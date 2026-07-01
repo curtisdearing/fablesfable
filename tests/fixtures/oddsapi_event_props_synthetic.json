@@ -1,0 +1,66 @@
+{
+ "_meta": {
+  "note": "SYNTHETIC payload shaped like The Odds API v4 /events/{id}/odds response (decimal odds). A real recording requires a personal API key and an in-season slate; this fixture exists to pin the parser + budget/rotation logic offline. Not real market data.",
+  "shape_source": "https://the-odds-api.com/liveapi/guides/v4/ (documented response shape)",
+  "created": "2026-07-01"
+ },
+ "payload": {
+  "id": "evt_synth_001",
+  "sport_key": "americanfootball_nfl",
+  "commence_time": "2023-11-12T18:00:00Z",
+  "home_team": "Baltimore Ravens",
+  "away_team": "Cleveland Browns",
+  "bookmakers": [
+   {
+    "key": "draftkings",
+    "title": "DraftKings",
+    "markets": [
+     {
+      "key": "player_reception_yds",
+      "outcomes": [
+       {"name": "Over", "description": "Mark Andrews", "price": 1.87, "point": 52.5},
+       {"name": "Under", "description": "Mark Andrews", "price": 1.95, "point": 52.5},
+       {"name": "Over", "description": "Amari Cooper", "price": 1.91, "point": 68.5},
+       {"name": "Under", "description": "Amari Cooper", "price": 1.91, "point": 68.5},
+       {"name": "Over", "description": "Unknown Practice Squad Guy", "price": 1.90, "point": 12.5},
+       {"name": "Under", "description": "Unknown Practice Squad Guy", "price": 1.92, "point": 12.5}
+      ]
+     },
+     {
+      "key": "player_receptions",
+      "outcomes": [
+       {"name": "Over", "description": "Mark Andrews", "price": 1.83, "point": 4.5},
+       {"name": "Under", "description": "Mark Andrews", "price": 1.99, "point": 4.5}
+      ]
+     },
+     {
+      "key": "player_anytime_td",
+      "outcomes": [
+       {"name": "Yes", "description": "Mark Andrews", "price": 2.30, "point": null}
+      ]
+     }
+    ]
+   },
+   {
+    "key": "fanduel",
+    "title": "FanDuel",
+    "markets": [
+     {
+      "key": "player_reception_yds",
+      "outcomes": [
+       {"name": "Over", "description": "Mark Andrews", "price": 1.90, "point": 53.5},
+       {"name": "Under", "description": "Mark Andrews", "price": 1.92, "point": 53.5}
+      ]
+     },
+     {
+      "key": "player_pass_yds",
+      "outcomes": [
+       {"name": "Over", "description": "Lamar Jackson", "price": 1.88, "point": 224.5},
+       {"name": "Under", "description": "Lamar Jackson", "price": 1.94, "point": 224.5}
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
