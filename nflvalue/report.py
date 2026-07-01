@@ -192,8 +192,14 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
              publish: bool = True, publish_reasons: Optional[List[str]] = None,
              weights: Optional[Dict] = None, params: Optional[Dict] = None,
              write_files: bool = True, persist: bool = True,
-             line_note: Optional[str] = None) -> Dict:
-    """Candidates -> composite -> shortlist -> context -> markdown/JSON/DB."""
+             line_note: Optional[str] = None,
+             candidates_df: Optional[pd.DataFrame] = None) -> Dict:
+    """Candidates -> composite -> shortlist -> context -> markdown/JSON/DB.
+
+    ``candidates_df``: pre-built (possibly availability-filtered) candidate
+    frame; when given, enumeration is skipped -- the pipeline uses this to
+    keep OUT players away from the ranker.
+    """
     cfg = cfgmod.load_config()
     weights = weights or (cfg.get("composite") or {}).get("weights")
     params = params or (cfg.get("composite") or {}).get("params")
@@ -204,10 +210,13 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
     inputs = inputs or candmod.build_week_inputs()
     as_of = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    cands = candmod.enumerate_candidates(
-        season, week, inputs=inputs, min_usage=min_usage, prop_lines=prop_lines,
-        roster_mode="as_played" if mode == "historical" else "carry_forward",
-    )
+    if candidates_df is not None:
+        cands = candidates_df
+    else:
+        cands = candmod.enumerate_candidates(
+            season, week, inputs=inputs, min_usage=min_usage, prop_lines=prop_lines,
+            roster_mode="as_played" if mode == "historical" else "carry_forward",
+        )
     games = slmod.shortlist_week(cands, weights=weights, params=params,
                                  top_n=top_n, max_per_player=max_pp)
 

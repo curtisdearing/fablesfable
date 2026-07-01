@@ -90,6 +90,7 @@ tr:hover td{background:#172033}
     <div class="tab active" data-t="weekly">Weekly Projections</div>
     <div class="tab" data-t="bets">Value Bets</div>
     <div class="tab" data-t="props">Player Props</div>
+    <div class="tab" data-t="leans">Weekly Leans</div>
     <div class="tab" data-t="mc">Monte Carlo</div>
     <div class="tab" data-t="games">All Games</div>
     <div class="tab" data-t="perf">Model &amp; Learning</div>
@@ -99,6 +100,7 @@ tr:hover td{background:#172033}
   <div class="panel active" id="weekly"></div>
   <div class="panel" id="bets"></div>
   <div class="panel" id="props"></div>
+  <div class="panel" id="leans"></div>
   <div class="panel" id="mc"></div>
   <div class="panel" id="games"></div>
   <div class="panel" id="perf"></div>
@@ -148,6 +150,43 @@ function renderProps(){
   if(!b.length){el.innerHTML='<div class="box empty">No +EV player props on the current slate.</div>';return;}
   el.innerHTML=`<table><thead><tr><th>Prop</th><th>Price</th><th>Probability</th><th>EV</th><th>Stake</th><th>Why</th></tr></thead>
     <tbody>${b.map(betRow).join("")}</tbody></table>`;
+}
+
+function renderLeans(){
+  const el=document.getElementById("leans");
+  const w=DATA.weekly_leans;
+  if(!w||!w.games||!w.games.length){
+    el.innerHTML='<div class="box empty">No weekly prop leans generated yet — run <code>python3 pipeline_weekly.py --season S --week W</code>.</div>';
+    return;
+  }
+  const clv=DATA.leans_clv||{};
+  const kc=DATA.leans_killcheck||{};
+  const pub = w.publish===false
+    ? `<div class="box" style="border-color:var(--red)"><b>NOT PUBLISHED</b> — data gate failed: ${esc((w.publish_reasons||[]).join("; "))}</div>` : "";
+  const clvBox = `<div class="box"><b>Forward CLV</b> — resolved leans: ${clv.n||0}
+      ${clv.lifetime_mean!=null?` · lifetime avg ${fmtPct(clv.lifetime_mean)} prob`:""}
+      ${clv.rolling_mean!=null?` · rolling(${clv.window}) ${fmtPct(clv.rolling_mean)}`:""}
+      ${kc.verdict?` · kill-check: <b>${esc(kc.verdict)}</b>`:""}
+      <div class="sub">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live (Phase 3).")}</div></div>`;
+  const sideLabel = l => l.market==="anytime_td" ? "YES" : (l.side||"").toUpperCase();
+  const games = w.games.map(g=>{
+    const ctx=(w.contexts||{})[g.game_id];
+    const rows=g.leans.map(l=>`<tr>
+      <td><div class="pick">${esc(l.name)}</div><div class="sub">${esc(l.pos)} · ${esc(l.team)}</div></td>
+      <td>${esc(String(l.market||"").replace(/_/g," "))}</td>
+      <td class="price">${esc(l.line)}${l.line_source==="odds_api"?"":"†"}</td>
+      <td><b>${sideLabel(l)}</b></td>
+      <td>${esc(l.mean)}</td>
+      <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
+      <td class="price">${esc(l.composite)}</td></tr>`).join("");
+    const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
+    return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
+      <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;
+  }).join("");
+  el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>
+    ${pub}${clvBox}${games}`;
 }
 
 function renderGames(){
@@ -357,7 +396,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
