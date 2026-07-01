@@ -81,6 +81,58 @@ SCHEMA = {
             PRIMARY KEY (run_at, market, sample_bucket, calibration_bucket)
         );
     """,
+    # -- Phase 2: qualitative notes (context panel only -- NEVER scored) ------ #
+    "manual_notes": """
+        CREATE TABLE IF NOT EXISTS manual_notes (
+            id INTEGER PRIMARY KEY, season INTEGER, week INTEGER,
+            scope TEXT,          -- 'game' | 'team' | 'player'
+            ref TEXT,            -- game_id / team abbr / player_id
+            tag TEXT,            -- 'revenge','scheme','motivation','weather','coaching','personal'
+            note TEXT, weight REAL DEFAULT 0.0, created_at TEXT
+        );
+    """,
+    # -- Phase 2: every published lean (the forward log the CLV/kill-check reads) #
+    "leans": """
+        CREATE TABLE IF NOT EXISTS leans (
+            season INTEGER, week INTEGER, clock TEXT,       -- 'wed' | 't90'
+            game_id TEXT, player_id TEXT, name TEXT, market TEXT,
+            side TEXT, line REAL, line_source TEXT, price REAL, book TEXT,
+            mean REAL, sd REAL, p_side REAL,
+            composite REAL, edge REAL, confidence_comp REAL, matchup_comp REAL,
+            screened_n INTEGER, reason TEXT,
+            status TEXT DEFAULT 'active',                    -- 'active' | 'voided'
+            void_reason TEXT, as_of TEXT, created_at TEXT,
+            PRIMARY KEY (season, week, clock, game_id, player_id, market)
+        );
+    """,
+    # -- Phase 3: prop-line snapshots (market history for edge + CLV) --------- #
+    "lines": """
+        CREATE TABLE IF NOT EXISTS lines (
+            ts TEXT, game_id TEXT, book TEXT, market TEXT,
+            player_id TEXT, player_name TEXT, side TEXT,
+            point REAL, price REAL,
+            PRIMARY KEY (ts, game_id, book, market, player_name, side)
+        );
+    """,
+    # -- Phase 3: closing-line-value log per lean ------------------------------ #
+    "clv": """
+        CREATE TABLE IF NOT EXISTS clv (
+            season INTEGER, week INTEGER, game_id TEXT, player_id TEXT,
+            market TEXT, side TEXT,
+            entry_ts TEXT, entry_point REAL, entry_price REAL, entry_prob REAL,
+            close_ts TEXT, close_point REAL, close_price REAL, close_prob REAL,
+            clv_prob REAL, point_moved REAL,
+            PRIMARY KEY (season, week, game_id, player_id, market, side)
+        );
+    """,
+    # -- Phase 3: The Odds API credit ledger (hard budget stop) ---------------- #
+    "api_credits": """
+        CREATE TABLE IF NOT EXISTS api_credits (
+            month TEXT PRIMARY KEY,      -- 'YYYY-MM'
+            used REAL DEFAULT 0.0,
+            last_headers TEXT, updated_at TEXT
+        );
+    """,
 }
 
 

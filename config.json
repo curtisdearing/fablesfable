@@ -22,5 +22,16 @@
   "learning_rate": 0.06,
   "l2": 0.01,
 
-  "refresh_seconds": 90
+  "refresh_seconds": 90,
+
+  "composite": {
+    "weights": {"edge": 0.5, "confidence": 0.3, "matchup": 0.2},
+    "params": {"z_cap": 2.0, "edge_cap": 0.10, "calibration_passed": true}
+  },
+  "shortlist": {"top_n": 5, "max_per_player": 2},
+  "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},
+
+  "odds_budget": {"monthly_credits": 500, "reserve": 50},
+  "discord_enabled": false,
+  "rag": {"vectorstore_enabled": false, "row_cap": 200}
 }

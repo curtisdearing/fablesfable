@@ -1,0 +1,4411 @@
+{
+  "season": 2023,
+  "week": 10,
+  "clock": "wed",
+  "as_of": "2026-07-01T20:49:26Z",
+  "publish": true,
+  "publish_reasons": [],
+  "mode": "historical",
+  "games": [
+    {
+      "game_id": "2023_10_ATL_ARI",
+      "matchup": "ATL @ ARI",
+      "screened": "5 of 44",
+      "screened_n": 44,
+      "leans": [
+        {
+          "player_id": "00-0037238",
+          "name": "D.London",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 67.027,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 54.5,
+          "p_over": 0.6109,
+          "p_under": 0.3891,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_ATL_ARI",
+          "team": "ATL",
+          "defteam": "ARI",
+          "home": false,
+          "matchup": 0.641,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.0,
+          "total_line": 43.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.233,
+            "efficiency": 7.1005,
+            "opp_factor": 1.3051,
+            "game_script": 0.9815
+          },
+          "composite": 37.9,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2043,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6109,
+            "z": 0.409,
+            "opp_sub": 1.0,
+            "script_sub": 0.4229,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033553",
+          "name": "J.Conner",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 60.812,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 73.5,
+          "p_over": 0.2877,
+          "p_under": 0.7123,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_ATL_ARI",
+          "team": "ARI",
+          "defteam": "ATL",
+          "home": true,
+          "matchup": 0.604,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.0,
+          "total_line": 43.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 15.021,
+            "efficiency": 4.7127,
+            "opp_factor": 0.859,
+            "game_script": 0.9815
+          },
+          "composite": 36.89,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2121,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7123,
+            "z": -0.424,
+            "opp_sub": 0.735,
+            "script_sub": 0.5771,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035662",
+          "name": "M.Brown",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 5.481,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 4.5,
+          "p_over": 0.6384,
+          "p_under": 0.3616,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_ATL_ARI",
+          "team": "ARI",
+          "defteam": "ATL",
+          "home": true,
+          "matchup": 0.5257,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.0,
+          "total_line": 43.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.652,
+            "efficiency": 0.5679,
+            "opp_factor": 1.0,
+            "game_script": 1.0185
+          },
+          "composite": 35.44,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2402,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6384,
+            "z": 0.48,
+            "opp_sub": 0.5,
+            "script_sub": 0.5771,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038122",
+          "name": "D.Ridder",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 243.862,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 212.5,
+          "p_over": 0.6231,
+          "p_under": 0.3769,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_ATL_ARI",
+          "team": "ATL",
+          "defteam": "ARI",
+          "home": false,
+          "matchup": 0.5627,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.0,
+          "total_line": 43.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 32.635,
+            "efficiency": 6.447,
+            "opp_factor": 1.1591,
+            "game_script": 0.9815
+          },
+          "composite": 31.91,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1568,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6231,
+            "z": 0.314,
+            "opp_sub": 0.7652,
+            "script_sub": 0.4229,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037744",
+          "name": "T.McBride",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 25.832,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 33.5,
+          "p_over": 0.267,
+          "p_under": 0.733,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_ATL_ARI",
+          "team": "ARI",
+          "defteam": "ATL",
+          "home": true,
+          "matchup": 0.5773,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.0,
+          "total_line": 43.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.711,
+            "efficiency": 6.7301,
+            "opp_factor": 0.8147,
+            "game_script": 1.0185
+          },
+          "composite": 30.59,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.125,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.733,
+            "z": -0.25,
+            "opp_sub": 0.8088,
+            "script_sub": 0.4229,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_CAR_CHI",
+      "matchup": "CAR @ CHI",
+      "screened": "5 of 40",
+      "screened_n": 40,
+      "leans": [
+        {
+          "player_id": "00-0036290",
+          "name": "C.Kmet",
+          "pos": "TE",
+          "market": "receptions",
+          "mean": 4.304,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 5.5,
+          "p_over": 0.2645,
+          "p_under": 0.7355,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CAR_CHI",
+          "team": "CHI",
+          "defteam": "CAR",
+          "home": true,
+          "matchup": 0.5385,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.632,
+            "efficiency": 0.7641,
+            "opp_factor": 1.0,
+            "game_script": 0.9723
+          },
+          "composite": 39.11,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2929,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7355,
+            "z": -0.586,
+            "opp_sub": 0.5,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034827",
+          "name": "D.Moore",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 71.452,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 88.5,
+          "p_over": 0.2552,
+          "p_under": 0.7448,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CAR_CHI",
+          "team": "CHI",
+          "defteam": "CAR",
+          "home": true,
+          "matchup": 0.5452,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.402,
+            "efficiency": 9.7713,
+            "opp_factor": 0.9879,
+            "game_script": 0.9723
+          },
+          "composite": 38.49,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.278,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7448,
+            "z": -0.556,
+            "opp_sub": 0.5202,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036555",
+          "name": "C.Hubbard",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 30.212,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 41.5,
+          "p_over": 0.2532,
+          "p_under": 0.7468,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CAR_CHI",
+          "team": "CAR",
+          "defteam": "CHI",
+          "home": false,
+          "matchup": 0.6754,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.699,
+            "efficiency": 4.1338,
+            "opp_factor": 0.7535,
+            "game_script": 0.9723
+          },
+          "composite": 38.34,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1887,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7468,
+            "z": -0.377,
+            "opp_sub": 0.9108,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0039150",
+          "name": "B.Young",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 239.558,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 196.5,
+          "p_over": 0.6666,
+          "p_under": 0.3334,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 7.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CAR_CHI",
+          "team": "CAR",
+          "defteam": "CHI",
+          "home": false,
+          "matchup": 0.5541,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 40.961,
+            "efficiency": 5.6882,
+            "opp_factor": 1.0282,
+            "game_script": 1.0277
+          },
+          "composite": 35.08,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2152,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6666,
+            "z": 0.43,
+            "opp_sub": 0.547,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036290",
+          "name": "C.Kmet",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 36.608,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 46.5,
+          "p_over": 0.2829,
+          "p_under": 0.7171,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CAR_CHI",
+          "team": "CHI",
+          "defteam": "CAR",
+          "home": true,
+          "matchup": 0.597,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.632,
+            "efficiency": 7.2648,
+            "opp_factor": 0.8947,
+            "game_script": 0.9723
+          },
+          "composite": 33.56,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1613,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7171,
+            "z": -0.323,
+            "opp_sub": 0.6755,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_CLE_BAL",
+      "matchup": "CLE @ BAL",
+      "screened": "5 of 51",
+      "screened_n": 51,
+      "leans": [
+        {
+          "player_id": "00-0034753",
+          "name": "M.Andrews",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 32.909,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 59.5,
+          "p_over": 0.1577,
+          "p_under": 0.8423,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CLE_BAL",
+          "team": "BAL",
+          "defteam": "CLE",
+          "home": true,
+          "matchup": 0.7436,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 6.476,
+            "efficiency": 8.2567,
+            "opp_factor": 0.6155,
+            "game_script": 0.9446
+          },
+          "composite": 55.76,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.4336,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.8423,
+            "z": -0.867,
+            "opp_sub": 1.0,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0031544",
+          "name": "A.Cooper",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 50.872,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 77.5,
+          "p_over": 0.172,
+          "p_under": 0.828,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CLE_BAL",
+          "team": "CLE",
+          "defteam": "BAL",
+          "home": false,
+          "matchup": 0.5897,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 8.325,
+            "efficiency": 9.3432,
+            "opp_factor": 0.654,
+            "game_script": 1.0554
+          },
+          "composite": 49.64,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.4342,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.828,
+            "z": -0.868,
+            "opp_sub": 1.0,
+            "script_sub": 0.2692,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034796",
+          "name": "L.Jackson",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 175.384,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 223.5,
+          "p_over": 0.3152,
+          "p_under": 0.6848,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CLE_BAL",
+          "team": "BAL",
+          "defteam": "CLE",
+          "home": true,
+          "matchup": 0.6608,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 29.283,
+            "efficiency": 7.0548,
+            "opp_factor": 0.849,
+            "game_script": 0.9446
+          },
+          "composite": 40.86,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2405,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6848,
+            "z": -0.481,
+            "opp_sub": 0.7517,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037838",
+          "name": "I.Likely",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 14.409,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 25.5,
+          "p_over": 0.1666,
+          "p_under": 0.8334,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CLE_BAL",
+          "team": "BAL",
+          "defteam": "CLE",
+          "home": true,
+          "matchup": 0.7436,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.369,
+            "efficiency": 6.9494,
+            "opp_factor": 0.6155,
+            "game_script": 0.9446
+          },
+          "composite": 40.6,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1809,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.8334,
+            "z": -0.362,
+            "opp_sub": 1.0,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0031549",
+          "name": "N.Agholor",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 17.45,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 28.5,
+          "p_over": 0.192,
+          "p_under": 0.808,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_CLE_BAL",
+          "team": "BAL",
+          "defteam": "CLE",
+          "home": true,
+          "matchup": 0.6644,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.646,
+            "efficiency": 7.8282,
+            "opp_factor": 0.8425,
+            "game_script": 0.9446
+          },
+          "composite": 37.39,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1802,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.808,
+            "z": -0.36,
+            "opp_sub": 0.7625,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_DEN_BUF",
+      "matchup": "DEN @ BUF",
+      "screened": "5 of 36",
+      "screened_n": 36,
+      "leans": [
+        {
+          "player_id": "00-0038933",
+          "name": "D.Kincaid",
+          "pos": "TE",
+          "market": "receptions",
+          "mean": 4.049,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 5.5,
+          "p_over": 0.2247,
+          "p_under": 0.7753,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DEN_BUF",
+          "team": "BUF",
+          "defteam": "DEN",
+          "home": true,
+          "matchup": 0.5961,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 7.5,
+          "total_line": 47.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.981,
+            "efficiency": 0.8128,
+            "opp_factor": 1.0,
+            "game_script": 0.9308
+          },
+          "composite": 45.16,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3553,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7753,
+            "z": -0.711,
+            "opp_sub": 0.5,
+            "script_sub": 0.7883,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037261",
+          "name": "K.Shakir",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 1.6,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.233,
+          "p_under": 0.767,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DEN_BUF",
+          "team": "BUF",
+          "defteam": "DEN",
+          "home": true,
+          "matchup": 0.5961,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 7.5,
+          "total_line": 47.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.189,
+            "efficiency": 0.7309,
+            "opp_factor": 1.0,
+            "game_script": 0.9308
+          },
+          "composite": 37.07,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2204,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.767,
+            "z": -0.441,
+            "opp_sub": 0.5,
+            "script_sub": 0.7883,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0031588",
+          "name": "S.Diggs",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 6.985,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 7.5,
+          "p_over": 0.3991,
+          "p_under": 0.6009,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DEN_BUF",
+          "team": "BUF",
+          "defteam": "DEN",
+          "home": true,
+          "matchup": 0.5961,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 7.5,
+          "total_line": 47.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 10.177,
+            "efficiency": 0.6864,
+            "opp_factor": 1.0,
+            "game_script": 0.9308
+          },
+          "composite": 31.41,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1261,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6009,
+            "z": -0.252,
+            "opp_sub": 0.5,
+            "script_sub": 0.7883,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0031588",
+          "name": "S.Diggs",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 102.858,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 91.5,
+          "p_over": 0.612,
+          "p_under": 0.388,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DEN_BUF",
+          "team": "BUF",
+          "defteam": "DEN",
+          "home": true,
+          "matchup": 0.4943,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 7.5,
+          "total_line": 47.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 10.177,
+            "efficiency": 8.6928,
+            "opp_factor": 1.1627,
+            "game_script": 0.9308
+          },
+          "composite": 30.88,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1852,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.612,
+            "z": 0.37,
+            "opp_sub": 0.7712,
+            "script_sub": 0.2117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036196",
+          "name": "G.Davis",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 3.028,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 3.5,
+          "p_over": 0.3563,
+          "p_under": 0.6437,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DEN_BUF",
+          "team": "BUF",
+          "defteam": "DEN",
+          "home": true,
+          "matchup": 0.5961,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 7.5,
+          "total_line": 47.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.114,
+            "efficiency": 0.5922,
+            "opp_factor": 1.0,
+            "game_script": 0.9308
+          },
+          "composite": 30.78,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1156,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6437,
+            "z": -0.231,
+            "opp_sub": 0.5,
+            "script_sub": 0.7883,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_DET_LAC",
+      "matchup": "DET @ LAC",
+      "screened": "5 of 46",
+      "screened_n": 46,
+      "leans": [
+        {
+          "player_id": "00-0030279",
+          "name": "K.Allen",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 72.109,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 90.5,
+          "p_over": 0.2436,
+          "p_under": 0.7564,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DET_LAC",
+          "team": "LAC",
+          "defteam": "DET",
+          "home": true,
+          "matchup": 0.544,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.5,
+          "total_line": 48.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 10.334,
+            "efficiency": 8.0857,
+            "opp_factor": 0.863,
+            "game_script": 1.0231
+          },
+          "composite": 39.76,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2999,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7564,
+            "z": -0.6,
+            "opp_sub": 0.7283,
+            "script_sub": 0.4038,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033699",
+          "name": "A.Ekeler",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 48.625,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 61.5,
+          "p_over": 0.2743,
+          "p_under": 0.7257,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DET_LAC",
+          "team": "LAC",
+          "defteam": "DET",
+          "home": true,
+          "matchup": 0.6228,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.5,
+          "total_line": 48.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 13.331,
+            "efficiency": 4.3589,
+            "opp_factor": 0.8368,
+            "game_script": 0.9769
+          },
+          "composite": 37.83,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2153,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7257,
+            "z": -0.431,
+            "opp_sub": 0.772,
+            "script_sub": 0.5963,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035414",
+          "name": "J.Guyton",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 24.04,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 39.5,
+          "p_over": 0.2008,
+          "p_under": 0.7992,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DET_LAC",
+          "team": "LAC",
+          "defteam": "DET",
+          "home": true,
+          "matchup": 0.544,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.5,
+          "total_line": 48.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.871,
+            "efficiency": 9.7016,
+            "opp_factor": 0.863,
+            "game_script": 1.0231
+          },
+          "composite": 36.89,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2521,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7992,
+            "z": -0.504,
+            "opp_sub": 0.7283,
+            "script_sub": 0.4038,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0039139",
+          "name": "J.Gibbs",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 52.768,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 66.5,
+          "p_over": 0.2706,
+          "p_under": 0.7294,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 6.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DET_LAC",
+          "team": "DET",
+          "defteam": "LAC",
+          "home": false,
+          "matchup": 0.5436,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.5,
+          "total_line": 48.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 13.47,
+            "efficiency": 4.5357,
+            "opp_factor": 0.8637,
+            "game_script": 1.0231
+          },
+          "composite": 35.52,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2296,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7294,
+            "z": -0.459,
+            "opp_sub": 0.7272,
+            "script_sub": 0.4038,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036370",
+          "name": "J.Kelley",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 33.149,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 40.5,
+          "p_over": 0.2983,
+          "p_under": 0.7017,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_DET_LAC",
+          "team": "LAC",
+          "defteam": "DET",
+          "home": true,
+          "matchup": 0.6228,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -2.5,
+          "total_line": 48.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.231,
+            "efficiency": 4.2916,
+            "opp_factor": 0.8368,
+            "game_script": 0.9769
+          },
+          "composite": 32.28,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1229,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7017,
+            "z": -0.246,
+            "opp_sub": 0.772,
+            "script_sub": 0.5963,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_GB_PIT",
+      "matchup": "GB @ PIT",
+      "screened": "5 of 43",
+      "screened_n": 43,
+      "leans": [
+        {
+          "player_id": "00-0037247",
+          "name": "G.Pickens",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 54.672,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 65.5,
+          "p_over": 0.3024,
+          "p_under": 0.6976,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_GB_PIT",
+          "team": "PIT",
+          "defteam": "GB",
+          "home": true,
+          "matchup": 0.581,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.42,
+            "efficiency": 7.9786,
+            "opp_factor": 0.9235,
+            "game_script": 0.9723
+          },
+          "composite": 33.83,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1766,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6976,
+            "z": -0.353,
+            "opp_sub": 0.6275,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037816",
+          "name": "R.Doubs",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 49.282,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 39.5,
+          "p_over": 0.5519,
+          "p_under": 0.4481,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_GB_PIT",
+          "team": "GB",
+          "defteam": "PIT",
+          "home": false,
+          "matchup": 0.59,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 6.523,
+            "efficiency": 6.9144,
+            "opp_factor": 1.0927,
+            "game_script": 1.0277
+          },
+          "composite": 33.17,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1595,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5519,
+            "z": 0.319,
+            "opp_sub": 0.6545,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0039146",
+          "name": "J.Reed",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 3.285,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.6067,
+          "p_under": 0.3933,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_GB_PIT",
+          "team": "GB",
+          "defteam": "PIT",
+          "home": false,
+          "matchup": 0.5385,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.424,
+            "efficiency": 0.6056,
+            "opp_factor": 1.0,
+            "game_script": 1.0277
+          },
+          "composite": 33.07,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1922,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6067,
+            "z": 0.384,
+            "opp_sub": 0.5,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038124",
+          "name": "C.Watson",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 55.011,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 47.5,
+          "p_over": 0.5271,
+          "p_under": 0.4729,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_GB_PIT",
+          "team": "GB",
+          "defteam": "PIT",
+          "home": false,
+          "matchup": 0.59,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.867,
+            "efficiency": 8.5817,
+            "opp_factor": 1.0927,
+            "game_script": 1.0277
+          },
+          "composite": 30.95,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1225,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5271,
+            "z": 0.245,
+            "opp_sub": 0.6545,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036264",
+          "name": "J.Love",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 239.809,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 215.5,
+          "p_over": 0.596,
+          "p_under": 0.404,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_GB_PIT",
+          "team": "GB",
+          "defteam": "PIT",
+          "home": false,
+          "matchup": 0.5619,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 3.0,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 35.97,
+            "efficiency": 6.3974,
+            "opp_factor": 1.0422,
+            "game_script": 1.0277
+          },
+          "composite": 29.77,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1215,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.596,
+            "z": 0.243,
+            "opp_sub": 0.5703,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_HOU_CIN",
+      "matchup": "HOU @ CIN",
+      "screened": "5 of 38",
+      "screened_n": 38,
+      "leans": [
+        {
+          "player_id": "00-0036900",
+          "name": "J.Chase",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 7.145,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 8.5,
+          "p_over": 0.2905,
+          "p_under": 0.7095,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_HOU_CIN",
+          "team": "CIN",
+          "defteam": "HOU",
+          "home": true,
+          "matchup": 0.5706,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 5.5,
+          "total_line": 46.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 11.021,
+            "efficiency": 0.6483,
+            "opp_factor": 1.0,
+            "game_script": 0.9492
+          },
+          "composite": 42.73,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3318,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7095,
+            "z": -0.664,
+            "opp_sub": 0.5,
+            "script_sub": 0.7117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034383",
+          "name": "D.Schultz",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 54.656,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 43.5,
+          "p_over": 0.5795,
+          "p_under": 0.4205,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_HOU_CIN",
+          "team": "HOU",
+          "defteam": "CIN",
+          "home": false,
+          "matchup": 0.6772,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 5.5,
+          "total_line": 46.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 6.888,
+            "efficiency": 6.6565,
+            "opp_factor": 1.192,
+            "game_script": 1.0508
+          },
+          "composite": 38.0,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1819,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5795,
+            "z": 0.364,
+            "opp_sub": 0.82,
+            "script_sub": 0.7117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0030431",
+          "name": "R.Woods",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 49.108,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 38.5,
+          "p_over": 0.564,
+          "p_under": 0.436,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_HOU_CIN",
+          "team": "HOU",
+          "defteam": "CIN",
+          "home": false,
+          "matchup": 0.5956,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 5.5,
+          "total_line": 46.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.408,
+            "efficiency": 6.3429,
+            "opp_factor": 1.0451,
+            "game_script": 1.0508
+          },
+          "composite": 34.2,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.173,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.564,
+            "z": 0.346,
+            "opp_sub": 0.5752,
+            "script_sub": 0.7117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0030431",
+          "name": "R.Woods",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 4.245,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 3.5,
+          "p_over": 0.6117,
+          "p_under": 0.3883,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_HOU_CIN",
+          "team": "HOU",
+          "defteam": "CIN",
+          "home": false,
+          "matchup": 0.5706,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 5.5,
+          "total_line": 46.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.408,
+            "efficiency": 0.573,
+            "opp_factor": 1.0,
+            "game_script": 1.0508
+          },
+          "composite": 33.77,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1824,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6117,
+            "z": 0.365,
+            "opp_sub": 0.5,
+            "script_sub": 0.7117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033591",
+          "name": "N.Brown",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 3.239,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.5961,
+          "p_under": 0.4039,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_HOU_CIN",
+          "team": "HOU",
+          "defteam": "CIN",
+          "home": false,
+          "matchup": 0.5706,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 5.5,
+          "total_line": 46.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.621,
+            "efficiency": 0.5762,
+            "opp_factor": 1.0,
+            "game_script": 1.0508
+          },
+          "composite": 33.68,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.181,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5961,
+            "z": 0.362,
+            "opp_sub": 0.5,
+            "script_sub": 0.7117,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_IND_NE",
+      "matchup": "IND @ NE",
+      "screened": "5 of 42",
+      "screened_n": 42,
+      "leans": [
+        {
+          "player_id": "00-0036251",
+          "name": "Z.Moss",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 56.207,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 76.5,
+          "p_over": 0.2164,
+          "p_under": 0.7836,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_IND_NE",
+          "team": "IND",
+          "defteam": "NE",
+          "home": false,
+          "matchup": 0.6003,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 42.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 16.421,
+            "efficiency": 4.2975,
+            "opp_factor": 0.7965,
+            "game_script": 1.0092
+          },
+          "composite": 44.37,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3393,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7836,
+            "z": -0.679,
+            "opp_sub": 0.8392,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036223",
+          "name": "J.Taylor",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 43.911,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 52.5,
+          "p_over": 0.3099,
+          "p_under": 0.6901,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_IND_NE",
+          "team": "IND",
+          "defteam": "NE",
+          "home": false,
+          "matchup": 0.6003,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 42.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 13.642,
+            "efficiency": 4.0414,
+            "opp_factor": 0.7965,
+            "game_script": 1.0092
+          },
+          "composite": 32.63,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1436,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6901,
+            "z": -0.287,
+            "opp_sub": 0.8392,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036252",
+          "name": "M.Pittman",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 5.9,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 6.5,
+          "p_over": 0.3777,
+          "p_under": 0.6223,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_IND_NE",
+          "team": "IND",
+          "defteam": "NE",
+          "home": false,
+          "matchup": 0.5128,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 42.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.432,
+            "efficiency": 0.6255,
+            "opp_factor": 1.0,
+            "game_script": 0.9908
+          },
+          "composite": 29.33,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1469,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6223,
+            "z": -0.294,
+            "opp_sub": 0.5,
+            "script_sub": 0.5383,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038621",
+          "name": "D.Douglas",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 2.834,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 3.5,
+          "p_over": 0.3192,
+          "p_under": 0.6808,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_IND_NE",
+          "team": "NE",
+          "defteam": "IND",
+          "home": true,
+          "matchup": 0.4872,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 42.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.458,
+            "efficiency": 0.6357,
+            "opp_factor": 1.0,
+            "game_script": 1.0092
+          },
+          "composite": 29.27,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1631,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6808,
+            "z": -0.326,
+            "opp_sub": 0.5,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037664",
+          "name": "A.Pierce",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 2.011,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.3135,
+          "p_under": 0.6865,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_IND_NE",
+          "team": "IND",
+          "defteam": "NE",
+          "home": false,
+          "matchup": 0.5128,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 42.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.408,
+            "efficiency": 0.5901,
+            "opp_factor": 1.0,
+            "game_script": 0.9908
+          },
+          "composite": 27.7,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1197,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6865,
+            "z": -0.239,
+            "opp_sub": 0.5,
+            "script_sub": 0.5383,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_NO_MIN",
+      "matchup": "NO @ MIN",
+      "screened": "5 of 44",
+      "screened_n": 44,
+      "leans": [
+        {
+          "player_id": "00-0036364",
+          "name": "L.Bowden",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 2.432,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 3.5,
+          "p_over": 0.2502,
+          "p_under": 0.7498,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NO_MIN",
+          "team": "NO",
+          "defteam": "MIN",
+          "home": false,
+          "matchup": 0.5385,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 41.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.117,
+            "efficiency": 0.5906,
+            "opp_factor": 1.0,
+            "game_script": 0.9723
+          },
+          "composite": 37.23,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2615,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7498,
+            "z": -0.523,
+            "opp_sub": 0.5,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038994",
+          "name": "J.Addison",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 45.019,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 59.5,
+          "p_over": 0.2568,
+          "p_under": 0.7432,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NO_MIN",
+          "team": "MIN",
+          "defteam": "NO",
+          "home": true,
+          "matchup": 0.533,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 41.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 6.528,
+            "efficiency": 7.9143,
+            "opp_factor": 0.8713,
+            "game_script": 1.0277
+          },
+          "composite": 35.49,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2361,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7432,
+            "z": -0.472,
+            "opp_sub": 0.7145,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033906",
+          "name": "A.Kamara",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 55.786,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 65.5,
+          "p_over": 0.3138,
+          "p_under": 0.6862,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NO_MIN",
+          "team": "NO",
+          "defteam": "MIN",
+          "home": false,
+          "matchup": 0.5441,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 41.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 16.576,
+            "efficiency": 3.9528,
+            "opp_factor": 0.8514,
+            "game_script": 1.0277
+          },
+          "composite": 31.51,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1624,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6862,
+            "z": -0.325,
+            "opp_sub": 0.7477,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037291",
+          "name": "J.Nailor",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 25.305,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 35.5,
+          "p_over": 0.2435,
+          "p_under": 0.7565,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 5.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NO_MIN",
+          "team": "MIN",
+          "defteam": "NO",
+          "home": true,
+          "matchup": 0.533,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 41.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.978,
+            "efficiency": 9.7525,
+            "opp_factor": 0.8713,
+            "game_script": 1.0277
+          },
+          "composite": 31.3,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1662,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7565,
+            "z": -0.332,
+            "opp_sub": 0.7145,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035229",
+          "name": "T.Hockenson",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 55.237,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 64.5,
+          "p_over": 0.319,
+          "p_under": 0.681,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NO_MIN",
+          "team": "MIN",
+          "defteam": "NO",
+          "home": true,
+          "matchup": 0.5479,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 41.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.054,
+            "efficiency": 7.2235,
+            "opp_factor": 0.8445,
+            "game_script": 1.0277
+          },
+          "composite": 30.98,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1511,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.681,
+            "z": -0.302,
+            "opp_sub": 0.7592,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_NYG_DAL",
+      "matchup": "NYG @ DAL",
+      "screened": "5 of 51",
+      "screened_n": 51,
+      "leans": [
+        {
+          "player_id": "00-0036358",
+          "name": "C.Lamb",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 5.577,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 7.5,
+          "p_over": 0.201,
+          "p_under": 0.799,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYG_DAL",
+          "team": "DAL",
+          "defteam": "NYG",
+          "home": true,
+          "matchup": 0.6667,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 17.5,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.684,
+            "efficiency": 0.7258,
+            "opp_factor": 1.0,
+            "game_script": 0.88
+          },
+          "composite": 54.92,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.4709,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.799,
+            "z": -0.942,
+            "opp_sub": 0.5,
+            "script_sub": 1.0,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036358",
+          "name": "C.Lamb",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 79.776,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 103.5,
+          "p_over": 0.2022,
+          "p_under": 0.7978,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYG_DAL",
+          "team": "DAL",
+          "defteam": "NYG",
+          "home": true,
+          "matchup": 0.6486,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 17.5,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.684,
+            "efficiency": 10.055,
+            "opp_factor": 1.0325,
+            "game_script": 0.88
+          },
+          "composite": 49.16,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3869,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7978,
+            "z": -0.774,
+            "opp_sub": 0.4458,
+            "script_sub": 1.0,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034844",
+          "name": "S.Barkley",
+          "pos": "RB",
+          "market": "rush_attempts",
+          "mean": 15.589,
+          "sd": 5.252,
+          "dist": "negbinom",
+          "line": 19.5,
+          "p_over": 0.2166,
+          "p_under": 0.7834,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYG_DAL",
+          "team": "NYG",
+          "defteam": "DAL",
+          "home": false,
+          "matchup": 0.6667,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 17.5,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 15.589,
+            "efficiency": 1.0,
+            "opp_factor": 1.0,
+            "game_script": 0.88
+          },
+          "composite": 49.01,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3723,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7834,
+            "z": -0.745,
+            "opp_sub": 0.5,
+            "script_sub": 1.0,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034844",
+          "name": "S.Barkley",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 60.404,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 80.5,
+          "p_over": 0.2203,
+          "p_under": 0.7797,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYG_DAL",
+          "team": "NYG",
+          "defteam": "DAL",
+          "home": false,
+          "matchup": 0.7181,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 17.5,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 15.589,
+            "efficiency": 4.2698,
+            "opp_factor": 0.9075,
+            "game_script": 0.88
+          },
+          "composite": 48.88,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.336,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7797,
+            "z": -0.672,
+            "opp_sub": 0.6542,
+            "script_sub": 1.0,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035261",
+          "name": "T.Pollard",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 74.635,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 59.5,
+          "p_over": 0.6586,
+          "p_under": 0.3414,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYG_DAL",
+          "team": "DAL",
+          "defteam": "NYG",
+          "home": true,
+          "matchup": 0.7356,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 17.5,
+          "total_line": 38.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 16.627,
+            "efficiency": 3.9931,
+            "opp_factor": 1.1241,
+            "game_script": 1.12
+          },
+          "composite": 44.61,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.253,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6586,
+            "z": 0.506,
+            "opp_sub": 0.7068,
+            "script_sub": 1.0,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_NYJ_LV",
+      "matchup": "NYJ @ LV",
+      "screened": "5 of 37",
+      "screened_n": 37,
+      "leans": [
+        {
+          "player_id": "00-0031381",
+          "name": "D.Adams",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 46.701,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 63.5,
+          "p_over": 0.2394,
+          "p_under": 0.7606,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYJ_LV",
+          "team": "LV",
+          "defteam": "NYJ",
+          "home": true,
+          "matchup": 0.6539,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 35.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.389,
+            "efficiency": 7.1649,
+            "opp_factor": 0.6942,
+            "game_script": 1.0092
+          },
+          "composite": 42.59,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2739,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7606,
+            "z": -0.548,
+            "opp_sub": 1.0,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034960",
+          "name": "J.Meyers",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 45.343,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 55.5,
+          "p_over": 0.297,
+          "p_under": 0.703,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYJ_LV",
+          "team": "LV",
+          "defteam": "NYJ",
+          "home": true,
+          "matchup": 0.6539,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 35.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.795,
+            "efficiency": 8.3789,
+            "opp_factor": 0.6942,
+            "game_script": 1.0092
+          },
+          "composite": 36.09,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1656,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.703,
+            "z": -0.331,
+            "opp_sub": 1.0,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038579",
+          "name": "A.O'Connell",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 141.246,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 174.5,
+          "p_over": 0.3698,
+          "p_under": 0.6302,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 3.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYJ_LV",
+          "team": "LV",
+          "defteam": "NYJ",
+          "home": true,
+          "matchup": 0.6186,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 35.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 28.594,
+            "efficiency": 6.4695,
+            "opp_factor": 0.7635,
+            "game_script": 1.0092
+          },
+          "composite": 34.72,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1662,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6302,
+            "z": -0.332,
+            "opp_sub": 0.8942,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0034983",
+          "name": "H.Renfrow",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 18.472,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 23.5,
+          "p_over": 0.243,
+          "p_under": 0.757,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYJ_LV",
+          "team": "LV",
+          "defteam": "NYJ",
+          "home": true,
+          "matchup": 0.6539,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 35.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.259,
+            "efficiency": 8.1639,
+            "opp_factor": 0.6942,
+            "game_script": 1.0092
+          },
+          "composite": 31.07,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.082,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.757,
+            "z": -0.164,
+            "opp_sub": 1.0,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0039066",
+          "name": "M.Mayer",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 15.929,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 22.5,
+          "p_over": 0.2083,
+          "p_under": 0.7917,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 7.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_NYJ_LV",
+          "team": "LV",
+          "defteam": "NYJ",
+          "home": true,
+          "matchup": 0.6159,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -1.0,
+          "total_line": 35.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.055,
+            "efficiency": 6.786,
+            "opp_factor": 0.7683,
+            "game_script": 1.0092
+          },
+          "composite": 31.07,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1072,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7917,
+            "z": -0.214,
+            "opp_sub": 0.8862,
+            "script_sub": 0.4617,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_SF_JAX",
+      "matchup": "SF @ JAX",
+      "screened": "5 of 37",
+      "screened_n": 37,
+      "leans": [
+        {
+          "player_id": "00-0033881",
+          "name": "E.Engram",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 34.101,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 54.5,
+          "p_over": 0.1956,
+          "p_under": 0.8044,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_SF_JAX",
+          "team": "JAX",
+          "defteam": "SF",
+          "home": true,
+          "matchup": 0.6282,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 44.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.946,
+            "efficiency": 7.1235,
+            "opp_factor": 0.6025,
+            "game_script": 1.0277
+          },
+          "composite": 45.09,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.3326,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.8044,
+            "z": -0.665,
+            "opp_sub": 1.0,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033288",
+          "name": "G.Kittle",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 37.242,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 55.5,
+          "p_over": 0.2155,
+          "p_under": 0.7845,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_SF_JAX",
+          "team": "SF",
+          "defteam": "JAX",
+          "home": false,
+          "matchup": 0.5904,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 44.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.934,
+            "efficiency": 8.3267,
+            "opp_factor": 0.9066,
+            "game_script": 0.9723
+          },
+          "composite": 41.48,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2977,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7845,
+            "z": -0.595,
+            "opp_sub": 0.6557,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033280",
+          "name": "C.McCaffrey",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 64.695,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 81.5,
+          "p_over": 0.251,
+          "p_under": 0.749,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_SF_JAX",
+          "team": "SF",
+          "defteam": "JAX",
+          "home": false,
+          "matchup": 0.5557,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 44.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 17.852,
+            "efficiency": 4.3636,
+            "opp_factor": 0.8305,
+            "game_script": 1.0277
+          },
+          "composite": 39.09,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.281,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.749,
+            "z": -0.562,
+            "opp_sub": 0.7825,
+            "script_sub": 0.3846,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033288",
+          "name": "G.Kittle",
+          "pos": "TE",
+          "market": "receptions",
+          "mean": 3.588,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 4.5,
+          "p_over": 0.2966,
+          "p_under": 0.7034,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_SF_JAX",
+          "team": "SF",
+          "defteam": "JAX",
+          "home": false,
+          "matchup": 0.5385,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 44.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 4.934,
+            "efficiency": 0.7273,
+            "opp_factor": 1.0,
+            "game_script": 0.9723
+          },
+          "composite": 34.94,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2233,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7034,
+            "z": -0.447,
+            "opp_sub": 0.5,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037834",
+          "name": "B.Purdy",
+          "pos": "QB",
+          "market": "passing_yards",
+          "mean": 216.294,
+          "sd": 100.024,
+          "dist": "normal",
+          "line": 254.5,
+          "p_over": 0.3512,
+          "p_under": 0.6488,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_SF_JAX",
+          "team": "SF",
+          "defteam": "JAX",
+          "home": false,
+          "matchup": 0.5606,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": -3.0,
+          "total_line": 44.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 28.926,
+            "efficiency": 7.7876,
+            "opp_factor": 0.9602,
+            "game_script": 0.9723
+          },
+          "composite": 33.88,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.191,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6488,
+            "z": -0.382,
+            "opp_sub": 0.5663,
+            "script_sub": 0.6154,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_TEN_TB",
+      "matchup": "TEN @ TB",
+      "screened": "5 of 40",
+      "screened_n": 40,
+      "leans": [
+        {
+          "player_id": "00-0032764",
+          "name": "D.Henry",
+          "pos": "RB",
+          "market": "rushing_yards",
+          "mean": 58.316,
+          "sd": 29.907,
+          "dist": "gamma",
+          "line": 75.5,
+          "p_over": 0.2437,
+          "p_under": 0.7563,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_TEN_TB",
+          "team": "TEN",
+          "defteam": "TB",
+          "home": false,
+          "matchup": 0.6322,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 2.5,
+          "total_line": 39.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 16.762,
+            "efficiency": 4.2445,
+            "opp_factor": 0.8197,
+            "game_script": 0.9769
+          },
+          "composite": 42.53,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.2873,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7563,
+            "z": -0.575,
+            "opp_sub": 0.8005,
+            "script_sub": 0.5963,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0030564",
+          "name": "D.Hopkins",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 80.752,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 70.5,
+          "p_over": 0.5876,
+          "p_under": 0.4124,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_TEN_TB",
+          "team": "TEN",
+          "defteam": "TB",
+          "home": false,
+          "matchup": 0.627,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 2.5,
+          "total_line": 39.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.975,
+            "efficiency": 8.6488,
+            "opp_factor": 1.1708,
+            "game_script": 1.0231
+          },
+          "composite": 35.11,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1672,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5876,
+            "z": 0.334,
+            "opp_sub": 0.7847,
+            "script_sub": 0.5962,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0033921",
+          "name": "C.Godwin",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 4.865,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 5.5,
+          "p_over": 0.3604,
+          "p_under": 0.6396,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_TEN_TB",
+          "team": "TB",
+          "defteam": "TEN",
+          "home": true,
+          "matchup": 0.5321,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 2.5,
+          "total_line": 39.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 7.719,
+            "efficiency": 0.6302,
+            "opp_factor": 1.0,
+            "game_script": 0.9769
+          },
+          "composite": 30.61,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1555,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6396,
+            "z": -0.311,
+            "opp_sub": 0.5,
+            "script_sub": 0.5963,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037273",
+          "name": "K.Philips",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 1.782,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.2673,
+          "p_under": 0.7327,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_TEN_TB",
+          "team": "TEN",
+          "defteam": "TB",
+          "home": false,
+          "matchup": 0.4679,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 2.5,
+          "total_line": 39.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.042,
+            "efficiency": 0.5857,
+            "opp_factor": 1.0,
+            "game_script": 1.0231
+          },
+          "composite": 29.27,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1758,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7327,
+            "z": -0.352,
+            "opp_sub": 0.5,
+            "script_sub": 0.4038,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0037487",
+          "name": "D.Thompkins",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 21.819,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 13.5,
+          "p_over": 0.4334,
+          "p_under": 0.5666,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_TEN_TB",
+          "team": "TB",
+          "defteam": "TEN",
+          "home": true,
+          "matchup": 0.5067,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 2.5,
+          "total_line": 39.5,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 3.583,
+            "efficiency": 5.8235,
+            "opp_factor": 1.0456,
+            "game_script": 0.9769
+          },
+          "composite": 28.41,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1357,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5666,
+            "z": 0.271,
+            "opp_sub": 0.424,
+            "script_sub": 0.5963,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    },
+    {
+      "game_id": "2023_10_WAS_SEA",
+      "matchup": "WAS @ SEA",
+      "screened": "5 of 42",
+      "screened_n": 42,
+      "leans": [
+        {
+          "player_id": "00-0035644",
+          "name": "N.Fant",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 19.65,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 30.5,
+          "p_over": 0.2085,
+          "p_under": 0.7915,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_WAS_SEA",
+          "team": "SEA",
+          "defteam": "WAS",
+          "home": true,
+          "matchup": 0.6947,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 44.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.394,
+            "efficiency": 10.4168,
+            "opp_factor": 0.788,
+            "game_script": 0.9446
+          },
+          "composite": 38.4,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1769,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7915,
+            "z": -0.354,
+            "opp_sub": 0.8533,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0036244",
+          "name": "C.Parkinson",
+          "pos": "TE",
+          "market": "receiving_yards",
+          "mean": 14.697,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 23.5,
+          "p_over": 0.182,
+          "p_under": 0.818,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_WAS_SEA",
+          "team": "SEA",
+          "defteam": "WAS",
+          "home": true,
+          "matchup": 0.6947,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 44.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.415,
+            "efficiency": 7.7216,
+            "opp_factor": 0.788,
+            "game_script": 0.9446
+          },
+          "composite": 36.4,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1435,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.818,
+            "z": -0.287,
+            "opp_sub": 0.8533,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035659",
+          "name": "T.McLaurin",
+          "pos": "WR",
+          "market": "receptions",
+          "mean": 6.313,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 5.5,
+          "p_over": 0.6022,
+          "p_under": 0.3978,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_WAS_SEA",
+          "team": "WAS",
+          "defteam": "SEA",
+          "home": false,
+          "matchup": 0.5769,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 44.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 9.382,
+            "efficiency": 0.6729,
+            "opp_factor": 1.0,
+            "game_script": 1.0554
+          },
+          "composite": 35.02,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1991,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.6022,
+            "z": 0.398,
+            "opp_sub": 0.5,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0035644",
+          "name": "N.Fant",
+          "pos": "TE",
+          "market": "receptions",
+          "mean": 1.811,
+          "sd": 2.042,
+          "dist": "negbinom",
+          "line": 2.5,
+          "p_over": 0.2729,
+          "p_under": 0.7271,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_WAS_SEA",
+          "team": "SEA",
+          "defteam": "WAS",
+          "home": true,
+          "matchup": 0.5769,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 44.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 2.394,
+            "efficiency": 0.7564,
+            "opp_factor": 1.0,
+            "game_script": 0.9446
+          },
+          "composite": 33.2,
+          "side": "under",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1687,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.7271,
+            "z": -0.337,
+            "opp_sub": 0.5,
+            "script_sub": 0.7308,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        },
+        {
+          "player_id": "00-0038543",
+          "name": "J.Smith-Njigba",
+          "pos": "WR",
+          "market": "receiving_yards",
+          "mean": 43.746,
+          "sd": 30.662,
+          "dist": "gamma",
+          "line": 34.5,
+          "p_over": 0.5343,
+          "p_under": 0.4657,
+          "low_confidence": false,
+          "eligible_for_shortlist": true,
+          "roll_games": 8.0,
+          "season": 2023,
+          "week": 10,
+          "game_id": "2023_10_WAS_SEA",
+          "team": "SEA",
+          "defteam": "WAS",
+          "home": true,
+          "matchup": 0.5217,
+          "line_source": "synthetic_trailing_mean",
+          "prices": null,
+          "spread_line": 6.0,
+          "total_line": 44.0,
+          "sd_source": "walk_forward_residuals",
+          "proj_components": {
+            "volume": 5.404,
+            "efficiency": 6.8746,
+            "opp_factor": 1.1776,
+            "game_script": 0.9446
+          },
+          "composite": 29.92,
+          "side": "over",
+          "no_market": true,
+          "edge": null,
+          "confidence": 0.1508,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.5343,
+            "z": 0.302,
+            "opp_sub": 0.796,
+            "script_sub": 0.2692,
+            "pace_sub": 0.5,
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true
+          }
+        }
+      ]
+    }
+  ],
+  "contexts": {
+    "2023_10_ATL_ARI": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0037238",
+          "name": "D.London",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033553",
+          "name": "J.Conner",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035662",
+          "name": "M.Brown",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038122",
+          "name": "D.Ridder",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037744",
+          "name": "T.McBride",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_CAR_CHI": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0036290",
+          "name": "C.Kmet",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034827",
+          "name": "D.Moore",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036555",
+          "name": "C.Hubbard",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0039150",
+          "name": "B.Young",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036290",
+          "name": "C.Kmet",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_CLE_BAL": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0034753",
+          "name": "M.Andrews",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0031544",
+          "name": "A.Cooper",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034796",
+          "name": "L.Jackson",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037838",
+          "name": "I.Likely",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0031549",
+          "name": "N.Agholor",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_DEN_BUF": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0038933",
+          "name": "D.Kincaid",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037261",
+          "name": "K.Shakir",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0031588",
+          "name": "S.Diggs",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0031588",
+          "name": "S.Diggs",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036196",
+          "name": "G.Davis",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_DET_LAC": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0030279",
+          "name": "K.Allen",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033699",
+          "name": "A.Ekeler",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035414",
+          "name": "J.Guyton",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0039139",
+          "name": "J.Gibbs",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036370",
+          "name": "J.Kelley",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_GB_PIT": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0037247",
+          "name": "G.Pickens",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037816",
+          "name": "R.Doubs",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0039146",
+          "name": "J.Reed",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038124",
+          "name": "C.Watson",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036264",
+          "name": "J.Love",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_HOU_CIN": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0036900",
+          "name": "J.Chase",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034383",
+          "name": "D.Schultz",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0030431",
+          "name": "R.Woods",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0030431",
+          "name": "R.Woods",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033591",
+          "name": "N.Brown",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_IND_NE": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0036251",
+          "name": "Z.Moss",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036223",
+          "name": "J.Taylor",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036252",
+          "name": "M.Pittman",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038621",
+          "name": "D.Douglas",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037664",
+          "name": "A.Pierce",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_NO_MIN": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0036364",
+          "name": "L.Bowden",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038994",
+          "name": "J.Addison",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033906",
+          "name": "A.Kamara",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037291",
+          "name": "J.Nailor",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035229",
+          "name": "T.Hockenson",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_NYG_DAL": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0036358",
+          "name": "C.Lamb",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036358",
+          "name": "C.Lamb",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034844",
+          "name": "S.Barkley",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034844",
+          "name": "S.Barkley",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035261",
+          "name": "T.Pollard",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_NYJ_LV": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0031381",
+          "name": "D.Adams",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034960",
+          "name": "J.Meyers",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038579",
+          "name": "A.O'Connell",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0034983",
+          "name": "H.Renfrow",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0039066",
+          "name": "M.Mayer",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_SF_JAX": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0033881",
+          "name": "E.Engram",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033288",
+          "name": "G.Kittle",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033280",
+          "name": "C.McCaffrey",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033288",
+          "name": "G.Kittle",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037834",
+          "name": "B.Purdy",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_TEN_TB": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0032764",
+          "name": "D.Henry",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0030564",
+          "name": "D.Hopkins",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0033921",
+          "name": "C.Godwin",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037273",
+          "name": "K.Philips",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0037487",
+          "name": "D.Thompkins",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    },
+    "2023_10_WAS_SEA": {
+      "label": "Context only \u2014 not part of the composite score.",
+      "mode": "historical",
+      "entries": [
+        {
+          "player_id": "00-0035644",
+          "name": "N.Fant",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0036244",
+          "name": "C.Parkinson",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035659",
+          "name": "T.McLaurin",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0035644",
+          "name": "N.Fant",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        },
+        {
+          "player_id": "00-0038543",
+          "name": "J.Smith-Njigba",
+          "items": [
+            "historical run \u2014 live injury/news feeds not applicable"
+          ]
+        }
+      ]
+    }
+  },
+  "n_candidates": 591,
+  "md_path": "/sessions/dazzling-clever-pascal/mnt/nfl gambling/reports/props_week_2023_10.md"
+}
