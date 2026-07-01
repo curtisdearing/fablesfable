@@ -301,6 +301,63 @@ def enumerate_candidates(
     return df
 
 
+_FAMILY_MARKETS = {  # usage family -> the markets whose volume scales with it
+    "targets": ("receiving_yards", "receptions"),
+    "carries": ("rushing_yards", "rush_attempts"),
+}
+
+
+def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
+                       max_boost: float = 1.35) -> pd.DataFrame:
+    """Price injury-vacated usage INTO the projections (deterministic).
+
+    ``realloc_results``: outputs of ``availability.reallocate_usage`` for each
+    OUT player. A beneficiary's family markets scale by
+    ``(share_with + share_delta) / share_with``, bounded to [1.0, max_boost];
+    proportional-guess bases are additionally halved (they're flagged
+    low-confidence guesses, so they move the number half as far). p_over/
+    p_under recompute against the same line; ``realloc_mult`` is stamped for
+    the report.
+    """
+    if cands.empty or not realloc_results:
+        return cands
+    from .projection import p_over as p_over_fn
+
+    mult_by_key: Dict[tuple, float] = {}
+    for res in realloc_results:
+        role = res.get("role")
+        family = "targets" if role in ("WR", "TE") else ("carries" if role == "RB" else None)
+        if family is None or not res.get("boosts"):
+            continue
+        damp = 0.5 if res.get("basis") == "proportional_guess" else 1.0
+        for pid, b in res["boosts"].items():
+            sw, delta = b.get("share_with"), b.get("share_delta")
+            if not sw or sw <= 0 or not delta or delta <= 0:
+                continue
+            mult = 1.0 + damp * (float(delta) / float(sw))
+            mult = min(mult, max_boost)
+            for market in _FAMILY_MARKETS[family]:
+                key = (pid, market)
+                mult_by_key[key] = max(mult_by_key.get(key, 1.0), mult)
+    if not mult_by_key:
+        return cands
+
+    cands = cands.copy()
+    mults = [mult_by_key.get((p, m), 1.0)
+             for p, m in zip(cands["player_id"], cands["market"])]
+    cands["realloc_mult"] = [round(m, 4) for m in mults]
+    cands["mean"] = [round(mean * m, 3) for mean, m in zip(cands["mean"], mults)]
+    changed = cands["realloc_mult"] > 1.0
+    for i in cands.index[changed]:
+        line = cands.at[i, "line"]
+        if line is None or (isinstance(line, float) and math.isnan(line)):
+            continue
+        po = p_over_fn(cands.at[i, "mean"], cands.at[i, "sd"], float(line), cands.at[i, "dist"])
+        cands.at[i, "p_over"] = round(po, 4)
+        cands.at[i, "p_under"] = round(1 - po, 4)
+    return cands
+
+
 def _carry_forward_synth(inputs: WeekInputs, market: str, player_id: str) -> Optional[float]:
     """Synthetic line for a carry-forward row: trailing mean of the player's
     actuals over his own prior rows (leak-free by construction)."""

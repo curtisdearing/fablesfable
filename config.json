@@ -33,5 +33,9 @@
 
   "odds_budget": {"monthly_credits": 500, "reserve": 50},
   "discord_enabled": false,
-  "rag": {"vectorstore_enabled": false, "row_cap": 200}
+  "rag": {"vectorstore_enabled": false, "row_cap": 200},
+
+  "learning": {"enabled": true, "lr": 0.35, "bias_clip": 0.08,
+               "reliability_k": 50, "reliability_clip": 0.15, "window_weeks": 12},
+  "context_learning": {"enabled_tags": []}
 }

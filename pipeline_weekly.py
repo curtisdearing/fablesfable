@@ -95,7 +95,8 @@ def _players_frame(cands: pd.DataFrame) -> pd.DataFrame:
 def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
                          sleeper_df: Optional[pd.DataFrame], as_of: str,
                          week: int, freshness_ts: Dict[str, str],
-                         client=None) -> Dict[str, Dict]:
+                         client=None,
+                         news_by_player: Optional[Dict[str, List[Dict]]] = None) -> Dict[str, Dict]:
     """Run the §3 synthesis layer per game over the RANKED leans (context/
     verification only -- ranking is already final)."""
     slp_idx = {}
@@ -126,7 +127,7 @@ def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
                 "fantasy_ref": ({"source": "sleeper", "proj": fantasy,
                                  "timestamp": freshness_ts.get("fantasy", as_of)}
                                 if fantasy is not None else {}),
-                "news": [],
+                "news": (news_by_player or {}).get(pid, []),
             })
         inp = synmod.build_input(as_of=as_of, week=week, game_id=g["game_id"],
                                  matchup=g["matchup"] or "",
@@ -185,6 +186,20 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
         feeds.append(Feed("inactives", ina_ts, n_records=len(inactive_rows or []),
                           load_bearing=True))
 
+    # -- league news (context only -> not load-bearing; text is untrusted) --- #
+    if "news_items" in inject:
+        news_items = inject["news_items"]
+        news_ts = inject.get("news_fetched_at", stamp_now())
+    else:
+        try:
+            from nflvalue.sources import espn_news
+            res = espn_news.fetch_news()
+            news_items, news_ts = res["items"], res["fetched_at"]
+        except Exception as exc:  # noqa: BLE001
+            print(f"[pipeline] news fetch failed (context panel runs without it): {exc}")
+            news_items, news_ts = [], None
+    feeds.append(Feed("news", news_ts, n_records=len(news_items or []), load_bearing=False))
+
     # -- sleeper cross-check (context only -> not load-bearing) -------------- #
     if "sleeper_df" in inject:
         sleeper_df = inject["sleeper_df"]
@@ -203,10 +218,13 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     resolved = avmod.resolve_statuses(players, injury_rows, inactive_rows=inactive_rows,
                                       clock=clock, injuries_fetched_at=inj_ts,
                                       inactives_fetched_at=ina_ts)
+    from nflvalue.sources.espn_news import news_by_player as _nbp
+    news_map = _nbp(news_items or [], players) if news_items else {}
     return {"feeds": feeds, "statuses": resolved["statuses"],
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
+            "news_by_player": news_map,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
-                   "rosters": stamp_now(), "news": None, "lines": None}}
+                   "rosters": stamp_now(), "news": news_ts, "lines": None}}
 
 
 # --------------------------------------------------------------------------- #
@@ -249,18 +267,34 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # 2. live feeds + freshness gate
     publish, publish_reasons = True, []
     statuses: Dict[str, Dict] = {}
-    sleeper_df, feeds_ts = None, {}
+    sleeper_df, feeds_ts, news_by_player = None, {}, {}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
                                  clock="wed", inject=inject_feeds)
         statuses, sleeper_df, feeds_ts = live["statuses"], live["sleeper_df"], live["ts"]
+        news_by_player = live.get("news_by_player") or {}
         g = gate(live["feeds"], as_of=as_of,
                  staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
         publish, publish_reasons = g["publish"], g["reasons"]
-        # OUT players never reach the ranker (availability gate)
+        # OUT players never reach the ranker (availability gate) -- and their
+        # vacated usage is PRICED into teammates' projections (bounded; H8)
         out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
         if out_ids:
+            realloc = [avmod.reallocate_usage(inputs.pw, season, week, pid)
+                       for pid in sorted(out_ids)]
             cands = cands[~cands["player_id"].isin(out_ids)].reset_index(drop=True)
+            cands = candmod.apply_reallocation(cands, realloc)
+
+    # 2b. learning loop: walk-forward per-market corrections + (evidence-gated,
+    # human-promoted) context multipliers. All no-ops until weeks are graded.
+    learn_cfg = {**{"enabled": True}, **(cfg.get("learning") or {})}
+    if learn_cfg.get("enabled"):
+        from nflvalue import context_study, prop_learning
+        adjustments = prop_learning.load_adjustments(conn, season, week)
+        cands = prop_learning.apply_to_candidates(cands, adjustments, enabled=True)
+        ctx_mults = context_study.enabled_multipliers(cfg, conn)
+        if ctx_mults:
+            cands = context_study.apply_context_multipliers(cands, conn, season, week, ctx_mults)
 
     # 3. real prop lines (budgeted, rotating) -- optional
     prop_lines, line_note = None, None
@@ -300,7 +334,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
 
     if mode == "live":
         syn = _synthesis_for_games(result["games"], statuses, sleeper_df,
-                                   as_of, week, feeds_ts)
+                                   as_of, week, feeds_ts, news_by_player=news_by_player)
         notes = rptmod.load_manual_notes(conn, season, week)
         result["contexts"] = {
             g["game_id"]: slmod.build_context_panel(
@@ -310,6 +344,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         result["markdown"] = rptmod.render_markdown(
             season, week, result["games"], result["contexts"], result["as_of"],
             clock, publish=publish, publish_reasons=publish_reasons, line_note=line_note)
+        # context hypothesis ledger: record every tag we DISPLAYED, so the
+        # weekly grade can test whether any of them actually predict outcomes
+        from nflvalue import context_study
+        context_study.record_tags(conn, season, week, result["games"], result["contexts"])
 
     # 5. write artifacts + forward log (idempotent)
     import os
@@ -429,6 +467,18 @@ def resolve_clv(season: int, week: int,
     return {"resolved": int(len(resolved)), "clv": stats, "killcheck": verdict}
 
 
+def run_grade(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None) -> Dict:
+    """The Tuesday learning step: grade last week, attribute, update adjustments."""
+    from nflvalue import prop_learning
+    cfg = cfgmod.load_config()
+    conn = dbmod.connect()
+    inputs = inputs or candmod.build_week_inputs()
+    res = prop_learning.grade_and_learn(conn, season, week, inputs,
+                                        params=cfg.get("learning"))
+    conn.close()
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--season", type=int, required=True)
@@ -442,8 +492,18 @@ def main() -> None:
     ap.add_argument("--discord-live", action="store_true",
                     help="actually POST to the webhook (default is dry-run)")
     ap.add_argument("--resolve-clv", action="store_true", help="post-slate CLV resolution")
+    ap.add_argument("--grade", action="store_true",
+                    help="grade a completed week + update the learning loop")
     args = ap.parse_args()
 
+    if args.grade:
+        res = run_grade(args.season, args.week)
+        import json as _json
+        print(f"Graded {res['graded']} leans (hit rate {res['hit_rate']}); "
+              f"adjustments effective {res['adjustments_effective']}:")
+        print(_json.dumps(res["adjustments"], indent=1, default=str))
+        print("Miss reasons:", res["why"].get("recent_miss_reasons"))
+        return
     if args.resolve_clv:
         res = resolve_clv(args.season, args.week)
         print(f"CLV resolved: {res['resolved']} · rolling: {res['clv']} · "

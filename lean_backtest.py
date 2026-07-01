@@ -118,11 +118,19 @@ def _rate(frame: pd.DataFrame) -> Dict:
 # Replay
 # --------------------------------------------------------------------------- #
 def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
-        write_files: bool = True) -> Dict:
+        write_files: bool = True, learn: bool = False,
+        learn_params: Optional[Dict] = None) -> Dict:
+    """``learn=True`` replays ADAPTIVELY: each week is ranked with the bias/
+    reliability adjustments learned from the weeks already graded (walk-
+    forward -- week W never sees week W's outcomes), exactly like the live
+    Tuesday --grade loop would have applied them."""
+    from nflvalue import prop_learning
+
     cfg = cfgmod.load_config()
     weights = (cfg.get("composite") or {}).get("weights")
     params = (cfg.get("composite") or {}).get("params")
     min_usage = (cfg.get("candidates") or {}).get("min_usage")
+    state = prop_learning.LearningState(learn_params or cfg.get("learning")) if learn else None
 
     all_weeks = sorted(inputs.schedules[
         (inputs.schedules["season"] == season)
@@ -136,11 +144,13 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
 
     lean_rows, cand_rows = [], []
     for wk in weeks:
-        cands = enumerate_candidates(season, wk, inputs=inputs, min_usage=min_usage,
-                                     sd_by_market=sd_map.get((season, wk), {}),
-                                     synth_by_market=synth_map)
-        if cands.empty:
+        cands_raw = enumerate_candidates(season, wk, inputs=inputs, min_usage=min_usage,
+                                         sd_by_market=sd_map.get((season, wk), {}),
+                                         synth_by_market=synth_map)
+        if cands_raw.empty:
             continue
+        cands = (prop_learning.apply_to_candidates(cands_raw, state.adjustments(), enabled=True)
+                 if state is not None else cands_raw)
         actuals = _actuals_for_week(inputs.pw, season, wk)
         games = shortlist_week(cands, weights=weights, params=params)
 
@@ -170,6 +180,26 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
                               "side": s["side"], "composite": s["composite"],
                               "is_lean": (c["player_id"], c["market"]) in lean_keys,
                               **graded})
+
+        # adaptive mode: fold this week's outcomes into the state AFTER using
+        # it (raw prediction sums; lean hits per market) -- strictly walk-forward
+        if state is not None:
+            wk_leans = [r for r in lean_rows if r["week"] == wk]
+            hits_by_market: Dict[str, List[int]] = {}
+            for r in wk_leans:
+                hits_by_market.setdefault(r["market"], []).append(int(r["hit"]))
+            for market, grp in cands_raw.groupby("market"):
+                s_pred = n = s_act = 0
+                for c in grp.itertuples(index=False):
+                    a = actuals.get((c.player_id, market))
+                    if a is None:
+                        continue
+                    n += 1
+                    s_pred += float(c.mean)
+                    s_act += float(a)
+                if n:
+                    state.observe(market, n, s_pred, s_act,
+                                  hits_by_market.get(market, []))
 
     leans = pd.DataFrame(lean_rows)
     cands_all = pd.DataFrame(cand_rows)
@@ -247,6 +277,8 @@ def main() -> None:
     ap.add_argument("--season", type=int, required=True)
     ap.add_argument("--pw"), ap.add_argument("--opd"), ap.add_argument("--tw"), ap.add_argument("--sched")
     ap.add_argument("--weeks", type=int, nargs="*", default=None)
+    ap.add_argument("--learn", action="store_true",
+                    help="adaptive replay: apply the weekly learning loop walk-forward")
     args = ap.parse_args()
     if args.pw:
         inputs = WeekInputs(pd.read_parquet(args.pw), pd.read_parquet(args.opd),
@@ -254,7 +286,7 @@ def main() -> None:
     else:
         from nflvalue.candidates import build_week_inputs
         inputs = build_week_inputs()
-    res = run(args.season, inputs, weeks=args.weeks)
+    res = run(args.season, inputs, weeks=args.weeks, learn=args.learn)
     r = res["report"]["leans"]["overall"]
     print(f"{args.season}: {r['n']} leans, hit rate {r['hit_rate']:.1%} "
           f"(baseline {res['report']['baseline_all_candidates']['overall']['hit_rate']:.1%})")

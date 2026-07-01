@@ -133,6 +133,48 @@ SCHEMA = {
             last_headers TEXT, updated_at TEXT
         );
     """,
+    # -- Learning loop: every graded lean + WHY it hit/missed ------------------ #
+    "lean_outcomes": """
+        CREATE TABLE IF NOT EXISTS lean_outcomes (
+            season INTEGER, week INTEGER, clock TEXT, game_id TEXT,
+            player_id TEXT, name TEXT, market TEXT, side TEXT, line REAL,
+            mean REAL, composite REAL, actual REAL, hit INTEGER,
+            primary_reason TEXT,        -- as_projected | volume_miss | efficiency_miss |
+                                        -- availability_surprise | script_flip | tail_variance
+            volume_log_err REAL, efficiency_log_err REAL,
+            detail TEXT, graded_at TEXT,
+            PRIMARY KEY (season, week, clock, game_id, player_id, market)
+        );
+    """,
+    # -- Learning loop: walk-forward per-market corrections (weeks < as_of) ---- #
+    "model_adjustments": """
+        CREATE TABLE IF NOT EXISTS model_adjustments (
+            as_of_season INTEGER, as_of_week INTEGER, market TEXT,
+            bias_mult REAL,             -- multiplicative mean correction, clipped
+            resid_sd REAL,              -- walk-forward residual SD at this cutoff
+            reliability REAL,           -- trailing lean hit-rate multiplier, shrunk+clipped
+            n_candidates INTEGER, n_leans INTEGER, updated_at TEXT,
+            PRIMARY KEY (as_of_season, as_of_week, market)
+        );
+    """,
+    # -- Learning loop: per-week candidate-pool aggregates (bias is learned from
+    # the FULL screened pool, never just the picks -- selection-bias guard) ---- #
+    "candidate_aggregates": """
+        CREATE TABLE IF NOT EXISTS candidate_aggregates (
+            season INTEGER, week INTEGER, market TEXT,
+            n INTEGER, sum_pred REAL, sum_actual REAL, created_at TEXT,
+            PRIMARY KEY (season, week, market)
+        );
+    """,
+    # -- Context hypothesis ledger: tags recorded at publish, graded later ----- #
+    "context_ledger": """
+        CREATE TABLE IF NOT EXISTS context_ledger (
+            season INTEGER, week INTEGER, player_id TEXT, market TEXT,
+            tag TEXT,                   -- birthday | revenge | contract | bereavement | ...
+            source TEXT, note TEXT, created_at TEXT,
+            PRIMARY KEY (season, week, player_id, market, tag)
+        );
+    """,
 }
 
 

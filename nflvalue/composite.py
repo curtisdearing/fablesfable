@@ -166,6 +166,16 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     if cand.get("low_confidence"):
         composite *= float(prm["low_confidence_mult"])
 
+    # -- learning-loop multipliers (both absent/1.0 unless the pipeline set
+    # them from walk-forward evidence; context_mult additionally requires the
+    # tag to be user-promoted in config after clearing the evidence bar) ----- #
+    reliability_mult = cand.get("reliability_mult")
+    if reliability_mult is not None:
+        composite *= float(reliability_mult)
+    context_mult = cand.get("context_mult")
+    if context_mult is not None:
+        composite *= float(context_mult)
+
     return {
         "composite": round(composite, 2),
         "side": side,
@@ -185,5 +195,10 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "weights_used": ({"confidence": w["confidence"], "matchup": w["matchup"]}
                              if no_market else dict(w)),
             "calibration_gate": bool(prm["calibration_passed"]),
+            "reliability_mult": (round(float(reliability_mult), 4)
+                                 if reliability_mult is not None else None),
+            "context_mult": (round(float(context_mult), 4)
+                             if context_mult is not None else None),
+            "bias_mult": cand.get("bias_mult"),
         },
     }

@@ -1,0 +1,455 @@
+{
+ "_meta": {
+  "retrieved_at": "2026-07-01T22:38:21Z",
+  "source_url": "site.api.espn.com/.../nfl/news?limit=50",
+  "note": "REAL recorded payload, trimmed."
+ },
+ "payload": {
+  "articles": [
+   {
+    "headline": "Ex-Titans scout, Arkansas State DB Taylor found guilty of murder",
+    "description": "Blaise Taylor, a former defensive back at Arkansas State and NFL scout for the Titans, was found guilty of murdering his girlfriend and her unborn child Wednesday in a Nashville courtroom.",
+    "published": "2026-07-01T22:31:16Z",
+    "categories": [
+     {
+      "type": "topic",
+      "description": "news",
+      "athleteId": null
+     },
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Tennessee Titans",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Arkansas State Red Wolves",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Arkansas State University",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Law enforcement official confirms Taylor Swift-Travis Kelce wedding at MSG on Friday",
+    "description": "The star couple will have their wedding at Madison Square Garden on Friday night, according to a law enforcement official briefed on the security plans.",
+    "published": "2026-07-01T21:42:10Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Travis Kelce",
+      "athleteId": 15847
+     },
+     {
+      "type": "team",
+      "description": "Kansas City Chiefs",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "MSG fits the plot for Taylor Swift-Travis Kelce wedding",
+    "description": "No, we can't come to the wedding. But when it comes to the details, has the \"Life of a Showgirl\" singer already spelled it out for us?",
+    "published": "2026-07-01T19:32:09Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Kansas City Chiefs",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Travis Kelce",
+      "athleteId": 15847
+     },
+     {
+      "type": "contributor",
+      "description": "Tory Barron",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "What Tannenbaum wants to see from Sorsby between now and 2027 NFL draft",
+    "description": "What Tannenbaum wants to see from Sorsby between now and 2027 NFL draft",
+    "published": "2026-07-01T17:39:21Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "editorialindicator",
+      "description": "2 Star Rating",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Brendan Sorsby",
+      "athleteId": 4899046
+     },
+     {
+      "type": "contributor",
+      "description": "Mike Tannenbaum",
+      "athleteId": null
+     },
+     {
+      "type": "editorialindicator",
+      "description": "Verts - Exclude Content",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Why Patrick Mahomes is Ryan Fitzpatrick's favorite for MVP",
+    "description": "Why Patrick Mahomes is Ryan Fitzpatrick's favorite for MVP",
+    "published": "2026-07-01T17:00:14Z",
+    "categories": [
+     {
+      "type": "team",
+      "description": "Kansas City Chiefs",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Patrick Mahomes",
+      "athleteId": 3139477
+     },
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "editorialindicator",
+      "description": "2 Star Rating",
+      "athleteId": null
+     },
+     {
+      "type": "series",
+      "description": "The Rich Eisen Show",
+      "athleteId": null
+     },
+     {
+      "type": "editorialindicator",
+      "description": "Verts - Exclude Content",
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Fantasy football buzz: Pay attention to Bucs' Godwin as he looks to bounce back",
+    "description": "Despite Emeka Egbuka's success, don't overlook Chris Godwin Jr. as he looks to bounce back for the Buccaneers.",
+    "published": "2026-07-01T15:52:08Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "Fantasy NFL",
+      "athleteId": null
+     },
+     {
+      "type": "topic",
+      "description": "news - fantasy",
+      "athleteId": null
+     },
+     {
+      "type": "topic",
+      "description": "news - fantasy football",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Jordyn Tyson",
+      "athleteId": 4880281
+     },
+     {
+      "type": "athlete",
+      "description": "Makai Lemon",
+      "athleteId": 4870795
+     },
+     {
+      "type": "athlete",
+      "description": "Germie Bernard",
+      "athleteId": 4685261
+     }
+    ]
+   },
+   {
+    "headline": "Calais Campbell's mother found dead, brother charged with murder",
+    "description": "The brother of Ravens defensive lineman Calais Campbell has been charged with murder after police found their 71-year-old mother dead at a home in Atlanta during a welfare check.",
+    "published": "2026-07-01T19:33:54Z",
+    "categories": [
+     {
+      "type": "topic",
+      "description": "news",
+      "athleteId": null
+     },
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Baltimore Ravens",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Arizona Cardinals",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Calais Campbell",
+      "athleteId": 11284
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Fantasy football: \"Red flag\" players I'll draft anyway",
+    "description": "Liz Loza sees the warning signs but is still willing to click on these players in drafts this summer.",
+    "published": "2026-07-01T15:26:49Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "Fantasy NFL",
+      "athleteId": null
+     },
+     {
+      "type": "topic",
+      "description": "news - fantasy",
+      "athleteId": null
+     },
+     {
+      "type": "topic",
+      "description": "news - fantasy football",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "George Kittle",
+      "athleteId": 3040151
+     },
+     {
+      "type": "athlete",
+      "description": "Jonathon Brooks",
+      "athleteId": 4678008
+     },
+     {
+      "type": "athlete",
+      "description": "Bhayshul Tuten",
+      "athleteId": 4882093
+     }
+    ]
+   },
+   {
+    "headline": "10 predictions for 2026 NFL season: Division winners, trades",
+    "description": "Could Houston take the AFC? Will Myles Garrett hit 20-plus sacks again? Could two big-name players get dealt? Here are 10 early predictions for this NFL season.",
+    "published": "2026-07-01T15:22:34Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Detroit Lions",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Carolina Panthers",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Las Vegas Raiders",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Kansas City Chiefs",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "New Orleans Saints",
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Seahawks DT Rylie Mills is ready for breakout Year 2",
+    "description": "Now fully healthy, Rylie Mills looks to break out on Seattle's defensive line in 2026.",
+    "published": "2026-07-01T10:00:04Z",
+    "categories": [
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "team",
+      "description": "Seattle Seahawks",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Rylie Mills",
+      "athleteId": 4430838
+     },
+     {
+      "type": "contributor",
+      "description": "Brady Henderson",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "Can CeeDee Lamb return to fantasy stardom?",
+    "description": "Can CeeDee Lamb return to fantasy stardom?",
+    "published": "2026-07-01T05:15:08Z",
+    "categories": [
+     {
+      "type": "athlete",
+      "description": "CeeDee Lamb",
+      "athleteId": 4241389
+     },
+     {
+      "type": "topic",
+      "description": "fantasy",
+      "athleteId": null
+     },
+     {
+      "type": "league",
+      "description": "Fantasy NFL",
+      "athleteId": null
+     },
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   },
+   {
+    "headline": "The rookie RB Mike Clay is targeting in fantasy",
+    "description": "The rookie RB Mike Clay is targeting in fantasy",
+    "published": "2026-07-01T05:04:29Z",
+    "categories": [
+     {
+      "type": "topic",
+      "description": "fantasy",
+      "athleteId": null
+     },
+     {
+      "type": "league",
+      "description": "Fantasy NFL",
+      "athleteId": null
+     },
+     {
+      "type": "athlete",
+      "description": "Jeremiyah Love",
+      "athleteId": 4870808
+     },
+     {
+      "type": "league",
+      "description": "NFL",
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     },
+     {
+      "type": "guid",
+      "description": null,
+      "athleteId": null
+     }
+    ]
+   }
+  ]
+ }
+}

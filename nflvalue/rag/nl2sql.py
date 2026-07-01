@@ -33,6 +33,7 @@ from .. import db as dbmod
 WHITELIST_TABLES = {
     "player_week", "opp_pos_def", "projections", "prop_backtest",
     "manual_notes", "leans", "lines", "clv",
+    "lean_outcomes", "model_adjustments", "context_ledger", "candidate_aggregates",
 }
 FORBIDDEN = {
     "insert", "update", "delete", "drop", "alter", "create", "replace",

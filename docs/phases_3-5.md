@@ -111,6 +111,51 @@ Semantic recall over past reports is flag-gated OFF
 (`rag.vectorstore_enabled`) and uses a dependency-free TF-IDF index over
 `reports/*.md`; enable it and call `nflvalue.rag.vectorstore.search("...")`.
 
+## The weekly learning loop
+
+After each week's games finish (Tuesday, alongside `--resolve-clv`):
+
+```bash
+python3 pipeline_weekly.py --season 2026 --week 3 --grade
+```
+
+This grades every published lean, writes a WHY per miss into `lean_outcomes`
+(`volume_miss` / `efficiency_miss` / `availability_surprise` / `script_flip` /
+`tail_variance` — queryable: `python3 -m nflvalue.rag.nl2sql "why did we miss
+in week 3"`), and updates `model_adjustments` for the NEXT week:
+
+- **bias_mult** — per-market mean correction from the FULL candidate pool
+  (never picks-only; selection-bias guard), clipped ±8%;
+- **reliability** — trailing lean hit rate per market, shrunk (k=50) and
+  clipped ±15%, multiplied into the composite so markets that keep missing
+  rank lower until they earn it back.
+
+Everything is walk-forward, bounded, and rebuildable from the DB
+(`prop_learning.rebuild_state`). Toggle via config `learning.enabled`.
+2025 validation (adaptive vs static replay, identical volume):
+56.5%→58.5% overall, top-1 58.8%→64.0% — see
+`reports/lean_replay_2025_adaptive.md`. Replay it yourself with
+`python3 lean_backtest.py --season 2025 --learn`.
+
+## Context learning (birthdays, revenge, etc.) — evidence-gated
+
+Personal context stays display-only (the locked spec decision) but is now
+MEASURED: every tag shown on a published lean (from ESPN news, synthesis
+classification, or `manual_notes`) is recorded in `context_ledger` and joined
+to outcomes at grade time. `python3 -c "from nflvalue import context_study,
+db; import json; print(json.dumps(context_study.study(db.connect()),
+indent=1))"` reports per-tag n / hit rate / BH-adjusted q-value. A tag becomes
+**PROMOTABLE** only at n≥100 and q<0.05; even then nothing changes until you
+list it in config `context_learning.enabled_tags`, at which point it applies
+a bounded (≤±10%) composite multiplier. Expectation, stated up front: most
+narrative tags will never clear the bar — that's the point.
+
+ESPN league news now feeds the context panel in live mode (free, editorial,
+lags beat reporters — H4; text is untrusted data end-to-end). Injury-vacated
+usage is also now PRICED into projections: when a starter is OUT, teammates'
+family markets scale by their historical with/without share delta (capped
+×1.35; proportional guesses halved) — `apply_reallocation`.
+
 ## Manual context notes
 
 Insert rows into `manual_notes` (season, week, scope `player|team|game`,

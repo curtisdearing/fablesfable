@@ -118,6 +118,28 @@ reversible; config keys are noted where one exists.
   (`rag.vectorstore_enabled`). Chroma/FAISS deliberately not added to
   requirements; the interface allows swapping later.
 
+## Learning loop (added post-Phase-5, user-requested)
+
+- User asked for iterative week-over-week learning INCLUDING personal context
+  (birthdays etc.). That collides with the locked spec decision (context is
+  never scored). Resolution: quantitative learning ships live
+  (bias/reliability/reallocation/news-to-context), while personal context is
+  **measured in a hypothesis ledger** and may only gain a bounded multiplier
+  after n≥100, BH-q<0.05, AND explicit human promotion in config — the spec's
+  zero-weight default remains the shipped behavior.
+- Bias is learned from the FULL screened candidate pool, never the picks
+  (selection-bias guard), as a direct shrunk estimate (path-independent, no
+  compounding), clipped ±8%; reliability slope 1.0, shrunk k=50, clipped ±15%.
+- Reallocation boosts: share-ratio based, capped ×1.35, halved when the basis
+  is a proportional guess. QB replacement remains unsupported (different
+  problem, not a share shift).
+- Miss attribution thresholds: usage <25% of projection ⇒ availability
+  surprise; |log-err| >0.15 picks volume vs efficiency; script_flip needs an
+  actual-margin sign flip ≥10 pts against a ≥2.5-pt expectation.
+- 2025 adaptive-vs-static validation: 56.5%→58.5% overall, top-1 58.8%→64.0%
+  at identical volume; mechanism = market-mix shift toward receptions +
+  trimmed over-projections. Same synthetic-line caveats as the static replay.
+
 ## Environment notes
 
 - The mounted project folder forbade file deletion until Cowork's
