@@ -17,6 +17,11 @@ scipy>=1.9
 # seasons; the 2019-2023 cache already on disk works without it.
 nflreadpy>=0.1
 
+# Phases 2-5 (composite ranker, weekly pipeline, odds client, CLV, Discord
+# notifier, RAG layer) deliberately add NO new dependencies: the odds/Discord
+# HTTP calls use the standard library, and the RAG vectorstore is a built-in
+# TF-IDF index (Chroma/FAISS intentionally not required; see docs/phases_3-5.md).
+
 # Optional, for running the test suite (tests/):
 # pytest>=7.0
 
