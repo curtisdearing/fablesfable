@@ -1,6 +1,6 @@
 # NFL Prop Leans — 2023 Week 10
 
-*Generated 2026-07-01T20:49:26Z · clock: **wed** · PUBLISHED*
+*Generated 2026-07-01T22:07:33Z · clock: **wed** · PUBLISHED*
 
 **Leans, not locks.** These are model-ranked research leans on FREE data — variance is variance, and a lean can lose for no reason at all. Nothing here is financial advice. If you or someone you know has a gambling problem, call **1-800-GAMBLER**.
 
@@ -18,7 +18,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | D.Ridder (QB, ATL) | passing yards | 212.5† | **OVER** | 243.862 | 0.16 | `no_market` | **31.9** | proj 243.862 vs line 212.5 (z=+0.31); opp-vs-pos 1.1591 (soft matchup for this side) |
 | T.McBride (TE, ARI) | receiving yards | 33.5† | **UNDER** | 25.832 | 0.12 | `no_market` | **30.6** | proj 25.832 vs line 33.5 (z=-0.25); opp-vs-pos 0.8147 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **D.London** — historical run — live injury/news feeds not applicable
 - **J.Conner** — historical run — live injury/news feeds not applicable
@@ -36,7 +36,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | B.Young (QB, CAR) | passing yards | 196.5† | **OVER** | 239.558 | 0.22 | `no_market` | **35.1** | proj 239.558 vs line 196.5 (z=+0.43); opp-vs-pos 1.0282 (soft matchup for this side) |
 | C.Kmet (TE, CHI) | receiving yards | 46.5† | **UNDER** | 36.608 | 0.16 | `no_market` | **33.6** | proj 36.608 vs line 46.5 (z=-0.32); opp-vs-pos 0.8947 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **C.Kmet** — historical run — live injury/news feeds not applicable
 - **D.Moore** — historical run — live injury/news feeds not applicable
@@ -54,7 +54,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | I.Likely (TE, BAL) | receiving yards | 25.5† | **UNDER** | 14.409 | 0.18 | `no_market` | **40.6** | proj 14.409 vs line 25.5 (z=-0.36); opp-vs-pos 0.6155 (soft matchup for this side); game-script fit |
 | N.Agholor (WR, BAL) | receiving yards | 28.5† | **UNDER** | 17.45 | 0.18 | `no_market` | **37.4** | proj 17.45 vs line 28.5 (z=-0.36); opp-vs-pos 0.8425 (soft matchup for this side); game-script fit |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **M.Andrews** — historical run — live injury/news feeds not applicable
 - **A.Cooper** — historical run — live injury/news feeds not applicable
@@ -72,7 +72,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | S.Diggs (WR, BUF) | receiving yards | 91.5† | **OVER** | 102.858 | 0.19 | `no_market` | **30.9** | proj 102.858 vs line 91.5 (z=+0.37); opp-vs-pos 1.1627 (soft matchup for this side); game-script headwind |
 | G.Davis (WR, BUF) | receptions | 3.5† | **UNDER** | 3.028 | 0.12 | `no_market` | **30.8** | proj 3.028 vs line 3.5 (z=-0.23); game-script fit |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **D.Kincaid** — historical run — live injury/news feeds not applicable
 - **K.Shakir** — historical run — live injury/news feeds not applicable
@@ -90,7 +90,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | J.Gibbs (RB, DET) | rushing yards | 66.5† | **UNDER** | 52.768 | 0.23 | `no_market` | **35.5** | proj 52.768 vs line 66.5 (z=-0.46); opp-vs-pos 0.8637 (soft matchup for this side) |
 | J.Kelley (RB, LAC) | rushing yards | 40.5† | **UNDER** | 33.149 | 0.12 | `no_market` | **32.3** | proj 33.149 vs line 40.5 (z=-0.25); opp-vs-pos 0.8368 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **K.Allen** — historical run — live injury/news feeds not applicable
 - **A.Ekeler** — historical run — live injury/news feeds not applicable
@@ -108,7 +108,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | C.Watson (WR, GB) | receiving yards | 47.5† | **OVER** | 55.011 | 0.12 | `no_market` | **30.9** | proj 55.011 vs line 47.5 (z=+0.24); opp-vs-pos 1.0927 (soft matchup for this side) |
 | J.Love (QB, GB) | passing yards | 215.5† | **OVER** | 239.809 | 0.12 | `no_market` | **29.8** | proj 239.809 vs line 215.5 (z=+0.24); opp-vs-pos 1.0422 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **G.Pickens** — historical run — live injury/news feeds not applicable
 - **R.Doubs** — historical run — live injury/news feeds not applicable
@@ -126,7 +126,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | R.Woods (WR, HOU) | receptions | 3.5† | **OVER** | 4.245 | 0.18 | `no_market` | **33.8** | proj 4.245 vs line 3.5 (z=+0.36); game-script fit |
 | N.Brown (WR, HOU) | receptions | 2.5† | **OVER** | 3.239 | 0.18 | `no_market` | **33.7** | proj 3.239 vs line 2.5 (z=+0.36); game-script fit |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **J.Chase** — historical run — live injury/news feeds not applicable
 - **D.Schultz** — historical run — live injury/news feeds not applicable
@@ -144,7 +144,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | D.Douglas (WR, NE) | receptions | 3.5† | **UNDER** | 2.834 | 0.16 | `no_market` | **29.3** | proj 2.834 vs line 3.5 (z=-0.33) |
 | A.Pierce (WR, IND) | receptions | 2.5† | **UNDER** | 2.011 | 0.12 | `no_market` | **27.7** | proj 2.011 vs line 2.5 (z=-0.24) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **Z.Moss** — historical run — live injury/news feeds not applicable
 - **J.Taylor** — historical run — live injury/news feeds not applicable
@@ -162,7 +162,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | J.Nailor (WR, MIN) | receiving yards | 35.5† | **UNDER** | 25.305 | 0.17 | `no_market` | **31.3** | proj 25.305 vs line 35.5 (z=-0.33); opp-vs-pos 0.8713 (soft matchup for this side) |
 | T.Hockenson (TE, MIN) | receiving yards | 64.5† | **UNDER** | 55.237 | 0.15 | `no_market` | **31.0** | proj 55.237 vs line 64.5 (z=-0.30); opp-vs-pos 0.8445 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **L.Bowden** — historical run — live injury/news feeds not applicable
 - **J.Addison** — historical run — live injury/news feeds not applicable
@@ -180,7 +180,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | S.Barkley (RB, NYG) | rushing yards | 80.5† | **UNDER** | 60.404 | 0.34 | `no_market` | **48.9** | proj 60.404 vs line 80.5 (z=-0.67); opp-vs-pos 0.9075 (soft matchup for this side); game-script fit |
 | T.Pollard (RB, DAL) | rushing yards | 59.5† | **OVER** | 74.635 | 0.25 | `no_market` | **44.6** | proj 74.635 vs line 59.5 (z=+0.51); opp-vs-pos 1.1241 (soft matchup for this side); game-script fit |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **C.Lamb** — historical run — live injury/news feeds not applicable
 - **C.Lamb** — historical run — live injury/news feeds not applicable
@@ -198,7 +198,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | H.Renfrow (WR, LV) | receiving yards | 23.5† | **UNDER** | 18.472 | 0.08 | `no_market` | **31.1** | proj 18.472 vs line 23.5 (z=-0.16); opp-vs-pos 0.6942 (soft matchup for this side) |
 | M.Mayer (TE, LV) | receiving yards | 22.5† | **UNDER** | 15.929 | 0.11 | `no_market` | **31.1** | proj 15.929 vs line 22.5 (z=-0.21); opp-vs-pos 0.7683 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **D.Adams** — historical run — live injury/news feeds not applicable
 - **J.Meyers** — historical run — live injury/news feeds not applicable
@@ -216,7 +216,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | G.Kittle (TE, SF) | receptions | 4.5† | **UNDER** | 3.588 | 0.22 | `no_market` | **34.9** | proj 3.588 vs line 4.5 (z=-0.45) |
 | B.Purdy (QB, SF) | passing yards | 254.5† | **UNDER** | 216.294 | 0.19 | `no_market` | **33.9** | proj 216.294 vs line 254.5 (z=-0.38); opp-vs-pos 0.9602 (soft matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **E.Engram** — historical run — live injury/news feeds not applicable
 - **G.Kittle** — historical run — live injury/news feeds not applicable
@@ -234,7 +234,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | K.Philips (WR, TEN) | receptions | 2.5† | **UNDER** | 1.782 | 0.18 | `no_market` | **29.3** | proj 1.782 vs line 2.5 (z=-0.35) |
 | D.Thompkins (WR, TB) | receiving yards | 13.5† | **UNDER** | 21.819 | 0.14 | `no_market` | **28.4** | proj 21.819 vs line 13.5 (z=+0.27); opp-vs-pos 1.0456 (tough matchup for this side) |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **D.Henry** — historical run — live injury/news feeds not applicable
 - **D.Hopkins** — historical run — live injury/news feeds not applicable
@@ -252,7 +252,7 @@ Every top-5 shows **"5 of N screened"** — N is how many candidate props were a
 | N.Fant (TE, SEA) | receptions | 2.5† | **UNDER** | 1.811 | 0.17 | `no_market` | **33.2** | proj 1.811 vs line 2.5 (z=-0.34); game-script fit |
 | J.Smith-Njigba (WR, SEA) | receiving yards | 34.5† | **OVER** | 43.746 | 0.15 | `no_market` | **29.9** | proj 43.746 vs line 34.5 (z=+0.30); opp-vs-pos 1.1776 (soft matchup for this side); game-script headwind |
 
-**Context — Context only — not part of the composite score.**
+**Context only — not part of the composite score.**
 
 - **N.Fant** — historical run — live injury/news feeds not applicable
 - **C.Parkinson** — historical run — live injury/news feeds not applicable
