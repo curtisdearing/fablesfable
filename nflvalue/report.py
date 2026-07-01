@@ -129,7 +129,7 @@ def render_markdown(season: int, week: int, games: List[Dict],
         ctx = contexts.get(g["game_id"])
         lines.append("")
         if ctx:
-            lines.append(f"**Context — {ctx['label']}**")
+            lines.append(f"**{ctx['label']}**")
             lines.append("")
             for e in ctx["entries"]:
                 for item in e["items"]:
@@ -146,6 +146,15 @@ def render_markdown(season: int, week: int, games: List[Dict],
 # --------------------------------------------------------------------------- #
 def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
                   as_of: str, status: str = "active") -> int:
+    """Replace-the-run semantics: the forward log for a (season, week, clock)
+    is whatever the LATEST run published. The whole slice is deleted first so
+    a rerun after a ranking change can't leave orphan leans behind (found
+    live: a pre-fix run's degenerate TD-unders survived a rerun's upsert
+    because their (player, market) keys differed). Clocks run in order —
+    wed, then t90 — so a t90 void is never clobbered by design."""
+    conn.execute("DELETE FROM leans WHERE season=? AND week=? AND clock=?",
+                 (season, week, clock))
+    conn.commit()
     rows = []
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for g in games:

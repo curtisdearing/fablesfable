@@ -167,5 +167,26 @@ def test_persist_leans_idempotent(inputs, tmp_path):
     n1 = rpt.persist_leans(conn, SEASON, WEEK, "wed", games, as_of="2023-11-08T12:00:00Z")
     n2 = rpt.persist_leans(conn, SEASON, WEEK, "wed", games, as_of="2023-11-08T12:00:00Z")
     count = dbmod.query_df(conn, "SELECT COUNT(*) AS n FROM leans").iloc[0]["n"]
-    assert n1 == n2 == count                        # INSERT OR REPLACE: no dupes
+    assert n1 == n2 == count                        # replace-the-run: no dupes
+    conn.close()
+
+
+def test_persist_leans_replaces_stale_rows_from_prior_ranking(inputs, tmp_path):
+    """A rerun after a ranking change must not leave orphan leans behind
+    (regression: pre-fix degenerate TD-unders survived an upsert-only rerun)."""
+    conn = dbmod.connect(str(tmp_path / "t.db"))
+    dbmod.upsert(conn, "leans", [{
+        "season": SEASON, "week": WEEK, "clock": "wed", "game_id": f"{SEASON}_09_AAA_BBB",
+        "player_id": "GHOST", "name": "Old Ranking Ghost", "market": "anytime_td",
+        "side": "under", "line": 0.5, "line_source": "synthetic_trailing_mean",
+        "price": None, "book": None, "mean": 0.03, "sd": 0.35, "p_side": 0.97,
+        "composite": 59.0, "edge": None, "confidence_comp": 0.66, "matchup_comp": 0.5,
+        "screened_n": 44, "reason": "stale", "status": "active", "void_reason": None,
+        "as_of": "old", "created_at": "old",
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+    from nflvalue.shortlist import shortlist_week
+    games = shortlist_week(enumerate_candidates(SEASON, WEEK, inputs=inputs))
+    rpt.persist_leans(conn, SEASON, WEEK, "wed", games, as_of="new")
+    left = dbmod.query_df(conn, "SELECT player_id FROM leans")
+    assert "GHOST" not in set(left["player_id"])
     conn.close()

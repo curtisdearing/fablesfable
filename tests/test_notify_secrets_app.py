@@ -90,19 +90,24 @@ def test_gitignore_covers_local_secrets():
 
 
 def test_no_secrets_in_tracked_files():
+    import re
     try:
         tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True,
                                  text=True, timeout=30).stdout.splitlines()
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pytest.skip("git unavailable")
     assert "config.local.json" not in tracked
+    # a REAL discord webhook is /webhooks/<snowflake>/<~68-char token>; test
+    # dummies (short fake tokens) are fine, live tokens are not
+    live_webhook = re.compile(r"discord\.com/api/webhooks/\d{5,}/[A-Za-z0-9_\-]{30,}")
     for path in tracked:
         p = ROOT / path
         if p.suffix in {".py", ".json", ".md", ".txt", ".html"} and p.exists():
             text = p.read_text(errors="ignore")
-            assert "discord.com/api/webhooks/" not in text, f"webhook URL leaked in {path}"
+            assert not live_webhook.search(text), f"live webhook URL leaked in {path}"
     cfg = json.loads((ROOT / "config.json").read_text())
     assert cfg.get("odds_api_key", "") == ""             # key comes from env/local only
+    assert "discord_webhook" not in cfg                  # webhook never in tracked config
 
 
 # --------------------------------------------------------------------------- #
