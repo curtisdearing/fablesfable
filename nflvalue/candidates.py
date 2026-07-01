@@ -174,6 +174,8 @@ def enumerate_candidates(
     min_games: int = MIN_GAMES_ELIGIBLE,
     prop_lines: Optional[pd.DataFrame] = None,
     roster_mode: str = "as_played",
+    sd_by_market: Optional[Dict[str, Optional[float]]] = None,
+    synth_by_market: Optional[Dict[str, pd.Series]] = None,
 ) -> pd.DataFrame:
     """All eligible (player, market) candidates for every game of (season, week).
 
@@ -234,8 +236,15 @@ def enumerate_candidates(
         for r in prop_lines.itertuples(index=False):
             line_idx[(r.game_id, r.market, r.player_id)] = r._asdict()
 
-    synth = {m: synthetic_lines(inputs, m) for m in markets}
-    sd_by_market = {m: market_residual_sd(inputs, m, season, week) for m in markets}
+    # synthetic-line series are week-independent (leak-free by construction),
+    # so season replays precompute them once and pass them in
+    synth = synth_by_market if synth_by_market is not None else {
+        m: synthetic_lines(inputs, m) for m in markets}
+    if sd_by_market is None:
+        sd_by_market = {m: market_residual_sd(inputs, m, season, week) for m in markets}
+    # else: caller supplied precomputed walk-forward SDs for this exact
+    # (season, week) cutoff -- season replays precompute all cutoffs in one
+    # pass instead of re-deriving full history per week (same numbers).
 
     out: List[Dict] = []
     for idx, row in week_rows.iterrows():

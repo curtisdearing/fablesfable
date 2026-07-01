@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""Season replay: what would the weekly top-5 leans have done?
+
+For every REG week of a completed season, run the EXACT production path
+(enumerate -> composite -> top-5 per game with the per-player cap), then
+grade each lean against what the player actually did.
+
+READ THIS BEFORE READING THE NUMBERS (PREMORTEM.md F9 / spec §5):
+  * There is no free historical prop-PRICE data, so leans are graded at the
+    tool's SYNTHETIC reference line (the player's own trailing mean,
+    floor+0.5) -- the same line the report would have printed that week.
+  * A hit therefore means "the model's side of its own reference line was
+    right", i.e. DIRECTIONAL skill vs a naive trailing-mean baseline.
+    It is NOT price-beating, NOT CLV, NOT profit. If these had been real
+    -110 lines at these numbers, breakeven would be 52.38%.
+  * Selection honesty: the same grading is run over ALL screened candidates,
+    so the top-5's hit rate can be compared to "just bet everything" -- the
+    composite earns its keep only by beating its own candidate pool.
+  * Walk-forward end to end: features, SDs, and lines at week W use only
+    weeks < W (season boundaries included via prior seasons).
+
+Run:  python3 lean_backtest.py --season 2025 \
+          [--pw /tmp/pw.parquet --opd ... --tw ... --sched ...]
+Writes: data/lean_replay_{season}.json + reports/lean_replay_{season}.md
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+
+from nflvalue import config as cfgmod
+from nflvalue.candidates import ACTUAL_COL, WeekInputs, enumerate_candidates, games_for_week
+from nflvalue.projection import MARKETS
+from nflvalue.shortlist import shortlist_week
+
+BREAKEVEN = 0.5238  # win rate needed at standard -110 juice
+
+
+# --------------------------------------------------------------------------- #
+# Walk-forward per-market SD for every week cutoff, in ONE pass per market
+# --------------------------------------------------------------------------- #
+def precompute_sds(inputs: WeekInputs, markets: List[str],
+                   min_history: int = 30) -> Dict[tuple, Dict[str, Optional[float]]]:
+    """{(season, week) -> {market -> sd}} where sd is the std of residuals of
+    all (season', week') strictly before that cutoff -- identical in
+    definition to candidates.market_residual_sd, computed incrementally."""
+    import prop_backtest
+
+    out: Dict[tuple, Dict[str, Optional[float]]] = {}
+    for market in markets:
+        preds = prop_backtest._predictions_for_market(
+            inputs.pw, market, inputs.team_idx, inputs.opp_idx)
+        if preds.empty:
+            continue
+        preds = preds.sort_values(["season", "week"], kind="mergesort")
+        resid = (preds["actual"] - preds["mean_pred"]).to_numpy(dtype=float)
+        keys = list(zip(preds["season"].to_numpy(), preds["week"].to_numpy()))
+        n = s = ss = 0.0
+        i = 0
+        while i < len(resid):
+            j = i
+            while j < len(resid) and keys[j] == keys[i]:
+                j += 1
+            # sd at THIS week's cutoff = residuals of all strictly-prior weeks
+            sd = None
+            if n >= min_history:
+                var = (ss - (s * s) / n) / (n - 1)
+                sd = float(np.sqrt(var)) if var > 0 else None
+            out.setdefault(keys[i], {})[market] = sd
+            chunk = resid[i:j]
+            chunk = chunk[np.isfinite(chunk)]
+            n += len(chunk)
+            s += float(chunk.sum())
+            ss += float((chunk ** 2).sum())
+            i = j
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Grading
+# --------------------------------------------------------------------------- #
+def _actuals_for_week(pw: pd.DataFrame, season: int, week: int) -> Dict[tuple, float]:
+    wk = pw[(pw["season"] == season) & (pw["week"] == week)]
+    idx: Dict[tuple, float] = {}
+    for r in wk.itertuples(index=False):
+        for market, col in ACTUAL_COL.items():
+            idx[(r.player_id, market)] = float(getattr(r, col))
+        idx[(r.player_id, "anytime_td")] = float(r.rush_tds + r.rec_tds)
+    return idx
+
+
+def grade(row: Dict, actuals: Dict[tuple, float]) -> Optional[Dict]:
+    actual = actuals.get((row["player_id"], row["market"]))
+    if actual is None:
+        return None
+    if row["market"] == "anytime_td":
+        hit = actual >= 1.0  # YES side only
+    elif row["side"] == "over":
+        hit = actual > row["line"]
+    else:
+        hit = actual < row["line"]
+    return {"hit": bool(hit), "actual": actual}
+
+
+def _rate(frame: pd.DataFrame) -> Dict:
+    n = len(frame)
+    return {"n": n, "hit_rate": round(float(frame["hit"].mean()), 4) if n else None}
+
+
+# --------------------------------------------------------------------------- #
+# Replay
+# --------------------------------------------------------------------------- #
+def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
+        write_files: bool = True) -> Dict:
+    cfg = cfgmod.load_config()
+    weights = (cfg.get("composite") or {}).get("weights")
+    params = (cfg.get("composite") or {}).get("params")
+    min_usage = (cfg.get("candidates") or {}).get("min_usage")
+
+    all_weeks = sorted(inputs.schedules[
+        (inputs.schedules["season"] == season)
+        & (inputs.schedules["game_type"] == "REG")]["week"].unique().tolist())
+    weeks = weeks or all_weeks
+
+    markets = list(MARKETS)
+    sd_map = precompute_sds(inputs, markets)
+    from nflvalue.candidates import synthetic_lines
+    synth_map = {m: synthetic_lines(inputs, m) for m in markets}  # week-independent
+
+    lean_rows, cand_rows = [], []
+    for wk in weeks:
+        cands = enumerate_candidates(season, wk, inputs=inputs, min_usage=min_usage,
+                                     sd_by_market=sd_map.get((season, wk), {}),
+                                     synth_by_market=synth_map)
+        if cands.empty:
+            continue
+        actuals = _actuals_for_week(inputs.pw, season, wk)
+        games = shortlist_week(cands, weights=weights, params=params)
+
+        lean_keys = set()
+        for g in games:
+            for rank, l in enumerate(g["leans"], start=1):
+                graded = grade(l, actuals)
+                if graded is None:
+                    continue
+                lean_keys.add((l["player_id"], l["market"]))
+                lean_rows.append({
+                    "season": season, "week": wk, "game_id": g["game_id"],
+                    "matchup": g["matchup"], "rank": rank,
+                    "player_id": l["player_id"], "name": l["name"], "pos": l["pos"],
+                    "market": l["market"], "side": l["side"], "line": l["line"],
+                    "mean": l["mean"], "composite": l["composite"],
+                    "screened_n": g["screened_n"], **graded,
+                })
+        # baseline: EVERY screened candidate, model side at the same line
+        from nflvalue.composite import score_candidate
+        for c in cands.to_dict("records"):
+            s = score_candidate(c, weights=weights, params=params)
+            graded = grade({**c, "side": s["side"]}, actuals)
+            if graded is None:
+                continue
+            cand_rows.append({"season": season, "week": wk, "market": c["market"],
+                              "side": s["side"], "composite": s["composite"],
+                              "is_lean": (c["player_id"], c["market"]) in lean_keys,
+                              **graded})
+
+    leans = pd.DataFrame(lean_rows)
+    cands_all = pd.DataFrame(cand_rows)
+
+    report = {
+        "season": season, "weeks": weeks,
+        "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "framing": ("Directional grading at SYNTHETIC trailing-mean lines -- the lines the "
+                    "tool would have published. NOT price-beating/profit; breakeven at a real "
+                    f"-110 line would be {BREAKEVEN:.2%}."),
+        "leans": {
+            "overall": _rate(leans),
+            "top1_per_game": _rate(leans[leans["rank"] == 1]),
+            "by_market": {m: _rate(g) for m, g in leans.groupby("market")},
+            "by_side": {s: _rate(g) for s, g in leans.groupby("side")},
+            "by_composite_band": {
+                label: _rate(leans[(leans["composite"] >= lo) & (leans["composite"] < hi)])
+                for label, lo, hi in (("<35", 0, 35), ("35-45", 35, 45),
+                                      ("45-55", 45, 55), ("55+", 55, 1000))},
+            "by_week": {int(wk): _rate(g) for wk, g in leans.groupby("week")},
+        },
+        "baseline_all_candidates": {
+            "overall": _rate(cands_all),
+            "non_lean_only": _rate(cands_all[~cands_all["is_lean"]]) if len(cands_all) else {},
+        },
+        "n_games": int(leans["game_id"].nunique()) if len(leans) else 0,
+        "avg_screened_per_game": (round(float(leans.groupby("game_id")["screened_n"].first().mean()), 1)
+                                  if len(leans) else None),
+    }
+
+    if write_files:
+        os.makedirs("reports", exist_ok=True)
+        cfgmod.save_json(os.path.join(cfgmod.DATA_DIR, f"lean_replay_{season}.json"),
+                         {**report, "lean_rows": lean_rows})
+        with open(os.path.join("reports", f"lean_replay_{season}.md"), "w") as f:
+            f.write(render_md(report, leans))
+    return {"report": report, "leans": leans, "candidates": cands_all}
+
+
+def render_md(report: Dict, leans: pd.DataFrame) -> str:
+    L = report["leans"]
+    lines = [
+        f"# Lean replay — {report['season']} season (weeks {report['weeks'][0]}–{report['weeks'][-1]})",
+        "",
+        "**Leans, not locks.** " + report["framing"],
+        "Gambling problem? **1-800-GAMBLER**.",
+        "",
+        f"- Leans graded: **{L['overall']['n']}** across {report['n_games']} games "
+        f"(avg {report['avg_screened_per_game']} candidates screened per game)",
+        f"- **Overall hit rate: {L['overall']['hit_rate']:.1%}** "
+        f"(directional, vs {BREAKEVEN:.1%} breakeven if these were real -110 lines)",
+        f"- Top-1 pick per game: {L['top1_per_game']['hit_rate']:.1%} (n={L['top1_per_game']['n']})",
+        f"- All-candidates baseline: {report['baseline_all_candidates']['overall']['hit_rate']:.1%} "
+        f"(n={report['baseline_all_candidates']['overall']['n']}) — the composite must beat this "
+        "for the ranking to mean anything.",
+        "",
+        "| Market | n | hit rate |", "|---|---|---|",
+    ]
+    for m, r in sorted(L["by_market"].items()):
+        lines.append(f"| {m.replace('_', ' ')} | {r['n']} | {r['hit_rate']:.1%} |")
+    lines += ["", "| Composite band | n | hit rate |", "|---|---|---|"]
+    for band, r in L["by_composite_band"].items():
+        if r["n"]:
+            lines.append(f"| {band} | {r['n']} | {r['hit_rate']:.1%} |")
+    lines += ["", "| Side | n | hit rate |", "|---|---|---|"]
+    for s, r in L["by_side"].items():
+        lines.append(f"| {s} | {r['n']} | {r['hit_rate']:.1%} |")
+    lines += ["", "Weekly: " + ", ".join(
+        f"wk{wk} {r['hit_rate']:.0%} (n={r['n']})" for wk, r in sorted(L["by_week"].items())), ""]
+    return "\n".join(lines)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--season", type=int, required=True)
+    ap.add_argument("--pw"), ap.add_argument("--opd"), ap.add_argument("--tw"), ap.add_argument("--sched")
+    ap.add_argument("--weeks", type=int, nargs="*", default=None)
+    args = ap.parse_args()
+    if args.pw:
+        inputs = WeekInputs(pd.read_parquet(args.pw), pd.read_parquet(args.opd),
+                            pd.read_parquet(args.tw), pd.read_parquet(args.sched))
+    else:
+        from nflvalue.candidates import build_week_inputs
+        inputs = build_week_inputs()
+    res = run(args.season, inputs, weeks=args.weeks)
+    r = res["report"]["leans"]["overall"]
+    print(f"{args.season}: {r['n']} leans, hit rate {r['hit_rate']:.1%} "
+          f"(baseline {res['report']['baseline_all_candidates']['overall']['hit_rate']:.1%})")
+
+
+if __name__ == "__main__":
+    main()
