@@ -158,37 +158,73 @@ def match_player_ids(rows: List[Dict], candidates: pd.DataFrame) -> List[Dict]:
     return rows
 
 
-def to_prop_lines_frame(rows: List[Dict]) -> pd.DataFrame:
-    """Snapshot rows -> the ``prop_lines`` frame candidates.enumerate_candidates
-    accepts: one row per (game_id, market, player_id) with a two-sided price
-    from the book quoting BOTH sides (first such book, alphabetical --
-    deterministic)."""
+PROP_LINE_COLS = ["game_id", "market", "player_id", "point", "over_price",
+                  "under_price", "book", "consensus_p_over", "n_books"]
+
+
+def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
+                        sharp_weight: float = 2.0) -> pd.DataFrame:
+    """Snapshot rows -> prop-line frame with CROSS-BOOK comparison.
+
+    Per (game, market, player): pick the consensus point (the point quoted
+    two-sided by the most books; deterministic tie-break), de-vig EVERY book
+    at that point into a sharp-weighted CONSENSUS fair probability
+    (``oddsmath.consensus_two_way`` -- the same engine the game-line app
+    trusts), and carry the BEST available price per side with its book
+    (line shopping: edge is judged vs consensus, captured at the best price).
+    One-book markets still work (n_books=1 = consensus is that book)."""
     matched = [r for r in rows if r["player_id"] is not None]
     if not matched:
-        return pd.DataFrame(columns=["game_id", "market", "player_id", "point",
-                                     "over_price", "under_price", "book"])
+        return pd.DataFrame(columns=PROP_LINE_COLS)
+    from .. import oddsmath
+
     df = pd.DataFrame(matched)
     out = []
     for (gid, market, pid), grp in df.groupby(["game_id", "market", "player_id"]):
-        for book in sorted(grp["book"].unique()):
-            b = grp[grp["book"] == book]
+        # books quoting BOTH sides, keyed by point
+        two_sided: Dict[float, Dict[str, tuple]] = {}
+        yes_only: Dict[str, float] = {}
+        for book, b in grp.groupby("book"):
             overs = b[b["side"] == "over"]
             unders = b[b["side"] == "under"]
             if overs.empty:
                 continue
             over = overs.iloc[0]
-            under = unders.iloc[0] if not unders.empty else None
-            if under is None and market != "anytime_td":
-                continue  # need both sides to de-vig an over/under market
+            if unders.empty:
+                if market == "anytime_td" and over["price"]:
+                    yes_only[book] = float(over["price"])
+                continue
+            pt = float(over["point"])
+            two_sided.setdefault(pt, {})[book] = (float(over["price"]),
+                                                  float(unders.iloc[0]["price"]))
+        if two_sided:
+            # consensus point: most two-sided books; ties -> alphabetically
+            # first book's point (deterministic)
+            point = sorted(two_sided,
+                           key=lambda p: (-len(two_sided[p]), min(two_sided[p])))[0]
+            cons = oddsmath.consensus_two_way(two_sided[point],
+                                              sharp_books=sharp_books,
+                                              sharp_weight=sharp_weight)
+            if not cons:
+                continue
             out.append({
-                "game_id": gid, "market": market, "player_id": pid,
-                "point": float(over["point"]),
-                "over_price": over["price"],
-                "under_price": (under["price"] if under is not None else None),
-                "book": book,
+                "game_id": gid, "market": market, "player_id": pid, "point": point,
+                "over_price": cons["best_a"], "under_price": cons["best_b"],
+                "book": f"{cons['best_a_book']}/{cons['best_b_book']}",
+                "consensus_p_over": round(cons["p_a"], 4),
+                "n_books": len(two_sided[point]),
             })
-            break
-    return pd.DataFrame(out)
+        elif yes_only:
+            best_book = max(yes_only, key=lambda b: (yes_only[b], b))
+            out.append({
+                "game_id": gid, "market": market, "player_id": pid, "point": 0.5,
+                "over_price": yes_only[best_book], "under_price": None,
+                "book": best_book,
+                "consensus_p_over": round(float(np_mean := sum(
+                    oddsmath.implied_prob(v) for v in yes_only.values()) / len(yes_only)), 4),
+                "n_books": len(yes_only),
+            })
+    return pd.DataFrame(out, columns=PROP_LINE_COLS)
 
 
 # --------------------------------------------------------------------------- #

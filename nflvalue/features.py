@@ -229,7 +229,7 @@ def _safe_ratio(num: pd.Series, den: pd.Series) -> pd.Series:
 def _rolling_shifted(s: pd.Series, window: int = ROLL_WINDOW, how: str = "mean") -> pd.Series:
     """PRIOR-weeks-only feature from a player's/team's own history.
 
-    ``how="mean"`` uses an exponentially-weighted mean (span=``EWM_SPAN``)
+    ``how="mean"`` is a FLAT trailing average (window=``ROLL_WINDOW``); ``how="ewm"``
     rather than a flat rolling average. Phase 1B change: Checkpoint 1's
     calibration curve showed predicted P(over) barely tracking the actual
     over-rate, worst in the low-probability buckets -- consistent with a

@@ -238,3 +238,21 @@ reversible; config keys are noted where one exists.
   2025 67.1%→67.3% (AUC .6298→.6341, log-loss .62846→.62786), top-1 69.9%.
   Artifact refit on the full feature set; ingest refreshes NGS + contracts +
   extended pbp columns each run.
+
+## Cross-book lines + matchup strengthening (2026-07-02, user-requested)
+
+- to_prop_lines_frame now does REAL line comparison: consensus point (most
+  two-sided books, deterministic tie-break), sharp-weighted de-vigged
+  consensus fair prob (oddsmath.consensus_two_way, pinnacle 2x), best price
+  per side line-shopped with books named. Edge = model − CONSENSUS;
+  ev_best_price + n_books surfaced in components. A soft book's vig can no
+  longer pose as fair value; its off-market price is instead CAPTURED.
+- Matchup clause strengthened: opp_epa_allowed factor (computed since the
+  context build, previously unscored) is now a fourth directional matchup
+  sub-score. Known remaining matchup depth: defense VOLUME-allowed factor
+  and FTN man/zone splits (2022+) — queued as early-season ablations.
+- DOC/CODE MISMATCH found in features.py: docstring claimed EWM for player
+  rolling means; code ships a flat 8-game window (all validation/tuning was
+  performed against the flat version, so behavior is consistent — the
+  docstring was the bug, now fixed). EWM recency weighting queued as a
+  controlled ablation rather than a silent core change.

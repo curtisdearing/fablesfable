@@ -65,7 +65,20 @@ def _direction(side: str) -> float:
 
 
 def _devig_probs(prices: Dict) -> Optional[Dict[str, float]]:
-    """{'over': decimal, 'under': decimal} -> fair {'over': p, 'under': p}."""
+    """Fair market probabilities for a prop quote.
+
+    Prefers the CROSS-BOOK consensus (sharp-weighted, computed at snapshot
+    time by oddsapi_props.to_prop_lines_frame) — a single soft book's vig
+    shape can't masquerade as fair value. Falls back to de-vigging the
+    two-sided quote when no consensus was carried (older rows, tests)."""
+    cp = prices.get("consensus_p_over")
+    if cp is not None:
+        try:
+            cpf = float(cp)
+            if 0.0 < cpf < 1.0:
+                return {"over": cpf, "under": 1.0 - cpf}
+        except (TypeError, ValueError):
+            pass
     over, under = prices.get("over"), prices.get("under")
     if not over or not under:
         return None
@@ -160,7 +173,14 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     if team_volume is not None and not (isinstance(team_volume, float) and math.isnan(team_volume)):
         pace_sub = _clip01(0.5 + d * float(team_volume) / prm["pace_span"] * 0.5)
 
-    matchup_comp = (opp_sub + script_sub + pace_sub) / 3.0
+    # EPA-allowed dimension (evaluation catch: computed since the context-
+    # features build but never scored) -- a defense bleeding EPA to this
+    # position is a soft matchup beyond raw yards-per-play
+    subs = [opp_sub, script_sub, pace_sub]
+    epa_f = cand.get("opp_epa_factor")
+    if epa_f is not None and not (isinstance(epa_f, float) and math.isnan(epa_f)):
+        subs.append(_clip01(0.5 + d * (float(epa_f) - 1.0) / 0.15 * 0.5))
+    matchup_comp = sum(subs) / len(subs)
 
     # ---- weighted blend (renormalize when edge is unavailable) ------------- #
     if no_market:
@@ -204,6 +224,13 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "weights_used": ({"confidence": w["confidence"], "matchup": w["matchup"]}
                              if no_market else dict(w)),
             "calibration_gate": bool(prm["calibration_passed"]),
+            "ev_best_price": (round(model_prob * float(
+                (prices or {}).get("over") if side == "over" else (prices or {}).get("under")
+            ) - 1.0, 4)
+                if (not no_market and model_prob is not None
+                    and (prices or {}).get("over" if side == "over" else "under"))
+                else None),
+            "n_books": (prices or {}).get("n_books") if prices else None,
             "reliability_mult": (round(float(reliability_mult), 4)
                                  if reliability_mult is not None else None),
             "context_mult": (round(float(context_mult), 4)

@@ -280,7 +280,9 @@ def enumerate_candidates(
             if real is not None:
                 line, line_source = float(real["point"]), "odds_api"
                 prices = {"over": real.get("over_price"), "under": real.get("under_price"),
-                          "book": real.get("book")}
+                          "book": real.get("book"),
+                          "consensus_p_over": real.get("consensus_p_over"),
+                          "n_books": real.get("n_books")}
             else:
                 sl = synth[market].get(idx) if roster_mode == "as_played" else None
                 if sl is None or (isinstance(sl, float) and math.isnan(sl)):

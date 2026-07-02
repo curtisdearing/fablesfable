@@ -137,7 +137,7 @@ def test_match_player_ids_conservative(payload):
     assert by_name["Unknown Practice Squad Guy"] == {None}   # kept, never guessed
 
 
-def test_to_prop_lines_frame_requires_two_sides(payload):
+def test_to_prop_lines_frame_cross_book_consensus(payload):
     rows = oap.parse_event_props(payload, ts="t")
     for r in rows:
         r["game_id"] = "G"
@@ -145,7 +145,58 @@ def test_to_prop_lines_frame_requires_two_sides(payload):
                                {"player_id": "00-L1", "name": "L.Jackson"}])
     rows = oap.match_player_ids(rows, candidates)
     frame = oap.to_prop_lines_frame(rows)
-    rec = frame[(frame["market"] == "receiving_yards") & (frame["player_id"] == "00-A1")]
-    assert len(rec) == 1 and rec.iloc[0]["book"] == "draftkings"   # deterministic book pick
-    td = frame[frame["market"] == "anytime_td"]
-    assert len(td) == 1 and pd.isna(td.iloc[0]["under_price"])     # yes-only allowed for TD
+    rec = frame[(frame["market"] == "receiving_yards") & (frame["player_id"] == "00-A1")].iloc[0]
+    # DK quotes 52.5, FD quotes 53.5 -- tie on book count resolves
+    # deterministically to the alphabetically-first book's point
+    assert rec["point"] == 52.5 and rec["n_books"] == 1
+    assert 0.4 < rec["consensus_p_over"] < 0.6
+    td = frame[frame["market"] == "anytime_td"].iloc[0]
+    assert pd.isna(td["under_price"]) and td["book"] == "draftkings"  # yes-only TD ok
+
+
+def test_consensus_and_best_price_across_books():
+    """Three books at the same point: consensus is de-vigged + sharp-weighted;
+    best price per side is line-shopped with the book named; a soft book's
+    fat vig cannot pull fair value."""
+    rows = []
+    for book, over, under in (("pinnacle", 1.90, 1.94),
+                              ("draftkings", 1.85, 1.95),
+                              ("softie", 2.05, 1.70)):   # off-market over price
+        for side, price in (("over", over), ("under", under)):
+            rows.append({"ts": "t", "game_id": "G", "book": book,
+                         "market": "receiving_yards", "player_id": "00-A1",
+                         "player_name": "Mark Andrews", "side": side,
+                         "point": 52.5, "price": price})
+    frame = oap.to_prop_lines_frame(rows)
+    r = frame.iloc[0]
+    assert r["n_books"] == 3
+    assert r["over_price"] == 2.05 and "softie" in r["book"]      # line-shopped
+    from nflvalue.oddsmath import devig_multiplicative
+    pinn = devig_multiplicative([1.90, 1.94])[0]
+    assert abs(r["consensus_p_over"] - pinn) < 0.02               # sharp-anchored
+
+    # the composite consumes consensus for edge, best price for EV
+    from nflvalue.composite import score_candidate
+    cand = {"player_id": "00-A1", "market": "receiving_yards", "mean": 60.0,
+            "sd": 20.0, "line": 52.5, "p_over": 0.60, "p_under": 0.40,
+            "components": {"opp_factor": 1.0, "game_script": 1.0},
+            "low_confidence": False,
+            "prices": {"over": r["over_price"], "under": r["under_price"],
+                       "book": r["book"], "consensus_p_over": r["consensus_p_over"],
+                       "n_books": r["n_books"]}}
+    s = score_candidate(cand)
+    assert s["edge"] == pytest.approx(0.60 - r["consensus_p_over"], abs=1e-4)
+    assert s["components"]["ev_best_price"] == pytest.approx(0.60 * 2.05 - 1, abs=1e-3)
+    assert s["components"]["n_books"] == 3
+
+
+def test_matchup_includes_epa_dimension():
+    from nflvalue.composite import score_candidate
+    base = {"player_id": "P", "market": "receiving_yards", "mean": 70.0, "sd": 25.0,
+            "line": 65.5, "p_over": 0.58, "p_under": 0.42,
+            "components": {"opp_factor": 1.0, "game_script": 1.0},
+            "low_confidence": False, "prices": None}
+    soft = score_candidate({**base, "opp_epa_factor": 1.12})   # bleeds EPA -> over-friendly
+    hard = score_candidate({**base, "opp_epa_factor": 0.88})
+    none = score_candidate(base)
+    assert soft["matchup"] > none["matchup"] > hard["matchup"]
