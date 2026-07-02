@@ -139,8 +139,14 @@ def _feature_packs(inputs: candmod.WeekInputs):
     except Exception as exc:  # noqa: BLE001
         print(f"[pipeline] advanced features unavailable ({exc}); using neutral values")
         adv = None
-    _PACK_CACHE[key] = (pack, adv)
-    return pack, adv
+    try:
+        from nflvalue.chemistry import ChemistryPack
+        chem = ChemistryPack(pw=inputs.pw, schedules=inputs.schedules)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[pipeline] chemistry features unavailable ({exc}); using neutral values")
+        chem = None
+    _PACK_CACHE[key] = (pack, adv, chem)
+    return pack, adv, chem
 
 
 def _maybe_stamp_ml(cfg: Dict, cands: pd.DataFrame,
@@ -161,7 +167,7 @@ def _maybe_stamp_ml(cfg: Dict, cands: pd.DataFrame,
         print(f"[pipeline] ml_ranker enabled but no model at {path} — "
               "run `python3 ml_test.py --stage fit` after grading; using composite ranking")
         return cands
-    pack, adv = _feature_packs(inputs)
+    pack, adv, chem = _feature_packs(inputs)
     feats = mlrmod.build_features(cands, inputs.pw, pack=pack, adv=adv)
     try:
         p = model.predict_p_over(feats)
@@ -427,7 +433,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # layer is off or falls back). Live weather comes from the FORECAST
     # (schedule temp/wind are observed post-game and NaN for future games).
     if mode == "live" and not cands.empty:
-        pack, adv = _feature_packs(inputs)
+        pack, adv, chem = _feature_packs(inputs)
         from nflvalue.advanced_features import attach_neutral
         from nflvalue.context_features import attach as ctx_attach
         cands = ctx_attach(cands, pack)
@@ -436,6 +442,12 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
             cands = adv.attach(cands)
         else:
             cands = attach_neutral(cands)
+        outs_now = {pid for pid, s in statuses.items() if s.get("status") == "OUT"}
+        if chem is not None:
+            cands = chem.attach(cands, out_player_ids=outs_now)
+        else:
+            from nflvalue.chemistry import attach_neutral as chem_neutral
+            cands = chem_neutral(cands)
 
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
@@ -515,11 +527,16 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
     if mode == "live" and not cands.empty:
-        pack, adv = _feature_packs(inputs)
+        pack, adv, chem = _feature_packs(inputs)
         from nflvalue.advanced_features import attach_neutral
         from nflvalue.context_features import attach as ctx_attach
         cands = ctx_attach(cands, pack)
         cands = adv.attach(cands) if adv is not None else attach_neutral(cands)
+        if chem is not None:
+            cands = chem.attach(cands)
+        else:
+            from nflvalue.chemistry import attach_neutral as chem_neutral
+            cands = chem_neutral(cands)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
                              inject=inject_feeds)

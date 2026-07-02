@@ -283,10 +283,15 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
         if not budget.can_spend(cost_per_event):
             skipped_budget.append(game_id)
             continue
-        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_map[game_id]}/odds", {
-            "apiKey": cfg.get("odds_api_key", ""), "regions": regions,
-            "markets": ",".join(markets), "oddsFormat": "decimal",
-        })
+        params = {"apiKey": cfg.get("odds_api_key", ""),
+                  "markets": ",".join(markets), "oddsFormat": "decimal"}
+        # user's books (e.g. draftkings, betmgm, hardrockbet) beat a whole-
+        # region pull: comparable prices AND a cheaper cost basis
+        if cfg.get("books"):
+            params["bookmakers"] = ",".join(cfg["books"])
+        else:
+            params["regions"] = regions
+        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_map[game_id]}/odds", params)
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
         budget.spend(cost_per_event, headers=headers)
         spent += cost_per_event
@@ -328,9 +333,13 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
         if not budget.can_spend(cost):
             skipped.append(game_id)
             continue
-        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_id}/odds", {
-            "apiKey": cfg.get("odds_api_key", ""), "regions": regions,
-            "markets": ",".join(markets), "oddsFormat": "decimal"})
+        params = {"apiKey": cfg.get("odds_api_key", ""),
+                  "markets": ",".join(markets), "oddsFormat": "decimal"}
+        if cfg.get("books"):
+            params["bookmakers"] = ",".join(cfg["books"])
+        else:
+            params["regions"] = regions
+        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_id}/odds", params)
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
         budget.spend(cost, headers=headers)
         for r in parse_event_props(payload, ts):

@@ -66,7 +66,8 @@ NUMERIC_FEATURES = [
 # advanced process metrics (advanced_features.py): strategic aggression,
 # NGS, red-zone roles, O-line health, QB continuity, contract year, weather
 from .advanced_features import FEATURES as _ADV_FEATURES  # noqa: E402
-NUMERIC_FEATURES = NUMERIC_FEATURES + _ADV_FEATURES
+from .chemistry import FEATURES as _CHEM_FEATURES  # noqa: E402
+NUMERIC_FEATURES = NUMERIC_FEATURES + _ADV_FEATURES + _CHEM_FEATURES
 
 
 def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
@@ -80,9 +81,12 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
     injury/opp-EPA features; ``adv`` (advanced_features.AdvancedPack) adds
     the process metrics. Either None stamps neutral values."""
     from .advanced_features import attach_neutral
+    from .chemistry import attach_neutral as chem_neutral
     from .context_features import attach
     f = attach(cands, pack)
     f = adv.attach(f) if adv is not None else attach_neutral(f)
+    if not all(c in f.columns for c in _CHEM_FEATURES):
+        f = chem_neutral(f)   # chemistry stamped upstream when its pack exists
     comps = f["components"].apply(lambda c: c or {})
     f["opp_factor"] = comps.apply(lambda c: c.get("opp_factor", 1.0)).astype(float)
     f["game_script"] = comps.apply(lambda c: c.get("game_script", 1.0)).astype(float)

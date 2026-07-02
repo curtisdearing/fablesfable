@@ -256,3 +256,22 @@ reversible; config keys are noted where one exists.
   performed against the flat version, so behavior is consistent — the
   docstring was the bug, now fixed). EWM recency weighting queued as a
   controlled ablation rather than a silent core change.
+
+## Your books + chemistry/formation tier (2026-07-02, user-requested)
+
+- Odds pulls now target config `books`: ["draftkings", "betmgm",
+  "hardrockbet"] via the API's bookmakers param (falls back to regions when
+  empty). Consensus + line-shopping runs across exactly those three.
+- Formation/chemistry ask triaged by data trust: exact formations/personnel/
+  on-field-22 (NGS participation) is free only through 2023 and discontinued
+  — REJECTED for live features (train/serve mismatch). Shipped the trustable
+  generalizations, all-seasons and live-capable: shotgun-vs-under-center
+  usage tilts (per player, 15-play-per-bucket trust gate), QB-specific
+  target-share chemistry vs the schedule's projected starter, top-teammate
+  absence + historical with/without boost (Chase-sans-Higgins as a standing
+  feature), defense pressure rate (sacks+hits/dropback). All strictly-before
+  via AsOfLookup; NaN = insufficient history, never current-week info.
+- 2025 OOS with chemistry tier: 67.3% -> 67.9% (log-loss .628, AUC .632 —
+  no leak signature). Panel/game notes surface tilts >=5%, chemistry >=4%,
+  and teammate-absent bumps. FTN charting (play-action/motion/blitz, 2022+)
+  queued as the next tier.

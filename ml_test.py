@@ -60,6 +60,8 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
                        opd=inputs.opd)
     from nflvalue.advanced_features import AdvancedPack
     adv = AdvancedPack(schedules=inputs.schedules)
+    from nflvalue.chemistry import ChemistryPack
+    chem = ChemistryPack(pw=inputs.pw, schedules=inputs.schedules)
 
     chunks = []
     for season in seasons:
@@ -76,6 +78,7 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
             if cands.empty:
                 continue
             actuals = lb._actuals_for_week(inputs.pw, season, wk)
+            cands = chem.attach(cands)
             feats = mlr.build_features(cands, inputs.pw, pack=pack, adv=adv)
             feats["y_over"] = mlr.label_over(feats, actuals)
             # baseline-composite fields (tune_weights conventions)

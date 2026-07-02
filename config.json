@@ -7,6 +7,7 @@
   "fetch_props": true,
   "max_prop_games_per_run": 4,
 
+  "books": ["draftkings", "betmgm", "hardrockbet"],
   "sharp_books": ["pinnacle"],
   "sharp_weight": 2.0,
 
