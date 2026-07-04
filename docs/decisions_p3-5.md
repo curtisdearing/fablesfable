@@ -275,3 +275,28 @@ reversible; config keys are noted where one exists.
   no leak signature). Panel/game notes surface tilts >=5%, chemistry >=4%,
   and teammate-absent bumps. FTN charting (play-action/motion/blitz, 2022+)
   queued as the next tier.
+
+## Second-order injuries + formations workaround + FTN (2026-07-02, user-requested)
+
+- MEASURED second-order translation (not asserted): teammate-absent
+  beneficiaries (n=297 player-weeks 2019-25) gain volume but lose ~31%
+  efficiency per opportunity -> reallocation now applies eff dampening
+  (slope .29/unit boost, floor .85) on top of the capped volume boost.
+  Backup-QB weeks (n=162): volume ~FLAT (pass x1.02, rush x0.98 — the "more
+  handoffs" intuition is empirically false) but passing efficiency x0.916 ->
+  pass-family means x0.92 when projected starter threw <50% of trailing
+  attempts. User's directional instincts confirmed on efficiency, corrected
+  on volume.
+- Formations workaround shipped: free FTN charting (2022->now, weekly) gives
+  own play-action + motion rates, opponent blitz rate (5+ rushers) and
+  DEFENDERS-IN-BOX faced — the live-safe formation-adjacent tier. Cached per
+  season, ingest-refreshed, AsOf walk-forward, NaN pre-2022. 2025 OOS: 67.5%
+  overall (within noise of 67.9), top-1 69.9% -> 71.3%, log-loss .6276.
+- Paid options priced (2026-07): FTN Data CSV $599 (3 seasons + pbp feeds),
+  API tier custom-priced (participation + charting since 2019), site sub
+  $69.99/yr (no API); PFF+ $79.99/yr or $9.99/mo (browsable premium stats
+  incl alignment/slot; no API). Decision: stay free until live CLV proves
+  edge worth funding; the paid FTN API is the natural first purchase.
+- Ops: pack construction pickled/cached for chunked frame rebuilds; FTN
+  cross-join OOM caught+fixed (game-only merge guard removed); AsOfLookup
+  made picklable.

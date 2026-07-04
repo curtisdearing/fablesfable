@@ -322,6 +322,44 @@ _FAMILY_MARKETS = {  # usage family -> the markets whose volume scales with it
 }
 
 
+# Second-order injury translation, MEASURED (2019-2025 pooled, top-2 mates,
+# n=297 absent player-weeks): beneficiaries gained volume but produced ~31%
+# fewer yards per opportunity (defense attention + marginal-target quality).
+# Slope of efficiency loss per unit of volume boost ~= 0.29, floored at 0.85.
+REALLOC_EFF_SLOPE = 0.29
+REALLOC_EFF_FLOOR = 0.85
+# Backup-QB weeks (n=162 team-weeks): volume ~flat (pass x1.02, rush x0.98)
+# but passing efficiency x0.916 -- the "defense anticipates" effect shows up
+# in EFFICIENCY, not handoff counts. Applied to pass-family markets when the
+# projected starter threw <50% of trailing attempts.
+BACKUP_QB_PASS_EFF_MULT = 0.92
+_PASS_FAMILY = ("receiving_yards", "receptions", "passing_yards")
+
+
+def apply_backup_qb_adjustment(cands: pd.DataFrame,
+                               threshold: float = 0.5) -> pd.DataFrame:
+    """Dampen pass-family means when a low-continuity QB is projected to
+    start (requires chemistry's qb_continuity column; no column -> no-op)."""
+    if cands.empty or "qb_continuity" not in cands.columns:
+        return cands
+    from .projection import p_over as p_over_fn
+    cands = cands.copy()
+    mask = (cands["qb_continuity"].notna() & (cands["qb_continuity"] < threshold)
+            & cands["market"].isin(_PASS_FAMILY))
+    if not mask.any():
+        return cands
+    cands.loc[mask, "mean"] = (cands.loc[mask, "mean"] * BACKUP_QB_PASS_EFF_MULT).round(3)
+    cands.loc[mask, "backup_qb_adj"] = BACKUP_QB_PASS_EFF_MULT
+    for i in cands.index[mask]:
+        line = cands.at[i, "line"]
+        if line is None or (isinstance(line, float) and math.isnan(line)):
+            continue
+        po = p_over_fn(cands.at[i, "mean"], cands.at[i, "sd"], float(line), cands.at[i, "dist"])
+        cands.at[i, "p_over"] = round(po, 4)
+        cands.at[i, "p_under"] = round(1 - po, 4)
+    return cands
+
+
 def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
                        max_boost: float = 1.35) -> pd.DataFrame:
     """Price injury-vacated usage INTO the projections (deterministic).
@@ -360,8 +398,14 @@ def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
     cands = cands.copy()
     mults = [mult_by_key.get((p, m), 1.0)
              for p, m in zip(cands["player_id"], cands["market"])]
+    # measured second-order effect: the volume boost costs efficiency
+    # (defense adjusts to the beneficiary) -- net mean = vol x dampened eff
+    eff = [max(REALLOC_EFF_FLOOR, 1.0 - REALLOC_EFF_SLOPE * (m - 1.0)) for m in mults]
     cands["realloc_mult"] = [round(m, 4) for m in mults]
-    cands["mean"] = [round(mean * m, 3) for mean, m in zip(cands["mean"], mults)]
+    cands["realloc_eff_mult"] = [round(e, 4) if m > 1.0 else 1.0
+                                 for e, m in zip(eff, mults)]
+    cands["mean"] = [round(mean * m * (e if m > 1.0 else 1.0), 3)
+                     for mean, m, e in zip(cands["mean"], mults, eff)]
     changed = cands["realloc_mult"] > 1.0
     for i in cands.index[changed]:
         line = cands.at[i, "line"]

@@ -64,7 +64,7 @@ from .features import PBP_COLUMNS
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HIST = os.path.join(ROOT, "historical")
 
-EXT_ONLY = ["down", "ydstogo", "yardline_100", "score_differential", "qtr", "wp",
+EXT_ONLY = ["play_id", "down", "ydstogo", "yardline_100", "score_differential", "qtr", "wp",
             "xpass", "pass_oe", "cpoe", "shotgun", "no_huddle",
             "game_seconds_remaining", "sack", "qb_hit", "pass", "rush", "fixed_drive"]
 EXT_PBP_COLUMNS = PBP_COLUMNS + EXT_ONLY
@@ -267,8 +267,6 @@ class AsOfLookup:
     never 'nothing happened THIS week'."""
 
     def __init__(self, df: pd.DataFrame, value_cols: List[str]):
-        import bisect
-        self._bisect = bisect
         self.value_cols = value_cols
         self.data: Dict[str, Tuple[List[int], List[Tuple]]] = {}
         d = df.sort_values(["player_id", "season", "week"])
@@ -283,7 +281,8 @@ class AsOfLookup:
         if entry is None:
             return nan_row
         wkeys, vals = entry
-        i = self._bisect.bisect_left(wkeys, season * 100 + week)  # strictly before
+        import bisect
+        i = bisect.bisect_left(wkeys, season * 100 + week)  # strictly before
         return vals[i - 1] if i > 0 else nan_row
 
 

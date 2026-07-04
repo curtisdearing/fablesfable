@@ -249,7 +249,11 @@ def test_reallocation_prices_vacated_usage_bounded():
                                    "share_delta": 0.10}}}]
     out = apply_reallocation(cands, realloc)
     rec = out[out["market"] == "receiving_yards"].iloc[0]
-    assert rec["mean"] == pytest.approx(50 * 1.35, abs=0.01)  # +50% share, capped at 1.35
+    # +50% share capped at x1.35 volume, then the MEASURED second-order
+    # efficiency dampening (defense adjusts): eff = 1 - 0.29*(1.35-1) = .8985
+    assert rec["realloc_mult"] == pytest.approx(1.35, abs=0.01)
+    assert rec["realloc_eff_mult"] == pytest.approx(0.8985, abs=0.001)
+    assert rec["mean"] == pytest.approx(50 * 1.35 * 0.8985, abs=0.05)
     assert rec["p_over"] > 0.5                                # prob followed
     ratt = out[out["market"] == "rush_attempts"].iloc[0]
     assert ratt["mean"] == 1.0                                # wrong family: untouched
@@ -264,4 +268,5 @@ def test_reallocation_guess_is_dampened():
                 "boosts": {"WR2": {"share_with": 0.20, "share_without": None,
                                    "share_delta": 0.10}}}]
     out = apply_reallocation(cands, realloc)
-    assert out.iloc[0]["mean"] == pytest.approx(4.0 * 1.25, abs=0.01)  # half the 50% move
+    # half the 50% move (guess-dampened) x measured efficiency loss (.9275)
+    assert out.iloc[0]["mean"] == pytest.approx(4.0 * 1.25 * 0.9275, abs=0.02)

@@ -52,17 +52,45 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
     from nflvalue.context_features import ContextPack
     from nflvalue.sources import rosters as rostersmod
 
+    pkl = os.environ.get("ML_PACKS_PKL")
+    if pkl and os.path.exists(pkl + "_a.pkl"):
+        import pickle
+        with open(pkl + "_a.pkl", "rb") as fh:
+            pack, adv = pickle.load(fh)
+        with open(pkl + "_chem.pkl", "rb") as fh:
+            chem = pickle.load(fh)
+        with open(pkl + "_ftn.pkl", "rb") as fh:
+            ftn = pickle.load(fh)
+        with open(pkl + "_sd.pkl", "rb") as fh:
+            sd_map, synth_map = pickle.load(fh)
+        min_usage = (cfgmod.load_config().get("candidates") or {}).get("min_usage")
+        return _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
+                           sd_map, synth_map, min_usage)
+
     sd_map = lb.precompute_sds(inputs, list(MARKETS))
     synth_map = {m: synthetic_lines(inputs, m) for m in MARKETS}
     min_usage = (cfgmod.load_config().get("candidates") or {}).get("min_usage")
     all_seasons = sorted(inputs.pw["season"].unique().tolist())
     pack = ContextPack(rostersmod.fetch_rosters_weekly(all_seasons), all_seasons,
                        opd=inputs.opd)
-    from nflvalue.advanced_features import AdvancedPack
-    adv = AdvancedPack(schedules=inputs.schedules)
+    from nflvalue.advanced_features import AdvancedPack, load_pbp_ext
+    _pbp_ext = load_pbp_ext()
+    adv = AdvancedPack(pbp=_pbp_ext, schedules=inputs.schedules)
     from nflvalue.chemistry import ChemistryPack
-    chem = ChemistryPack(pw=inputs.pw, schedules=inputs.schedules)
+    chem = ChemistryPack(pbp=_pbp_ext, pw=inputs.pw, schedules=inputs.schedules)
+    from nflvalue.ftn_features import FTNPack
+    ftn = FTNPack(pbp=_pbp_ext)
+    if os.environ.get("ML_PACKS_DUMP"):
+        import pickle
+        with open(os.environ["ML_PACKS_DUMP"], "wb") as fh:
+            pickle.dump((pack, adv, chem, ftn, sd_map, synth_map), fh)
+    return _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
+                       sd_map, synth_map, min_usage)
 
+
+def _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
+                sd_map, synth_map, min_usage) -> pd.DataFrame:
+    import lean_backtest as lb
     chunks = []
     for season in seasons:
         weeks = sorted(inputs.schedules[
@@ -79,6 +107,7 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
                 continue
             actuals = lb._actuals_for_week(inputs.pw, season, wk)
             cands = chem.attach(cands)
+            cands = ftn.attach(cands)
             feats = mlr.build_features(cands, inputs.pw, pack=pack, adv=adv)
             feats["y_over"] = mlr.label_over(feats, actuals)
             # baseline-composite fields (tune_weights conventions)
@@ -94,6 +123,8 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
                     + mlr.feature_columns())
             keep = list(dict.fromkeys(keep))
             chunks.append(feats[keep].dropna(subset=["y_over"]))
+    if not chunks:
+        return pd.DataFrame()
     frame = pd.concat(chunks, ignore_index=True)
     if append and os.path.exists(FRAME_PATH):
         old = pd.read_parquet(FRAME_PATH)

@@ -152,6 +152,9 @@ def refresh(season: Optional[int] = None, force: bool = False) -> Dict:
             con = nfl.load_contracts().to_pandas()
             con[["gsis_id", "player", "position", "year_signed", "years",
                  "value", "apy", "is_active"]].to_parquet(cpath, index=False)
+        from . import ftn_features
+        if season >= ftn_features.FTN_SEASON_MIN:
+            ftn_features.refresh(season)
     except Exception as exc:  # noqa: BLE001
         errors.append(f"ngs/contracts {season}: {exc}")
         print(f"[ingest] NGS/contracts refresh failed: {exc}")
