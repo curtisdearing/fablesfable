@@ -68,7 +68,28 @@ PBP_COLUMNS = [
     "passer_player_id", "passer_player_name",
     # Phase 6.1: target depth/location splits + red-zone defense
     "pass_location", "yardline_100", "fixed_drive",
+    # Phase 6.3: garbage-time filter + deterministic PROE/pace game script
+    "down", "qtr", "score_differential", "wp", "pass_oe",
 ]
+
+# ---- Phase 6.3: garbage time ------------------------------------------------ #
+# Q4 with a 3-possession margin, or a Q4 win probability outside 5-95%.
+# Same ingredient columns as the neutral-situation PROE/pace filter in
+# advanced_features (down/qtr/score_differential/wp); this is its complement
+# concept -- drop desperation/kneel-down noise from the CORE rolling stats.
+GARBAGE_Q4_MARGIN = 17
+GARBAGE_WP_BAND = (0.05, 0.95)
+GARBAGE_FILTER_ENABLED = True   # module switch for the walk-forward ablation
+
+
+def _garbage_mask(pbp: pd.DataFrame) -> pd.Series:
+    """True = garbage-time play. NaN-tolerant: missing wp falls back to the
+    score-margin rule alone; missing qtr/score never flags a play."""
+    q4 = pbp["qtr"].fillna(0) >= 4
+    blowout = pbp["score_differential"].abs().fillna(0) >= GARBAGE_Q4_MARGIN
+    wp = pbp["wp"]
+    wp_extreme = wp.notna() & ~wp.between(*GARBAGE_WP_BAND)
+    return q4 & (blowout | wp_extreme)
 
 
 # --------------------------------------------------------------------------- #
@@ -346,6 +367,24 @@ def _league_role_prior_mean(df: pd.DataFrame, rate_col: str) -> pd.Series:
     return _league_prior_mean_by(df, rate_col, ["role"], fill=0.0)
 
 
+def _league_full_ng_ratio(pw: pd.DataFrame, full_rate: pd.Series,
+                          ng_rate: pd.Series) -> pd.Series:
+    """PRIOR-weeks-only league ratio of full-game rate to garbage-filtered
+    rate (Phase 6.3). Multiplied onto the filtered rate so filtering can't
+    shift the league level (projections are graded against full games).
+    Expanding shift(1) means: never sees the current week; first-week rows
+    fall back to 1.0 (no adjustment, never a leak)."""
+    t = pd.DataFrame({"season": pw["season"], "week": pw["week"],
+                      "f": full_rate, "n": ng_rate})
+    weekly = (t.groupby(["season", "week"])[["f", "n"]].mean()
+              .reset_index().sort_values(["season", "week"]))
+    ef = weekly["f"].shift(1).expanding(min_periods=1).mean()
+    en = weekly["n"].shift(1).expanding(min_periods=1).mean()
+    weekly["_ratio"] = (ef / en.replace(0, np.nan)).clip(0.8, 1.25).fillna(1.0)
+    return t.merge(weekly[["season", "week", "_ratio"]],
+                   on=["season", "week"], how="left")["_ratio"].set_axis(pw.index)
+
+
 def _assign_archetype(pw: pd.DataFrame) -> pd.Series:
     """Walk-forward archetype label from TRAILING usage only (Phase 6.1).
 
@@ -378,7 +417,8 @@ def _assign_archetype(pw: pd.DataFrame) -> pd.Series:
     return pd.Series(np.where(cold, "generic", arch), index=pw.index)
 
 
-def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None,
+                      garbage_filter: Optional[bool] = None) -> pd.DataFrame:
     if pbp is None:
         pbp = load_pbp()
     team_week = _team_week(pbp)
@@ -387,18 +427,65 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw = _assign_position(pw, rosters=rosters)
     pw = pw.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
 
+    # ---- Phase 6.3: garbage-time filter for the RATE inputs ------------------ #
+    # Blowout-inflated usage shares and garbage-time efficiency previously
+    # leaked straight into mean = volume x efficiency (audit §1). Shares and
+    # efficiencies are now computed from NON-GARBAGE plays; absolute volume
+    # counts (targets/carries/attempts) stay full-game, because projections
+    # are graded against full-game stats. Each filtered rate is recalibrated
+    # by the PRIOR-WEEKS-ONLY league full/non-garbage ratio so the filter
+    # sharpens cross-player signal without shifting the league level (a
+    # derived walk-forward series, not a constant).
+    garbage_filter = GARBAGE_FILTER_ENABLED if garbage_filter is None else garbage_filter
+    can_filter = {"qtr", "score_differential"} <= set(pbp.columns)
+    if garbage_filter and can_filter:
+        ng_pw = _combine_player_week(pbp[~_garbage_mask(pbp)])
+        ng_tw = _team_week(pbp[~_garbage_mask(pbp)])
+        ng_cols = ["targets", "receptions", "rec_yards", "carries", "rush_yards",
+                   "pass_attempts", "completions", "pass_yards",
+                   "pass_tds", "rush_tds", "rec_tds"]
+        ng = ng_pw[["season", "week", "player_id"] + ng_cols].rename(
+            columns={c: f"{c}_ng" for c in ng_cols})
+        pw = pw.merge(ng, on=["season", "week", "player_id"], how="left")
+        ngt = ng_tw[["season", "week", "team", "team_pass_att", "team_rush_att"]].rename(
+            columns={"team_pass_att": "team_pass_att_ng", "team_rush_att": "team_rush_att_ng"})
+        pw = pw.merge(ngt, on=["season", "week", "team"], how="left")
+        # a played week whose every snap was garbage -> 0 usage, not NaN
+        # (the row exists, so this can't encode missingness)
+        for c in [f"{c}_ng" for c in ng_cols] + ["team_pass_att_ng", "team_rush_att_ng"]:
+            pw[c] = pw[c].fillna(0.0)
+        S = "_ng"
+    else:
+        S = ""
+
+    def _col(c: str) -> pd.Series:
+        return pw[c + S]
+
     # ---- per-week raw ratios (this week's realized rate; NOT leaked yet -- ---
     # these are just intermediate columns used to build ROLLING features below)
-    pw["_target_share"] = _safe_ratio(pw["targets"], pw["team_pass_att"])
-    pw["_carry_share"] = _safe_ratio(pw["carries"], pw["team_rush_att"])
+    pw["_target_share"] = _safe_ratio(_col("targets"), _col("team_pass_att"))
+    pw["_carry_share"] = _safe_ratio(_col("carries"), _col("team_rush_att"))
     pw["_adot"] = _safe_ratio(pw["air_yards_sum"], pw["targets"])
-    pw["_ypt"] = _safe_ratio(pw["rec_yards"], pw["targets"])
-    pw["_catch_rate"] = _safe_ratio(pw["receptions"], pw["targets"])
-    pw["_ypc"] = _safe_ratio(pw["rush_yards"], pw["carries"])
-    pw["_ypa"] = _safe_ratio(pw["pass_yards"], pw["pass_attempts"])
-    pw["_pass_td_rate"] = _safe_ratio(pw["pass_tds"], pw["pass_attempts"])
-    pw["_rush_td_rate"] = _safe_ratio(pw["rush_tds"], pw["carries"])
-    pw["_rec_td_rate"] = _safe_ratio(pw["rec_tds"], pw["targets"])
+    pw["_ypt"] = _safe_ratio(_col("rec_yards"), _col("targets"))
+    pw["_catch_rate"] = _safe_ratio(_col("receptions"), _col("targets"))
+    pw["_ypc"] = _safe_ratio(_col("rush_yards"), _col("carries"))
+    pw["_ypa"] = _safe_ratio(_col("pass_yards"), _col("pass_attempts"))
+    pw["_pass_td_rate"] = _safe_ratio(_col("pass_tds"), _col("pass_attempts"))
+    pw["_rush_td_rate"] = _safe_ratio(_col("rush_tds"), _col("carries"))
+    pw["_rec_td_rate"] = _safe_ratio(_col("rec_tds"), _col("targets"))
+
+    if S:  # recalibrate each filtered rate by the league full/filtered ratio
+        rate_full = {
+            "_target_share": ("targets", "team_pass_att"),
+            "_carry_share": ("carries", "team_rush_att"),
+            "_ypt": ("rec_yards", "targets"), "_catch_rate": ("receptions", "targets"),
+            "_ypc": ("rush_yards", "carries"), "_ypa": ("pass_yards", "pass_attempts"),
+            "_pass_td_rate": ("pass_tds", "pass_attempts"),
+            "_rush_td_rate": ("rush_tds", "carries"), "_rec_td_rate": ("rec_tds", "targets"),
+        }
+        for rate_col, (num, den) in rate_full.items():
+            full_rate = _safe_ratio(pw[num], pw[den])
+            pw[rate_col] = pw[rate_col] * _league_full_ng_ratio(pw, full_rate, pw[rate_col])
     # Phase 6.1: depth/location profiles (share of KNOWN-depth/-location plays)
     pw["_short_tgt_share"] = _safe_ratio(pw["short_tgt"], pw["known_ay_tgt"])
     pw["_mid_tgt_share"] = _safe_ratio(pw["mid_tgt"], pw["known_loc_tgt"])
@@ -731,14 +818,39 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     if pbp is None:
         pbp = load_pbp()
     tw = _team_week(pbp).sort_values(["team", "season", "week"]).reset_index(drop=True)
+    tw["_plays"] = tw["team_pass_att"] + tw["team_rush_att"]
+    # Phase 6.3: trailing neutral-situation PROE (same neutral filter as
+    # advanced_features: 1st/2nd down, Q1-Q3, score within 7, wp 20-80%)
+    if "pass_oe" in pbp.columns and "wp" in pbp.columns:
+        neutral = (pbp["down"].isin([1, 2]) & (pbp["qtr"] <= 3)
+                   & (pbp["score_differential"].abs() <= 7)
+                   & pbp["wp"].between(0.20, 0.80) & pbp["pass_oe"].notna())
+        proe = (pbp[neutral].groupby(["season", "week", "posteam"])["pass_oe"]
+                .mean().rename("_proe").reset_index().rename(columns={"posteam": "team"}))
+        tw = tw.merge(proe, on=["season", "week", "team"], how="left")
+        tw = tw.sort_values(["team", "season", "week"]).reset_index(drop=True)
+    else:
+        tw["_proe"] = np.nan
+
+    # every team-grouped transform runs BEFORE any season/week merges so the
+    # groupby view can never go stale against a reordered frame
     g = tw.groupby("team")
     tw["roll_team_pass_att"] = g["team_pass_att"].transform(_rolling_shifted)
     tw["roll_team_rush_att"] = g["team_rush_att"].transform(_rolling_shifted)
+    tw["roll_team_plays"] = g["_plays"].transform(_rolling_shifted)          # 6.3 pace basis
+    tw["roll_team_neutral_proe"] = g["_proe"].transform(_rolling_shifted)   # 6.3 intent
     # Phase 6.2: expected red-zone opportunity volume (anytime-TD's RZ path)
     tw["roll_team_rz_tgt"] = g["team_rz_tgt"].transform(
         lambda s: _rolling_shifted(s, window=16))
     tw["roll_team_rz_car"] = g["team_rz_car"].transform(
         lambda s: _rolling_shifted(s, window=16))
+
+    # Phase 6.3: prior-weeks-only league mean plays (the neutral point the
+    # opponent-pace multiplier tilts around)
+    lgp = (tw.groupby(["season", "week"])["_plays"].mean()
+           .reset_index().sort_values(["season", "week"]))
+    lgp["league_plays_prior"] = lgp["_plays"].shift(1).expanding(min_periods=1).mean()
+    tw = tw.merge(lgp[["season", "week", "league_plays_prior"]], on=["season", "week"], how="left")
 
     # league TD-per-RZ-opportunity, PRIOR-weeks-only expanding (a derived
     # walk-forward series, not a hand-picked constant): what fraction of
@@ -769,7 +881,8 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     tw = tw.drop(columns=["lp_pass", "lp_rush"])
     return tw[["season", "week", "team", "roll_team_pass_att", "roll_team_rush_att",
                "roll_team_rz_tgt", "roll_team_rz_car",
-               "league_rz_tgt_td_rate", "league_rz_car_td_rate"]]
+               "league_rz_tgt_td_rate", "league_rz_car_td_rate",
+               "roll_team_plays", "league_plays_prior", "roll_team_neutral_proe"]]
 
 
 if __name__ == "__main__":

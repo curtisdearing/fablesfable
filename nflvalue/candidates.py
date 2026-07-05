@@ -294,11 +294,20 @@ def enumerate_candidates(
         ginfo = team_to_game.get(player_row.get("team"))
         if ginfo is None or role not in ("QB", "RB", "WR", "TE"):
             continue
-        gs = game_script_multipliers(ginfo["margin"])
         team_row = inputs.team_idx.get((season, week, player_row["team"]))
         if team_row is None and roster_mode == "carry_forward":
             # live week: no week-W row exists yet; use the freshest prior row
             team_row = inputs.team_row_asof(season, week, player_row["team"])
+        # Phase 6.3: the split tilt now carries the team's measured coaching
+        # intent (trailing neutral PROE) alongside the spread
+        _tp = (team_row or {}).get("roll_team_pass_att")
+        _tr = (team_row or {}).get("roll_team_rush_att")
+        trail_share = (float(_tp) / (float(_tp) + float(_tr))
+                       if _tp and _tr and (float(_tp) + float(_tr)) > 0 else None)
+        gs = game_script_multipliers(
+            ginfo["margin"],
+            neutral_proe=(team_row or {}).get("roll_team_neutral_proe"),
+            trail_pass_share=trail_share)
         for market in markets:
             spec = MARKETS[market]
             if role not in spec["role"]:

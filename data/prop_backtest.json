@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-05 20:59 UTC",
+  "generated": "2026-07-05 21:07 UTC",
   "n_plays": 45339,
   "seasons": [
     2019
@@ -15,116 +15,116 @@
       "low_confidence": false,
       "overall": {
         "n": 3021,
-        "mae": 24.83,
-        "rmse": 34.116,
-        "corr": 0.4057
+        "mae": 24.976,
+        "rmse": 34.373,
+        "corr": 0.4006
       },
       "eligible_only": {
         "n": 2069,
-        "mae": 23.941,
-        "rmse": 32.35,
-        "corr": 0.4757
+        "mae": 24.007,
+        "rmse": 32.483,
+        "corr": 0.4727
       },
       "n_ineligible_cold_start": 952,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 361,
-          "mae": 33.937,
-          "rmse": 46.323,
-          "corr": -0.3274
+          "mae": 34.118,
+          "rmse": 46.508,
+          "corr": -0.323
         },
         "1-3 games": {
           "n": 852,
-          "mae": 22.723,
-          "rmse": 31.666,
-          "corr": 0.4464
+          "mae": 23.021,
+          "rmse": 32.374,
+          "corr": 0.4339
         },
         "4-7 games": {
           "n": 880,
-          "mae": 22.868,
-          "rmse": 32.123,
-          "corr": 0.482
+          "mae": 22.927,
+          "rmse": 32.135,
+          "corr": 0.4824
         },
         "8+ games": {
           "n": 928,
-          "mae": 25.083,
-          "rmse": 32.481,
-          "corr": 0.4746
+          "mae": 25.158,
+          "rmse": 32.609,
+          "corr": 0.4716
         }
       },
       "by_role": {
         "TE": {
           "n": 1008,
-          "mae": 18.531,
-          "rmse": 25.667,
-          "corr": 0.421
+          "mae": 18.424,
+          "rmse": 25.658,
+          "corr": 0.4203
         },
         "WR": {
           "n": 2013,
-          "mae": 27.984,
-          "rmse": 37.64,
-          "corr": 0.3644
+          "mae": 28.257,
+          "rmse": 37.993,
+          "corr": 0.3578
         }
       },
       "calibration": [
         {
           "bucket": "0-10%",
-          "n": 49,
-          "predicted_p_over": 0.076,
-          "actual_over_rate": 0.5102
+          "n": 80,
+          "predicted_p_over": 0.0688,
+          "actual_over_rate": 0.5
         },
         {
           "bucket": "10-20%",
-          "n": 292,
-          "predicted_p_over": 0.1572,
-          "actual_over_rate": 0.4247
+          "n": 333,
+          "predicted_p_over": 0.1573,
+          "actual_over_rate": 0.4234
         },
         {
           "bucket": "20-30%",
-          "n": 625,
-          "predicted_p_over": 0.2524,
-          "actual_over_rate": 0.4112
+          "n": 597,
+          "predicted_p_over": 0.2512,
+          "actual_over_rate": 0.407
         },
         {
           "bucket": "30-40%",
-          "n": 540,
-          "predicted_p_over": 0.3484,
-          "actual_over_rate": 0.4259
+          "n": 525,
+          "predicted_p_over": 0.3503,
+          "actual_over_rate": 0.4438
         },
         {
           "bucket": "40-50%",
-          "n": 321,
-          "predicted_p_over": 0.4457,
-          "actual_over_rate": 0.4673
+          "n": 291,
+          "predicted_p_over": 0.4483,
+          "actual_over_rate": 0.4364
         },
         {
           "bucket": "50-60%",
-          "n": 144,
-          "predicted_p_over": 0.5436,
-          "actual_over_rate": 0.4583
+          "n": 146,
+          "predicted_p_over": 0.5438,
+          "actual_over_rate": 0.4452
         },
         {
           "bucket": "60-70%",
-          "n": 55,
-          "predicted_p_over": 0.6366,
-          "actual_over_rate": 0.3818
+          "n": 51,
+          "predicted_p_over": 0.6435,
+          "actual_over_rate": 0.4902
         },
         {
           "bucket": "70-80%",
-          "n": 29,
-          "predicted_p_over": 0.7409,
-          "actual_over_rate": 0.4828
+          "n": 23,
+          "predicted_p_over": 0.7362,
+          "actual_over_rate": 0.4348
         },
         {
           "bucket": "80-90%",
-          "n": 5,
-          "predicted_p_over": 0.8257,
-          "actual_over_rate": 0.2
+          "n": 14,
+          "predicted_p_over": 0.8362,
+          "actual_over_rate": 0.2857
         },
         {
           "bucket": "90-100%",
           "n": 9,
-          "predicted_p_over": 0.9896,
+          "predicted_p_over": 0.9897,
           "actual_over_rate": 0.4444
         }
       ]
@@ -138,104 +138,104 @@
       "low_confidence": false,
       "overall": {
         "n": 3021,
-        "mae": 1.637,
-        "rmse": 2.218,
-        "corr": 0.4725
+        "mae": 1.65,
+        "rmse": 2.234,
+        "corr": 0.4678
       },
       "eligible_only": {
         "n": 2069,
-        "mae": 1.527,
-        "rmse": 2.037,
-        "corr": 0.5572
+        "mae": 1.538,
+        "rmse": 2.046,
+        "corr": 0.5539
       },
       "n_ineligible_cold_start": 952,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 361,
-          "mae": 2.582,
-          "rmse": 3.284,
-          "corr": -0.4106
+          "mae": 2.584,
+          "rmse": 3.286,
+          "corr": -0.4089
         },
         "1-3 games": {
           "n": 852,
-          "mae": 1.449,
-          "rmse": 2.0,
-          "corr": 0.5676
+          "mae": 1.473,
+          "rmse": 2.041,
+          "corr": 0.5533
         },
         "4-7 games": {
           "n": 880,
-          "mae": 1.47,
-          "rmse": 1.99,
-          "corr": 0.5511
+          "mae": 1.476,
+          "rmse": 1.993,
+          "corr": 0.5509
         },
         "8+ games": {
           "n": 928,
-          "mae": 1.601,
-          "rmse": 2.096,
-          "corr": 0.5446
+          "mae": 1.615,
+          "rmse": 2.11,
+          "corr": 0.5386
         }
       },
       "by_role": {
         "TE": {
           "n": 1008,
-          "mae": 1.389,
-          "rmse": 1.919,
-          "corr": 0.4783
+          "mae": 1.395,
+          "rmse": 1.939,
+          "corr": 0.4643
         },
         "WR": {
           "n": 2013,
-          "mae": 1.762,
-          "rmse": 2.354,
-          "corr": 0.4539
+          "mae": 1.778,
+          "rmse": 2.368,
+          "corr": 0.4523
         }
       },
       "calibration": [
         {
           "bucket": "0-10%",
-          "n": 9,
-          "predicted_p_over": 0.064,
-          "actual_over_rate": 0.6667
+          "n": 19,
+          "predicted_p_over": 0.0534,
+          "actual_over_rate": 0.6316
         },
         {
           "bucket": "10-20%",
-          "n": 98,
-          "predicted_p_over": 0.165,
-          "actual_over_rate": 0.4592
+          "n": 139,
+          "predicted_p_over": 0.1578,
+          "actual_over_rate": 0.4029
         },
         {
           "bucket": "20-30%",
-          "n": 394,
-          "predicted_p_over": 0.2567,
-          "actual_over_rate": 0.4543
+          "n": 390,
+          "predicted_p_over": 0.2577,
+          "actual_over_rate": 0.441
         },
         {
           "bucket": "30-40%",
-          "n": 732,
-          "predicted_p_over": 0.3524,
-          "actual_over_rate": 0.373
+          "n": 695,
+          "predicted_p_over": 0.3516,
+          "actual_over_rate": 0.3971
         },
         {
           "bucket": "40-50%",
-          "n": 652,
-          "predicted_p_over": 0.4448,
-          "actual_over_rate": 0.4663
+          "n": 568,
+          "predicted_p_over": 0.4447,
+          "actual_over_rate": 0.4665
         },
         {
           "bucket": "50-60%",
-          "n": 177,
-          "predicted_p_over": 0.5353,
-          "actual_over_rate": 0.4972
+          "n": 227,
+          "predicted_p_over": 0.5333,
+          "actual_over_rate": 0.4537
         },
         {
           "bucket": "60-70%",
-          "n": 6,
-          "predicted_p_over": 0.6224,
-          "actual_over_rate": 0.5
+          "n": 30,
+          "predicted_p_over": 0.633,
+          "actual_over_rate": 0.4667
         },
         {
           "bucket": "70-80%",
           "n": 1,
-          "predicted_p_over": 0.7473,
+          "predicted_p_over": 0.7098,
           "actual_over_rate": 1.0
         }
       ]
@@ -248,97 +248,103 @@
       "low_confidence": false,
       "overall": {
         "n": 1412,
-        "mae": 21.663,
-        "rmse": 31.148,
-        "corr": 0.57
+        "mae": 21.681,
+        "rmse": 31.443,
+        "corr": 0.5695
       },
       "eligible_only": {
         "n": 964,
-        "mae": 20.896,
-        "rmse": 29.991,
-        "corr": 0.6373
+        "mae": 20.954,
+        "rmse": 30.381,
+        "corr": 0.6315
       },
       "n_ineligible_cold_start": 448,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 173,
-          "mae": 30.358,
-          "rmse": 40.821,
-          "corr": -0.3741
+          "mae": 30.105,
+          "rmse": 40.665,
+          "corr": -0.37
         },
         "1-3 games": {
           "n": 393,
-          "mae": 18.547,
-          "rmse": 28.207,
-          "corr": 0.6069
+          "mae": 18.664,
+          "rmse": 28.782,
+          "corr": 0.6064
         },
         "4-7 games": {
           "n": 404,
-          "mae": 19.778,
-          "rmse": 28.547,
-          "corr": 0.6601
+          "mae": 19.612,
+          "rmse": 28.751,
+          "corr": 0.6585
         },
         "8+ games": {
           "n": 442,
-          "mae": 22.754,
-          "rmse": 31.541,
-          "corr": 0.6021
+          "mae": 22.958,
+          "rmse": 31.922,
+          "corr": 0.5974
         }
       },
       "by_role": {},
       "calibration": [
         {
           "bucket": "0-10%",
-          "n": 102,
-          "predicted_p_over": 0.0419,
-          "actual_over_rate": 0.3824
+          "n": 153,
+          "predicted_p_over": 0.0418,
+          "actual_over_rate": 0.4052
         },
         {
           "bucket": "10-20%",
-          "n": 137,
-          "predicted_p_over": 0.1526,
-          "actual_over_rate": 0.4526
+          "n": 142,
+          "predicted_p_over": 0.1575,
+          "actual_over_rate": 0.4718
         },
         {
           "bucket": "20-30%",
-          "n": 211,
-          "predicted_p_over": 0.2517,
-          "actual_over_rate": 0.4076
+          "n": 206,
+          "predicted_p_over": 0.2506,
+          "actual_over_rate": 0.3592
         },
         {
           "bucket": "30-40%",
-          "n": 233,
-          "predicted_p_over": 0.3468,
-          "actual_over_rate": 0.3906
+          "n": 208,
+          "predicted_p_over": 0.3459,
+          "actual_over_rate": 0.399
         },
         {
           "bucket": "40-50%",
-          "n": 126,
-          "predicted_p_over": 0.4448,
-          "actual_over_rate": 0.3968
+          "n": 111,
+          "predicted_p_over": 0.4484,
+          "actual_over_rate": 0.4144
         },
         {
           "bucket": "50-60%",
-          "n": 86,
-          "predicted_p_over": 0.5389,
-          "actual_over_rate": 0.4419
+          "n": 68,
+          "predicted_p_over": 0.5523,
+          "actual_over_rate": 0.4853
         },
         {
           "bucket": "60-70%",
-          "n": 39,
-          "predicted_p_over": 0.635,
-          "actual_over_rate": 0.6154
+          "n": 35,
+          "predicted_p_over": 0.64,
+          "actual_over_rate": 0.6
         },
         {
           "bucket": "70-80%",
-          "n": 8,
-          "predicted_p_over": 0.7342,
-          "actual_over_rate": 0.625
+          "n": 18,
+          "predicted_p_over": 0.7242,
+          "actual_over_rate": 0.5
+        },
+        {
+          "bucket": "80-90%",
+          "n": 1,
+          "predicted_p_over": 0.8006,
+          "actual_over_rate": 0.0
         },
         {
           "bucket": "90-100%",
           "n": 20,
-          "predicted_p_over": 0.9962,
+          "predicted_p_over": 0.9964,
           "actual_over_rate": 0.45
         }
       ]
@@ -351,41 +357,41 @@
       "low_confidence": false,
       "overall": {
         "n": 605,
-        "mae": 83.364,
-        "rmse": 116.298,
-        "corr": 0.3831
+        "mae": 83.296,
+        "rmse": 116.588,
+        "corr": 0.3772
       },
       "eligible_only": {
         "n": 410,
-        "mae": 65.374,
-        "rmse": 87.011,
-        "corr": 0.5301
+        "mae": 65.018,
+        "rmse": 86.667,
+        "corr": 0.5286
       },
       "n_ineligible_cold_start": 195,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 72,
-          "mae": 184.649,
-          "rmse": 218.748,
-          "corr": -0.5071
+          "mae": 185.402,
+          "rmse": 219.242,
+          "corr": -0.5053
         },
         "1-3 games": {
           "n": 171,
-          "mae": 83.596,
-          "rmse": 115.338,
-          "corr": 0.4849
+          "mae": 83.522,
+          "rmse": 116.384,
+          "corr": 0.4841
         },
         "4-7 games": {
           "n": 156,
-          "mae": 72.859,
-          "rmse": 94.736,
-          "corr": 0.491
+          "mae": 72.461,
+          "rmse": 94.385,
+          "corr": 0.4864
         },
         "8+ games": {
           "n": 206,
-          "mae": 55.726,
-          "rmse": 71.823,
-          "corr": 0.6081
+          "mae": 55.626,
+          "rmse": 71.624,
+          "corr": 0.612
         }
       },
       "by_role": {},
@@ -393,44 +399,44 @@
         {
           "bucket": "10-20%",
           "n": 1,
-          "predicted_p_over": 0.1756,
+          "predicted_p_over": 0.1662,
           "actual_over_rate": 0.0
         },
         {
           "bucket": "20-30%",
-          "n": 12,
-          "predicted_p_over": 0.2701,
-          "actual_over_rate": 0.3333
+          "n": 16,
+          "predicted_p_over": 0.2711,
+          "actual_over_rate": 0.25
         },
         {
           "bucket": "30-40%",
-          "n": 52,
-          "predicted_p_over": 0.3536,
-          "actual_over_rate": 0.2885
+          "n": 59,
+          "predicted_p_over": 0.357,
+          "actual_over_rate": 0.339
         },
         {
           "bucket": "40-50%",
-          "n": 136,
-          "predicted_p_over": 0.453,
-          "actual_over_rate": 0.4632
+          "n": 142,
+          "predicted_p_over": 0.4521,
+          "actual_over_rate": 0.4366
         },
         {
           "bucket": "50-60%",
-          "n": 142,
-          "predicted_p_over": 0.5428,
-          "actual_over_rate": 0.5352
+          "n": 137,
+          "predicted_p_over": 0.5397,
+          "actual_over_rate": 0.5912
         },
         {
           "bucket": "60-70%",
-          "n": 54,
-          "predicted_p_over": 0.6417,
-          "actual_over_rate": 0.5926
+          "n": 45,
+          "predicted_p_over": 0.6409,
+          "actual_over_rate": 0.5111
         },
         {
           "bucket": "70-80%",
-          "n": 13,
-          "predicted_p_over": 0.7357,
-          "actual_over_rate": 0.3077
+          "n": 10,
+          "predicted_p_over": 0.7328,
+          "actual_over_rate": 0.4
         }
       ]
     },
@@ -515,91 +521,97 @@
       "low_confidence": false,
       "overall": {
         "n": 1412,
-        "mae": 3.831,
-        "rmse": 5.344,
-        "corr": 0.6768
+        "mae": 3.918,
+        "rmse": 5.454,
+        "corr": 0.6782
       },
       "eligible_only": {
         "n": 964,
-        "mae": 3.522,
-        "rmse": 4.872,
-        "corr": 0.7458
+        "mae": 3.619,
+        "rmse": 5.008,
+        "corr": 0.7408
       },
       "n_ineligible_cold_start": 448,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 173,
-          "mae": 6.803,
-          "rmse": 8.369,
-          "corr": -0.4275
+          "mae": 6.85,
+          "rmse": 8.408,
+          "corr": -0.4277
         },
         "1-3 games": {
           "n": 393,
-          "mae": 3.133,
-          "rmse": 4.492,
-          "corr": 0.7512
+          "mae": 3.241,
+          "rmse": 4.637,
+          "corr": 0.7483
         },
         "4-7 games": {
           "n": 404,
-          "mae": 3.318,
-          "rmse": 4.793,
-          "corr": 0.7635
+          "mae": 3.361,
+          "rmse": 4.856,
+          "corr": 0.761
         },
         "8+ games": {
           "n": 442,
-          "mae": 3.757,
-          "rmse": 4.987,
-          "corr": 0.7184
+          "mae": 3.881,
+          "rmse": 5.165,
+          "corr": 0.7149
         }
       },
       "by_role": {},
       "calibration": [
         {
           "bucket": "0-10%",
-          "n": 85,
-          "predicted_p_over": 0.041,
-          "actual_over_rate": 0.4118
+          "n": 102,
+          "predicted_p_over": 0.037,
+          "actual_over_rate": 0.4608
         },
         {
           "bucket": "10-20%",
-          "n": 44,
-          "predicted_p_over": 0.1664,
-          "actual_over_rate": 0.5455
+          "n": 92,
+          "predicted_p_over": 0.1524,
+          "actual_over_rate": 0.4891
         },
         {
           "bucket": "20-30%",
-          "n": 138,
-          "predicted_p_over": 0.2547,
-          "actual_over_rate": 0.4565
+          "n": 129,
+          "predicted_p_over": 0.2584,
+          "actual_over_rate": 0.3876
         },
         {
           "bucket": "30-40%",
-          "n": 241,
-          "predicted_p_over": 0.3619,
-          "actual_over_rate": 0.4232
+          "n": 185,
+          "predicted_p_over": 0.3531,
+          "actual_over_rate": 0.4541
         },
         {
           "bucket": "40-50%",
-          "n": 364,
-          "predicted_p_over": 0.4451,
-          "actual_over_rate": 0.4505
+          "n": 236,
+          "predicted_p_over": 0.4532,
+          "actual_over_rate": 0.4068
         },
         {
           "bucket": "50-60%",
-          "n": 81,
-          "predicted_p_over": 0.531,
-          "actual_over_rate": 0.4938
+          "n": 148,
+          "predicted_p_over": 0.5448,
+          "actual_over_rate": 0.5068
         },
         {
           "bucket": "60-70%",
-          "n": 8,
-          "predicted_p_over": 0.6187,
-          "actual_over_rate": 0.625
+          "n": 66,
+          "predicted_p_over": 0.6409,
+          "actual_over_rate": 0.5303
+        },
+        {
+          "bucket": "70-80%",
+          "n": 3,
+          "predicted_p_over": 0.7233,
+          "actual_over_rate": 0.3333
         },
         {
           "bucket": "80-90%",
           "n": 1,
-          "predicted_p_over": 0.8281,
+          "predicted_p_over": 0.8742,
           "actual_over_rate": 0.0
         }
       ]
@@ -614,105 +626,105 @@
       "low_confidence": true,
       "overall": {
         "n": 4433,
-        "mae": 0.361,
+        "mae": 0.36,
         "rmse": 0.538,
-        "corr": 0.2172
+        "corr": 0.2146
       },
       "eligible_only": {
         "n": 3033,
-        "mae": 0.386,
-        "rmse": 0.552,
-        "corr": 0.2508
+        "mae": 0.385,
+        "rmse": 0.553,
+        "corr": 0.2476
       },
       "n_ineligible_cold_start": 1400,
       "by_sample_size": {
         "0 games (cold start)": {
           "n": 534,
-          "mae": 0.294,
-          "rmse": 0.545,
-          "corr": -0.1596
+          "mae": 0.298,
+          "rmse": 0.546,
+          "corr": -0.1592
         },
         "1-3 games": {
           "n": 1245,
-          "mae": 0.319,
-          "rmse": 0.487,
-          "corr": 0.2137
+          "mae": 0.32,
+          "rmse": 0.488,
+          "corr": 0.2076
         },
         "4-7 games": {
           "n": 1284,
-          "mae": 0.364,
-          "rmse": 0.549,
-          "corr": 0.2539
+          "mae": 0.362,
+          "rmse": 0.547,
+          "corr": 0.2623
         },
         "8+ games": {
           "n": 1370,
-          "mae": 0.422,
-          "rmse": 0.568,
-          "corr": 0.2457
+          "mae": 0.42,
+          "rmse": 0.57,
+          "corr": 0.2391
         }
       },
       "by_role": {
         "RB": {
           "n": 1412,
-          "mae": 0.428,
-          "rmse": 0.602,
-          "corr": 0.2821
+          "mae": 0.43,
+          "rmse": 0.604,
+          "corr": 0.2741
         },
         "TE": {
           "n": 1008,
-          "mae": 0.28,
+          "mae": 0.279,
           "rmse": 0.451,
-          "corr": 0.1216
+          "corr": 0.1256
         },
         "WR": {
           "n": 2013,
-          "mae": 0.354,
+          "mae": 0.352,
           "rmse": 0.53,
-          "corr": 0.12
+          "corr": 0.1222
         }
       },
       "calibration": [
         {
           "bucket": "0-10%",
-          "n": 649,
-          "predicted_p_over": 0.0723,
-          "actual_over_rate": 0.1279
+          "n": 692,
+          "predicted_p_over": 0.0709,
+          "actual_over_rate": 0.1286
         },
         {
           "bucket": "10-20%",
-          "n": 1067,
-          "predicted_p_over": 0.1492,
-          "actual_over_rate": 0.1799
+          "n": 1070,
+          "predicted_p_over": 0.1493,
+          "actual_over_rate": 0.1897
         },
         {
           "bucket": "20-30%",
-          "n": 716,
-          "predicted_p_over": 0.2449,
-          "actual_over_rate": 0.25
+          "n": 691,
+          "predicted_p_over": 0.2459,
+          "actual_over_rate": 0.2518
         },
         {
           "bucket": "30-40%",
-          "n": 423,
-          "predicted_p_over": 0.3412,
-          "actual_over_rate": 0.3404
+          "n": 405,
+          "predicted_p_over": 0.3404,
+          "actual_over_rate": 0.3309
         },
         {
           "bucket": "40-50%",
-          "n": 145,
-          "predicted_p_over": 0.4395,
-          "actual_over_rate": 0.3724
+          "n": 146,
+          "predicted_p_over": 0.4425,
+          "actual_over_rate": 0.4178
         },
         {
           "bucket": "50-60%",
-          "n": 32,
-          "predicted_p_over": 0.5337,
-          "actual_over_rate": 0.625
+          "n": 28,
+          "predicted_p_over": 0.5296,
+          "actual_over_rate": 0.4286
         },
         {
-          "bucket": "60-70%",
+          "bucket": "70-80%",
           "n": 1,
-          "predicted_p_over": 0.6015,
-          "actual_over_rate": 1.0
+          "predicted_p_over": 0.7299,
+          "actual_over_rate": 0.0
         }
       ]
     }

@@ -185,22 +185,58 @@ MIN_GAMES_ELIGIBLE = 3
 # --------------------------------------------------------------------------- #
 # Volume: team pace x player share, with an optional game-script tilt
 # --------------------------------------------------------------------------- #
+# ---- Phase 6.3: measured PROE term in the deterministic split -------------- #
+# scripts/fit_game_script.py, 2019-2023 (n=2,607 team-weeks): this week's
+# pass share ~ trailing pass share + spread tilt + trailing NEUTRAL PROE.
+# PROE coefficient +0.1168 per (pass_oe/100), t=+3.1 -- coaching intent adds
+# real signal beyond trailing pass share, so it ships. The OPPONENT-pace
+# volume term from the same fit FAILED (elasticity -0.015, t=-0.3; implied
+# multiplier band [0.9985, 1.0016]) and is deliberately NOT shipped -- a
+# team's play count is its own pace plus game flow; opponent pace measured
+# as nothing at team level. Provenance: docs/decisions_p6.md.
+PROE_SPLIT_COEF = 0.1168
+PROE_MULT_CAP = 0.03    # |proe| tops out ~12 pass_oe pts -> ~2.4% pass-volume
+                        # shift at league share; 3% cap is the P99 guard
+
+
 def game_script_multipliers(projected_margin: Optional[float], sd: float = 13.0,
-                             max_tilt: float = 0.12) -> Dict[str, float]:
-    """Trailing teams pass more, leading teams run more.
+                             max_tilt: float = 0.12,
+                             neutral_proe: Optional[float] = None,
+                             trail_pass_share: Optional[float] = None) -> Dict[str, float]:
+    """Trailing teams pass more, leading teams run more -- plus a measured
+    coaching-intent (neutral PROE) lean on the pass/rush split (Phase 6.3).
 
     ``projected_margin`` is this TEAM's expected margin (positive = favored),
     e.g. from ``build_ratings`` ratings fed into ``nflvalue.montecarlo.simulate``.
     Returns ``{"pass_mult", "rush_mult"}`` centered at 1.0, tilted by how much
-    the team is expected to be leading/trailing, capped at +/-``max_tilt``.
+    the team is expected to be leading/trailing, capped at +/-``max_tilt``;
+    the PROE lean converts the fitted pass-SHARE delta into volume space and
+    is capped at +/-``PROE_MULT_CAP``. Missing PROE/share -> spread-only
+    (the exact pre-6.3 behavior).
     """
-    if projected_margin is None:
+    if projected_margin is None and neutral_proe is None:
         return {"pass_mult": 1.0, "rush_mult": 1.0}
-    # normalize margin into roughly [-1, 1] using the game's margin SD, then
-    # scale into a small multiplicative tilt (a big favorite runs ~12% more).
-    z = max(-1.0, min(1.0, -projected_margin / max(sd, 1e-6)))  # favored (>0 margin) -> negative z -> more run
-    tilt = -z * max_tilt
-    return {"pass_mult": round(1.0 - tilt, 4), "rush_mult": round(1.0 + tilt, 4)}
+    tilt = 0.0
+    if projected_margin is not None:
+        # normalize margin into roughly [-1, 1] using the game's margin SD, then
+        # scale into a small multiplicative tilt (a big favorite runs ~12% more).
+        z = max(-1.0, min(1.0, -projected_margin / max(sd, 1e-6)))  # favored (>0) -> negative z -> more run
+        tilt = -z * max_tilt
+    pass_mult, rush_mult = 1.0 - tilt, 1.0 + tilt
+
+    if neutral_proe is not None and trail_pass_share is not None:
+        try:
+            proe, share = float(neutral_proe), float(trail_pass_share)
+        except (TypeError, ValueError):
+            proe, share = None, None
+        if proe is not None and share is not None \
+                and not (math.isnan(proe) or math.isnan(share)) and 0.30 <= share <= 0.80:
+            share_delta = PROE_SPLIT_COEF * (proe / 100.0)
+            p_adj = max(-PROE_MULT_CAP, min(PROE_MULT_CAP, share_delta / share))
+            r_adj = max(-PROE_MULT_CAP, min(PROE_MULT_CAP, -share_delta / (1.0 - share)))
+            pass_mult *= (1.0 + p_adj)
+            rush_mult *= (1.0 + r_adj)
+    return {"pass_mult": round(pass_mult, 4), "rush_mult": round(rush_mult, 4)}
 
 
 def expected_volume(player_row: Dict, team_row: Optional[Dict], market_spec: Dict,
