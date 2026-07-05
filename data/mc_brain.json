@@ -1,0 +1,131 @@
+{
+ "inputs": "weekly-retrain GBDT leans (live cadence), synthetic-line graded",
+ "bootstrap_by_week": {
+  "2024": {
+   "n_bets": 1360,
+   "hit": 0.6632,
+   "hit_ci90": [
+    0.6435,
+    0.6833
+   ],
+   "units": 362.0,
+   "units_ci90": [
+    304.9,
+    421.2
+   ],
+   "p_profitable": 1.0,
+   "p_beat_breakeven": 1.0
+  },
+  "2025": {
+   "n_bets": 1360,
+   "hit": 0.6816,
+   "hit_ci90": [
+    0.6578,
+    0.7067
+   ],
+   "units": 409.7,
+   "units_ci90": [
+    342.5,
+    480.9
+   ],
+   "p_profitable": 1.0,
+   "p_beat_breakeven": 1.0
+  }
+ },
+ "paths": {
+  "2024": {
+   "max_losing_streak_p50_p95": [
+    6,
+    8
+   ],
+   "max_drawdown_units_p50_p95": [
+    8.3,
+    11.4
+   ],
+   "flat_end_units_p5_p50_p95": [
+    362.0,
+    362.0,
+    362.0
+   ]
+  },
+  "2025": {
+   "max_losing_streak_p50_p95": [
+    6,
+    8
+   ],
+   "max_drawdown_units_p50_p95": [
+    8.2,
+    11.3
+   ],
+   "flat_end_units_p5_p50_p95": [
+    409.7,
+    409.7,
+    409.7
+   ]
+  }
+ },
+ "realism_at_real_lines": [
+  {
+   "true_hit": 0.52,
+   "ev_units_300bets": -2.2,
+   "sd_units_300bets": 16.5,
+   "p_losing_season": 0.553,
+   "bets_to_prove_skill": null,
+   "qkelly_f_pct": 0.0,
+   "qkelly_end_median": 100.0,
+   "qkelly_p_halve": 0.0
+  },
+  {
+   "true_hit": 0.5238,
+   "ev_units_300bets": -0.0,
+   "sd_units_300bets": 16.5,
+   "p_losing_season": 0.5,
+   "bets_to_prove_skill": null,
+   "qkelly_f_pct": 0.0,
+   "qkelly_end_median": 100.0,
+   "qkelly_p_halve": 0.0
+  },
+  {
+   "true_hit": 0.54,
+   "ev_units_300bets": 9.3,
+   "sd_units_300bets": 16.5,
+   "p_losing_season": 0.287,
+   "bets_to_prove_skill": 5855,
+   "qkelly_f_pct": 0.85,
+   "qkelly_end_median": 107.1,
+   "qkelly_p_halve": 0.0
+  },
+  {
+   "true_hit": 0.55,
+   "ev_units_300bets": 15.0,
+   "sd_units_300bets": 16.5,
+   "p_losing_season": 0.181,
+   "bets_to_prove_skill": 2231,
+   "qkelly_f_pct": 1.38,
+   "qkelly_end_median": 119.8,
+   "qkelly_p_halve": 0.001
+  },
+  {
+   "true_hit": 0.56,
+   "ev_units_300bets": 20.7,
+   "sd_units_300bets": 16.4,
+   "p_losing_season": 0.103,
+   "bets_to_prove_skill": 1163,
+   "qkelly_f_pct": 1.9,
+   "qkelly_end_median": 141.2,
+   "qkelly_p_halve": 0.002
+  },
+  {
+   "true_hit": 0.58,
+   "ev_units_300bets": 32.2,
+   "sd_units_300bets": 16.3,
+   "p_losing_season": 0.024,
+   "bets_to_prove_skill": 478,
+   "qkelly_f_pct": 2.95,
+   "qkelly_end_median": 229.8,
+   "qkelly_p_halve": 0.005
+  }
+ ],
+ "breakeven": 0.5238,
+ "B": 10000
+}

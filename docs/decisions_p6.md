@@ -137,3 +137,98 @@ driven by nothing individually significant; +0.3pt in 2025.
 Synthetic-line caveat applies to every number above, as everywhere in this
 project. All 213 tests green, leakage suite extended to every new column
 (player, opp, team) including the archetype label itself.
+
+---
+
+# Checkpoint 2 — 6.4-6.8
+
+## 6.4 Weather (scripts/fit_weather.py, nflvalue/weather_study.py)
+
+Ground truth: pbp ``weather`` strings (94-98% of games, all seasons) parsed
+for temp / wind speed+DIRECTION / conditions; schedule temp/wind fill;
+precip = conditions-text flag (Open-Meteo archive kept as a validation
+source only — 1,700 kickoff-hour calls buy little over recorded conditions).
+Static stadium orientations entered (±15°, cosine-tolerant).
+
+Fits (2019-2023 outdoor-effective, n=1,556 team-games, trailing-controlled):
+wind −2.46 yds/mph to 10 mph (t=−3.4), −1.43/mph above (the guessed
+"30 mph = max" shape was wrong twice — linear, and active at single-digit
+wind); precip −38.0 yds (t=−5.9), the DOMINANT term; cold t=−1.3 FAILS;
+crosswind nothing for passing (t=−0.1) but REAL for FG% (−0.032/mph logit,
+t=−2.9, n=4,042; alongwind t=−1.5; Denver +0.22, t=+0.7 ns); rushing:
+nothing clears (precip t=+1.9) — the old "+0.5·sev rushing boost" was a vibe.
+Shipped: ``factors.weather_severity`` rebuilt from the fit;
+``weather_pass_multiplier`` (typical-day-centered, [0.85, 1.06]) applied to
+pass-family YARDS markets in replays (observed wx) and live wed/t90
+(forecast, now with wind_direction_10m). Retractable-roof audit (n=292):
+open 12.7%, ZERO open games with pricable weather — the dome treatment is
+now a measured fact, not an assumption. Composite delta: 2024 +0.2, 2025
+−0.4 (noise); the mechanism ships on the strength of the fit.
+
+## 6.5 Injuries (scripts/fit_absence_opp.py)
+
+Opponent-side: +6.04 team pass yds per opponent DB Out/Doubtful (t=+2.0,
+n=2,557 team-games) — independently corroborates the candidate-level +2.5pt
+pass-family finding (n=3,540). Shipped as ``opp_absence_factor`` into the
+composite's pinned absence dimension (pass-family, cap 1.10, sub-score only,
+means untouched). Front-7/LB outs: nothing clears for pass or rush. OWN
+O-line outs: nothing clears (sacks t=−0.3/+0.3, pass yds t=−1.4, scrambles
+t=−1.0; 2+-OL incidence 5.1% — power-limited, honestly noted); no multiplier.
+Durability shipped as ML features + panel flags only: ``roll_early_exit_rate``
+(pbp half-split early exits, 32-game roll, leakage-tested) and
+``inj_out_count_2y`` (trailing ~2-season Out/Doubtful listings, AsOf).
+
+## 6.6 Situational context (scripts/study_situations.py → data/situation_study.json)
+
+Historical study harness added (``context_study.study_frame`` — the exact
+n≥100 / BH-q<0.05 bars over the 73,925-candidate graded population, baseline
+46.21%). VERDICT: **nothing clears.** Closest: revenge_trade 52.75%, n=309,
+raw p=.022, **BH q=.36** — the audit's directional hypothesis shows up but
+does not survive correction; it keeps accruing in the live ledger. Everything
+else flat: primetime 46.2% (n=16,008), division 46.7% (n=26,624), short week
+45.5%, 2+-timezone travel 45.7%, west-east-early 46.6%, wind≥15 47.1%,
+birthday home/away 45.6/45.7, revenge home/away/quality-terciles 46-48.5,
+revenge_cut 42.0 (n=131), revenge_fa 44.7 (n=671). Subtype split reconciles
+exactly to the known revenge n=1,111 (309+131+671). Live accrual wired
+(panel lines + ledger keywords); STRICT GATE held — none of these touch the
+composite or the ML features (test-pinned).
+
+## 6.7 Selection optimizer (scripts/optimize_selection.py → data/selection_opt.json)
+
+Framing correction (again): the GBDT already IS gradient descent (log-loss,
+weekly retrain). The never-optimized layer was bet SELECTION — 5 discrete
+dials, so exhaustive walk-forward search (policy for season S chosen only on
+seasons < S OOS predictions, volume-floored) dominates gradient methods.
+VERDICT: the default top-5 protocol is already near the frontier. Chosen
+policy (p_min .66, drop low-confidence) OOS: 2023 +4.1u / 2024 +5.4u BETTER,
+2022 −52.5u / 2025 −27.0u WORSE than default. Pooled frontier: hit rate is
+buyable (65.2% → 66.8% at p_min .70) but units peak near p_min .62. Default
+policy UNCHANGED on this evidence; accuracy gains must come from the
+probability model, not selection re-slicing.
+
+## 6.8 Monte Carlo (scripts/mc_brain.py → docs/mc_brain_eval.md)
+
+Weekly-retrain leans (live cadence), week-cluster bootstrap B=10,000:
+2024 66.3% (90% CI 64.3-68.3), +362u; 2025 68.2% (65.8-70.7), +410u;
+P(profitable)=100% — AT SYNTHETIC LINES. Path stats: median/p95 max losing
+streak 6/8, max drawdown ~8/11u per season flat-1u. The realism bridge:
+at REAL lines the plausible band is 52-58%; a true 55% bettor needs ~2,231
+bets (80% power) to separate from breakeven, 54% needs ~5,855 — which is why
+the kill-check referendum is CLV, not won-bet counts. Full table incl.
+quarter-Kelly staking in docs/mc_brain_eval.md.
+
+## Final Phase-6 scoreboard (identical data/protocol/seeds; synthetic lines)
+
+| metric | 2024 base → final | 2025 base → final |
+|---|---|---|
+| composite hit / top-1 | 59.3/61.8 → 58.7/61.8 | 57.1/58.5 → 56.5/61.0 |
+| GBDT (season-fit) hit / top-1 | 63.8/73.2 → 64.5/68.0 | 68.5/72.4 → 67.9/73.5 |
+| GBDT weekly-retrain hit / top-1 | — → 66.3/68.0 | — → 68.2/77.6 |
+
+Aggregate movement is inside noise both ways; what Phase 6 actually bought is
+(a) every weather/injury/script/TD constant is now FITTED with printed
+provenance instead of guessed, (b) four dead-or-wrong wirings fixed (live
+neutral opp/team factors, 2024+ schedule column drops, silent matchup
+renormalization, RZ share computed-but-unused), (c) five plausible signal
+families measured and honestly rejected rather than left as folklore, and
+(d) the variance/realism envelope of the whole system is quantified.
