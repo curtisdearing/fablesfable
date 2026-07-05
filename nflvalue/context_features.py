@@ -211,4 +211,16 @@ def panel_items(lean: Dict) -> List[str]:
         db = lean.get("def_out_db") or 0
         items.append(f"opponent defense lists {int(d)} Out/Doubtful"
                      + (f" ({int(db)} in the secondary)" if db else ""))
+    # Phase 6.6 situational flags (display + ledger accrual ONLY -- every one
+    # measured not-significant on 2019-2025 history; strict gate applies)
+    if lean.get("primetime"):
+        items.append("primetime game (TNF/SNF/MNF)")
+    if lean.get("division_game"):
+        items.append("division game")
+    if lean.get("short_week"):
+        items.append("short week (<=5 days rest)")
+    if lean.get("long_travel_2tz"):
+        items.append("long travel: 2+ timezones crossed")
+    if lean.get("west_east_early"):
+        items.append("west-coast team, early eastern kickoff")
     return items

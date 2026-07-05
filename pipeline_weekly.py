@@ -481,6 +481,19 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         if pack is not None:
             cands = candmod.apply_opp_absence_factor(
                 cands, {k: v[1] for k, v in pack.def_out.items()})
+        # Phase 6.6: situational flags (panel + ledger accrual only; the
+        # composite/ML never see these until a tag clears the gate)
+        try:
+            from nflvalue import situations as sitmod
+            gt = sitmod.game_tags(inputs.schedules)
+            flags = gt.set_index(["game_id", "team"])[
+                ["primetime", "division_game", "short_week",
+                 "long_travel_2tz", "west_east_early"]]
+            idx = pd.MultiIndex.from_arrays([cands["game_id"], cands["team"]])
+            for col in flags.columns:
+                cands[col] = flags[col].reindex(idx).fillna(0).astype(int).to_numpy()
+        except Exception as exc:  # noqa: BLE001
+            print(f"[pipeline] situational flags unavailable ({exc})")
 
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)

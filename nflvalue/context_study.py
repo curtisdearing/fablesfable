@@ -45,6 +45,12 @@ TAG_KEYWORDS = {
     "homecoming": "homecoming", "milestone": "milestone", "record": "milestone",
     "incentive": "contract_incentive", "bonus": "contract_incentive",
     "escalator": "contract_incentive",
+    # Phase 6.6 situational families (all measured NOT-significant on
+    # 2019-2025 history -- data/situation_study.json -- accruing live
+    # evidence here; the closest was revenge_trade, q=.36)
+    "primetime": "primetime", "division game": "division_game",
+    "short week": "short_week", "timezones": "long_travel_2tz",
+    "early eastern kickoff": "west_east_early",
 }
 
 
@@ -88,21 +94,11 @@ def _binom_p(hits: int, n: int, p0: float) -> Optional[float]:
         return None
 
 
-def study(conn) -> Dict:
-    """Per-tag evidence report. PROMOTABLE only past every pre-committed bar."""
-    ledger = dbmod.query_df(conn, "SELECT * FROM context_ledger")
-    outcomes = dbmod.query_df(conn, "SELECT * FROM lean_outcomes")
-    if ledger.empty or outcomes.empty:
-        return {"n_tagged": 0, "tags": {},
-                "note": "no graded, tagged leans yet — the ledger fills as live weeks run"}
-
-    joined = ledger.merge(outcomes[["season", "week", "player_id", "market", "hit"]],
-                          on=["season", "week", "player_id", "market"], how="inner")
-    if joined.empty:
-        return {"n_tagged": int(len(ledger)), "tags": {},
-                "note": "tags recorded but none graded yet"}
-
-    baseline = float(outcomes["hit"].mean())
+def _evaluate_tags(joined: pd.DataFrame, baseline: float) -> Dict:
+    """The pre-committed verdict machinery, shared by the live-ledger study
+    and the Phase 6.6 historical study: exact binomial vs the pooled
+    baseline, Benjamini-Hochberg across every testable tag, PROMOTABLE only
+    past n>=MIN_N and q<ALPHA."""
     results = []
     for tag, grp in joined.groupby("tag"):
         n, hits = int(len(grp)), int(grp["hit"].sum())
@@ -133,6 +129,36 @@ def study(conn) -> Dict:
     return {"n_tagged": int(len(joined)), "baseline_hit_rate": round(baseline, 4),
             "bars": {"min_n": MIN_N, "alpha_bh": ALPHA, "max_effect": MAX_EFFECT},
             "tags": {r["tag"]: r for r in results}}
+
+
+def study(conn) -> Dict:
+    """Per-tag evidence report. PROMOTABLE only past every pre-committed bar."""
+    ledger = dbmod.query_df(conn, "SELECT * FROM context_ledger")
+    outcomes = dbmod.query_df(conn, "SELECT * FROM lean_outcomes")
+    if ledger.empty or outcomes.empty:
+        return {"n_tagged": 0, "tags": {},
+                "note": "no graded, tagged leans yet — the ledger fills as live weeks run"}
+
+    joined = ledger.merge(outcomes[["season", "week", "player_id", "market", "hit"]],
+                          on=["season", "week", "player_id", "market"], how="inner")
+    if joined.empty:
+        return {"n_tagged": int(len(ledger)), "tags": {},
+                "note": "tags recorded but none graded yet"}
+    return _evaluate_tags(joined, float(outcomes["hit"].mean()))
+
+
+def study_frame(tag_table: pd.DataFrame, graded: pd.DataFrame) -> Dict:
+    """Phase 6.6 historical mode: same bars, but the population is a graded
+    HISTORICAL candidate frame (e.g. data/ml_frame.parquet, the population
+    the original birthday/revenge verdicts were measured on) instead of the
+    live ledger. ``tag_table``: [season, week, player_id, market, tag];
+    ``graded`` must carry [season, week, player_id, market, hit]."""
+    keys = ["season", "week", "player_id", "market"]
+    joined = tag_table.merge(graded[keys + ["hit"]].drop_duplicates(subset=keys),
+                             on=keys, how="inner")
+    if joined.empty:
+        return {"n_tagged": 0, "tags": {}, "note": "no tag matched a graded row"}
+    return _evaluate_tags(joined, float(graded["hit"].mean()))
 
 
 def enabled_multipliers(cfg: Dict, conn) -> Dict[str, float]:

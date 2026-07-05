@@ -1,0 +1,171 @@
+{
+ "n_tagged": 69825,
+ "baseline_hit_rate": 0.4621,
+ "bars": {
+  "min_n": 100,
+  "alpha_bh": 0.05,
+  "max_effect": 0.1
+ },
+ "tags": {
+  "birthday_away": {
+   "tag": "birthday_away",
+   "n": 1151,
+   "hits": 526,
+   "hit_rate": 0.457,
+   "baseline": 0.4621,
+   "p_value": 0.7450825280112872,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "birthday_home": {
+   "tag": "birthday_home",
+   "n": 1124,
+   "hits": 513,
+   "hit_rate": 0.4564,
+   "baseline": 0.4621,
+   "p_value": 0.7196498784387171,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "division_game": {
+   "tag": "division_game",
+   "n": 26624,
+   "hits": 12433,
+   "hit_rate": 0.467,
+   "baseline": 0.4621,
+   "p_value": 0.11003236566386185,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "long_travel_2tz": {
+   "tag": "long_travel_2tz",
+   "n": 9296,
+   "hits": 4247,
+   "hit_rate": 0.4569,
+   "baseline": 0.4621,
+   "p_value": 0.3130117742874405,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "primetime": {
+   "tag": "primetime",
+   "n": 16008,
+   "hits": 7391,
+   "hit_rate": 0.4617,
+   "baseline": 0.4621,
+   "p_value": 0.9242226815904881,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "revenge_away": {
+   "tag": "revenge_away",
+   "n": 548,
+   "hits": 259,
+   "hit_rate": 0.4726,
+   "baseline": 0.4621,
+   "p_value": 0.6375432496243774,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "revenge_cut": {
+   "tag": "revenge_cut",
+   "n": 131,
+   "hits": 55,
+   "hit_rate": 0.4198,
+   "baseline": 0.4621,
+   "p_value": 0.33693384431414086,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "revenge_fa": {
+   "tag": "revenge_fa",
+   "n": 671,
+   "hits": 300,
+   "hit_rate": 0.4471,
+   "baseline": 0.4621,
+   "p_value": 0.4390631824239625,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "revenge_home": {
+   "tag": "revenge_home",
+   "n": 563,
+   "hits": 259,
+   "hit_rate": 0.46,
+   "baseline": 0.4621,
+   "p_value": 0.9326769571508737,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "revenge_trade": {
+   "tag": "revenge_trade",
+   "n": 309,
+   "hits": 163,
+   "hit_rate": 0.5275,
+   "baseline": 0.4621,
+   "p_value": 0.022415731204871232,
+   "q_value": 0.3587,
+   "verdict": "not_significant"
+  },
+  "revenge_vs_mid": {
+   "tag": "revenge_vs_mid",
+   "n": 385,
+   "hits": 176,
+   "hit_rate": 0.4571,
+   "baseline": 0.4621,
+   "p_value": 0.8781698899185704,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "revenge_vs_soft": {
+   "tag": "revenge_vs_soft",
+   "n": 365,
+   "hits": 167,
+   "hit_rate": 0.4575,
+   "baseline": 0.4621,
+   "p_value": 0.8749891300564746,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "revenge_vs_tough": {
+   "tag": "revenge_vs_tough",
+   "n": 361,
+   "hits": 175,
+   "hit_rate": 0.4848,
+   "baseline": 0.4621,
+   "p_value": 0.39861269082174944,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "short_week": {
+   "tag": "short_week",
+   "n": 4721,
+   "hits": 2147,
+   "hit_rate": 0.4548,
+   "baseline": 0.4621,
+   "p_value": 0.31392487735807995,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  },
+  "west_east_early": {
+   "tag": "west_east_early",
+   "n": 2502,
+   "hits": 1167,
+   "hit_rate": 0.4664,
+   "baseline": 0.4621,
+   "p_value": 0.6737342656308688,
+   "q_value": 0.9327,
+   "verdict": "not_significant"
+  },
+  "wind15_game": {
+   "tag": "wind15_game",
+   "n": 5066,
+   "hits": 2386,
+   "hit_rate": 0.471,
+   "baseline": 0.4621,
+   "p_value": 0.20478207550351757,
+   "q_value": 0.8781,
+   "verdict": "not_significant"
+  }
+ }
+}
