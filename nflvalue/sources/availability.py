@@ -290,6 +290,13 @@ _ROLE_FAMILY = {  # role -> (numerator actual col, team denominator col)
     "TE": ("targets", "team_pass_att"),
     "RB": ("carries", "team_rush_att"),
 }
+# Phase 6.2: the red-zone analog -- when a leader sits, his GOAL-LINE/RZ work
+# is redistributed too, which is what anytime-TD props actually price
+_ROLE_RZ_FAMILY = {
+    "WR": ("rz_tgt", "team_rz_tgt"),
+    "TE": ("rz_tgt", "team_rz_tgt"),
+    "RB": ("rz_car", "team_rz_car"),
+}
 
 
 def reallocate_usage(player_week: pd.DataFrame, season: int, week: int,
@@ -343,9 +350,12 @@ def reallocate_usage(player_week: pd.DataFrame, season: int, week: int,
     mates = team_hist[(team_hist["role"].isin(fam_roles))
                       & (team_hist["player_id"] != out_player_id)]
 
-    def _share(frame: pd.DataFrame) -> pd.Series:
-        den = frame[den_col].replace(0, pd.NA)
-        return (frame[num_col] / den).astype(float)
+    rz_num, rz_den = _ROLE_RZ_FAMILY[role]
+    have_rz_cols = rz_num in team_hist.columns and rz_den in team_hist.columns
+
+    def _share(frame: pd.DataFrame, n=num_col, d=den_col) -> pd.Series:
+        den = frame[d].replace(0, pd.NA)
+        return (frame[n] / den).astype(float)
 
     boosts: Dict[str, Dict] = {}
     if len(absent_games) >= min_absent_games:
@@ -361,6 +371,17 @@ def reallocate_usage(player_week: pd.DataFrame, season: int, week: int,
             boosts[pid] = {"name": grp.iloc[-1]["player_name"],
                            "share_with": round(sw, 4), "share_without": round(so, 4),
                            "share_delta": round(so - sw, 4)}
+            # Phase 6.2: goal-line/red-zone share shift (drives anytime-TD
+            # reallocation). NaN-safe: weeks where the team had no RZ play
+            # simply drop out of the mean; both sides empty -> no rz keys.
+            if have_rz_cols:
+                rzw = _share(with_g, rz_num, rz_den).mean(skipna=True)
+                rzo = _share(without_g, rz_num, rz_den).mean(skipna=True)
+                if pd.notna(rzw) and pd.notna(rzo):
+                    boosts[pid].update({
+                        "rz_share_with": round(float(rzw), 4),
+                        "rz_share_without": round(float(rzo), 4),
+                        "rz_share_delta": round(float(rzo - rzw), 4)})
         return {"out_player_id": out_player_id, "role": role, "team": team,
                 "basis": "with_without", "absent_games": len(absent_games),
                 "played_games": len(played_games), "low_confidence": False,
@@ -369,6 +390,8 @@ def reallocate_usage(player_week: pd.DataFrame, season: int, week: int,
     # not enough absent games -> proportional redistribution, flagged as a guess
     out_share_hist = team_hist[(team_hist["player_id"] == out_player_id)]
     out_share = float(_share(out_share_hist).mean(skipna=True) or 0.0) if not out_share_hist.empty else 0.0
+    out_rz_share = (float(_share(out_share_hist, rz_num, rz_den).mean(skipna=True) or 0.0)
+                    if have_rz_cols and not out_share_hist.empty else 0.0)
     recent = mates[mates["_gkey"].isin(game_keys[-4:])]
     mate_share = {pid: float(_share(g).mean(skipna=True) or 0.0)
                   for pid, g in recent.groupby("player_id")}
@@ -379,6 +402,13 @@ def reallocate_usage(player_week: pd.DataFrame, season: int, week: int,
         boosts[pid] = {"name": str(recent[recent["player_id"] == pid].iloc[-1]["player_name"]),
                        "share_with": round(s, 4), "share_without": None,
                        "share_delta": round(out_share * (s / total), 4)}
+        if have_rz_cols and pd.notna(out_rz_share) and out_rz_share > 0:
+            g = recent[recent["player_id"] == pid]
+            rzw = _share(g, rz_num, rz_den).mean(skipna=True)
+            if pd.notna(rzw):
+                boosts[pid].update({
+                    "rz_share_with": round(float(rzw), 4), "rz_share_without": None,
+                    "rz_share_delta": round(out_rz_share * (s / total), 4)})
     return {"out_player_id": out_player_id, "role": role, "team": team,
             "basis": "proportional_guess", "absent_games": len(absent_games),
             "played_games": len(played_games), "low_confidence": True,

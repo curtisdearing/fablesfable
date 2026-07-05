@@ -130,6 +130,50 @@ def shape_tilts(player_row: Dict, opp_row: Optional[Dict], market: str) -> Dict[
 # Fallback SD used only when the caller doesn't supply a measured one.
 DEFAULT_SD_FRACTION = 0.45  # sd ~= 45% of the mean, a generic count/yardage prior
 
+# ---- Phase 6.2: anytime-TD red-zone path ----------------------------------- #
+# TD_BLEND_W: weight on the RZ-share path vs the overall-rate path. MEASURED,
+# not guessed: walk-forward log-loss grid over the frozen 2019-2023 base
+# seasons, n=16,871 candidate-gated player-weeks (scripts/fit_td_blend.py):
+# w=0.4 minimizes log-loss (.5398 -> .5341) and Brier (.1781 -> .1760).
+# The same fit showed the opponent RZ-defense factor HURTS lambda at every w
+# (factor-ON uniformly worse), so roll_rz_td_factor is deliberately NOT
+# multiplied into the deterministic mean -- it rides along as an ML feature
+# only (opp_rz_td_factor). Provenance: docs/decisions_p6.md.
+TD_BLEND_W = 0.40
+RZ_FACTOR_CLIP = (0.80, 1.25)  # bounds used when scoring the factor ablation
+
+
+def _rz_lambda(player_row: Dict, team_row: Optional[Dict]) -> Optional[float]:
+    """Expected TDs via the red-zone path; None when any ingredient is
+    missing (cold starts, no team volume yet) -- caller falls back to the
+    overall-rate path rather than inventing a number."""
+    if team_row is None:
+        return None
+    need = {
+        "tgt_share": player_row.get("roll_rz_tgt_share"),
+        "car_share": player_row.get("roll_rz_carry_share"),
+        "team_tgt": team_row.get("roll_team_rz_tgt"),
+        "team_car": team_row.get("roll_team_rz_car"),
+        "lg_tgt": team_row.get("league_rz_tgt_td_rate"),
+        "lg_car": team_row.get("league_rz_car_td_rate"),
+    }
+    def _f(v):
+        return None if v is None or (isinstance(v, float) and math.isnan(v)) else float(v)
+    vals = {k: _f(v) for k, v in need.items()}
+    # a receiver with no RZ carry history is fine (that term is just 0);
+    # what's REQUIRED is team volume + league rates, plus at least one share
+    if vals["team_tgt"] is None or vals["team_car"] is None \
+            or vals["lg_tgt"] is None or vals["lg_car"] is None:
+        return None
+    if vals["tgt_share"] is None and vals["car_share"] is None:
+        return None
+    lam = 0.0
+    if vals["tgt_share"] is not None:
+        lam += vals["team_tgt"] * vals["tgt_share"] * vals["lg_tgt"]
+    if vals["car_share"] is not None:
+        lam += vals["team_car"] * vals["car_share"] * vals["lg_car"]
+    return lam
+
 # Phase 1B cold-start gate (Checkpoint 1 finding: 0-2 trailing games project
 # poorly, sometimes negatively correlated with the actual outcome -- see
 # docs/phase1.md). Below this many trailing games, a player is marked
@@ -285,10 +329,24 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
         targets = float(player_row.get("roll_targets") or 0.0)
         rush_rate = float(player_row.get("roll_rush_td_rate") or 0.0)
         rec_rate = float(player_row.get("roll_rec_td_rate") or 0.0)
-        lam = carries * rush_rate + targets * rec_rate
+        lam_base = carries * rush_rate + targets * rec_rate
+
+        # Phase 6.2: red-zone path -- expected team RZ opportunities x this
+        # player's trailing RZ share x the league's PRIOR-weeks TD-per-RZ-
+        # opportunity. Blended with the overall-rate path by TD_BLEND_W
+        # (measured walk-forward on 2019-2023, see decisions_p6.md). Any
+        # missing ingredient -> pure base path, never a guess. The opponent
+        # RZ factor is deliberately absent here -- it FAILED the same fit
+        # (see TD_BLEND_W note) and enters only as an ML feature.
+        lam_rz = _rz_lambda(player_row, team_row)
+        lam = ((1.0 - TD_BLEND_W) * lam_base + TD_BLEND_W * lam_rz
+               if lam_rz is not None else lam_base)
+
         mean_, sd_, dist = lam, max(math.sqrt(max(lam, 1e-6)), 0.35), "poisson"
         components = {"volume": round(carries + targets, 3), "efficiency": round(rush_rate + rec_rate, 4),
-                      "opp_factor": 1.0, "game_script": 1.0}
+                      "opp_factor": 1.0, "game_script": 1.0,
+                      "lam_base": round(lam_base, 4),
+                      "lam_rz": round(lam_rz, 4) if lam_rz is not None else None}
     else:
         volume = expected_volume(player_row, team_row, spec, game_script)
         eff_col = spec["efficiency"]

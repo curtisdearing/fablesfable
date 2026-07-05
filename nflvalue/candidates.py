@@ -474,6 +474,7 @@ def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
     from .projection import p_over as p_over_fn
 
     mult_by_key: Dict[tuple, float] = {}
+    td_mult_by_pid: Dict[str, float] = {}
     for res in realloc_results:
         role = res.get("role")
         family = "targets" if role in ("WR", "TE") else ("carries" if role == "RB" else None)
@@ -482,15 +483,22 @@ def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
         damp = 0.5 if res.get("basis") == "proportional_guess" else 1.0
         for pid, b in res["boosts"].items():
             sw, delta = b.get("share_with"), b.get("share_delta")
-            if not sw or sw <= 0 or not delta or delta <= 0:
-                continue
-            mult = 1.0 + damp * (float(delta) / float(sw))
-            mult = min(mult, max_boost)
-            for market in _FAMILY_MARKETS[family]:
-                key = (pid, market)
-                mult_by_key[key] = max(mult_by_key.get(key, 1.0), mult)
-    if not mult_by_key:
+            if sw and sw > 0 and delta and delta > 0:
+                mult = 1.0 + damp * (float(delta) / float(sw))
+                mult = min(mult, max_boost)
+                for market in _FAMILY_MARKETS[family]:
+                    key = (pid, market)
+                    mult_by_key[key] = max(mult_by_key.get(key, 1.0), mult)
+            # Phase 6.2: anytime-TD reallocation rides the RED-ZONE share
+            # shift (goal-line work is what TD props price), not raw volume
+            rzw, rzd = b.get("rz_share_with"), b.get("rz_share_delta")
+            if rzw and rzw > 0 and rzd and rzd > 0:
+                td_mult = min(1.0 + damp * (float(rzd) / float(rzw)), max_boost)
+                td_mult_by_pid[pid] = max(td_mult_by_pid.get(pid, 1.0), td_mult)
+    if not mult_by_key and not td_mult_by_pid:
         return cands
+    for pid, m in td_mult_by_pid.items():
+        mult_by_key[(pid, "anytime_td")] = max(mult_by_key.get((pid, "anytime_td"), 1.0), m)
 
     cands = cands.copy()
     mults = [mult_by_key.get((p, m), 1.0)

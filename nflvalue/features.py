@@ -85,10 +85,23 @@ def load_pbp(path: Optional[str] = None) -> pd.DataFrame:
 # Per-player-week actuals
 # --------------------------------------------------------------------------- #
 def _team_week(pbp: pd.DataFrame) -> pd.DataFrame:
-    g = pbp.groupby(["season", "week", "posteam"])
+    p = pbp.copy()
+    rz = p["yardline_100"].notna() & (p["yardline_100"] <= 20)
+    gl = p["yardline_100"].notna() & (p["yardline_100"] <= 5)
+    p["_rz_tgt"] = ((p["pass_attempt"] == 1) & rz).astype(float)
+    p["_rz_car"] = ((p["rush_attempt"] == 1) & rz).astype(float)
+    p["_gl_car"] = ((p["rush_attempt"] == 1) & gl).astype(float)
+    p["_rz_pass_td"] = ((p["pass_touchdown"] == 1) & rz).astype(float)
+    p["_rz_rush_td"] = ((p["rush_touchdown"] == 1) & rz).astype(float)
+    g = p.groupby(["season", "week", "posteam"])
     out = g.agg(
         team_pass_att=("pass_attempt", "sum"),
         team_rush_att=("rush_attempt", "sum"),
+        team_rz_tgt=("_rz_tgt", "sum"),
+        team_rz_car=("_rz_car", "sum"),
+        team_gl_car=("_gl_car", "sum"),
+        team_rz_pass_td=("_rz_pass_td", "sum"),
+        team_rz_rush_td=("_rz_rush_td", "sum"),
     ).reset_index()
     out["team_plays"] = out["team_pass_att"] + out["team_rush_att"]
     out = out.rename(columns={"posteam": "team"})
@@ -131,6 +144,7 @@ def _passer_week(pbp: pd.DataFrame) -> pd.DataFrame:
 def _receiver_week(pbp: pd.DataFrame) -> pd.DataFrame:
     r = pbp[pbp["pass_attempt"] == 1].dropna(subset=["receiver_player_id"])
     r = _with_depth_loc_flags(r)
+    r["_rz"] = (r["yardline_100"].notna() & (r["yardline_100"] <= 20)).astype(float)
     g = r.groupby(["season", "week", "receiver_player_id"])
     out = g.agg(
         targets=("pass_attempt", "sum"),
@@ -144,6 +158,7 @@ def _receiver_week(pbp: pd.DataFrame) -> pd.DataFrame:
         known_ay_tgt=("_ay_known", "sum"),
         mid_tgt=("_loc_mid", "sum"),
         known_loc_tgt=("_loc_known", "sum"),
+        rz_tgt=("_rz", "sum"),
         player_name=("receiver_player_name", "first"),
         team=("posteam", "first"),
         defteam=("defteam", "first"),
@@ -153,12 +168,16 @@ def _receiver_week(pbp: pd.DataFrame) -> pd.DataFrame:
 
 def _rusher_week(pbp: pd.DataFrame) -> pd.DataFrame:
     r = pbp[pbp["rush_attempt"] == 1].dropna(subset=["rusher_player_id"]).copy()
+    r["_rz"] = (r["yardline_100"].notna() & (r["yardline_100"] <= 20)).astype(float)
+    r["_gl"] = (r["yardline_100"].notna() & (r["yardline_100"] <= 5)).astype(float)
     g = r.groupby(["season", "week", "rusher_player_id"])
     out = g.agg(
         carries=("rush_attempt", "sum"),
         rush_yards=("rushing_yards", lambda s: np.nansum(s.to_numpy())),
         rush_tds=("rush_touchdown", "sum"),
         rush_epa_sum=("epa", "sum"),
+        rz_car=("_rz", "sum"),
+        gl_car=("_gl", "sum"),
         player_name=("rusher_player_name", "first"),
         team=("posteam", "first"),
         defteam=("defteam", "first"),
@@ -196,6 +215,7 @@ def _combine_player_week(pbp: pd.DataFrame) -> pd.DataFrame:
         "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum", "rec_tds", "rec_epa_sum",
         "carries", "rush_yards", "rush_tds", "rush_epa_sum",
         "short_att", "known_ay_att", "short_tgt", "known_ay_tgt", "mid_tgt", "known_loc_tgt",
+        "rz_tgt", "rz_car", "gl_car",
     ]
     for c in numeric_fill:
         if c in merged.columns:
@@ -383,6 +403,13 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw["_short_tgt_share"] = _safe_ratio(pw["short_tgt"], pw["known_ay_tgt"])
     pw["_mid_tgt_share"] = _safe_ratio(pw["mid_tgt"], pw["known_loc_tgt"])
     pw["_short_pass_share"] = _safe_ratio(pw["short_att"], pw["known_ay_att"])
+    # Phase 6.2: red-zone / goal-line usage shares (the anytime-TD drivers).
+    # Every played week has a row (share NaN when the TEAM had no RZ play),
+    # so missingness can't encode week-W info -- unlike the advanced_features
+    # RZ table, whose rows only exist for RZ-active weeks (AsOf-consumed there).
+    pw["_rz_tgt_share"] = _safe_ratio(pw["rz_tgt"], pw["team_rz_tgt"])
+    pw["_rz_carry_share"] = _safe_ratio(pw["rz_car"], pw["team_rz_car"])
+    pw["_gl_carry_share"] = _safe_ratio(pw["gl_car"], pw["team_gl_car"])
 
     g = pw.groupby("player_id")
     pw["roll_games"] = g["targets"].transform(lambda s: _rolling_shifted(s, how="count"))
@@ -427,6 +454,19 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     for out_col, raw_col in raw_eff.items():
         pw[f"_raw_{out_col}"] = g[raw_col].transform(_rolling_shifted)
 
+    # Phase 6.2: RZ/GL shares roll over a LONGER window (16) -- red-zone
+    # events are ~10x sparser than targets, so an 8-game window is mostly
+    # noise; matches the 16-game window advanced_features already uses.
+    raw_eff_rz = {
+        "roll_rz_tgt_share": "_rz_tgt_share",
+        "roll_rz_carry_share": "_rz_carry_share",
+        "roll_gl_carry_share": "_gl_carry_share",
+    }
+    for out_col, raw_col in raw_eff_rz.items():
+        pw[f"_raw_{out_col}"] = g[raw_col].transform(
+            lambda s: _rolling_shifted(s, window=16))
+    raw_eff = {**raw_eff, **raw_eff_rz}
+
     # ---- archetype (Phase 6.1): assigned from trailing-only rolls, used as
     # the FIRST shrinkage tier; coarse role remains the fallback tier ---------- #
     pw["archetype"] = _assign_archetype(pw)
@@ -451,12 +491,15 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum",
         "carries", "rush_yards", "pass_attempts", "completions", "pass_yards",
         "pass_tds", "rush_tds", "rec_tds",
+        "rz_tgt", "rz_car", "gl_car",
         "team_pass_att", "team_rush_att", "team_plays",
+        "team_rz_tgt", "team_rz_car", "team_gl_car",
         "roll_games", "roll_targets", "roll_target_share", "roll_air_yards", "roll_adot",
         "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
         "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
         "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
+        "roll_rz_tgt_share", "roll_rz_carry_share", "roll_gl_carry_share",
     ]
     return pw[keep].reset_index(drop=True)
 
@@ -691,6 +734,23 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     g = tw.groupby("team")
     tw["roll_team_pass_att"] = g["team_pass_att"].transform(_rolling_shifted)
     tw["roll_team_rush_att"] = g["team_rush_att"].transform(_rolling_shifted)
+    # Phase 6.2: expected red-zone opportunity volume (anytime-TD's RZ path)
+    tw["roll_team_rz_tgt"] = g["team_rz_tgt"].transform(
+        lambda s: _rolling_shifted(s, window=16))
+    tw["roll_team_rz_car"] = g["team_rz_car"].transform(
+        lambda s: _rolling_shifted(s, window=16))
+
+    # league TD-per-RZ-opportunity, PRIOR-weeks-only expanding (a derived
+    # walk-forward series, not a hand-picked constant): what fraction of
+    # red-zone targets / carries league-wide became TDs, up through last week
+    lg = (tw.groupby(["season", "week"])
+          [["team_rz_tgt", "team_rz_car", "team_rz_pass_td", "team_rz_rush_td"]]
+          .sum().reset_index().sort_values(["season", "week"]))
+    csum = lg[["team_rz_tgt", "team_rz_car", "team_rz_pass_td", "team_rz_rush_td"]].shift(1).cumsum()
+    lg["league_rz_tgt_td_rate"] = (csum["team_rz_pass_td"] / csum["team_rz_tgt"].replace(0, np.nan))
+    lg["league_rz_car_td_rate"] = (csum["team_rz_rush_td"] / csum["team_rz_car"].replace(0, np.nan))
+    tw = tw.merge(lg[["season", "week", "league_rz_tgt_td_rate", "league_rz_car_td_rate"]],
+                  on=["season", "week"], how="left")
 
     # Cold start (a team's first game in the dataset): fall back to the
     # PRIOR-weeks-only cross-team league average for that same (season, week)
@@ -707,7 +767,9 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     tw["roll_team_pass_att"] = tw["roll_team_pass_att"].fillna(tw["lp_pass"])
     tw["roll_team_rush_att"] = tw["roll_team_rush_att"].fillna(tw["lp_rush"])
     tw = tw.drop(columns=["lp_pass", "lp_rush"])
-    return tw[["season", "week", "team", "roll_team_pass_att", "roll_team_rush_att"]]
+    return tw[["season", "week", "team", "roll_team_pass_att", "roll_team_rush_att",
+               "roll_team_rz_tgt", "roll_team_rz_car",
+               "league_rz_tgt_td_rate", "league_rz_car_td_rate"]]
 
 
 if __name__ == "__main__":
