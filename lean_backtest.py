@@ -139,8 +139,21 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
 
     markets = list(MARKETS)
     sd_map = precompute_sds(inputs, markets)
-    from nflvalue.candidates import synthetic_lines
+    from nflvalue.candidates import apply_weather_adjustment, synthetic_lines
     synth_map = {m: synthetic_lines(inputs, m) for m in markets}  # week-independent
+
+    # Phase 6.4: observed per-game weather for the fitted pass-family
+    # multiplier (live runs use the kickoff forecast instead -- same
+    # train/serve note as the ML weather features)
+    wx_map: Dict = {}
+    try:
+        from nflvalue.weather_study import build_game_weather
+        gwx = build_game_weather()
+        wx_map = {r.game_id: {"wind_mph": r.wind_mph, "precip_mm": (2.0 if r.precip_flag else 0.0),
+                              "effective_outdoor": bool(r.effective_outdoor)}
+                  for r in gwx.itertuples(index=False)}
+    except Exception as exc:  # noqa: BLE001 -- replay still runs, weather-neutral
+        print(f"[lean_backtest] game weather unavailable ({exc}); no weather adjustment")
 
     lean_rows, cand_rows = [], []
     for wk in weeks:
@@ -149,6 +162,7 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
                                          synth_by_market=synth_map)
         if cands_raw.empty:
             continue
+        cands_raw = apply_weather_adjustment(cands_raw, wx_map)
         cands = (prop_learning.apply_to_candidates(cands_raw, state.adjustments(), enabled=True)
                  if state is not None else cands_raw)
         actuals = _actuals_for_week(inputs.pw, season, wk)

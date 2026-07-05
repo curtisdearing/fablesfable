@@ -92,28 +92,42 @@ def _players_frame(cands: pd.DataFrame) -> pd.DataFrame:
             .rename(columns={"name": "player_name"}))
 
 
-def _apply_forecast_weather(adv, slate: pd.DataFrame) -> None:
+def _apply_forecast_weather(adv, slate: pd.DataFrame) -> Dict[str, Dict]:
     """Override the pack's (post-game, NaN-for-future) schedule weather with
     live Open-Meteo forecasts for this slate's outdoor games (evaluation
-    catch: without this, the weather feature is dead all season)."""
+    catch: without this, the weather feature is dead all season).
+
+    Phase 6.4: also returns {game_id: {wind_mph, precip_mm, wind_dir_deg,
+    effective_outdoor}} for the fitted deterministic pass-family multiplier
+    (candidates.apply_weather_adjustment)."""
+    wx_map: Dict[str, Dict] = {}
     try:
         from build_ratings import ABBR
         from nflvalue.sources.weather import forecast_for_game
         for g in slate.itertuples(index=False):
-            wx = adv.weather.get(g.game_id, (None, None))
-            if wx[0] is not None and not pd.isna(wx[0]):
-                continue  # dome-neutralized or already known
             commence = f"{g.gameday}T{(g.gametime or '13:00')}:00+00:00"
             fc = (forecast_for_game(g.home_team, commence)
                   or forecast_for_game(ABBR.get(g.home_team, g.home_team), commence))
             if not fc:
                 continue
             if fc.get("dome"):
-                adv.weather[g.game_id] = (70.0, 0.0)
+                wx_map[g.game_id] = {"effective_outdoor": False}
+                if adv is not None:
+                    adv.weather.setdefault(g.game_id, (70.0, 0.0))
             elif fc.get("temp_f") is not None:
-                adv.weather[g.game_id] = (float(fc["temp_f"]), float(fc.get("wind_mph") or 0.0))
+                wx_map[g.game_id] = {
+                    "wind_mph": float(fc.get("wind_mph") or 0.0),
+                    "precip_mm": float(fc.get("precip_mm") or 0.0),
+                    "wind_dir_deg": fc.get("wind_dir_deg"),
+                    "effective_outdoor": True,
+                }
+                if adv is not None:
+                    wx = adv.weather.get(g.game_id, (None, None))
+                    if wx[0] is None or pd.isna(wx[0]):
+                        adv.weather[g.game_id] = (float(fc["temp_f"]), float(fc.get("wind_mph") or 0.0))
     except Exception as exc:  # noqa: BLE001 -- forecast is enhancement, not load-bearing
         print(f"[pipeline] forecast weather unavailable ({exc}); schedule values kept")
+    return wx_map
 
 
 _PACK_CACHE: Dict = {}
@@ -444,8 +458,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         from nflvalue.advanced_features import attach_neutral
         from nflvalue.context_features import attach as ctx_attach
         cands = ctx_attach(cands, pack)
+        wx_map = _apply_forecast_weather(adv, slate)
         if adv is not None:
-            _apply_forecast_weather(adv, slate)
             cands = adv.attach(cands)
         else:
             cands = attach_neutral(cands)
@@ -458,9 +472,11 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         from nflvalue.ftn_features import attach_neutral as ftn_neutral
         cands = ftn.attach(cands) if ftn is not None else ftn_neutral(cands)
         # measured second-order: backup QB -> pass-family efficiency x0.92;
-        # skill-leader absence -> QB passing markets (absence matrix)
+        # skill-leader absence -> QB passing markets (absence matrix);
+        # fitted weather -> pass-family yards (Phase 6.4, forecast-driven)
         cands = candmod.apply_backup_qb_adjustment(cands)
         cands = candmod.apply_absence_qb_adjustment(cands, inputs.pw, season, week, outs_now)
+        cands = candmod.apply_weather_adjustment(cands, wx_map)
 
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
@@ -553,6 +569,10 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         from nflvalue.ftn_features import attach_neutral as ftn_neutral
         cands = ftn.attach(cands) if ftn is not None else ftn_neutral(cands)
         cands = candmod.apply_backup_qb_adjustment(cands)
+        # Phase 6.4: T-90 re-pull gets the freshest kickoff-hour forecast
+        _t90_slate = candmod.games_for_week(season, week, inputs.schedules)
+        cands = candmod.apply_weather_adjustment(
+            cands, _apply_forecast_weather(adv, _t90_slate[_t90_slate["game_id"] == game_id]))
     cands = _maybe_stamp_ml(cfg, cands, inputs)
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
                              inject=inject_feeds)

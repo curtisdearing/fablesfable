@@ -531,6 +531,49 @@ def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
     return cands
 
 
+# Phase 6.4: pass-family YARDS markets take the fitted weather multiplier
+# (receptions is a count market and the fit was on yards -- excluded, noted).
+_WX_PASS_MARKETS = ("passing_yards", "receiving_yards")
+
+
+def apply_weather_adjustment(cands: pd.DataFrame, wx_by_game: Dict[str, Dict]) -> pd.DataFrame:
+    """Dampen/boost pass-family yardage means by the FITTED weather effect
+    (factors.weather_pass_multiplier; provenance scripts/fit_weather.py).
+
+    ``wx_by_game``: {game_id: {wind_mph, precip_mm, effective_outdoor}} --
+    observed history in backtests, forecasts live (same train/serve note as
+    the ML weather features). Missing game -> untouched. p_over/p_under are
+    recomputed against the same line; ``wx_pass_mult`` is stamped."""
+    if cands.empty or not wx_by_game:
+        return cands
+    from . import factors as factmod
+    from .projection import p_over as p_over_fn
+
+    mult_by_game: Dict[str, float] = {}
+    for gid, wx in wx_by_game.items():
+        m = factmod.weather_pass_multiplier(
+            wx.get("wind_mph"), wx.get("precip_mm"),
+            bool(wx.get("effective_outdoor", not wx.get("dome", False))))
+        if abs(m - 1.0) > 1e-9:
+            mult_by_game[gid] = m
+    if not mult_by_game:
+        return cands
+    cands = cands.copy()
+    mask = cands["market"].isin(_WX_PASS_MARKETS) & cands["game_id"].isin(mult_by_game)
+    if not mask.any():
+        return cands
+    cands.loc[mask, "wx_pass_mult"] = cands.loc[mask, "game_id"].map(mult_by_game)
+    cands.loc[mask, "mean"] = (cands.loc[mask, "mean"] * cands.loc[mask, "wx_pass_mult"]).round(3)
+    for i in cands.index[mask]:
+        line = cands.at[i, "line"]
+        if line is None or (isinstance(line, float) and math.isnan(line)):
+            continue
+        po = p_over_fn(cands.at[i, "mean"], cands.at[i, "sd"], float(line), cands.at[i, "dist"])
+        cands.at[i, "p_over"] = round(po, 4)
+        cands.at[i, "p_under"] = round(1 - po, 4)
+    return cands
+
+
 def _carry_forward_synth(inputs: WeekInputs, market: str, player_id: str) -> Optional[float]:
     """Synthetic line for a carry-forward row: trailing mean of the player's
     actuals over his own prior rows (leak-free by construction)."""

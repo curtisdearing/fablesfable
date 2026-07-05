@@ -16,6 +16,15 @@ from typing import Dict, Optional
 
 # --------------------------------------------------------------------------- #
 # NFL stadiums: (lat, lon, is_dome). Weather is ignored for domes / fixed roofs.
+#
+# Phase 6.4 retractable-roof audit (ARI, ATL, DAL, HOU, IND -- all currently
+# dome=True here): MEASURED over 292 retractable-stadium games 2019-2025,
+# the roof was open in 12.7%, and ZERO open-roof games had pricable weather
+# (all 53-90F, dry, mean wind 5.5 mph; scripts/fit_weather.py [roof]).
+# Roof policy already neutralizes weather before kickoff, so the static
+# dome=True treatment is empirically correct for pricing -- kept, now as a
+# measured fact instead of an assumption. (LV Allegiant and LA SoFi are
+# FIXED roofs; MIN/DET/NO fixed domes.)
 # --------------------------------------------------------------------------- #
 STADIUMS: Dict[str, Dict] = {
     "Arizona Cardinals":      {"lat": 33.5277, "lon": -112.2626, "dome": True},
@@ -62,24 +71,67 @@ STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.75, "questionable": 0.35, "ir": 1.0}
 
 
 # --------------------------------------------------------------------------- #
-# Weather
+# Weather -- FITTED constants (Phase 6.4), not the old guessed thresholds.
+#
+# scripts/fit_weather.py, 2019-2023 outdoor-effective team-games (n=1,556),
+# pass yards OLS controlling trailing team passing:
+#   wind        -2.46 yds/mph up to 10 mph (t=-3.4), -1.43/mph above
+#               (kink term itself t=+0.9 -- the old "30mph = max" shape was
+#               wrong twice: the effect is linear-ish and already present at
+#               single-digit wind)
+#   precip flag -38.0 yds (t=-5.9)  -- the DOMINANT term; the old heuristic
+#               gave precip less weight than wind
+#   cold        -0.98 yds per degree below 32F, t=-1.3 -> FAILS the t>=2 bar,
+#               deliberately NOT shipped
+#   crosswind   nothing for passing (t=-0.1); real for FG% (-0.032/mph logit,
+#               t=-2.9, n=4,042 attempts) -- kicking, not passing, cares
+#               about direction
+#   rushing     no term clears (wind t=+0.6, precip t=+1.9): the old
+#               "bad weather boosts rushing" rush-severity bonus was a vibe
+# Severity = fitted pass-yards deficit vs a TYPICAL outdoor day (8 mph, dry),
+# normalized so ~20 mph + rain ~= 1.0.
 # --------------------------------------------------------------------------- #
-def weather_severity(weather: Optional[Dict]) -> float:
-    """0 (perfect / dome) .. ~1 (brutal). High wind & precip hurt passing/scoring.
+WX_PASS_WIND = -2.46        # yds per mph, 0-10 mph
+WX_PASS_WIND_HI = -1.43     # yds per mph above 10 (=-2.46+1.03)
+WX_PASS_PRECIP = -38.0      # yds, conditions-flag rain/snow
+WX_TYPICAL_WIND = 8.0       # mph; the centering point (league outdoor mean)
+WX_SEV_NORM = 60.0          # yds of deficit-vs-typical that reads as sev 1.0
+WX_PRECIP_MM_FLAG = 0.5     # forecast mm/hr at/above this -> precip flag
+LEAGUE_PASS_YDS = 243.4     # 2019-2023 mean team-game passing yards (fit sample)
 
-    ``weather`` keys: wind_mph, precip_mm, temp_f (all optional).
+
+def _pass_yds_delta(wind_mph: float, precip_flag: int) -> float:
+    """Fitted expected team-pass-yards delta vs zero wind, dry."""
+    w = max(float(wind_mph or 0.0), 0.0)
+    d = WX_PASS_WIND * min(w, 10.0) + WX_PASS_WIND_HI * max(w - 10.0, 0.0)
+    return d + (WX_PASS_PRECIP if precip_flag else 0.0)
+
+
+def weather_severity(weather: Optional[Dict]) -> float:
+    """0 (typical/dome) .. ~1 (brutal). Fitted, see module note.
+
+    ``weather`` keys: wind_mph, precip_mm, temp_f (all optional; temp is
+    accepted but unused -- cold failed the significance bar).
     """
     if not weather or weather.get("dome"):
         return 0.0
     wind = float(weather.get("wind_mph", 0) or 0)
-    precip = float(weather.get("precip_mm", 0) or 0)
-    temp = float(weather.get("temp_f", 60) or 60)
+    precip_flag = int(float(weather.get("precip_mm", 0) or 0) >= WX_PRECIP_MM_FLAG)
+    deficit = _pass_yds_delta(WX_TYPICAL_WIND, 0) - _pass_yds_delta(wind, precip_flag)
+    return round(min(max(deficit / WX_SEV_NORM, 0.0), 1.0), 4)
 
-    wind_s = min(wind / 30.0, 1.0)                 # 30+ mph = max
-    precip_s = min(precip / 8.0, 1.0)              # 8+ mm/hr = max
-    cold_s = min(max(20.0 - temp, 0) / 30.0, 1.0)  # below 20F starts to bite
-    sev = 0.55 * wind_s + 0.30 * precip_s + 0.15 * cold_s
-    return round(min(sev, 1.0), 4)
+
+def weather_pass_multiplier(wind_mph: Optional[float], precip_mm: Optional[float],
+                            effective_outdoor: bool) -> float:
+    """Phase 6.4 prop-level multiplier for pass-family YARDS markets: the
+    fitted team-passing delta vs a typical day, expressed multiplicatively.
+    Centered at 1.0 on a typical outdoor day; calm days boost mildly, wind/
+    rain dampen. Clipped [0.85, 1.06]. Domes/closed roofs -> exactly 1.0."""
+    if not effective_outdoor or wind_mph is None:
+        return 1.0
+    precip_flag = int(float(precip_mm or 0.0) >= WX_PRECIP_MM_FLAG)
+    delta = _pass_yds_delta(float(wind_mph), precip_flag) - _pass_yds_delta(WX_TYPICAL_WIND, 0)
+    return round(min(max(1.0 + delta / LEAGUE_PASS_YDS, 0.85), 1.06), 4)
 
 
 # --------------------------------------------------------------------------- #

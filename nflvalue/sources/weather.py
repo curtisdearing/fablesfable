@@ -23,7 +23,7 @@ def forecast_for_game(home_team: str, commence_iso: str) -> Optional[Dict]:
         day = dt.strftime("%Y-%m-%d")
         data = get_json(BASE, {
             "latitude": st["lat"], "longitude": st["lon"],
-            "hourly": "temperature_2m,precipitation,wind_speed_10m",
+            "hourly": "temperature_2m,precipitation,wind_speed_10m,wind_direction_10m",
             "temperature_unit": "fahrenheit", "wind_speed_unit": "mph",
             "precipitation_unit": "mm", "start_date": day, "end_date": day,
             "timezone": "UTC",
@@ -40,6 +40,9 @@ def forecast_for_game(home_team: str, commence_iso: str) -> Optional[Dict]:
             "temp_f": hours["temperature_2m"][idx],
             "precip_mm": hours["precipitation"][idx],
             "wind_mph": hours["wind_speed_10m"][idx],
+            # Phase 6.4: direction (degrees) -- crosswind decomposition for the
+            # FG model / game notes (passing measured direction-insensitive)
+            "wind_dir_deg": (hours.get("wind_direction_10m") or [None] * len(times))[idx],
         }
     except Exception as exc:  # noqa: BLE001
         print(f"[weather] lookup failed for {home_team}: {exc}")
