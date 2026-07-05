@@ -356,6 +356,8 @@ def enumerate_candidates(
                 # feeds anytime_td (6.2) and the ML ranker; NaN = no data
                 "opp_rz_td_factor": ((opp_row or {}).get("roll_rz_td_factor")
                                      if opp_row is not None else float("nan")),
+                # Phase 6.5 durability (panel display + ML via pw join)
+                "roll_early_exit_rate": player_row.get("roll_early_exit_rate"),
             })
             out.append(proj)
 
@@ -534,6 +536,41 @@ def apply_reallocation(cands: pd.DataFrame, realloc_results: List[Dict],
 # Phase 6.4: pass-family YARDS markets take the fitted weather multiplier
 # (receptions is a count market and the fit was on yards -- excluded, noted).
 _WX_PASS_MARKETS = ("passing_yards", "receiving_yards")
+
+# ---- Phase 6.5: opponent-side absence -> composite matchup dimension ------- #
+# MEASURED (scripts/fit_absence_opp.py, 2019-2023 team-games, n=2,557,
+# trailing-production controlled): each opponent DB listed Out/Doubtful is
+# worth +6.04 team pass yards (t=+2.0) -- independently corroborating the
+# candidate-level finding from the context build (2+ DBs out -> +2.5pt
+# pass-family over-rate, n=3,540). Front-7/LB outs cleared nothing for pass
+# OR rush, and OWN O-line outs cleared nothing (sacks t=-0.3, pass yds
+# t=-1.4, scrambles t=-1.0; 2+-OL incidence only 5.1% -- power-limited,
+# noted) -- so ONLY the DB term ships, and only into the matchup SUB-SCORE
+# (composite absence_sub), never the mean.
+OPP_DB_OUT_PASS_YDS = 6.04
+_ABSENCE_PASS_MARKETS = ("passing_yards", "receiving_yards", "receptions", "pass_attempts")
+OPP_ABSENCE_FACTOR_CAP = 1.10
+
+
+def apply_opp_absence_factor(cands: pd.DataFrame,
+                             db_outs_by_key: Dict[tuple, int]) -> pd.DataFrame:
+    """Stamp ``opp_absence_factor`` (>1 = opponent secondary shorthanded =
+    softer pass matchup) for the composite's fixed-weight absence dimension.
+    ``db_outs_by_key``: {(season, week, defteam): n_db_out}. Means untouched."""
+    if cands.empty or not db_outs_by_key:
+        return cands
+    cands = cands.copy()
+    from . import factors as factmod  # LEAGUE_PASS_YDS lives with the fits
+    vals = []
+    for r in cands.itertuples(index=False):
+        n = db_outs_by_key.get((int(r.season), int(r.week), r.defteam), 0)
+        f = 1.0
+        if n and r.market in _ABSENCE_PASS_MARKETS:
+            f = min(1.0 + OPP_DB_OUT_PASS_YDS * float(n) / factmod.LEAGUE_PASS_YDS,
+                    OPP_ABSENCE_FACTOR_CAP)
+        vals.append(round(f, 4))
+    cands["opp_absence_factor"] = vals
+    return cands
 
 
 def apply_weather_adjustment(cands: pd.DataFrame, wx_by_game: Dict[str, Dict]) -> pd.DataFrame:

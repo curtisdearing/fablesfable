@@ -64,6 +64,8 @@ NUMERIC_FEATURES = [
     # Phase 6.1: player depth/location profiles + opponent red-zone defense
     "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
     "opp_rz_td_factor",
+    # Phase 6.5: opponent-secondary absence factor + in-game durability
+    "opp_absence_factor", "roll_early_exit_rate",
 ]
 
 # advanced process metrics (advanced_features.py): strategic aggression,
@@ -111,7 +113,8 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
     roll_cols = ["roll_games", "roll_targets", "roll_target_share", "roll_carries",
                  "roll_carry_share", "roll_pass_attempts", "roll_adot", "roll_air_yards",
                  "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
-                 "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share"]
+                 "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
+                 "roll_early_exit_rate"]
     pw_slim = pw[["season", "week", "player_id"] + roll_cols].drop_duplicates(
         subset=["season", "week", "player_id"])
     f = f.drop(columns=[c for c in roll_cols if c in f.columns], errors="ignore")
@@ -121,6 +124,11 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
         f[f"mkt_{m}"] = (f["market"] == m).astype(int)
     for p in POSITIONS:
         f[f"pos_{p}"] = (f["pos"] == p).astype(int)
+    # any numeric feature a caller's path didn't stamp exists as NaN (e.g.
+    # opp_absence_factor when injury data is unavailable) -- GBDT handles NaN
+    for c in NUMERIC_FEATURES:
+        if c not in f.columns:
+            f[c] = np.nan
     return f
 
 

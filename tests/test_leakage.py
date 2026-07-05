@@ -35,6 +35,9 @@ ROLL_COLS_PLAYER = [
     # feeds the shrinkage prior, so a leaked label would leak the prior)
     "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
     "archetype",
+    # Phase 6.2 red-zone shares + 6.5 durability
+    "roll_rz_tgt_share", "roll_rz_carry_share", "roll_gl_carry_share",
+    "roll_early_exit_rate",
 ]
 ROLL_COLS_OPP = [
     "roll_games", "roll_ypt_allowed_factor", "roll_ypc_allowed_factor",

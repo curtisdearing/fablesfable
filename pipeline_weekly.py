@@ -477,6 +477,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         cands = candmod.apply_backup_qb_adjustment(cands)
         cands = candmod.apply_absence_qb_adjustment(cands, inputs.pw, season, week, outs_now)
         cands = candmod.apply_weather_adjustment(cands, wx_map)
+        # Phase 6.5: opponent-secondary outs -> composite matchup dimension
+        if pack is not None:
+            cands = candmod.apply_opp_absence_factor(
+                cands, {k: v[1] for k, v in pack.def_out.items()})
 
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)

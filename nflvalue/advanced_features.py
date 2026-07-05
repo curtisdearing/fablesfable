@@ -88,6 +88,10 @@ FEATURES = [
     "rz_tgt_share", "rz_carry_share",
     "qb_continuity", "oline_outs", "is_contract_year", "age_years",
     "temp", "wind",
+    # Phase 6.5 durability: trailing count of Out/Doubtful listings on the
+    # official injury report (34 report-weeks ~ 2 seasons). Pairs with
+    # player_week's roll_early_exit_rate (in-game exits from pbp).
+    "inj_out_count_2y",
 ]
 
 
@@ -331,6 +335,46 @@ class AdvancedPack:
             for (s, w, t), grp in d.groupby(["season", "week", "team"]):
                 self.ol_out[(int(s), int(w), str(t))] = int(len(grp))
 
+        # Phase 6.5 durability: per-player trailing Out/Doubtful listing count
+        # over the last 34 report-weeks, AsOf-consumed (strictly before the
+        # candidate week; row-existence can't leak -- built on all listings).
+        self.inj_out = AsOfLookup(pd.DataFrame(
+            columns=["player_id", "season", "week", "inj_out_count_2y"]),
+            ["inj_out_count_2y"])
+        if len(inj) and "gsis_id" in inj.columns:
+            io = inj[inj["report_status"].isin(OUT_STATUSES)].dropna(subset=["gsis_id"])
+            if len(io):
+                io = (io.groupby(["gsis_id", "season", "week"]).size()
+                      .rename("n").reset_index()
+                      .rename(columns={"gsis_id": "player_id"})
+                      .sort_values(["player_id", "season", "week"]))
+                # listings within a trailing ~2-season time window (34 season-
+                # weeks in season*18+week space), inclusive of the row itself;
+                # AsOf consumption keeps it strictly-prior. Known softness: a
+                # player unlisted for 2+ years carries his LAST row's value
+                # (>=1) instead of decaying to 0 -- mild flattening on the
+                # healthiest players, acceptable for an ML feature.
+                key = io["season"].astype(int) * 18 + io["week"].astype(int)
+                io["_k"] = key
+                counts = []
+                for pid, grp in io.groupby("player_id"):
+                    ks = grp["_k"].tolist()
+                    ns = grp["n"].tolist()
+                    lo = 0
+                    run = 0.0
+                    out = []
+                    for i, k in enumerate(ks):
+                        run += ns[i]
+                        while ks[lo] < k - 34:
+                            run -= ns[lo]
+                            lo += 1
+                        out.append(run)
+                    counts.extend(out)
+                io["inj_out_count_2y"] = counts
+                self.inj_out = AsOfLookup(
+                    io[["player_id", "season", "week", "inj_out_count_2y"]],
+                    ["inj_out_count_2y"])
+
         meta = players_meta if players_meta is not None else load_players_meta()
         self.dob = {r.player_id: pd.Timestamp(r.birth_date)
                     for r in meta.itertuples(index=False) if pd.notna(r.birth_date)}
@@ -368,6 +412,7 @@ class AdvancedPack:
             rows["ngs_yac_aoe"].append(ngs[2])
             rows["qb_continuity"].append(self.qbc.get((*key, r.team), np.nan))
             rows["oline_outs"].append(self.ol_out.get((*key, r.team), 0))
+            rows["inj_out_count_2y"].append(self.inj_out.get(r.player_id, *key)[0])
             rows["is_contract_year"].append(self.contract.get((r.player_id, int(r.season)), 0))
             dob = self.dob.get(r.player_id)
             gd = getattr(r, "gameday", None)
@@ -403,4 +448,11 @@ def panel_items(lean: Dict) -> List[str]:
     if qbc is not None and not (isinstance(qbc, float) and np.isnan(qbc)) and qbc < 0.5:
         items.append("projected starting QB threw <50% of the team's trailing attempts "
                      "(usage history discount)")
+    # Phase 6.5 durability flags (display-only, like everything here)
+    ee = lean.get("roll_early_exit_rate")
+    if ee is not None and not (isinstance(ee, float) and np.isnan(ee)) and ee >= 0.15:
+        items.append(f"durability: left {ee:.0%} of recent games early (pbp half-split)")
+    ic = lean.get("inj_out_count_2y")
+    if ic is not None and not (isinstance(ic, float) and np.isnan(ic)) and ic >= 4:
+        items.append(f"durability: {int(ic)} Out/Doubtful listings in ~2 seasons")
     return items

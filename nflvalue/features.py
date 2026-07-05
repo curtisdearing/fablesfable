@@ -215,6 +215,32 @@ def _rusher_week(pbp: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _early_exit_week(pbp: pd.DataFrame) -> pd.DataFrame:
+    """Phase 6.5 durability input: player had meaningful first-half usage
+    (>=3 touches/targets/attempts in Q1-Q2) and ZERO in Q3-Q4 while his team
+    ran second-half plays -- the pbp signature of leaving a game early.
+    Returns one row per (season, week, player_id) with ``early_exit`` 0/1."""
+    if "qtr" not in pbp.columns:
+        return pd.DataFrame(columns=["season", "week", "player_id", "early_exit"])
+    frames = []
+    for id_col in ("receiver_player_id", "rusher_player_id", "passer_player_id"):
+        d = pbp.dropna(subset=[id_col])
+        frames.append(pd.DataFrame({
+            "season": d["season"], "week": d["week"], "player_id": d[id_col],
+            "posteam": d["posteam"], "h1": (d["qtr"] <= 2).astype(float),
+            "h2": (d["qtr"] >= 3).astype(float)}))
+    u = pd.concat(frames, ignore_index=True)
+    per = (u.groupby(["season", "week", "player_id", "posteam"])[["h1", "h2"]]
+           .sum().reset_index())
+    team_h2 = (pbp[pbp["qtr"] >= 3].groupby(["season", "week", "posteam"])
+               .size().rename("team_h2_plays").reset_index())
+    per = per.merge(team_h2, on=["season", "week", "posteam"], how="left")
+    per["early_exit"] = ((per["h1"] >= 3) & (per["h2"] == 0)
+                         & (per["team_h2_plays"].fillna(0) >= 10)).astype(float)
+    return per[["season", "week", "player_id", "early_exit"]].drop_duplicates(
+        subset=["season", "week", "player_id"])
+
+
 def _combine_player_week(pbp: pd.DataFrame) -> pd.DataFrame:
     """Outer-merge passer/receiver/rusher weekly stats into one row per player-week."""
     passer = _passer_week(pbp)
@@ -563,6 +589,19 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
             lambda s: _rolling_shifted(s, window=16))
     raw_eff = {**raw_eff, **raw_eff_rz}
 
+    # Phase 6.5 durability: rolling share of recent games the player failed
+    # to finish (first-half usage, none after halftime). 32-game window --
+    # durability is a slow-moving trait, not week-to-week form.
+    ee = _early_exit_week(pbp)
+    if len(ee):
+        pw = pw.merge(ee, on=["season", "week", "player_id"], how="left")
+        pw["early_exit"] = pw["early_exit"].fillna(0.0)  # played but low H1 usage
+    else:
+        pw["early_exit"] = 0.0
+    g = pw.groupby("player_id")  # re-group after the merge (fresh frame)
+    pw["roll_early_exit_rate"] = g["early_exit"].transform(
+        lambda s: _rolling_shifted(s, window=32)).fillna(0.0)  # no history = no exits observed
+
     # ---- archetype (Phase 6.1): assigned from trailing-only rolls, used as
     # the FIRST shrinkage tier; coarse role remains the fallback tier ---------- #
     pw["archetype"] = _assign_archetype(pw)
@@ -596,6 +635,7 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
         "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
         "roll_rz_tgt_share", "roll_rz_carry_share", "roll_gl_carry_share",
+        "roll_early_exit_rate",
     ]
     return pw[keep].reset_index(drop=True)
 

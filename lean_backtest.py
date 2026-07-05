@@ -155,6 +155,19 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
     except Exception as exc:  # noqa: BLE001 -- replay still runs, weather-neutral
         print(f"[lean_backtest] game weather unavailable ({exc}); no weather adjustment")
 
+    # Phase 6.5: opponent-secondary outs (official reports; pre-game info)
+    db_outs: Dict = {}
+    try:
+        from nflvalue.candidates import apply_opp_absence_factor
+        from nflvalue.context_features import (DB_POS, OUT_STATUSES,
+                                               load_injury_history)
+        inj = load_injury_history(sorted(inputs.pw["season"].unique().tolist()))
+        d = inj[inj["report_status"].isin(OUT_STATUSES) & inj["position"].isin(DB_POS)]
+        db_outs = {(int(s), int(w), str(t)): int(len(g))
+                   for (s, w, t), g in d.groupby(["season", "week", "team"])}
+    except Exception as exc:  # noqa: BLE001
+        print(f"[lean_backtest] injury history unavailable ({exc}); no absence factor")
+
     lean_rows, cand_rows = [], []
     for wk in weeks:
         cands_raw = enumerate_candidates(season, wk, inputs=inputs, min_usage=min_usage,
@@ -163,6 +176,8 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
         if cands_raw.empty:
             continue
         cands_raw = apply_weather_adjustment(cands_raw, wx_map)
+        if db_outs:
+            cands_raw = apply_opp_absence_factor(cands_raw, db_outs)
         cands = (prop_learning.apply_to_candidates(cands_raw, state.adjustments(), enabled=True)
                  if state is not None else cands_raw)
         actuals = _actuals_for_week(inputs.pw, season, wk)
