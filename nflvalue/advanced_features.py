@@ -67,7 +67,18 @@ HIST = os.path.join(ROOT, "historical")
 EXT_ONLY = ["play_id", "down", "ydstogo", "yardline_100", "score_differential", "qtr", "wp",
             "xpass", "pass_oe", "cpoe", "shotgun", "no_huddle",
             "game_seconds_remaining", "sack", "qb_hit", "pass", "rush", "fixed_drive"]
-EXT_PBP_COLUMNS = PBP_COLUMNS + EXT_ONLY
+EXT_PBP_COLUMNS = list(dict.fromkeys(PBP_COLUMNS + EXT_ONLY))
+
+# Phase 6: every pbp column any tier consumes, in ONE list -- ingest keeps
+# exactly these for new seasons and scripts/bootstrap_history.py rebuilds the
+# base with them, so a column needed by weather fitting (6.4) or O-line/
+# scramble effects (6.5) can't silently vanish from future caches.
+P6_ONLY = ["goal_to_go", "qb_scramble", "qb_dropback",
+           "field_goal_attempt", "field_goal_result", "kick_distance",
+           "kicker_player_id", "kicker_player_name", "extra_point_result",
+           "weather", "roof", "surface", "stadium", "home_team", "away_team",
+           "drive", "touchdown", "td_player_id"]
+FULL_PBP_COLUMNS = list(dict.fromkeys(EXT_PBP_COLUMNS + P6_ONLY))
 
 OL_POS = {"T", "G", "C", "OT", "OG", "OL", "LT", "RT", "LG", "RG"}
 FEATURES = [

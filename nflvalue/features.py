@@ -48,6 +48,17 @@ EWM_SPAN = 4              # games; recent-usage weighting for the rolling MEAN f
 SHRINK_K = 6.0            # "games" of role-mean prior weight in shrinkage
 QB_ATTEMPT_THRESHOLD = 10  # cumulative pass attempts before we call someone a QB (fallback heuristic only)
 
+# ---- Phase 6.1: depth/location + archetype constants ----------------------- #
+SHORT_AIR_YARDS = 8.0      # air_yards < 8 = "short game"; >= 8 = downfield.
+                           # ~60/40 league split, so both bands stay well-sampled
+                           # per defense per rolling window.
+WR_DEEP_ADOT = 11.0        # trailing aDOT >= 11 = downfield profile (league WR
+                           # median sits just under this; fixed, documented, not
+                           # refit per week -- an archetype label, not a weight).
+RB_RECEIVING_MIX = 0.35    # trailing targets/(targets+carries) >= .35 = receiving back
+ARCHETYPE_MIN_GAMES = 3    # below this trailing sample, archetype = generic
+                           # (nothing stable to classify on; coarse role prior).
+
 PBP_COLUMNS = [
     "season", "week", "game_id", "season_type", "posteam", "defteam", "epa",
     "pass_attempt", "rush_attempt", "complete_pass", "pass_touchdown", "rush_touchdown",
@@ -55,6 +66,8 @@ PBP_COLUMNS = [
     "receiver_player_id", "receiver_player_name",
     "rusher_player_id", "rusher_player_name",
     "passer_player_id", "passer_player_name",
+    # Phase 6.1: target depth/location splits + red-zone defense
+    "pass_location", "yardline_100", "fixed_drive",
 ]
 
 
@@ -82,8 +95,23 @@ def _team_week(pbp: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _with_depth_loc_flags(p: pd.DataFrame) -> pd.DataFrame:
+    """Per-play depth/location indicator columns (NaN-aware: a play with no
+    recorded air_yards / pass_location contributes to neither band, so a
+    profile is share-of-KNOWN, never share-of-all)."""
+    p = p.copy()
+    ay_known = p["air_yards"].notna()
+    p["_ay_known"] = ay_known.astype(float)
+    p["_ay_short"] = (ay_known & (p["air_yards"] < SHORT_AIR_YARDS)).astype(float)
+    loc_known = p["pass_location"].notna() if "pass_location" in p.columns else pd.Series(False, index=p.index)
+    p["_loc_known"] = loc_known.astype(float)
+    p["_loc_mid"] = (loc_known & (p["pass_location"] == "middle")).astype(float)
+    return p
+
+
 def _passer_week(pbp: pd.DataFrame) -> pd.DataFrame:
-    p = pbp[pbp["pass_attempt"] == 1].dropna(subset=["passer_player_id"]).copy()
+    p = pbp[pbp["pass_attempt"] == 1].dropna(subset=["passer_player_id"])
+    p = _with_depth_loc_flags(p)
     g = p.groupby(["season", "week", "passer_player_id"])
     out = g.agg(
         pass_attempts=("pass_attempt", "sum"),
@@ -91,6 +119,8 @@ def _passer_week(pbp: pd.DataFrame) -> pd.DataFrame:
         pass_yards=("passing_yards", lambda s: np.nansum(s.to_numpy())),
         pass_tds=("pass_touchdown", "sum"),
         pass_epa_sum=("epa", "sum"),
+        short_att=("_ay_short", "sum"),
+        known_ay_att=("_ay_known", "sum"),
         player_name=("passer_player_name", "first"),
         team=("posteam", "first"),
         defteam=("defteam", "first"),
@@ -99,7 +129,8 @@ def _passer_week(pbp: pd.DataFrame) -> pd.DataFrame:
 
 
 def _receiver_week(pbp: pd.DataFrame) -> pd.DataFrame:
-    r = pbp[pbp["pass_attempt"] == 1].dropna(subset=["receiver_player_id"]).copy()
+    r = pbp[pbp["pass_attempt"] == 1].dropna(subset=["receiver_player_id"])
+    r = _with_depth_loc_flags(r)
     g = r.groupby(["season", "week", "receiver_player_id"])
     out = g.agg(
         targets=("pass_attempt", "sum"),
@@ -109,6 +140,10 @@ def _receiver_week(pbp: pd.DataFrame) -> pd.DataFrame:
         yac_sum=("yards_after_catch", lambda s: np.nansum(s.to_numpy())),
         rec_tds=("pass_touchdown", "sum"),
         rec_epa_sum=("epa", "sum"),
+        short_tgt=("_ay_short", "sum"),
+        known_ay_tgt=("_ay_known", "sum"),
+        mid_tgt=("_loc_mid", "sum"),
+        known_loc_tgt=("_loc_known", "sum"),
         player_name=("receiver_player_name", "first"),
         team=("posteam", "first"),
         defteam=("defteam", "first"),
@@ -160,6 +195,7 @@ def _combine_player_week(pbp: pd.DataFrame) -> pd.DataFrame:
         "pass_attempts", "completions", "pass_yards", "pass_tds", "pass_epa_sum",
         "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum", "rec_tds", "rec_epa_sum",
         "carries", "rush_yards", "rush_tds", "rush_epa_sum",
+        "short_att", "known_ay_att", "short_tgt", "known_ay_tgt", "mid_tgt", "known_loc_tgt",
     ]
     for c in numeric_fill:
         if c in merged.columns:
@@ -252,29 +288,74 @@ def _rolling_shifted(s: pd.Series, window: int = ROLL_WINDOW, how: str = "mean")
     raise ValueError(how)
 
 
-def _league_role_prior_mean(df: pd.DataFrame, rate_col: str) -> pd.Series:
-    """Expanding, PRIOR-weeks-only league average of a per-week rate, by role.
+def _league_prior_mean_by(df: pd.DataFrame, rate_col: str, group_cols: list,
+                          fill: Optional[float] = 0.0) -> pd.Series:
+    """Expanding, PRIOR-weeks-only league average of a per-week rate, by
+    ``group_cols`` (e.g. ["role"] or ["role", "archetype"]).
 
-    Computes one number per (role, season, week) -- the across-players average
-    rate up through the PREVIOUS week only -- then broadcasts it back onto
-    every player-week row of that role. Used as the shrinkage target so a
-    3-target rookie regresses toward his role's league mean, not a stranger's.
+    Computes one number per (*group_cols, season, week) -- the across-players
+    average rate up through the PREVIOUS week only -- then broadcasts it back
+    onto every matching player-week row. Used as the shrinkage target so a
+    3-target rookie regresses toward his own kind's league mean, not a
+    stranger's.
+
+    ``fill``: the ONLY rows still NaN after the expanding mean are the very
+    first (*group, season, week) in the dataset -- no prior data exists at
+    all. Filling those with this dataframe's overall mean would leak future
+    weeks into that first prediction, so the default is a fixed constant
+    (0.0): not derived from the data, so it can never leak, at the cost of a
+    deliberately weak (zero-information) estimate for that edge case.
+    ``fill=None`` keeps them NaN so the caller can chain a coarser prior
+    (Phase 6.1: archetype prior falls back to the role prior, not to 0).
     """
-    weekly = (df.groupby(["role", "season", "week"])[rate_col]
-              .mean().reset_index().sort_values(["role", "season", "week"]))
+    keys = group_cols + ["season", "week"]
+    weekly = (df.groupby(keys)[rate_col]
+              .mean().reset_index().sort_values(keys))
     weekly["league_prior_mean"] = (
-        weekly.groupby("role")[rate_col]
+        weekly.groupby(group_cols)[rate_col]
         .transform(lambda s: s.shift(1).expanding(min_periods=1).mean())
     )
-    # The ONLY rows still NaN here are the very first (role, season, week) in
-    # the whole dataset -- by definition there is no prior data to average at
-    # all. Filling those with this dataframe's overall mean would leak future
-    # weeks into that first prediction, so use a fixed constant (0.0) instead:
-    # not derived from the data, so it can never leak, at the cost of a
-    # deliberately weak (zero-information) estimate for that one edge case.
-    weekly["league_prior_mean"] = weekly["league_prior_mean"].fillna(0.0)
-    return df.merge(weekly[["role", "season", "week", "league_prior_mean"]],
-                     on=["role", "season", "week"], how="left")["league_prior_mean"]
+    if fill is not None:
+        weekly["league_prior_mean"] = weekly["league_prior_mean"].fillna(fill)
+    return df.merge(weekly[keys + ["league_prior_mean"]],
+                     on=keys, how="left")["league_prior_mean"]
+
+
+def _league_role_prior_mean(df: pd.DataFrame, rate_col: str) -> pd.Series:
+    """Coarse-role prior (the Phase 1 behavior; kept as the fallback tier)."""
+    return _league_prior_mean_by(df, rate_col, ["role"], fill=0.0)
+
+
+def _assign_archetype(pw: pd.DataFrame) -> pd.Series:
+    """Walk-forward archetype label from TRAILING usage only (Phase 6.1).
+
+    Built exclusively from roll_* columns (shift-1-then-roll by construction),
+    so the label at (season, week) can never see week W. Players under
+    ARCHETYPE_MIN_GAMES trailing games are 'generic' -- there is nothing
+    stable to classify on, and generic routes them to the coarse role prior.
+
+      RB_receiving / RB_early_down   trailing targets/(targets+carries) mix
+      WR_deep / WR_short             trailing aDOT split at WR_DEEP_ADOT
+      generic                        QB, TE (no honest free split: inline-vs-
+                                     move is alignment data, see DATA_SOURCES
+                                     paywall boundary), and cold starts
+    """
+    tgt = pw["roll_targets"].fillna(0.0)
+    car = pw["roll_carries"].fillna(0.0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mix = tgt / (tgt + car).replace(0, np.nan)
+    arch = np.select(
+        [
+            pw["role"].eq("RB") & (mix >= RB_RECEIVING_MIX),
+            pw["role"].eq("RB"),
+            pw["role"].eq("WR") & (pw["roll_adot"] >= WR_DEEP_ADOT),
+            pw["role"].eq("WR") & pw["roll_adot"].notna(),
+        ],
+        ["RB_receiving", "RB_early_down", "WR_deep", "WR_short"],
+        default="generic",
+    )
+    cold = pw["roll_games"].fillna(0.0) < ARCHETYPE_MIN_GAMES
+    return pd.Series(np.where(cold, "generic", arch), index=pw.index)
 
 
 def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
@@ -298,6 +379,10 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw["_pass_td_rate"] = _safe_ratio(pw["pass_tds"], pw["pass_attempts"])
     pw["_rush_td_rate"] = _safe_ratio(pw["rush_tds"], pw["carries"])
     pw["_rec_td_rate"] = _safe_ratio(pw["rec_tds"], pw["targets"])
+    # Phase 6.1: depth/location profiles (share of KNOWN-depth/-location plays)
+    pw["_short_tgt_share"] = _safe_ratio(pw["short_tgt"], pw["known_ay_tgt"])
+    pw["_mid_tgt_share"] = _safe_ratio(pw["mid_tgt"], pw["known_loc_tgt"])
+    pw["_short_pass_share"] = _safe_ratio(pw["short_att"], pw["known_ay_att"])
 
     g = pw.groupby("player_id")
     pw["roll_games"] = g["targets"].transform(lambda s: _rolling_shifted(s, how="count"))
@@ -333,13 +418,25 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_pass_td_rate": "_pass_td_rate",
         "roll_rush_td_rate": "_rush_td_rate",
         "roll_rec_td_rate": "_rec_td_rate",
+        # Phase 6.1 depth/location profiles: shrunk like efficiencies so a
+        # 3-game profile doesn't read as an extreme depth specialist
+        "roll_short_tgt_share": "_short_tgt_share",
+        "roll_mid_tgt_share": "_mid_tgt_share",
+        "roll_short_pass_share": "_short_pass_share",
     }
     for out_col, raw_col in raw_eff.items():
         pw[f"_raw_{out_col}"] = g[raw_col].transform(_rolling_shifted)
 
-    # ---- shrink each rolling efficiency toward its role's prior league mean -- #
+    # ---- archetype (Phase 6.1): assigned from trailing-only rolls, used as
+    # the FIRST shrinkage tier; coarse role remains the fallback tier ---------- #
+    pw["archetype"] = _assign_archetype(pw)
+
+    # ---- shrink each rolling efficiency toward its archetype's prior league
+    # mean where one exists (falling back to the coarse role prior) ------------ #
     for out_col, raw_col in raw_eff.items():
-        league_mean = _league_role_prior_mean(pw, raw_col)
+        role_mean = _league_role_prior_mean(pw, raw_col)
+        arch_mean = _league_prior_mean_by(pw, raw_col, ["role", "archetype"], fill=None)
+        league_mean = arch_mean.fillna(role_mean)
         n = pw["roll_games"].fillna(0.0)
         raw = pw[f"_raw_{out_col}"]
         pw[out_col] = np.where(
@@ -350,6 +447,7 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
 
     keep = [
         "season", "week", "player_id", "player_name", "team", "defteam", "role", "position_source",
+        "archetype",
         "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum",
         "carries", "rush_yards", "pass_attempts", "completions", "pass_yards",
         "pass_tds", "rush_tds", "rec_tds",
@@ -358,6 +456,7 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
         "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
+        "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
     ]
     return pw[keep].reset_index(drop=True)
 
@@ -466,14 +565,116 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     opp["roll_ypc_allowed_factor"] = np.where(opp["role"] == "RB", ypp_factor, np.nan)
     opp["roll_epa_allowed_factor"] = epa_factor
 
+    # ---- Phase 6.1: defense SHAPE vs target depth/location + red-zone TD rate
+    # (one value per defteam-week, merged onto every role row of that week).
+    # Both are computed on the FULL defense-week grid -- a week where a
+    # defense happened to face no red-zone trip still gets a row (carrying
+    # its trailing value), so row-missingness can never encode current-week
+    # information (the AsOfLookup lesson from the advanced-features build). -- #
+    grid = opp[["season", "week", "defteam"]].drop_duplicates().reset_index(drop=True)
+    shape = _build_def_shape(pbp, grid)
+    rz = _build_rz_def(pbp, grid)
+    opp = opp.merge(shape, on=["season", "week", "defteam"], how="left")
+    opp = opp.merge(rz, on=["season", "week", "defteam"], how="left")
+
     keep = [
         "season", "week", "defteam", "role",
         "targets_allowed", "rec_yards_allowed", "carries_allowed", "rush_yards_allowed",
         "pass_yards_allowed", "epa_allowed_sum", "plays_faced", "roll_games",
         "roll_ypt_allowed_factor", "roll_ypc_allowed_factor", "roll_ypa_allowed_factor",
         "roll_epa_allowed_factor",
+        "roll_shape_short", "roll_shape_deep", "roll_shape_mid", "roll_shape_out",
+        "league_short_share", "league_mid_share",
+        "roll_rz_td_factor",
     ]
     return opp[keep].reset_index(drop=True)
+
+
+def _def_roll_factor(d: pd.DataFrame, num: str, den: str, out: str,
+                     clip: tuple = (0.6, 1.6)) -> pd.DataFrame:
+    """Shared walk-forward defense-factor idiom: per-week rate -> shift(1)
+    rolling mean per defteam -> ratio to the prior-weeks-only league mean,
+    clipped. Returns d with column ``out`` added."""
+    d = d.sort_values(["defteam", "season", "week"]).reset_index(drop=True)
+    d["_rate"] = _safe_ratio(d[num], d[den])
+    d["_roll"] = d.groupby("defteam")["_rate"].transform(_rolling_shifted)
+    weekly = (d.groupby(["season", "week"])["_rate"].mean()
+              .reset_index().sort_values(["season", "week"]))
+    weekly["_lp"] = weekly["_rate"].shift(1).expanding(min_periods=1).mean()
+    weekly["_lp"] = weekly["_lp"].fillna(0.0)  # first week in dataset only; see _league_prior_mean_by
+    d = d.merge(weekly[["season", "week", "_lp"]], on=["season", "week"], how="left")
+    d[out] = _safe_ratio(d["_roll"].fillna(d["_lp"]), d["_lp"]).fillna(1.0).clip(*clip)
+    return d.drop(columns=["_rate", "_roll", "_lp"])
+
+
+def _build_def_shape(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
+    """Per-defense depth/location SHAPE factors (Phase 6.1).
+
+    Free-data feasibility verdict (constraint: no fake matchup data): man/zone
+    and slot/perimeter alignment are NOT honestly buildable free + live --
+    they lived in NGS participation data (dead after 2023; already rejected
+    for live features in the chemistry build) and the free FTN subset carries
+    no coverage/alignment columns (verified at bootstrap, see decisions_p6).
+    The live-safe substitute is target DEPTH (air_yards) x field LOCATION
+    (pass_location), available every season from standard pbp.
+
+    Shape = the defense's yards-per-target factor on that band vs the league,
+    same clip/priors as the coarse factors. Consumers normalize by the
+    league band mix, so an average-everywhere defense tilts nothing.
+    """
+    p = pbp[(pbp["pass_attempt"] == 1)].dropna(subset=["receiver_player_id"])
+    p = _with_depth_loc_flags(p)
+    yds = p["passing_yards"].fillna(0.0)
+    p = p.assign(
+        _y_short=yds * p["_ay_short"], _a_short=p["_ay_short"],
+        _y_deep=yds * (p["_ay_known"] - p["_ay_short"]), _a_deep=p["_ay_known"] - p["_ay_short"],
+        _y_mid=yds * p["_loc_mid"], _a_mid=p["_loc_mid"],
+        _y_out=yds * (p["_loc_known"] - p["_loc_mid"]), _a_out=p["_loc_known"] - p["_loc_mid"],
+    )
+    d = (p.groupby(["season", "week", "defteam"])
+         [["_y_short", "_a_short", "_y_deep", "_a_deep", "_y_mid", "_a_mid", "_y_out", "_a_out"]]
+         .sum().reset_index())
+    d = grid.merge(d, on=["season", "week", "defteam"], how="left")
+    d[[c for c in d.columns if c.startswith("_")]] = d[[c for c in d.columns if c.startswith("_")]].fillna(0.0)
+    for num, den, out in (("_y_short", "_a_short", "roll_shape_short"),
+                          ("_y_deep", "_a_deep", "roll_shape_deep"),
+                          ("_y_mid", "_a_mid", "roll_shape_mid"),
+                          ("_y_out", "_a_out", "roll_shape_out")):
+        d = _def_roll_factor(d, num, den, out)
+
+    # league band mix (prior-weeks-only): what share of known-depth targets are
+    # short / known-location targets are middle -- the tilt's neutral point
+    mix = (d.groupby(["season", "week"])[["_a_short", "_a_deep", "_a_mid", "_a_out"]]
+           .sum().reset_index().sort_values(["season", "week"]))
+    mix["_short_share"] = mix["_a_short"] / (mix["_a_short"] + mix["_a_deep"]).replace(0, np.nan)
+    mix["_mid_share"] = mix["_a_mid"] / (mix["_a_mid"] + mix["_a_out"]).replace(0, np.nan)
+    mix["league_short_share"] = mix["_short_share"].shift(1).expanding(min_periods=1).mean()
+    mix["league_mid_share"] = mix["_mid_share"].shift(1).expanding(min_periods=1).mean()
+    d = d.merge(mix[["season", "week", "league_short_share", "league_mid_share"]],
+                on=["season", "week"], how="left")
+    return d[["season", "week", "defteam",
+              "roll_shape_short", "roll_shape_deep", "roll_shape_mid", "roll_shape_out",
+              "league_short_share", "league_mid_share"]]
+
+
+def _build_rz_def(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
+    """Red-zone defense (Phase 6.1): TDs allowed per red-zone TRIP, as a
+    walk-forward factor vs league (>1 = bleeds TDs once opponents reach the
+    20). A trip = a distinct (game, drive) with at least one snap at
+    yardline_100 <= 20; TDs counted are offensive skill TDs (pass/rush), the
+    thing anytime_td prices."""
+    rz = pbp[((pbp["pass_attempt"] == 1) | (pbp["rush_attempt"] == 1))
+             & (pbp["yardline_100"] <= 20)].copy()
+    rz["_td"] = ((rz["pass_touchdown"] == 1) | (rz["rush_touchdown"] == 1)).astype(float)
+    trips = (rz.groupby(["season", "week", "defteam", "game_id", "fixed_drive"])["_td"]
+             .max().reset_index())
+    d = (trips.groupby(["season", "week", "defteam"])
+         .agg(rz_tds_allowed=("_td", "sum"), rz_trips_faced=("_td", "size"))
+         .reset_index())
+    d = grid.merge(d, on=["season", "week", "defteam"], how="left")
+    d[["rz_tds_allowed", "rz_trips_faced"]] = d[["rz_tds_allowed", "rz_trips_faced"]].fillna(0.0)
+    d = _def_roll_factor(d, "rz_tds_allowed", "rz_trips_faced", "roll_rz_td_factor")
+    return d[["season", "week", "defteam", "roll_rz_td_factor"]]
 
 
 def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:

@@ -31,10 +31,17 @@ ROLL_COLS_PLAYER = [
     "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
     "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
     "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
+    # Phase 6.1: depth/location profiles + the archetype label itself (it
+    # feeds the shrinkage prior, so a leaked label would leak the prior)
+    "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
+    "archetype",
 ]
 ROLL_COLS_OPP = [
     "roll_games", "roll_ypt_allowed_factor", "roll_ypc_allowed_factor",
     "roll_ypa_allowed_factor", "roll_epa_allowed_factor",
+    # Phase 6.1: depth/location shapes + red-zone defense
+    "roll_shape_short", "roll_shape_deep", "roll_shape_mid", "roll_shape_out",
+    "league_short_share", "league_mid_share", "roll_rz_td_factor",
 ]
 ROLL_COLS_TEAM = ["roll_team_pass_att", "roll_team_rush_att"]
 

@@ -107,13 +107,13 @@
       },
       "models": {
         "gbdt": {
-          "log_loss": 0.63632,
-          "auc": 0.6332,
+          "log_loss": 0.63393,
+          "auc": 0.6415,
           "leans": {
             "n": 1360,
-            "hit_rate": 0.6574,
-            "units_at_-110": 346.73,
-            "top1_hit_rate": 0.7132
+            "hit_rate": 0.6375,
+            "units_at_-110": 295.18,
+            "top1_hit_rate": 0.7316
           }
         },
         "rf": {
@@ -139,13 +139,13 @@
       },
       "models": {
         "gbdt": {
-          "log_loss": 0.62761,
-          "auc": 0.6322,
+          "log_loss": 0.62439,
+          "auc": 0.6385,
           "leans": {
             "n": 1360,
-            "hit_rate": 0.675,
-            "units_at_-110": 392.55,
-            "top1_hit_rate": 0.7132
+            "hit_rate": 0.6853,
+            "units_at_-110": 419.27,
+            "top1_hit_rate": 0.7243
           }
         },
         "rf": {

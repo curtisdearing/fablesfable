@@ -39,6 +39,14 @@ from typing import Dict, Optional
 from . import oddsmath
 
 DEFAULT_WEIGHTS = {"edge": 0.5, "confidence": 0.3, "matchup": 0.2}
+# Phase 6.1: FIXED matchup sub-score weights. Previously the EPA dimension was
+# appended only when present, silently shifting the effective weighting
+# between 1/3 and 1/4 per candidate (audit §1). Now every dimension always
+# carries its stated weight; a dimension with no data contributes its NEUTRAL
+# value (0.5), never a renormalization. opp_absence lands in Phase 6.5 --
+# reserved here so the weighting is pinned once, not re-shifted per phase.
+MATCHUP_SUB_WEIGHTS = {"opp": 0.25, "script": 0.20, "pace": 0.20,
+                       "epa": 0.20, "opp_absence": 0.15}
 DEFAULT_PARAMS = {
     "z_cap": 2.0,             # |z| at/above this = full confidence component
     "edge_cap": 0.10,         # a 10-point probability edge = full edge component
@@ -173,14 +181,26 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     if team_volume is not None and not (isinstance(team_volume, float) and math.isnan(team_volume)):
         pace_sub = _clip01(0.5 + d * float(team_volume) / prm["pace_span"] * 0.5)
 
-    # EPA-allowed dimension (evaluation catch: computed since the context-
-    # features build but never scored) -- a defense bleeding EPA to this
-    # position is a soft matchup beyond raw yards-per-play
-    subs = [opp_sub, script_sub, pace_sub]
+    # EPA-allowed dimension -- a defense bleeding EPA to this position is a
+    # soft matchup beyond raw yards-per-play; neutral 0.5 when unavailable
+    epa_sub = 0.5
     epa_f = cand.get("opp_epa_factor")
     if epa_f is not None and not (isinstance(epa_f, float) and math.isnan(epa_f)):
-        subs.append(_clip01(0.5 + d * (float(epa_f) - 1.0) / 0.15 * 0.5))
-    matchup_comp = sum(subs) / len(subs)
+        epa_sub = _clip01(0.5 + d * (float(epa_f) - 1.0) / 0.15 * 0.5)
+
+    # opponent-side absence dimension (Phase 6.5; neutral until it ships /
+    # when injury data is unavailable)
+    absence_sub = 0.5
+    absence_f = cand.get("opp_absence_factor")
+    if absence_f is not None and not (isinstance(absence_f, float) and math.isnan(absence_f)):
+        absence_sub = _clip01(0.5 + d * (float(absence_f) - 1.0) / 0.15 * 0.5)
+
+    # Phase 6.1: FIXED weighting, missing dimensions neutral -- the effective
+    # weights no longer shift with data availability (see MATCHUP_SUB_WEIGHTS)
+    subs = {"opp": opp_sub, "script": script_sub, "pace": pace_sub,
+            "epa": epa_sub, "opp_absence": absence_sub}
+    w_m = MATCHUP_SUB_WEIGHTS
+    matchup_comp = sum(w_m[k] * v for k, v in subs.items()) / sum(w_m.values())
 
     # ---- weighted blend (renormalize when edge is unavailable) ------------- #
     if no_market:
@@ -221,6 +241,9 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "opp_sub": round(opp_sub, 4),
             "script_sub": round(script_sub, 4),
             "pace_sub": round(pace_sub, 4),
+            "epa_sub": round(epa_sub, 4),
+            "absence_sub": round(absence_sub, 4),
+            "matchup_weights": dict(MATCHUP_SUB_WEIGHTS),
             "weights_used": ({"confidence": w["confidence"], "matchup": w["matchup"]}
                              if no_market else dict(w)),
             "calibration_gate": bool(prm["calibration_passed"]),

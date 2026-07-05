@@ -105,6 +105,35 @@ class WeekInputs:
                          for r in tw.itertuples(index=False)}
         self.opp_idx = {(r.season, r.week, r.defteam, r.role): r._asdict()
                         for r in opd.itertuples(index=False)}
+        # Phase 6.1 as-of indexes (LIVE-mode fix): a live week has no pbp yet,
+        # so exact (season, week) lookups above return None and every live
+        # projection silently ran with NEUTRAL team volume and opp factors --
+        # backtest and live disagreed. carry_forward now falls back to the
+        # entity's most recent row strictly before the target week (whose
+        # roll_* values are the freshest leak-free estimates available).
+        self._team_weeks: Dict[str, List] = {}
+        for r in tw.sort_values(["team", "season", "week"]).itertuples(index=False):
+            self._team_weeks.setdefault(r.team, []).append(
+                (int(r.season) * 100 + int(r.week), r._asdict()))
+        self._opp_weeks: Dict[tuple, List] = {}
+        for r in opd.sort_values(["defteam", "role", "season", "week"]).itertuples(index=False):
+            self._opp_weeks.setdefault((r.defteam, r.role), []).append(
+                (int(r.season) * 100 + int(r.week), r._asdict()))
+
+    @staticmethod
+    def _asof(entries: Optional[List], season: int, week: int) -> Optional[Dict]:
+        if not entries:
+            return None
+        import bisect
+        keys = [k for k, _ in entries]
+        i = bisect.bisect_left(keys, season * 100 + week)   # strictly before
+        return entries[i - 1][1] if i > 0 else None
+
+    def team_row_asof(self, season: int, week: int, team: str) -> Optional[Dict]:
+        return self._asof(self._team_weeks.get(team), season, week)
+
+    def opp_row_asof(self, season: int, week: int, defteam: str, role: str) -> Optional[Dict]:
+        return self._asof(self._opp_weeks.get((defteam, role)), season, week)
 
 
 def build_week_inputs(pbp: Optional[pd.DataFrame] = None,
@@ -267,14 +296,21 @@ def enumerate_candidates(
             continue
         gs = game_script_multipliers(ginfo["margin"])
         team_row = inputs.team_idx.get((season, week, player_row["team"]))
+        if team_row is None and roster_mode == "carry_forward":
+            # live week: no week-W row exists yet; use the freshest prior row
+            team_row = inputs.team_row_asof(season, week, player_row["team"])
         for market in markets:
             spec = MARKETS[market]
             if role not in spec["role"]:
                 continue
             if not _passes_usage_floor(player_row, spec, min_usage):
                 continue
-            opp_row = (inputs.opp_idx.get((season, week, ginfo["opp"], role))
-                       if spec["use_opp_factor"] else None)
+            # opp row is now ALWAYS fetched (Phase 6.2 reads red-zone defense
+            # off it for anytime_td); use_opp_factor still governs whether the
+            # yards-allowed factor multiplies the mean (projection.py).
+            opp_row = inputs.opp_idx.get((season, week, ginfo["opp"], role))
+            if opp_row is None and roster_mode == "carry_forward":
+                opp_row = inputs.opp_row_asof(season, week, ginfo["opp"], role)
 
             real = line_idx.get((ginfo["game_id"], market, player_row["player_id"]))
             if real is not None:
@@ -307,6 +343,10 @@ def enumerate_candidates(
                 "spread_line": ginfo["spread_line"], "total_line": ginfo["total_line"],
                 "gameday": ginfo.get("gameday"),
                 "sd_source": ("walk_forward_residuals" if sd_by_market.get(market) else "default_fraction"),
+                # Phase 6.1: opponent red-zone defense (TD-per-trip factor) --
+                # feeds anytime_td (6.2) and the ML ranker; NaN = no data
+                "opp_rz_td_factor": ((opp_row or {}).get("roll_rz_td_factor")
+                                     if opp_row is not None else float("nan")),
             })
             out.append(proj)
 

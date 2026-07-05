@@ -94,14 +94,14 @@ def refresh(season: Optional[int] = None, force: bool = False) -> Dict:
                 "errors": ["nflreadpy not installed -- run: pip install nflreadpy"]}
 
     # -- play-by-play: refresh current season, backfill any missing prior ---- #
-    from .advanced_features import EXT_PBP_COLUMNS
+    from .advanced_features import FULL_PBP_COLUMNS
     need = [s for s in range(2024, season + 1)
             if force or s == season or not os.path.exists(_season_pbp_path(s))]
     for s in need:
         try:
             pbp = nfl.load_pbp(seasons=[s]).to_pandas()
             if len(pbp):
-                cols = [c for c in EXT_PBP_COLUMNS if c in pbp.columns]
+                cols = [c for c in FULL_PBP_COLUMNS if c in pbp.columns]
                 pbp[cols].to_parquet(_season_pbp_path(s), index=False)
                 if s == season:
                     pbp_rows = int(len(pbp))

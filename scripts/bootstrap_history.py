@@ -26,19 +26,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 HIST = os.path.join(ROOT, "historical")
 
-from nflvalue.advanced_features import EXT_PBP_COLUMNS  # noqa: E402
+from nflvalue.advanced_features import FULL_PBP_COLUMNS  # noqa: E402
 
-# Phase 6 additions: depth/location splits (6.1), goal-line share (6.2),
-# weather + kicking ground truth (6.4), scrambles/sacks for O-line effects
-# (6.5). All standard nflverse pbp columns.
-P6_EXTRA = [
-    "pass_location", "goal_to_go", "qb_scramble", "qb_dropback",
-    "field_goal_attempt", "field_goal_result", "kick_distance",
-    "kicker_player_id", "kicker_player_name", "extra_point_result",
-    "weather", "roof", "surface", "stadium", "home_team", "away_team",
-    "drive", "touchdown", "td_player_id",
-]
-PBP_KEEP = list(dict.fromkeys(EXT_PBP_COLUMNS + P6_EXTRA))
+# Single source of truth for kept pbp columns lives in advanced_features
+# (FULL_PBP_COLUMNS = base + extended + Phase-6 tiers); ingest.refresh keeps
+# the same set for new seasons.
+PBP_KEEP = FULL_PBP_COLUMNS
 
 BASE_SEASONS = [2019, 2020, 2021, 2022, 2023]
 EXTRA_SEASONS = [2024, 2025]          # 2026 hasn't kicked off (July 2026)

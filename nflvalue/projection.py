@@ -79,6 +79,54 @@ _OPP_FACTOR_COL = {
     "TE": "roll_ypt_allowed_factor", "RB": "roll_ypc_allowed_factor",
 }
 
+# ---- Phase 6.1: depth/location shape tilt ---------------------------------- #
+# Which markets take which tilt, and the player-profile column that maps the
+# player onto the defense's shape. Receiving markets tilt on target depth AND
+# field location; QB passing tilts on his own throw-depth profile only.
+_TILT_SPEC = {
+    "receiving_yards": {"depth": "roll_short_tgt_share", "location": "roll_mid_tgt_share"},
+    "passing_yards": {"depth": "roll_short_pass_share"},
+}
+TILT_CLIP = 0.10  # each tilt bounded to [0.90, 1.10] -- a shape lean, not a new factor
+# module-level switch so walk-forward ablations can flip tilts off without
+# touching call sites; shipped default = both on (see decisions_p6.md)
+TILTS_ENABLED = {"depth": True, "location": True}
+
+
+def _one_tilt(profile: Optional[float], league_share: Optional[float],
+              shape_a: Optional[float], shape_b: Optional[float]) -> Optional[float]:
+    """Blend the defense's band-A/band-B shape by the PLAYER's band mix,
+    normalized by the LEAGUE band mix, so profile==league -> exactly 1.0.
+    Any missing ingredient -> None (neutral), never a guess."""
+    vals = [profile, league_share, shape_a, shape_b]
+    if any(v is None or (isinstance(v, float) and math.isnan(v)) for v in vals):
+        return None
+    p, l = float(profile), float(league_share)
+    num = p * float(shape_a) + (1.0 - p) * float(shape_b)
+    den = l * float(shape_a) + (1.0 - l) * float(shape_b)
+    if den <= 0:
+        return None
+    return max(1.0 - TILT_CLIP, min(1.0 + TILT_CLIP, num / den))
+
+
+def shape_tilts(player_row: Dict, opp_row: Optional[Dict], market: str) -> Dict[str, float]:
+    """{"depth": t, "location": t} for the market (missing data -> absent key)."""
+    out: Dict[str, float] = {}
+    spec = _TILT_SPEC.get(market)
+    if not spec or opp_row is None:
+        return out
+    if TILTS_ENABLED.get("depth") and "depth" in spec:
+        t = _one_tilt(player_row.get(spec["depth"]), opp_row.get("league_short_share"),
+                      opp_row.get("roll_shape_short"), opp_row.get("roll_shape_deep"))
+        if t is not None:
+            out["depth"] = t
+    if TILTS_ENABLED.get("location") and "location" in spec:
+        t = _one_tilt(player_row.get(spec["location"]), opp_row.get("league_mid_share"),
+                      opp_row.get("roll_shape_mid"), opp_row.get("roll_shape_out"))
+        if t is not None:
+            out["location"] = t
+    return out
+
 # Fallback SD used only when the caller doesn't supply a measured one.
 DEFAULT_SD_FRACTION = 0.45  # sd ~= 45% of the mean, a generic count/yardage prior
 
@@ -258,6 +306,14 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
             v = opp_row.get(factor_col) if factor_col else None
             if v is not None and not (isinstance(v, float) and math.isnan(v)):
                 opp_factor = float(v)
+            # Phase 6.1: multiply in the defense's depth/location SHAPE as seen
+            # by THIS player's own target/throw profile (normalized so a
+            # league-average profile or shapeless defense tilts nothing)
+            tilts = shape_tilts(player_row, opp_row, market)
+            for t in tilts.values():
+                opp_factor *= t
+        else:
+            tilts = {}
 
         mean_ = volume * efficiency * opp_factor
         gs = game_script or {"pass_mult": 1.0, "rush_mult": 1.0}
@@ -266,6 +322,8 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
         sd_ = sd if sd is not None else max(mean_ * DEFAULT_SD_FRACTION, 0.75)
         components = {"volume": round(float(volume), 3), "efficiency": round(float(efficiency), 4),
                       "opp_factor": round(float(opp_factor), 4), "game_script": round(float(gs_component or 1.0), 4)}
+        if tilts:
+            components["shape_tilts"] = {k: round(v, 4) for k, v in tilts.items()}
 
     mean_ = float(max(mean_, 0.0))
     sd_ = float(max(sd_, 1e-3))

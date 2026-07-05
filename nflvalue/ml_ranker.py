@@ -61,6 +61,9 @@ NUMERIC_FEATURES = [
     # classifier decides their weight from outcomes; NaN = data unavailable
     "is_birthday_week", "revenge_game", "def_out_total", "def_out_db",
     "opp_epa_factor",
+    # Phase 6.1: player depth/location profiles + opponent red-zone defense
+    "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
+    "opp_rz_td_factor",
 ]
 
 # advanced process metrics (advanced_features.py): strategic aggression,
@@ -107,7 +110,8 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
 
     roll_cols = ["roll_games", "roll_targets", "roll_target_share", "roll_carries",
                  "roll_carry_share", "roll_pass_attempts", "roll_adot", "roll_air_yards",
-                 "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa"]
+                 "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
+                 "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share"]
     pw_slim = pw[["season", "week", "player_id"] + roll_cols].drop_duplicates(
         subset=["season", "week", "player_id"])
     f = f.drop(columns=[c for c in roll_cols if c in f.columns], errors="ignore")
