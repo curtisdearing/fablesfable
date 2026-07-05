@@ -77,9 +77,18 @@ PBP_COLUMNS = [
 # Same ingredient columns as the neutral-situation PROE/pace filter in
 # advanced_features (down/qtr/score_differential/wp); this is its complement
 # concept -- drop desperation/kneel-down noise from the CORE rolling stats.
+#
+# MEASURED AND REJECTED (Phase 6.3 ablation, shipped OFF): filtering shares/
+# efficiencies cost ~1pt of composite hit rate in BOTH 2024 and 2025 replays
+# and was a wash on line-free projection accuracy (2024-25 eligible-candidate
+# MAE: receiving 24.77 vs 24.58 filtered-vs-not, receptions 1.670 vs 1.658,
+# passing 72.76 vs 72.60, rushing 25.52 vs 25.70 -- only rushing improved).
+# The machinery stays for re-testing (an additive variant -- filtered columns
+# ALONGSIDE full-game ones for the GBDT -- is the natural next experiment);
+# flip this switch or pass garbage_filter=True to rebuild the filtered world.
 GARBAGE_Q4_MARGIN = 17
 GARBAGE_WP_BAND = (0.05, 0.95)
-GARBAGE_FILTER_ENABLED = True   # module switch for the walk-forward ablation
+GARBAGE_FILTER_ENABLED = False
 
 
 def _garbage_mask(pbp: pd.DataFrame) -> pd.Series:
