@@ -42,7 +42,13 @@ BASE_SEASONS = {2019, 2020, 2021, 2022, 2023}
 SCHED_COLS = ["game_id", "season", "game_type", "week", "gameday", "weekday", "gametime",
               "away_team", "away_score", "home_team", "home_score", "result", "total",
               "spread_line", "total_line", "away_moneyline", "home_moneyline",
-              "roof", "surface"]
+              "roof", "surface",
+              # Phase 6: these existed in the 2019-2023 base (full-column
+              # schedules) but were dropped from 2024+ extras, silently
+              # NaN-ing qb_continuity and historical weather for those
+              # seasons. Now carried for every season.
+              "temp", "wind", "home_qb_id", "away_qb_id", "home_qb_name",
+              "away_qb_name", "home_rest", "away_rest", "stadium", "stadium_id"]
 
 
 def current_season(today: Optional[dt.date] = None) -> int:

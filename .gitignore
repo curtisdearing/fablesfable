@@ -10,3 +10,6 @@ data/*.db-journal
 # secrets (webhooks, API keys) live here — NEVER tracked
 config.local.json
 data/*.joblib
+
+# test fixtures are small recorded samples, deliberately tracked
+!nflvalue/sources/fixtures/*.parquet
