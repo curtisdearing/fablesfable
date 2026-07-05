@@ -91,6 +91,28 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
 def _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
                 sd_map, synth_map, min_usage) -> pd.DataFrame:
     import lean_backtest as lb
+    from nflvalue.candidates import (apply_opp_absence_factor,
+                                     apply_weather_adjustment)
+
+    # Phase 6.4/6.5 parity: the frame must reflect the same weather/absence
+    # steps the replay + live paths apply (means, p_over, stamped factors)
+    wx_map, db_outs = {}, {}
+    try:
+        from nflvalue.weather_study import build_game_weather
+        gwx = build_game_weather()
+        wx_map = {r.game_id: {"wind_mph": r.wind_mph,
+                              "precip_mm": (2.0 if r.precip_flag else 0.0),
+                              "effective_outdoor": bool(r.effective_outdoor)}
+                  for r in gwx.itertuples(index=False)}
+        from nflvalue.context_features import (DB_POS, OUT_STATUSES,
+                                               load_injury_history)
+        inj = load_injury_history(sorted(inputs.pw["season"].unique().tolist()))
+        d = inj[inj["report_status"].isin(OUT_STATUSES) & inj["position"].isin(DB_POS)]
+        db_outs = {(int(s), int(w), str(t)): int(len(g))
+                   for (s, w, t), g in d.groupby(["season", "week", "team"])}
+    except Exception as exc:  # noqa: BLE001
+        print(f"[ml_test] weather/absence maps unavailable ({exc})")
+
     chunks = []
     for season in seasons:
         weeks = sorted(inputs.schedules[
@@ -105,6 +127,9 @@ def _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
                 continue
             if cands.empty:
                 continue
+            cands = apply_weather_adjustment(cands, wx_map)
+            if db_outs:
+                cands = apply_opp_absence_factor(cands, db_outs)
             actuals = lb._actuals_for_week(inputs.pw, season, wk)
             cands = chem.attach(cands)
             cands = ftn.attach(cands)

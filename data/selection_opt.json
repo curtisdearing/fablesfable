@@ -1,0 +1,148 @@
+{
+ "per_season": {
+  "2022": {
+   "policy": {
+    "p_min": 0.66,
+    "top_k": 5,
+    "per_player": 1,
+    "markets": "all",
+    "low_conf": true
+   },
+   "oos": {
+    "n": 1207,
+    "hit": 0.6413,
+    "units": 270.6
+   },
+   "baseline_policy": {
+    "n": 1355,
+    "hit": 0.6487,
+    "units": 323.1
+   }
+  },
+  "2023": {
+   "policy": {
+    "p_min": 0.66,
+    "top_k": 5,
+    "per_player": 2,
+    "markets": "all",
+    "low_conf": false
+   },
+   "oos": {
+    "n": 1333,
+    "hit": 0.6572,
+    "units": 339.4
+   },
+   "baseline_policy": {
+    "n": 1360,
+    "hit": 0.6529,
+    "units": 335.3
+   }
+  },
+  "2024": {
+   "policy": {
+    "p_min": 0.66,
+    "top_k": 5,
+    "per_player": 2,
+    "markets": "all",
+    "low_conf": false
+   },
+   "oos": {
+    "n": 1282,
+    "hit": 0.6544,
+    "units": 319.7
+   },
+   "baseline_policy": {
+    "n": 1360,
+    "hit": 0.6449,
+    "units": 314.3
+   }
+  },
+  "2025": {
+   "policy": {
+    "p_min": 0.66,
+    "top_k": 5,
+    "per_player": 2,
+    "markets": "all",
+    "low_conf": false
+   },
+   "oos": {
+    "n": 1156,
+    "hit": 0.6938,
+    "units": 375.1
+   },
+   "baseline_policy": {
+    "n": 1360,
+    "hit": 0.6787,
+    "units": 402.1
+   }
+  }
+ },
+ "frontier": [
+  {
+   "n": 6795,
+   "hit": 0.6517,
+   "units": 1658.5,
+   "p_min": 0.5
+  },
+  {
+   "n": 6795,
+   "hit": 0.6517,
+   "units": 1658.5,
+   "p_min": 0.54
+  },
+  {
+   "n": 6795,
+   "hit": 0.6517,
+   "units": 1658.5,
+   "p_min": 0.58
+  },
+  {
+   "n": 6763,
+   "hit": 0.6524,
+   "units": 1659.9,
+   "p_min": 0.62
+  },
+  {
+   "n": 6382,
+   "hit": 0.659,
+   "units": 1647.6,
+   "p_min": 0.66
+  },
+  {
+   "n": 5176,
+   "hit": 0.6677,
+   "units": 1421.8,
+   "p_min": 0.7
+  }
+ ],
+ "baseline": {},
+ "grid": {
+  "p_min": [
+   0.5,
+   0.54,
+   0.58,
+   0.62,
+   0.66
+  ],
+  "top_k": [
+   1,
+   2,
+   3,
+   5
+  ],
+  "per_player": [
+   1,
+   2
+  ],
+  "markets": [
+   "all",
+   "no_td",
+   "core4"
+  ],
+  "low_conf": [
+   true,
+   false
+  ]
+ },
+ "objective": "pooled prior-season units@-110, volume floor 150/season"
+}
