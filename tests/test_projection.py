@@ -75,3 +75,16 @@ def test_missing_roll_games_defaults_to_ineligible():
     player_row = {"player_id": "00-X", "player_name": "Unknown", "team": "TST", "defteam": "OPP", "role": "RB"}
     result = project(player_row, "rushing_yards", line=40.5, sd=20.0)
     assert result["eligible_for_shortlist"] is False
+
+
+def test_p_over_is_finite_and_bounded_for_nan_mean_or_sd():
+    """A NaN mean/sd must not slip through the clip as a certain OVER (1.0);
+    it must return a finite p in [0, 1]. Real calls floor mean/sd upstream, so
+    this only guards a malformed edge case."""
+    nan = float("nan")
+    for dist in ("normal", "gamma", "negbinom", "poisson"):
+        for mean, sd in ((nan, 15.0), (50.0, nan), (nan, nan)):
+            p = p_over(mean, sd, 50.0, dist)
+            assert p == p, (dist, mean, sd)          # not NaN
+            assert 0.0 <= p <= 1.0, (dist, mean, sd)
+            assert p != 1.0, (dist, mean, sd)        # not a spurious certain OVER

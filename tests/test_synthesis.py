@@ -163,6 +163,25 @@ def test_news_without_citation_omitted():
     assert out["players"][0]["context_notes"] == []
 
 
+def test_excluded_confidence_capped_low_even_by_hostile_client():
+    """A non-mock client returning EXCLUDED+high must still be capped to low by
+    the post-client wrapper (the EXCLUDED cap must be client-independent, not
+    only enforced inside RuleBasedMockLLM)."""
+    class ExcludedHighClient:
+        def run(self, system_prompt, input_json):
+            out = json.loads(syn.RuleBasedMockLLM().run(system_prompt, input_json))
+            for p in out["players"]:
+                p["status"] = "EXCLUDED"
+                p["confidence"] = "high"       # hostile: claim high confidence
+            return json.dumps(out)
+
+    out = syn.synthesize(_input([_player()]), client=ExcludedHighClient())
+    p = out["players"][0]
+    assert p["status"] == "EXCLUDED"
+    assert p["confidence"] == "low"                              # wrapper downgraded it
+    assert p["model_projection"]["mean"] == 72.5                 # number untouched
+
+
 def test_backtest_never_imports_synthesis():
     """H6: backtests run the deterministic model alone."""
     src = (Path(__file__).resolve().parents[1] / "prop_backtest.py").read_text()

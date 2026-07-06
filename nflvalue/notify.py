@@ -105,8 +105,14 @@ def build_messages(report_payload: Dict) -> List[Dict]:
 
 
 def post_weekly(report_payload: Dict, cfg: Optional[Dict] = None,
-                dry_run: bool = False, post_gate_notice: bool = True) -> Dict:
-    """Post the weekly leans. Returns a status dict; never raises on skip paths."""
+                dry_run: bool = True, post_gate_notice: bool = True,
+                opener=None) -> Dict:
+    """Post the weekly leans. Returns a status dict; never raises.
+
+    ``dry_run`` DEFAULTS TO True -- safe by default for direct callers. The
+    pipeline always passes an explicit value, so real posting behaviour is
+    unchanged. ``opener`` is an injectable ``urlopen``-shaped seam for tests;
+    it defaults to :func:`urllib.request.urlopen`."""
     cfg = cfg or cfgmod.load_config()
     if not cfg.get("discord_enabled"):
         return {"status": "skipped", "reason": "discord_enabled is false in config.json"}
@@ -131,12 +137,21 @@ def post_weekly(report_payload: Dict, cfg: Optional[Dict] = None,
     if dry_run:
         return {"status": "dry_run", "n_messages": len(messages), "messages": messages}
 
+    urlopen = opener or urllib.request.urlopen
     posted = 0
     for body in messages:
         req = urllib.request.Request(
             webhook, data=json.dumps(body).encode("utf-8"),
             headers={"Content-Type": "application/json", "User-Agent": "nfl-value/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 - user-configured webhook
-            resp.read()
+        # The docstring promises this "never blocks the pipeline" -- a Discord
+        # 5xx/timeout must degrade to a status dict, not raise. The webhook URL
+        # is NEVER put in the returned payload or any log line.
+        try:
+            with urlopen(req, timeout=15) as resp:  # noqa: S310 - user-configured webhook
+                resp.read()
+        except Exception as exc:  # noqa: BLE001
+            return {"status": "error", "n_messages": posted,
+                    "reason": f"discord post failed after {posted} message(s): "
+                              f"{type(exc).__name__}"}
         posted += 1
     return {"status": "posted", "n_messages": posted}

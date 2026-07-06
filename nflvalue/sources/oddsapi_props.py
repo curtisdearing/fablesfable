@@ -243,7 +243,7 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                 "game_id": gid, "market": market, "player_id": pid, "point": 0.5,
                 "over_price": yes_only[best_book], "under_price": None,
                 "book": best_book,
-                "consensus_p_over": round(float(np_mean := sum(
+                "consensus_p_over": round(float(sum(
                     oddsmath.implied_prob(v) for v in yes_only.values()) / len(yes_only)), 4),
                 "n_books": len(yes_only),
             })

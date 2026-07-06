@@ -195,6 +195,9 @@ def apply_context_multipliers(cands: pd.DataFrame, conn, season: int, week: int,
     if not mult_by_key:
         return cands
     cands = cands.copy()
-    cands["context_mult"] = [mult_by_key.get((p, m))
+    # Untagged rows get 1.0 (a no-op multiplier) rather than None, so the
+    # column stays float-dtype. The composite multiplies by context_mult, so
+    # 1.0 means "no adjustment" -- behavior-preserving for the scored result.
+    cands["context_mult"] = [mult_by_key.get((p, m), 1.0)
                              for p, m in zip(cands["player_id"], cands["market"])]
     return cands

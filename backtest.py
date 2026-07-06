@@ -19,7 +19,6 @@ Needs numpy (for the simulator). Reads data/backtest_games.json from build_ratin
 from __future__ import annotations
 
 import argparse
-import json
 import os
 
 from nflvalue import config, montecarlo as mc
@@ -168,7 +167,7 @@ def run(sims=6000, threshold=0.03):
         print(f"  {name.upper():7} bets {m['bets']:4}  win {m['win_rate']*100:4.1f}%  "
               f"ROI {m['roi']*100:+5.1f}%  ({m['units']:+.1f}u)")
     print(f"  Combined bankroll: 100u -> {report['final_bankroll']}u")
-    print(f"\n  Saved: data/backtest.json")
+    print("\n  Saved: data/backtest.json")
 
 
 def _book(m, season_acc, won, push, dec):

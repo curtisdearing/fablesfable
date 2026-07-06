@@ -396,6 +396,8 @@ def synthesize(input_payload: Dict, client: Optional[LLMClient] = None) -> Dict:
 
     # confidence caps re-applied no matter what the client decided
     for p in out.get("players", []):
+        if p.get("status") == "EXCLUDED" and _CONF_RANK.get(p.get("confidence"), 0) > 0:
+            p["confidence"] = "low"
         if p.get("status") == "RISK" and _CONF_RANK.get(p.get("confidence"), 0) > 1:
             p["confidence"] = "medium"
         if stale and _CONF_RANK.get(p.get("confidence"), 0) > 0:

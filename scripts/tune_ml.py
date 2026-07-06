@@ -30,7 +30,6 @@ invocations continue rather than restart):
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
 import os
 import sys
@@ -454,7 +453,6 @@ def run_rf_search(time_budget: float = 35.0) -> None:
 
 def analyze_rf_search() -> Dict:
     ckpt = cfgmod.load_json(RF_CKPT_PATH, {}) or {}
-    default_key = rf_cfg_key(DEFAULT_RF)
     pooled = []
     for cfg in RF_GRID:
         k = rf_cfg_key(cfg)

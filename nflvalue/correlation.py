@@ -102,14 +102,18 @@ class CorrelationStructure:
         never handed structure the audit called noise."""
         if not ptype:
             return 0.0
+        if as_of_season is not None:
+            # Strict walk-forward: the slice encodes a PRIOR-ONLY real/noise
+            # verdict (built from seasons < as_of only). Gate ONLY on presence
+            # here -- never on the full-history verdict, which is contaminated
+            # by seasons >= as_of and would leak the future inclusion decision.
+            wf = self.walk_forward.get(str(as_of_season), {})
+            if ptype not in wf:
+                return 0.0          # not real / not enough prior-season data yet
+            return float(wf[ptype])
         info = self.pair_types.get(ptype)
         if info is None or info.get("verdict") != "real":
             return 0.0
-        if as_of_season is not None:
-            wf = self.walk_forward.get(str(as_of_season), {})
-            if ptype not in wf:
-                return 0.0          # not enough prior-season data to consume yet
-            return float(wf[ptype])
         return float(info.get("rho_shrunk", 0.0))
 
     def rho_for(self, pos_i: str, market_i: str, player_i: str, team_i: str,

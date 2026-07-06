@@ -23,22 +23,26 @@ def _normalize_game_odds(ev: Dict) -> Dict:
         for mkt in bk.get("markets", []):
             outs = mkt.get("outcomes", [])
             if mkt.get("key") == "h2h":
-                d = {o["name"]: o["price"] for o in outs}
+                # a book may omit price on an outcome -- skip those, never index
+                d = {o["name"]: o["price"] for o in outs
+                     if o.get("name") is not None and o.get("price") is not None}
                 if home in d and away in d:
                     h2h[key] = {"home": d[home], "away": d[away]}
             elif mkt.get("key") == "spreads":
-                d = {o["name"]: o for o in outs}
+                d = {o["name"]: o for o in outs
+                     if o.get("name") is not None and o.get("price") is not None}
                 if home in d and away in d:
                     spreads[key] = {
-                        "home": {"point": d[home].get("point"), "price": d[home]["price"]},
-                        "away": {"point": d[away].get("point"), "price": d[away]["price"]},
+                        "home": {"point": d[home].get("point"), "price": d[home].get("price")},
+                        "away": {"point": d[away].get("point"), "price": d[away].get("price")},
                     }
             elif mkt.get("key") == "totals":
-                d = {o["name"].lower(): o for o in outs}
+                d = {o["name"].lower(): o for o in outs
+                     if o.get("name") is not None and o.get("price") is not None}
                 if "over" in d and "under" in d:
                     totals[key] = {
-                        "over": {"point": d["over"].get("point"), "price": d["over"]["price"]},
-                        "under": {"point": d["under"].get("point"), "price": d["under"]["price"]},
+                        "over": {"point": d["over"].get("point"), "price": d["over"].get("price")},
+                        "under": {"point": d["under"].get("point"), "price": d["under"].get("price")},
                     }
     return {
         "id": ev.get("id"),
@@ -50,12 +54,22 @@ def _normalize_game_odds(ev: Dict) -> Dict:
 
 
 def fetch_game_odds(cfg: Dict) -> List[Dict]:
-    data = get_json(f"{BASE}/sports/{SPORT}/odds", {
-        "apiKey": cfg["odds_api_key"],
-        "regions": cfg.get("regions", "us"),
-        "markets": ",".join(cfg.get("game_markets", ["h2h", "spreads", "totals"])),
-        "oddsFormat": "decimal",
-    })
+    """Game lines for the slate. Degrades to an empty list (which
+    ``live.build_live_slate`` already handles) on any feed/parse failure --
+    a bad response must never crash the pipeline."""
+    try:
+        data = get_json(f"{BASE}/sports/{SPORT}/odds", {
+            "apiKey": cfg["odds_api_key"],
+            "regions": cfg.get("regions", "us"),
+            "markets": ",".join(cfg.get("game_markets", ["h2h", "spreads", "totals"])),
+            "oddsFormat": "decimal",
+        })
+    except Exception as exc:  # noqa: BLE001
+        print(f"[oddsapi] game odds fetch failed: {exc}")
+        return []
+    if not isinstance(data, list):
+        print(f"[oddsapi] game odds unexpected shape: {type(data).__name__}")
+        return []
     return [_normalize_game_odds(ev) for ev in data]
 
 
@@ -107,19 +121,37 @@ def fetch_event_props(cfg: Dict, event_id: str) -> List[Dict]:
 
 
 def fetch_scores(cfg: Dict, days_from: int = 3) -> Dict[str, Dict]:
-    """Finished-game results keyed by event id."""
-    data = get_json(f"{BASE}/sports/{SPORT}/scores", {
-        "apiKey": cfg["odds_api_key"], "daysFrom": days_from,
-    })
+    """Finished-game results keyed by event id. Degrades to an empty dict
+    (which callers already handle) on any feed/parse failure -- a bad
+    response must never crash results grading."""
+    try:
+        data = get_json(f"{BASE}/sports/{SPORT}/scores", {
+            "apiKey": cfg["odds_api_key"], "daysFrom": days_from,
+        })
+    except Exception as exc:  # noqa: BLE001
+        print(f"[oddsapi] scores fetch failed: {exc}")
+        return {}
+    if not isinstance(data, list):
+        print(f"[oddsapi] scores unexpected shape: {type(data).__name__}")
+        return {}
     results = {}
     for ev in data:
         if not ev.get("completed"):
             continue
-        scores = {s["name"]: float(s["score"]) for s in (ev.get("scores") or [])
-                  if s.get("score") is not None}
+        # a book may omit name/score on an entry -- skip malformed, never index
+        scores = {}
+        for s in (ev.get("scores") or []):
+            name, raw = s.get("name"), s.get("score")
+            if name is None or raw is None:
+                continue
+            try:
+                scores[name] = float(raw)
+            except (TypeError, ValueError):
+                continue
         home, away = ev.get("home_team"), ev.get("away_team")
-        if home in scores and away in scores:
-            results[ev["id"]] = {
+        eid = ev.get("id")
+        if eid is not None and home in scores and away in scores:
+            results[eid] = {
                 "home_score": scores[home], "away_score": scores[away],
                 "prop_actuals": {},  # box-score grading of props is left to extend
                 "settled_ts": ev.get("last_update") or ev.get("commence_time"),

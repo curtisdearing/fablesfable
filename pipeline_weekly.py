@@ -31,7 +31,6 @@ Every injectable seam (feeds, fetchers, inputs) exists so tests run offline.
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd

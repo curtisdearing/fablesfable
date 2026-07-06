@@ -69,6 +69,30 @@ def test_walk_forward_correlation_uses_only_prior_seasons():
     assert wf_2021 == rho_tr, "walk-forward slice changed when future seasons were removed"
 
 
+def test_walk_forward_inclusion_set_is_prior_only():
+    """The *inclusion decision* (which types appear in walk_forward[S]), not
+    just each ρ value, must be leak-free: rebuilding on data with seasons >= S
+    deleted must yield the SAME set of pair types with the SAME values. This
+    guards against the fixed bug where the real/noise verdict gating the slice
+    was computed from full history (seasons >= S)."""
+    seasons = [2019, 2020, 2021, 2022]
+    full = _resid_frame(seasons, per_season=400, rho=0.5)
+    payload_full = fc.analyze(fc.collect_pairs(full))
+
+    for S in (2021, 2022):
+        wf_full = payload_full["walk_forward"][str(S)]
+        trunc = full[full["season"] < S]                  # delete seasons >= S
+        wf_trunc = fc.analyze(fc.collect_pairs(trunc))["walk_forward"][str(S)]
+        assert set(wf_full) == set(wf_trunc), (
+            f"walk_forward[{S}] inclusion set changed when seasons >= {S} were removed "
+            "-- the inclusion decision leaks future data")
+        assert wf_full == wf_trunc, (
+            f"walk_forward[{S}] values changed when seasons >= {S} were removed")
+    # the planted sameteam|QB.pass~WR.rec pair is real & sign-stable prior-only,
+    # so it survives the prior-only gate for a slice with >= 2 prior seasons
+    assert "sameteam|QB.pass~WR.rec" in payload_full["walk_forward"]["2021"]
+
+
 def test_shrinkage_pulls_thin_noisy_types_to_zero():
     # a well-measured moderate correlation barely moves; a thin near-zero one collapses
     rhos = {"strong": 0.30, "thin_noise": 0.04}
@@ -84,13 +108,17 @@ def test_accessor_returns_zero_for_noise_and_unknown():
         "sameteam|WR.rec~WR.rec": {"rho_shrunk": 0.03, "verdict": "noise"},
     }, "walk_forward": {"2024": {"sameteam|QB.pass~WR.rec": 0.29}}}
     cs = corr.CorrelationStructure(payload)
-    # real type -> shrunk rho; noise -> 0; unknown -> 0
+    # production (no as_of): real type -> shrunk rho; noise -> 0; unknown -> 0
     assert cs.rho("sameteam|QB.pass~WR.rec") == 0.30
     assert cs.rho("sameteam|WR.rec~WR.rec") == 0.0
     assert cs.rho("does|not~exist") == 0.0
-    # walk-forward lookup, and 0 when no prior-season slice exists yet
+    # walk-forward lookup gates ONLY on the (prior-only) slice, not the
+    # full-history verdict: present -> its value, and 0 when no slice exists yet
     assert cs.rho("sameteam|QB.pass~WR.rec", as_of_season=2024) == 0.29
     assert cs.rho("sameteam|QB.pass~WR.rec", as_of_season=2099) == 0.0
+    # a type absent from the slice (e.g. the noise type, which the prior-only
+    # gate excluded) returns 0 under as_of even though it exists in pair_types
+    assert cs.rho("sameteam|WR.rec~WR.rec", as_of_season=2024) == 0.0
     # end-to-end classify + lookup
     assert cs.rho_for("QB", "passing_yards", "p1", "AAA",
                       "WR", "receiving_yards", "p2", "AAA") == 0.30

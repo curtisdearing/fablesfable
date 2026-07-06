@@ -78,12 +78,38 @@ def validate_sql(sql: str) -> str:
     bad = words & FORBIDDEN
     if bad:
         raise SQLValidationError(f"forbidden keyword(s): {sorted(bad)}")
-    # every identifier following FROM or JOIN must be whitelisted
-    for tbl in re.findall(r"(?is)\b(?:from|join)\s+([a-zA-Z_][\w]*)", s):
-        if tbl.lower() not in WHITELIST_TABLES:
-            raise SQLValidationError(
-                f"table {tbl!r} is not in the read whitelist {sorted(WHITELIST_TABLES)}")
-    if not re.search(r"(?is)\bfrom\s+", s):
+    # belt-and-suspenders: never allow sqlite internals, however referenced.
+    if re.search(r"(?i)\bsqlite_\w+", s):
+        raise SQLValidationError("sqlite_* internal tables are never queryable")
+    # EVERY table referenced by any FROM/JOIN clause must be whitelisted --
+    # including comma-separated implicit cross-joins, which are past the reach
+    # of a "first identifier after the keyword" match. Capture the whole clause
+    # up to the next SQL keyword / clause terminator, then validate each
+    # comma-split identifier. This tool never needs comma-joins, so a bare comma
+    # inside a FROM/JOIN clause is rejected outright.
+    saw_from = False
+    clause_re = re.compile(
+        r"(?is)\b(?:from|join)\s+(.*?)"
+        r"(?=\b(?:where|group|order|limit|union|having|on|inner|left|right|"
+        r"full|cross|outer|natural|join)\b|;|$)")
+    for clause in clause_re.findall(s):
+        saw_from = True
+        clause = clause.strip().rstrip(")")
+        # split on commas so implicit cross-joins can't smuggle a second table
+        for part in clause.split(","):
+            part = part.strip().strip("()")
+            if not part:
+                raise SQLValidationError("empty table reference in FROM/JOIN clause")
+            # first token is the table identifier (an alias may follow)
+            m = re.match(r"([a-zA-Z_][\w]*)", part)
+            if not m:
+                raise SQLValidationError(
+                    f"unrecognized table reference {part!r} in FROM/JOIN clause")
+            tbl = m.group(1)
+            if tbl.lower() not in WHITELIST_TABLES:
+                raise SQLValidationError(
+                    f"table {tbl!r} is not in the read whitelist {sorted(WHITELIST_TABLES)}")
+    if not saw_from or not re.search(r"(?is)\bfrom\s+", s):
         raise SQLValidationError("SELECT without FROM is not a warehouse query")
     return s
 

@@ -190,3 +190,17 @@ def test_persist_leans_replaces_stale_rows_from_prior_ranking(inputs, tmp_path):
     left = dbmod.query_df(conn, "SELECT player_id FROM leans")
     assert "GHOST" not in set(left["player_id"])
     conn.close()
+
+
+def test_lean_row_md_renders_with_present_but_none_composite():
+    """A lean dict carrying composite=None (and no ml_score) must render its
+    Score cell as 0.0, not crash on float(None). Valid rows are unaffected."""
+    lean = {
+        "name": "Edge Case", "pos": "WR", "team": "TST", "market": "receiving_yards",
+        "line": 60.5, "side": "over", "mean": 65.0, "confidence": 0.5,
+        "edge": None, "no_market": True,
+        "ml_score": None, "composite": None,
+    }
+    row = rpt._lean_row_md(lean)
+    assert "**0.0**" in row              # None composite -> 0.0, no TypeError
+    assert "Edge Case" in row

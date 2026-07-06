@@ -25,6 +25,10 @@ from typing import Dict, List, Sequence, Tuple
 def american_to_decimal(american: float) -> float:
     """+150 -> 2.5, -200 -> 1.5."""
     american = float(american)
+    if american == 0:
+        # American odds of 0 are not a valid price; degrade gracefully rather
+        # than raising ZeroDivisionError (matches the module's other guards).
+        return 1.0
     if american > 0:
         return 1.0 + american / 100.0
     return 1.0 + 100.0 / abs(american)
@@ -97,10 +101,12 @@ def consensus_two_way(
     weight_total = 0.0
     best_a = best_b = 0.0
     best_a_book = best_b_book = None
+    n_contributing = 0
 
     for book, (da, db) in book_prices.items():
         if da <= 1.0 or db <= 1.0:
             continue
+        n_contributing += 1
         pa, _pb = devig_multiplicative([da, db])
         w = sharp_weight if book.lower() in sharp_books else 1.0
         weighted_pa += w * pa
@@ -122,7 +128,7 @@ def consensus_two_way(
         "best_b": best_b,
         "best_a_book": best_a_book,
         "best_b_book": best_b_book,
-        "n_books": len(book_prices),
+        "n_books": n_contributing,
     }
 
 

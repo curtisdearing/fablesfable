@@ -318,3 +318,128 @@ def test_ensemble_calibrated_prediction_does_not_leak_future_seasons():
         "season was removed -- future data is leaking through the nested fit")
 
 
+# --------------------------------------------------------------------------- #
+# Phase 7.5: the same-game correlation estimate is a NEW walk-forward surface.
+# The rho consumed at season S must be estimated only from pairs in seasons < S.
+# (Also covered in test_correlation.py; duplicated here so the leakage suite
+# alone certifies every Phase-7 surface -- belt and suspenders on the #1 bug.)
+# --------------------------------------------------------------------------- #
+def test_correlation_estimate_uses_only_prior_seasons():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import numpy as np
+    import fit_correlation as fc
+
+    rng = np.random.default_rng(3)
+    rows = []
+    for s in (2019, 2020, 2021):
+        for g in range(400):
+            z = rng.normal(size=2)
+            gid = f"{s}_{g:03d}_A_B"
+            rows.append(dict(season=s, week=1, game_id=gid, player_id=f"qb{s}{g}",
+                             team="A", market="passing_yards", pos="QB", resid=z[0]))
+            rows.append(dict(season=s, week=1, game_id=gid, player_id=f"wr{s}{g}",
+                             team="A", market="receiving_yards", pos="WR",
+                             resid=0.5 * z[0] + np.sqrt(0.75) * z[1]))
+    d = pd.DataFrame(rows)
+    ptype = "sameteam|QB.pass~WR.rec"
+    wf = fc.analyze(fc.collect_pairs(d))["walk_forward"]["2021"][ptype]   # from <2021
+    tr = fc.collect_pairs(d[d["season"] < 2021])
+    assert wf == round(fc._rho(np.asarray(tr[ptype]["x"]), np.asarray(tr[ptype]["y"])), 4), \
+        "correlation slice for season S changed when seasons >= S were removed"
+
+
+# --------------------------------------------------------------------------- #
+# Phase 7.7: advisory staking has NO temporal/rolling surface. Its only
+# history-derived input is the 7.5 correlation rho (walk-forward-guarded above);
+# everything else is point-in-time. It must be deterministic + stateless, so
+# there is no rolling/expanding computation that could ever see the future.
+# --------------------------------------------------------------------------- #
+def test_staking_has_no_temporal_leakage_surface():
+    from nflvalue import staking as st
+    ln = dict(game_id="G", player_id="a", market="passing_yards", pos="QB",
+              team="A", side="over", p=0.56, market_prob=0.5238, price=1.909)
+    a = st.recommend_stakes([dict(ln)], 100.0)
+    b = st.recommend_stakes([dict(ln)], 100.0)
+    assert a["recommendations"][0]["stake_frac"] == b["recommendations"][0]["stake_frac"]
+
+
+# --------------------------------------------------------------------------- #
+# Phase 6.1/6.6: the NEWER feature packs -- AdvancedPack (advanced_features.py)
+# and ChemistryPack (chemistry.py) -- consume their rolling builders through an
+# AsOfLookup that returns the latest value STRICTLY BEFORE (season, week). That
+# primitive is unit-tested directly (test_advanced_features.py /
+# test_chemistry.py), so these packs are believed safe; the guards below are
+# defense-in-depth: an END-TO-END truncation-invariance check on the AS-OF-READ
+# value, mirroring the feature tests above.
+#
+# The key subtlety (documented in build_player_redzone / _cum_share): the raw
+# builder output is intentionally UN-shifted -- a row at week w includes week w
+# -- because it is only ever read strictly-before via AsOfLookup. So we must NOT
+# compare raw builder rows (those legitimately differ under truncation); we
+# compare the AS-OF READ at the cutoff week, which resolves to strictly-prior
+# data and therefore must be identical whether or not at/after-cutoff data
+# exists. That read is exactly what the packs do at scoring time.
+# --------------------------------------------------------------------------- #
+def _asof_read_invariant_under_truncation(build, value_cols):
+    """Build+AsOfLookup on the full 2019-2020 ext-pbp fixture and on a version
+    truncated at (CUTOFF_SEASON, CUTOFF_WEEK); for every player the as-of read
+    AT the cutoff week (which resolves to the latest STRICTLY-PRIOR row) must be
+    identical. If a future week leaked into a pre-cutoff as-of value, removing
+    it would move the read -- and this catches it."""
+    import numpy as np
+    from nflvalue.advanced_features import AsOfLookup, load_pbp_ext
+
+    pbp = load_pbp_ext()
+    pbp = pbp[pbp["season"].isin([2019, 2020])].copy()
+    keep = (pbp["season"] < CUTOFF_SEASON) | (
+        (pbp["season"] == CUTOFF_SEASON) & (pbp["week"] < CUTOFF_WEEK))
+
+    full = AsOfLookup(build(pbp), value_cols)
+    trunc = AsOfLookup(build(pbp[keep].copy()), value_cols)
+
+    pids = set(full.data) | set(trunc.data)
+    assert pids, "fixture produced no players -- test would be vacuous"
+    checked = 0
+    for pid in pids:
+        # reading AT the cutoff week sees only weeks strictly before it
+        a = full.get(pid, CUTOFF_SEASON, CUTOFF_WEEK)
+        b = trunc.get(pid, CUTOFF_SEASON, CUTOFF_WEEK)
+        for va, vb in zip(a, b):
+            same = va == vb or (np.isnan(va) and np.isnan(vb))
+            assert same, (
+                f"as-of read for player {pid} at ({CUTOFF_SEASON},{CUTOFF_WEEK}) "
+                f"changed when at/after-cutoff data was removed: {a} vs {b} -- "
+                f"future data is leaking into a pre-cutoff as-of feature value")
+        checked += 1
+    return checked
+
+
+def test_advanced_pack_redzone_asof_read_does_not_leak_future_weeks():
+    """AdvancedPack.rz = AsOfLookup(build_player_redzone(...), [rz_tgt_share,
+    rz_carry_share]). The end-to-end guard on that consumed value."""
+    from nflvalue.advanced_features import build_player_redzone
+    assert _asof_read_invariant_under_truncation(
+        build_player_redzone, ["rz_tgt_share", "rz_carry_share"]) > 0
+
+
+def test_chemistry_pack_formation_tilt_asof_read_does_not_leak_future_weeks():
+    """ChemistryPack's formation tilts = AsOfLookup(build_formation_tilts(...),
+    [shotgun_tilt_tgt, shotgun_tilt_carry]). Same end-to-end guard."""
+    from nflvalue.chemistry import build_formation_tilts
+    assert _asof_read_invariant_under_truncation(
+        build_formation_tilts, ["shotgun_tilt_tgt", "shotgun_tilt_carry"]) > 0
+
+
+# ContextPack (context_features.py) is deliberately NOT truncation-tested here.
+# Its four features are not rolling/expanding surfaces over pbp: birthday is an
+# immutable DOB vs the schedule (no history); revenge reads roster stints via
+# former_teams(), which already breaks STRICTLY BEFORE (s, w) by construction;
+# and defense-outs / opp_epa are exact-(season, week) fact lookups. There is no
+# AsOfLookup wrapping a rolled builder, so a truncation test would only re-assert
+# trivial dict membership -- the strictly-before property is directly and better
+# covered by test_context_features.py (test_revenge_is_walk_forward_and_excludes
+# _current_team). Forcing a truncation test here would be a fragile false guard.
+
+

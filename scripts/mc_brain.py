@@ -194,9 +194,9 @@ def main() -> None:
     n55 = next(r["bets_to_prove_skill"] for r in real if r["true_hit"] == 0.55)
     n54 = next(r["bets_to_prove_skill"] for r in real if r["true_hit"] == 0.54)
     L += ["",
-          f"Read 'bets to prove skill': even a genuinely skilled 55% bettor",
+          "Read 'bets to prove skill': even a genuinely skilled 55% bettor",
           f"needs ~{n55:,} bets to statistically separate from breakeven (80%",
-          f"power) -- multiple full seasons at this volume. A 54% bettor needs",
+          "power) -- multiple full seasons at this volume. A 54% bettor needs",
           f"~{n54:,}. This is why the kill-check uses CLV (n>=150 resolved,",
           "avg CLV>0, 52%+ positive-CLV rate) rather than won-bet counts:",
           "closing-line value converges orders of magnitude faster than",

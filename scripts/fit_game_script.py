@@ -29,7 +29,7 @@ FIT_SEASONS = (2019, 2023)
 
 
 def main() -> None:
-    from nflvalue.candidates import build_week_inputs, games_for_week
+    from nflvalue.candidates import build_week_inputs
     from nflvalue.features import _team_week, load_pbp
 
     inputs = build_week_inputs()

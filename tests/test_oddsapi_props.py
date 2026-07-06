@@ -14,7 +14,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from nflvalue import db as dbmod  # noqa: E402
+from nflvalue.sources import oddsapi as oapi  # noqa: E402
 from nflvalue.sources import oddsapi_props as oap  # noqa: E402
+from nflvalue.sources import _http  # noqa: E402
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -248,3 +250,107 @@ def test_matchup_includes_epa_dimension():
     hard = score_candidate({**base, "opp_epa_factor": 0.88})
     none = score_candidate(base)
     assert soft["matchup"] > none["matchup"] > hard["matchup"]
+
+
+def test_american_to_decimal_guards_zero():
+    """American odds of 0 are not a valid price; degrade to 1.0 rather than
+    raising ZeroDivisionError. Valid prices are unchanged."""
+    from nflvalue import oddsmath
+    assert oddsmath.american_to_decimal(0) == 1.0
+    assert oddsmath.american_to_decimal(150) == pytest.approx(2.5)
+    assert oddsmath.american_to_decimal(-200) == pytest.approx(1.5)
+
+
+def test_consensus_n_books_counts_only_contributing_books():
+    """A book whose prices fail the da<=1.0/db<=1.0 filter is skipped and must
+    NOT be counted in n_books. Only books that contribute are counted."""
+    from nflvalue import oddsmath
+    r = oddsmath.consensus_two_way({
+        "pinnacle": (1.90, 1.94),
+        "draftkings": (1.85, 1.95),
+        "broken": (1.0, 0.0),          # invalid price -> skipped by the filter
+    })
+    assert r["n_books"] == 2            # not 3
+
+
+# --------------------------------------------------------------------------- #
+# Network-IO hardening: bad feeds degrade LOUDLY, never crash the pipeline
+# --------------------------------------------------------------------------- #
+def _cfg_game():
+    return {"odds_api_key": "test", "regions": "us"}
+
+
+def test_fetch_game_odds_degrades_on_feed_failure(monkeypatch, capsys):
+    """A transient feed blip must degrade to an empty slate, not raise."""
+    def boom(url, params=None, timeout=15.0):
+        raise _http.HttpJsonError("simulated transient blip")
+
+    monkeypatch.setattr(oapi, "get_json", boom)
+    out = oapi.fetch_game_odds(_cfg_game())
+    assert out == []
+    assert "game odds fetch failed" in capsys.readouterr().out   # degraded LOUDLY
+
+
+def test_fetch_game_odds_missing_price_skips_book(monkeypatch):
+    """A book omitting `price` on an outcome must be skipped mid-parse, not
+    KeyError. Valid books in the same payload still parse exactly."""
+    payload = [{
+        "id": "evt1", "commence_time": "2023-11-08T18:00:00Z",
+        "home_team": "BAL", "away_team": "CLE",
+        "bookmakers": [
+            {"key": "brokenbook", "markets": [
+                {"key": "h2h", "outcomes": [
+                    {"name": "BAL"},                       # NO price -> must skip
+                    {"name": "CLE", "price": 2.5}]},
+                {"key": "spreads", "outcomes": [
+                    {"name": "BAL", "point": -3.5},        # NO price
+                    {"name": "CLE", "point": 3.5, "price": 1.9}]},
+            ]},
+            {"key": "goodbook", "markets": [
+                {"key": "h2h", "outcomes": [
+                    {"name": "BAL", "price": 1.5},
+                    {"name": "CLE", "price": 2.6}]},
+                {"key": "totals", "outcomes": [
+                    {"name": "Over", "point": 44.5, "price": 1.91},
+                    {"name": "Under", "point": 44.5, "price": 1.91}]},
+            ]},
+        ],
+    }]
+    monkeypatch.setattr(oapi, "get_json",
+                        lambda url, params=None, timeout=15.0: payload)
+    out = oapi.fetch_game_odds(_cfg_game())          # must NOT raise KeyError
+    assert len(out) == 1
+    books = out[0]["books"]
+    # broken book missing a price on both sides drops out of h2h/spreads
+    assert "brokenbook" not in books["h2h"]
+    assert "brokenbook" not in books["spreads"]
+    # the good book parses exactly as before
+    assert books["h2h"]["goodbook"] == {"home": 1.5, "away": 2.6}
+    assert books["totals"]["goodbook"]["over"]["price"] == 1.91
+
+
+def test_fetch_game_odds_bad_shape_degrades(monkeypatch):
+    """A non-list body (e.g. an API error object) degrades to []."""
+    monkeypatch.setattr(oapi, "get_json",
+                        lambda url, params=None, timeout=15.0: {"message": "bad key"})
+    assert oapi.fetch_game_odds(_cfg_game()) == []
+
+
+def test_fetch_scores_degrades_and_skips_malformed(monkeypatch):
+    """Feed failure -> {}; and a malformed score entry is skipped, not indexed."""
+    monkeypatch.setattr(oapi, "get_json",
+                        lambda url, params=None, timeout=15.0: (_ for _ in ()).throw(
+                            _http.HttpJsonError("blip")))
+    assert oapi.fetch_scores(_cfg_game()) == {}
+
+    payload = [
+        {"id": "g1", "completed": True, "home_team": "BAL", "away_team": "CLE",
+         "scores": [{"name": "BAL", "score": "20"}, {"name": "CLE"}]},   # missing score
+        {"id": "g2", "completed": True, "home_team": "KC", "away_team": "DEN",
+         "scores": [{"name": "KC", "score": "27"}, {"name": "DEN", "score": "13"}]},
+    ]
+    monkeypatch.setattr(oapi, "get_json",
+                        lambda url, params=None, timeout=15.0: payload)
+    res = oapi.fetch_scores(_cfg_game())             # must NOT KeyError on g1
+    assert "g1" not in res                            # incomplete scores skipped
+    assert res["g2"]["home_score"] == 27.0 and res["g2"]["away_score"] == 13.0

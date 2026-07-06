@@ -171,7 +171,6 @@ def job_t90() -> int:
 def job_tuesday() -> int:
     import subprocess
     import pipeline_weekly as pw
-    from nflvalue import killcheck
     slate = load_slate()
     lw = last_completed_week(slate, now_et())
     if lw is None:

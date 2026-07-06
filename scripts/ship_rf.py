@@ -23,7 +23,6 @@ import os
 import sys
 
 import joblib
-import numpy as np
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

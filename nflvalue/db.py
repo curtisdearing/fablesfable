@@ -122,6 +122,9 @@ SCHEMA = {
             entry_ts TEXT, entry_point REAL, entry_price REAL, entry_prob REAL,
             close_ts TEXT, close_point REAL, close_price REAL, close_prob REAL,
             clv_prob REAL, point_moved REAL,
+            prob_kind TEXT,          -- 'devig' | 'raw_implied'; entry and close
+                                     -- always share this kind (mixed-kind leans
+                                     -- are refused, never resolved -- see clv.py)
             PRIMARY KEY (season, week, game_id, player_id, market, side)
         );
     """,

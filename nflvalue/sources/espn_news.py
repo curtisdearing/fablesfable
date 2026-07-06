@@ -13,7 +13,7 @@ category id or the player's normalized full name appears; no fuzzy guessing.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import pandas as pd
 

@@ -199,6 +199,53 @@ def test_clock_dedup_resolves_one_row_against_earliest_as_of(conn):
 
 
 # --------------------------------------------------------------------------- #
+# Correctness: a mixed prob_kind CLV (entry de-vigged two-sided, close
+# one-sided raw_implied -- or vice-versa) is apples-to-oranges and must NOT
+# resolve. anytime_td is the only market that can be one-sided; here the entry
+# snapshot is two-sided (devig) but the close snapshot is one-sided
+# (raw_implied), so log_close_for_week must refuse the lean.
+# --------------------------------------------------------------------------- #
+def test_mixed_prob_kind_not_resolved(conn):
+    gid = "2023_10_CLE_BAL"
+    dbmod.upsert(conn, "lines", [
+        # entry (way pre-kickoff): two-sided anytime_td -> de-vigged
+        _line("2023-11-08T10:00:00Z", "over", 1.80, point=0.0,
+              market="anytime_td", player_id="00-TD", name="Anytime Guy"),
+        _line("2023-11-08T10:00:00Z", "under", 2.30, point=0.0,
+              market="anytime_td", player_id="00-TD", name="Anytime Guy"),
+        # close (inside 6h window): one-sided Yes-only -> raw implied
+        _line("2023-11-12T15:00:00Z", "over", 1.65, point=0.0,
+              market="anytime_td", player_id="00-TD", name="Anytime Guy"),
+    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    dbmod.upsert(conn, "leans", [{
+        "season": 2023, "week": 10, "clock": "wed", "game_id": gid,
+        "player_id": "00-TD", "name": "Anytime Guy", "market": "anytime_td",
+        "side": "over", "line": 0.0, "line_source": "odds_api", "price": 1.80,
+        "book": "draftkings", "mean": 0.5, "sd": 0.5, "p_side": 0.55,
+        "composite": 70.0, "edge": 0.06, "confidence_comp": 0.4, "matchup_comp": 0.6,
+        "screened_n": 40, "reason": "test", "status": "active", "void_reason": None,
+        "as_of": "2023-11-08T12:00:00Z", "created_at": "2023-11-08T12:00:00Z",
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+
+    # sanity: the two snapshots really are different prob_kinds
+    entry = clvmod.snapshot_prob(conn, gid, "anytime_td", "00-TD", "over",
+                                 at_or_before_ts="2023-11-08T12:00:00Z")
+    close = clvmod.snapshot_prob(conn, gid, "anytime_td", "00-TD", "over",
+                                 at_or_before_ts="2023-11-12T18:00:00Z",
+                                 at_or_after_ts="2023-11-12T12:00:00Z")
+    assert entry["prob_kind"] == "devig"
+    assert close["prob_kind"] == "raw_implied"
+
+    out = clvmod.log_close_for_week(conn, 2023, 10,
+                                    kickoffs={gid: "2023-11-12T18:00:00Z"})
+    assert out.empty, "a mixed-kind (devig vs raw_implied) CLV must not resolve"
+    # and nothing landed in the clv table for that lean
+    persisted = dbmod.query_df(
+        conn, "SELECT * FROM clv WHERE game_id=? AND market='anytime_td'", (gid,))
+    assert persisted.empty
+
+
+# --------------------------------------------------------------------------- #
 # Kill-check verdicts
 # --------------------------------------------------------------------------- #
 def _seed_clv(conn, n, clv_value):

@@ -1,5 +1,4 @@
 import nfl_data_py as nfl
-import pandas as pd
 
 # Define the years you want to pressure-test against
 years = [2019, 2020, 2021, 2022, 2023]

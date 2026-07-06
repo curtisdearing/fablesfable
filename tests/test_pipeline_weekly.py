@@ -141,3 +141,20 @@ def test_t90_requires_inactives_feed(env):
     with pytest.raises(ValueError, match="t90"):
         pw.run_t90(SEASON, WEEK, GAME_ID, mode="live",
                    inputs=synthetic_inputs(), inject_feeds=feeds)
+
+
+def test_build_historical_absent_season_returns_none_without_raising(monkeypatch):
+    """--season naming a season with no games must NOT blow up on max([]);
+    it should print a clean message and return None (like the missing-file guard)."""
+    import weekly
+
+    def fake_load_json(path, default):
+        if path.endswith("league_priors.json"):
+            return {"any": "priors"}
+        if path.endswith("backtest_games.json"):
+            return [{"season": 2022, "week": 1, "home": "A", "away": "B"}]
+        return default
+
+    monkeypatch.setattr(weekly.config, "load_json", fake_load_json)
+    # 1999 has no games -> weeks stays empty -> old code raised ValueError on max()
+    assert weekly.build_historical(season=1999) is None

@@ -43,13 +43,13 @@ import argparse
 import itertools
 import json
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 
 from nflvalue import config as cfgmod
-from nflvalue.candidates import WeekInputs, enumerate_candidates, games_for_week
+from nflvalue.candidates import WeekInputs, enumerate_candidates
 from nflvalue.composite import DEFAULT_PARAMS, YES_ONLY_MARKETS, score_candidate
 from nflvalue.projection import MARKETS
 

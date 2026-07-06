@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import json
 import os
 from typing import Dict, List, Optional
 
@@ -82,7 +81,7 @@ def _lean_row_md(lean: Dict) -> str:
     # the Score column shows the RANKING score: the ML side-probability x100
     # when the classifier ordered this list, else the composite
     rank_score = lean.get("ml_score") if lean.get("ml_score") is not None \
-        else lean.get("composite", 0.0)
+        else (lean.get("composite") or 0.0)
     return ("| {name} ({pos}, {team}) | {market} | {line} | **{side}** | {mean} | "
             "{conf:.2f} | {edge} | **{comp:.1f}** | {reason} |").format(
         name=lean.get("name"), pos=lean.get("pos"), team=lean.get("team"),

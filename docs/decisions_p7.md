@@ -944,3 +944,238 @@ cases: determinism, no-edge→0, monotonic in edge, shrink reduces size, per-bet
 slate caps, correlation reduces correlated stakes, negative-ρ gets no bonus,
 disclaimer/units). Every projection is at real-line-plausible edges with the
 synthetic caveat stated.
+
+---
+
+## 7.8 — End-to-end integration, tests, docs
+
+**One end-to-end test** (`tests/test_e2e_phase7.py`) walks a fixture slate through
+the whole Phase-7 chain using each component's real interface — calibrated
+`MLRanker` → correlation-aware `shortlist.rank_game(corr=…)` → advisory
+`staking.recommend_stakes` → fixture `lines`/`leans`/`lean_outcomes` →
+`clv.log_close_for_week` → `killcheck.report` — and asserts every hand-off
+connects (calibrated probs bounded/walk-forward; the aware shortlist differs from
+the pre-7.6 baseline; stakes respect per-bet + slate caps and carry the advisory
+disclaimer; CLV = close − entry > 0; the kill-check reads `INSUFFICIENT_SAMPLE`
+at n=1). A regression anywhere in the chain trips it.
+
+**Leakage suite covers every Phase-7 surface** (`tests/test_leakage.py`):
+calibration fit (7.1), ensemble meta-learner (7.2), real-line re-label (7.3/7.4),
+correlation estimate (7.5) — each proven to use only data strictly before the
+season/week it informs — plus an explicit note+test that advisory staking (7.7)
+has **no** temporal/rolling surface (pure point-in-time; its only history-derived
+input is the walk-forward-guarded correlation ρ).
+
+**Docs brought to reality:** `README.md`, `docs/HOW_A_PICK_IS_MADE.md`, and
+`docs/DATA_SOURCES.md` now describe the calibrated RF ranker, correlation-aware
+selection, advisory staking, and the completed CLV referendum (n≥150 gate +
+coverage + dashboard), with the synthetic-vs-real distinction stated plainly.
+Full suite: **283 tests**, green (run in batches for the sandbox's per-call time
+limit; whole suite ~90s of compute). *(Grew to 332 after the §7.10 post-ship
+hardening pass below.)*
+
+---
+
+## 7.9 — Go/no-go framework + honest final assessment
+
+This section ships the project. It does two things and nothing else: it
+**pre-commits** the exact evidence that flips this tool from "entertainment" to
+"staked," and it states, as plainly as an honest skeptic would, what Phases 1–7
+do and do not prove. Not one number in the go/no-go decision is a synthetic-line
+figure — **the referendum is closing-line value.**
+
+### A. The go/no-go framework (pre-committed; CLV only)
+
+Why CLV and not won bets: 6.8 showed even a genuinely skilled 55% bettor needs
+~2,231 bets to separate from breakeven, a 54% bettor ~5,855 — many seasons at NFL
+volumes. CLV converges orders of magnitude faster (~50–150 resolved leans). So
+the decision rests entirely on CLV.
+
+**GO requires ALL of the following** (the first three are the Phase-3 / kill-check
+thresholds, unchanged; the last two are additional *validity* guards that make GO
+strictly harder, never looser):
+
+1. **n ≥ 150 resolved leans** — entry and in-window close both captured, lean
+   active (not voided). *(Phase-3, unchanged.)*
+2. **Lifetime average CLV > 0** in de-vigged probability space. *(unchanged.)*
+3. **Positive-CLV rate ≥ 52%.** *(unchanged.)*
+4. **Coverage ≥ 0.5** (`resolved_n / logged_n`): at least half of logged leans
+   actually resolved, so the 150 isn't a cherry-picked, biased subset of a thin
+   close-snapshot budget. Below this, any verdict is provisional until capture is
+   fixed.
+5. **Span ≥ 8 distinct in-season weeks** of live capture, so the sample crosses
+   real line-movement regimes rather than one fluke slate.
+
+**NO-GO** is declared the moment n ≥ 150 with (avg CLV ≤ 0 OR positive-CLV rate <
+52%). Pre-committed consequence, in writing, in the report and on the dashboard:
+**revert to a projection/entertainment tool and stop staking.** The check is
+*continuous*, not one-shot — even after a GO, a sustained negative rolling-window
+CLV re-triggers NO-GO. `n < 150` (today's state) is **INSUFFICIENT_SAMPLE**: keep
+logging, stake nothing, conclude nothing.
+
+**What a GO authorizes — and what it does not.** GO permits *small, disciplined,
+monitored* staking at the 7.7 advisory sizes (shrunk quarter-Kelly, capped), with
+the kill-check still armed. It is **not** a profit guarantee: prop CLV is a weaker
+edge proxy than main-market CLV (PREMORTEM §285), soft books limit winners in
+~20 bets (F4), and a Wednesday entry already sits near the close (F5). A GO means
+"consistent with real edge, worth risking a little to find out more" — no more.
+And in every state the tool still **never places a bet or moves money.**
+
+### B. The paid-data decision (FTN API)
+
+The FTN Data API (participation + charting: man/zone, alignment, personnel) is
+the single largest remaining free-data gap and the **one pre-authorized paid
+purchase** — but **only after a GO (§A)**. The logic is strict: buying data to
+improve a tool that has not yet demonstrated real edge is spending money on an
+unproven bet. The trigger is a GO **plus** a stated, testable hypothesis that FTN
+features would lift the specific markets where measured edge is thinnest. Until
+both hold: no paid source, and no scraping/ToS-circumvention (design H11). This is
+the only door through which paid data may ever enter, and it stays locked until
+CLV opens it.
+
+### C. Honest assessment — what Phases 1–7 built
+
+**What it demonstrably does** (measured, walk-forward, reproducible from scripts):
+
+- **Walk-forward directional skill at synthetic lines** — calibrated RF 63–69% /
+  season vs the tuned composite's 57–59%, calibrated pooled log-loss 0.621,
+  +1,600u at −110 over 2022–25 top-5 selection. **All at synthetic trailing-mean
+  lines.**
+- **Calibrated probabilities** — per-market Platt, ECE ≈ 0.011; `P(over)=0.62`
+  lands ~62%, so edge and stake read a trustworthy number (7.1/7.2).
+- **A measured, shrunk same-game correlation structure** — QB↔his-WR ≈ 0.30,
+  same-player markets ≈ 0.76, run/pass hedges ≈ −0.08 to −0.10, and the two-WR
+  "stack" honestly called noise (7.5).
+- **A quantified variance envelope** (6.8) and **advisory sizing that survives
+  it** — shrunk, correlation- and drawdown-aware, ~10–15% worst-case drawdown,
+  near-zero ruin at plausible edges (7.7).
+- **Discipline as a feature** — every constant measured with printed provenance;
+  leakage guards on every surface; and honest *negative* results kept rather than
+  buried (garbage-time filter, opponent-pace term, birthdays/revenge, feature
+  pruning, the ~0 calibration gain on 2025).
+
+**What it does NOT prove:**
+
+- **Real-line profit.** Synthetic trailing-mean lines structurally favor unders
+  and price far less than a real sharp market; part of the ML edge is likely
+  learned exploitation of that construction (documented in `decisions_p3-5.md`).
+  The honest chain is **synthetic-line skill (measured, strong) → real-line hit
+  rate (unknown until CLV accrues) → profit (variance-dominated at any realistic
+  NFL volume)**. No synthetic number in this repo is a profit claim, and none is
+  admissible in the go/no-go decision.
+
+**Bottom line.** The project is complete in the only sense that is honest here —
+not "guaranteed to win," but a disciplined instrument that makes calibrated,
+correlation-aware, honestly-sized recommendations *and is built to prove or
+disprove its own edge*, with a pre-committed answer either way. Its current state
+is **INSUFFICIENT_SAMPLE / paper-trade** (no live Odds API key, offseason, 0
+resolved leans). Until the CLV GO in §A, it is an entertainment and research tool
+— and §A says exactly, in advance, what would change that. Top-level snapshot:
+`PROJECT_STATUS.md`.
+
+---
+
+## 7.10 — Post-ship hardening pass
+
+After 7.9 shipped, a multi-agent audit re-read **every** module — the Phase-7
+surfaces AND the older Phase 1–6 learning/feature/IO code — for correctness (not
+style). No correctness-critical or leakage kill-bug was found anywhere; the issues
+below are the real-but-bounded ones that were fixed. The honest-negative culture
+applies here too (most were low-severity and are recorded as such). Full suite
+after this pass: **332 tests**, green (331 passed, 1 skipped — `test_ingest` skips
+cleanly when the optional `nflreadpy` isn't installed, via `pytest.importorskip`).
+
+**Correctness fixes (real):**
+
+- **Correlation walk-forward verdict-gate leak** (`correlation.py`,
+  `fit_correlation.py`). `rho(as_of_season=S)` returned a leak-free prior-only ρ
+  *value*, but gated inclusion on the type's `verdict`, which was computed from
+  *full-history* (2019–2025) sign-stability. So a backtest at season S could
+  include/exclude a pair based on data ≥ S. Fixed: the `walk_forward[S]` slices
+  now carry only pair types that clear a **prior-only** verdict (|ρ_<S| ≥ floor
+  AND sign-stable across seasons < S); `rho(as_of_season=S)` gates solely on
+  presence in that slice. Production (all-history) consumption is unchanged. New
+  test asserts the *inclusion set* (not just each value) is byte-identical when
+  seasons ≥ S are removed. The shipped `sameteam|QB.pass~WR.rec` survives every
+  slice.
+- **CLV prob-kind mixing** (`clv.py`, `db.py`). `log_close_for_week` never checked
+  `snapshot_prob`'s `prob_kind`, so a one-sided `anytime_td` close (raw-implied)
+  could be differenced against a two-sided entry (de-vigged) — an apples-to-
+  oranges CLV feeding the kill-check. Fixed: a lean now resolves only when entry
+  and close share `prob_kind`; the shared kind is persisted on a new `clv.prob_kind`
+  column; the module docstring was corrected to match. New test covers the
+  mixed-kind skip. (Continuous-yardage markets are de-vigged at both ends and are
+  unaffected.)
+- **Staking Monte-Carlo used independent draws per strategy** (`staking_mc.py`).
+  The `flat`/`qkelly`/`shrunk` comparison now uses **common random numbers** —
+  the same per-path/week correlated outcomes drive all three — so the drawdown/
+  growth comparison is properly paired. Numbers shifted trivially; the qualitative
+  story is unchanged (shrunk grows slower but ~10–15% p95 drawdown, zero ruin;
+  breakeven bets nothing).
+
+**Defensive guards (latent — not triggered by real data, fixed anyway):**
+
+- `staking.recommend_stakes` now sanitizes non-finite/negative bankroll to a
+  zero-dollar (still advisory) readout, treats NaN/inf or out-of-`[0,1]` `p` /
+  `market_prob` / `price` as unstakeable (never propagating NaN into a stake), and
+  clamps `dd_scale` to `[0,1]` so a stray value can't breach the caps.
+- `report._lean_row_md` tolerates a present-but-`None` composite; `projection`'s
+  survival functions return a finite `p_over` in `[0,1]` on a NaN mean/sd (never a
+  spurious 1.0); `oddsmath.american_to_decimal(0)` no longer divides by zero; and
+  `consensus_two_way`'s reported `n_books` counts only price-contributing books.
+- Doc test counts corrected across `README.md`, `PROJECT_STATUS.md`, and this file.
+
+**Older-code audit (Phase 1–6) fixes:**
+
+- **Synthesis confidence cap** (`synthesis.py`). The post-client wrapper re-enforced
+  the RISK→medium and stale→low confidence caps "no matter what the client
+  decided," but not the `EXCLUDED`→low cap — a non-mock LLM client returning
+  `EXCLUDED`+`high` would have survived. Now capped client-independently. (The
+  core H6 contract — synthesis can never mutate a published number — was
+  re-verified sound; this was a confidence-label gap only.)
+- **Network-IO robustness** (`sources/_http.py`, `sources/oddsapi.py`). `get_json`
+  gained a bounded retry-with-backoff and a parse/URL-error guard (raising a typed
+  `HttpJsonError` the callers already degrade on); the unguarded `fetch_game_odds`
+  / `fetch_scores` now degrade to empty results like `fetch_event_props`, and
+  `_normalize_game_odds` uses `.get("price")` so a book omitting a price is skipped
+  rather than crashing the live slate. Feeds now degrade loudly, never crash.
+- **Notify footguns** (`notify.py`). `post_weekly`'s default flipped to
+  `dry_run=True` (safe by default; the pipeline always passes an explicit value),
+  and the live Discord POST is wrapped so a 5xx/timeout returns an error status
+  instead of blocking the pipeline — with the webhook URL still never logged.
+- **`context_study` mixed-dtype column**. `context_mult` defaulted untagged rows to
+  `None`, yielding an object-dtype float/None column; now defaults to a `1.0`
+  no-op multiplier (behavior-preserving for the score, clean dtype).
+- **Defense-in-depth leakage tests.** Added end-to-end truncation-invariance guards
+  (on the as-of-read values) for `AdvancedPack` (red-zone shares) and
+  `ChemistryPack` (formation tilts); `ContextPack` was correctly skipped (its
+  features are immutable DOB / strictly-before roster lookups already covered).
+- Two doc/comment corrections in `prop_learning.py`: `load_adjustments`'s docstring
+  now documents the intentional effective-at `<=` SQL (so no one "fixes" it to `<`
+  and breaks it), and a misleading dead "flip for away teams" comment was removed.
+
+**RAG / CLI audit fixes:**
+
+- **SQL-whitelist validator bypass** (`rag/nl2sql.py`) — *the one critical (though
+  latent) finding*. The table-whitelist regex only captured the identifier
+  immediately after each `FROM`/`JOIN`, so a comma cross-join
+  (`SELECT * FROM leans, sqlite_master`) slipped a non-whitelisted table past the
+  check and could read `sqlite_master` / `api_credits`. Not exploitable with the
+  shipped rule-based generator (it only emits safe single-table SQL), but
+  `validate_sql` is by design the sole boundary for any future LLM SQL backend, so
+  it was closed now: every table in every FROM/JOIN clause (including
+  comma-separated) is validated, `sqlite_*` is explicitly denied, and the
+  read-only guards are unchanged. Tests prove the bypass is rejected while
+  legitimate single-table/JOIN queries still pass.
+- **`weekly.py --season <no-games>`** raised `ValueError` on `max([])`; now returns
+  cleanly with a "No games for that season" message. `tune_weights`'s walk-forward
+  OOS integrity, both Monte Carlos, `build_ratings`, `backtest`, and CLI secret
+  hygiene (no key/webhook ever printed) were audited and are clean.
+
+No correctness-critical defect or leakage kill-bug was found in the actual scoring
+path — the pipeline, report, dashboard, oddsmath core, projection distributions,
+candidate adjustments, the learning loop (walk-forward + selection-bias guards
+verified), the feature builders (all strictly prior-week), the RAG layer, the
+Monte Carlos, and the weight-tuning were all audited across four rounds and are
+clean. Every fix above is behavior-preserving on valid inputs and covered by a
+test.

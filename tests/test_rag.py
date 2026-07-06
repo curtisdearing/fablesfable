@@ -63,6 +63,33 @@ def test_whitelist_and_structure_rejected(bad):
         nl2sql.validate_sql(bad)
 
 
+@pytest.mark.parametrize("bad", [
+    # comma-separated implicit cross-join: the second table sits PAST the reach
+    # of a "first identifier after FROM/JOIN" match -- this is the latent bypass.
+    "SELECT * FROM leans, sqlite_master",                # schema snooping via cross-join
+    "SELECT * FROM leans, api_credits",                  # non-whitelisted table via cross-join
+    "SELECT * FROM leans, clv, api_credits",             # smuggled among whitelisted tables
+    "SELECT * FROM clv WHERE x IN (SELECT y FROM sqlite_master)",  # sqlite_* anywhere
+    "SELECT * FROM sqlite_sequence",                     # any sqlite_* internal
+])
+def test_comma_join_bypass_is_closed(bad):
+    with pytest.raises(nl2sql.SQLValidationError):
+        nl2sql.validate_sql(bad)
+
+
+@pytest.mark.parametrize("good", [
+    "SELECT * FROM leans",
+    "SELECT name, market FROM leans WHERE season = 2023 ORDER BY composite DESC",
+    "SELECT COUNT(*) AS n FROM clv WHERE season = 2023",
+    "SELECT game_id FROM leans GROUP BY game_id ORDER BY game_id",
+    "SELECT a.name FROM leans a JOIN clv b ON a.game_id = b.game_id",  # whitelisted JOIN
+    "SELECT player_name, team FROM player_week ORDER BY rec_yards DESC",
+])
+def test_legitimate_queries_still_pass(good):
+    # returns cleaned SQL (never raises) for whitelisted single-table and JOIN shapes
+    assert nl2sql.validate_sql(good).lower().startswith("select")
+
+
 def test_row_cap_is_structural(conn):
     rows = nl2sql.execute(conn, "SELECT * FROM leans", row_cap=200)
     assert len(rows) == 200                              # 300 seeded, hard-capped

@@ -10,9 +10,12 @@ record without CLV is just a story.
 Probabilities are compared in DE-VIGGED space (consensus across the books in
 the snapshot), so a book fattening its margin can't masquerade as line
 movement. ``anytime_td`` is quoted one-sided (Yes only), so its "prob" is the
-RAW implied probability -- vig included at both entry and close, so the
-DIFFERENCE is still meaningful; rows carry ``prob_kind`` so nobody mistakes
-one for the other.
+RAW implied probability (vig included) rather than de-vigged. A CLV is only
+meaningful when entry and close are the SAME ``prob_kind`` -- subtracting a
+raw-implied prob from a de-vigged one is apples-to-oranges. ``snapshot_prob``
+tags each snapshot with its ``prob_kind``; ``log_close_for_week`` refuses to
+resolve any lean whose entry and close kinds differ, and the resolved ``clv``
+row persists the (shared) ``prob_kind`` so nobody mistakes one for the other.
 
 Close is approximate by design (last pre-kickoff snapshot, however old).
 ``close_ts`` is stored so staleness is always visible.
@@ -152,6 +155,12 @@ def log_close_for_week(conn, season: int, week: int,
                               at_or_before_ts=kickoff, at_or_after_ts=window_start)
         if entry is None or close is None or close["ts"] <= entry["ts"]:
             continue  # need two distinct snapshots (close inside the window) to say anything
+        if entry["prob_kind"] != close["prob_kind"]:
+            # Mixed prob_kind (e.g. anytime_td de-vigged at entry but one-sided
+            # raw-implied at close, or vice-versa): subtracting these is
+            # apples-to-oranges and would feed a bogus number to the kill-check.
+            # Refuse to resolve -- visibly absent, never faked.
+            continue
         rows.append({
             "season": season, "week": week, "game_id": l.game_id,
             "player_id": l.player_id, "market": l.market, "side": l.side,
@@ -161,6 +170,7 @@ def log_close_for_week(conn, season: int, week: int,
             "close_price": None, "close_prob": round(close["prob"], 5),
             "clv_prob": round(close["prob"] - entry["prob"], 5),
             "point_moved": round(close["point"] - entry["point"], 2),
+            "prob_kind": entry["prob_kind"],   # entry == close (checked above)
         })
     if rows:
         dbmod.upsert(conn, "clv", rows,

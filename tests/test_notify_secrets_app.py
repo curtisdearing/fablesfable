@@ -81,6 +81,76 @@ def test_gate_failed_report_posts_notice_not_picks(monkeypatch):
     assert "M.Andrews" not in blob                       # zero picks on stale data
 
 
+def test_post_weekly_defaults_to_dry_run(monkeypatch):
+    """Footgun fix: the DEFAULT is now dry_run=True, so a direct caller that
+    forgets the flag can NEVER accidentally hit the webhook. If it ever posted
+    for real, the opener below would raise and fail this test."""
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/123/secret-token")
+
+    def must_not_be_called(*a, **k):  # pragma: no cover - only fires on regression
+        raise AssertionError("default call must NOT hit the network")
+
+    res = notify.post_weekly(PAYLOAD, cfg={"discord_enabled": True},
+                             opener=must_not_be_called)
+    assert res["status"] == "dry_run"                    # never "posted"
+    assert "secret-token" not in json.dumps(res.get("messages", []))
+
+
+def test_failing_post_is_caught_and_never_leaks_url(monkeypatch):
+    """A Discord 5xx/timeout must degrade to a status dict, never raise
+    (docstring: 'never blocks the pipeline'), and the webhook URL must NOT
+    appear anywhere in the returned payload."""
+    import urllib.error
+
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL",
+                       "https://discord.com/api/webhooks/123/secret-token")
+
+    def boom(req, timeout=15):
+        raise urllib.error.URLError("simulated discord 503")
+
+    res = notify.post_weekly(PAYLOAD, cfg={"discord_enabled": True},
+                             dry_run=False, opener=boom)
+    assert res["status"] == "error"
+    assert res["n_messages"] == 0                         # nothing got through
+    assert "secret-token" not in json.dumps(res)          # URL never echoed
+
+
+def test_partial_post_failure_reports_progress(monkeypatch):
+    """If the first message posts and a later one fails, the caught error
+    reports how many made it through -- still no raise, still no URL."""
+    import urllib.error
+
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL",
+                       "https://discord.com/api/webhooks/123/secret-token")
+    calls = {"n": 0}
+
+    class _FakeResp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b""
+
+    def flaky(req, timeout=15):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return _FakeResp()
+        raise urllib.error.URLError("second message 503")
+
+    # force >1 message by widening the payload past MAX_EMBEDS_PER_MSG
+    big = dict(PAYLOAD)
+    big["games"] = [dict(PAYLOAD["games"][0], game_id=f"g{i}") for i in range(12)]
+    big["contexts"] = {}
+    res = notify.post_weekly(big, cfg={"discord_enabled": True},
+                             dry_run=False, opener=flaky)
+    assert res["status"] == "error"
+    assert res["n_messages"] == 1                         # first got through
+    assert "secret-token" not in json.dumps(res)
+
+
 # --------------------------------------------------------------------------- #
 # Secrets hygiene
 # --------------------------------------------------------------------------- #

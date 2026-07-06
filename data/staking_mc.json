@@ -1,0 +1,173 @@
+{
+ "note": "Advisory staking MC at PLAUSIBLE real-line edges; synthetic-line caveat on inputs. No bet is ever placed.",
+ "rho_pair_used": 0.2968,
+ "bankroll0": 100.0,
+ "bets_per_season": 306,
+ "B_paths": 2000,
+ "config": {
+  "s_edge": 0.5,
+  "kappa": 0.25,
+  "cap_bet": 0.02,
+  "max_slate": 0.1,
+  "dd_scale": 1.0,
+  "unit_pct": 0.01
+ },
+ "results": {
+  "0.5200": {
+   "flat": {
+    "median_end": 97.5,
+    "p5_end": 70.8,
+    "p95_end": 126.2,
+    "p95_max_drawdown_pct": 36.7,
+    "p_ruin": 0.0,
+    "p_halve": 0.004
+   },
+   "qkelly": {
+    "median_end": 100.0,
+    "p5_end": 100.0,
+    "p95_end": 100.0,
+    "p95_max_drawdown_pct": 0.0,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "shrunk": {
+    "median_end": 100.0,
+    "p5_end": 100.0,
+    "p95_end": 100.0,
+    "p95_max_drawdown_pct": 0.0,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  },
+  "0.5238": {
+   "flat": {
+    "median_end": 99.5,
+    "p5_end": 70.8,
+    "p95_end": 130.0,
+    "p95_max_drawdown_pct": 36.1,
+    "p_ruin": 0.0,
+    "p_halve": 0.002
+   },
+   "qkelly": {
+    "median_end": 100.0,
+    "p5_end": 100.0,
+    "p95_end": 100.0,
+    "p95_max_drawdown_pct": 0.0,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "shrunk": {
+    "median_end": 100.0,
+    "p5_end": 100.0,
+    "p95_end": 100.0,
+    "p95_max_drawdown_pct": 0.0,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  },
+  "0.5400": {
+   "flat": {
+    "median_end": 109.0,
+    "p5_end": 80.4,
+    "p95_end": 139.5,
+    "p95_max_drawdown_pct": 29.7,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "qkelly": {
+    "median_end": 106.9,
+    "p5_end": 83.8,
+    "p95_end": 138.6,
+    "p95_max_drawdown_pct": 24.1,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "shrunk": {
+    "median_end": 103.3,
+    "p5_end": 93.1,
+    "p95_end": 114.6,
+    "p95_max_drawdown_pct": 11.0,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  },
+  "0.5500": {
+   "flat": {
+    "median_end": 114.7,
+    "p5_end": 88.0,
+    "p95_end": 145.3,
+    "p95_max_drawdown_pct": 25.4,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "qkelly": {
+    "median_end": 119.3,
+    "p5_end": 82.6,
+    "p95_end": 181.6,
+    "p95_max_drawdown_pct": 32.9,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "shrunk": {
+    "median_end": 107.7,
+    "p5_end": 92.9,
+    "p95_end": 128.4,
+    "p95_max_drawdown_pct": 14.5,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  },
+  "0.5600": {
+   "flat": {
+    "median_end": 120.5,
+    "p5_end": 91.8,
+    "p95_end": 151.0,
+    "p95_max_drawdown_pct": 23.3,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "qkelly": {
+    "median_end": 140.3,
+    "p5_end": 81.4,
+    "p95_end": 250.8,
+    "p95_max_drawdown_pct": 39.4,
+    "p_ruin": 0.0,
+    "p_halve": 0.0015
+   },
+   "shrunk": {
+    "median_end": 111.8,
+    "p5_end": 95.1,
+    "p95_end": 131.3,
+    "p95_max_drawdown_pct": 13.3,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  },
+  "0.5800": {
+   "flat": {
+    "median_end": 131.9,
+    "p5_end": 103.3,
+    "p95_end": 160.5,
+    "p95_max_drawdown_pct": 18.8,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   },
+   "qkelly": {
+    "median_end": 227.4,
+    "p5_end": 97.6,
+    "p95_end": 530.0,
+    "p95_max_drawdown_pct": 49.6,
+    "p_ruin": 0.0,
+    "p_halve": 0.0015
+   },
+   "shrunk": {
+    "median_end": 119.3,
+    "p5_end": 101.7,
+    "p95_end": 139.8,
+    "p95_max_drawdown_pct": 11.3,
+    "p_ruin": 0.0,
+    "p_halve": 0.0
+   }
+  }
+ }
+}

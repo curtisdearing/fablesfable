@@ -38,6 +38,8 @@ from typing import Dict, Optional
 
 from . import oddsmath
 
+# Fallback only: in the live/report path config.json's "composite.weights"
+# always overrides these; these values apply solely to callers that omit weights.
 DEFAULT_WEIGHTS = {"edge": 0.5, "confidence": 0.3, "matchup": 0.2}
 # Phase 6.1: FIXED matchup sub-score weights. Previously the EPA dimension was
 # appended only when present, silently shifting the effective weighting

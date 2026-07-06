@@ -33,7 +33,7 @@ def test_loaders_compose_extra_seasons():
 def test_refresh_degrades_loudly_not_silently(monkeypatch):
     """A dead nflverse pull must report errors + stale, never raise or
     silently serve nothing."""
-    import nflreadpy as nfl
+    nfl = pytest.importorskip("nflreadpy")  # optional data-download dep
 
     def boom(**kw):
         raise RuntimeError("nflverse unreachable (test)")

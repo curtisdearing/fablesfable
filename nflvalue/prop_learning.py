@@ -160,7 +160,9 @@ def grade_week(conn, season: int, week: int, pw: pd.DataFrame,
             actual = arow[col] if arow else 0.0
             hit = (actual > l["line"]) if l["side"] == "over" else (actual < l["line"])
         exp_m, act_m = margins.get(l["game_id"], (None, None))
-        # margins are home-relative; flip for away teams when we know the side
+        # margins are home-relative; no per-team flip is needed because the
+        # script_flip check compares sign(spread_line) vs sign(result), both
+        # home-relative, so the comparison is team-agnostic.
         graded = {**l, "actual": float(actual), "hit": bool(hit)}
         attr = attribute(graded, arow, exp_m, act_m)
         rows.append({
@@ -254,7 +256,14 @@ class LearningState:
 
 
 def load_adjustments(conn, season: int, week: int) -> Dict[str, Dict]:
-    """Latest persisted adjustments strictly BEFORE (season, week) per market."""
+    """Adjustments EFFECTIVE AT (season, week) per market.
+
+    The `<=` in the SQL is intentional (effective-at semantics): each row is
+    persisted at week+1 from data strictly BEFORE it, so the row whose
+    (as_of_season, as_of_week) equals the target week already contains only
+    pre-week data. Loading `<=` therefore picks the adjustment in effect AT the
+    week and never leaks current-week outcomes. Do NOT "fix" this to `<`.
+    """
     df = dbmod.query_df(conn, """
         SELECT * FROM model_adjustments
         WHERE (as_of_season < ?) OR (as_of_season = ? AND as_of_week <= ?)

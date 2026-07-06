@@ -32,10 +32,7 @@ never crashes with no dispersion info.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
 from typing import Dict, Optional
-
-import numpy as np
 
 try:
     from scipy import stats as _stats
@@ -319,7 +316,13 @@ _SF = {"normal": _norm_sf, "gamma": _gamma_sf, "negbinom": _negbinom_sf, "poisso
 
 def p_over(mean: float, sd: float, line: float, dist: str) -> float:
     fn = _SF.get(dist, _norm_sf)
-    return max(0.0, min(1.0, fn(line, mean, sd)))
+    sf = fn(line, mean, sd)
+    # NaN-safe clip: a NaN survival value (e.g. NaN mean/sd) must not slip
+    # through max(0.0, nan)->nan then min(1.0, nan)->1.0 and read as a certain
+    # OVER. Valid inputs are floored upstream, so this only guards edge cases.
+    if sf != sf:  # NaN
+        return 0.0
+    return max(0.0, min(1.0, sf))
 
 
 # --------------------------------------------------------------------------- #

@@ -37,11 +37,10 @@ Outputs: data/correlation_structure.json, reports/correlation_structure.md
 """
 from __future__ import annotations
 
-import json
 import os
 import sys
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -52,7 +51,7 @@ sys.path.insert(0, ROOT)
 from nflvalue import config as cfgmod                       # noqa: E402
 from nflvalue.candidates import ACTUAL_COL, build_week_inputs  # noqa: E402
 from nflvalue.correlation import (                           # noqa: E402
-    ART_PATH, CROSS_MARKETS, FAMILY, POSITIONS, classify_pair, eb_fisher_z_shrink)
+    ART_PATH, FAMILY, POSITIONS, classify_pair, eb_fisher_z_shrink)
 
 FRAME_PATH = os.path.join(cfgmod.DATA_DIR, "ml_frame.parquet")
 REPORT_MD = "reports/correlation_structure.md"
@@ -136,14 +135,35 @@ def analyze(store: Dict[str, Dict[str, list]]) -> Dict:
                 ps[int(s)] = round(_rho(x[k][m], y[k][m]), 3)
         per_season[k] = ps
 
-    # walk-forward slices: rho from seasons < S (what a consumer at S may use)
+    # walk-forward slices: rho from seasons < S (what a consumer at S may use).
+    # A type is included in slice S ONLY if a PRIOR-ONLY verdict (using strictly
+    # seasons < S) judges it real -- |rho_<S| >= RHO_FLOOR AND its per-season
+    # sign is stable across the per-season slices restricted to seasons < S
+    # (>= 2 qualifying seasons, all sharing the sign of rho_<S). This mirrors
+    # the full-history sign-stability logic but sees nothing from seasons >= S,
+    # so the INCLUSION decision -- not just the value -- is leak-free.
     walk_forward = {}
     for S in WALK_FORWARD_SEASONS:
         wf = {}
         for k in types:
             m = ssn[k] < S
-            if m.sum() >= MIN_N:
-                wf[k] = round(_rho(x[k][m], y[k][m]), 4)
+            if m.sum() < MIN_N:
+                continue
+            rho_prior = round(_rho(x[k][m], y[k][m]), 4)
+            if abs(rho_prior) < RHO_FLOOR:
+                continue
+            prior_signs = []
+            for s in sorted(set(ssn[k][m].tolist())):
+                sm = ssn[k] == s
+                if sm.sum() >= SIGN_MIN_N:
+                    r_s = _rho(x[k][sm], y[k][sm])
+                    if abs(r_s) >= 1e-9:
+                        prior_signs.append(np.sign(r_s))
+            prior_sign = np.sign(rho_prior)
+            sign_stable_prior = bool(len(prior_signs) >= 2
+                                     and all(sg == prior_sign for sg in prior_signs))
+            if sign_stable_prior:
+                wf[k] = rho_prior
         walk_forward[str(S)] = wf
 
     pair_types = {}

@@ -30,7 +30,6 @@ import os
 import sys
 import tempfile
 
-import numpy as np
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -132,8 +131,8 @@ def main() -> None:
     # -- 3. CLV: de-vigged entry vs close ----------------------------------- #
     resolved = clvmod.log_close_for_week(conn, SEASON, WEEK, {GAME_ID: KICKOFF})
     r = resolved.iloc[0]
-    print(f"\n[3] CLV (Mark Andrews receiving_yards OVER, de-vigged consensus, "
-          f"n_books≥2):")
+    print("\n[3] CLV (Mark Andrews receiving_yards OVER, de-vigged consensus, "
+          "n_books≥2):")
     print(f"      entry_prob   {r['entry_prob']:.4f}  (Wed snapshot {r['entry_ts'][:10]})")
     print(f"      close_prob   {r['close_prob']:.4f}  (pre-kickoff {r['close_ts'][:10]})")
     print(f"      clv_prob     {r['clv_prob']:+.4f}   (close − entry, de-vigged prob-points)")
@@ -145,7 +144,7 @@ def main() -> None:
 
     # -- 4. MONITOR: kill-check reads the accrued sample -------------------- #
     verdict = killcheck.report(conn, min_sample=150)
-    print(f"\n[4] MONITOR (killcheck, pre-committed n≥150 / avgCLV>0 / ≥52% positive):")
+    print("\n[4] MONITOR (killcheck, pre-committed n≥150 / avgCLV>0 / ≥52% positive):")
     print(f"      resolved n = {verdict['n']}  |  verdict = {verdict['verdict']}")
     print(f"      {verdict['detail']}")
     assert verdict["verdict"] == "INSUFFICIENT_SAMPLE"   # one lean is not a referendum

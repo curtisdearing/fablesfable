@@ -17,7 +17,6 @@ Needs numpy (for the simulator).
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from collections import defaultdict
 
@@ -146,6 +145,10 @@ def build_historical(season=None, sims=5000, through=None):
     for g in sgames:
         weeks[g["week"]].append(g)
 
+    if not weeks:
+        print(f"No games for season {season}.")
+        return None
+
     rec = _blank_record()
     out_weeks = []
     for wk in sorted(weeks):
@@ -221,7 +224,7 @@ def main():
     print(f"  Season-to-date: SU {sr['su']} ({sr['su_pct']*100:.0f}%) | "
           f"ATS {sr['ats']} ({sr['ats_pct']*100:.0f}%) | totals {sr['totals']} | "
           f"avg margin error {sr['avg_margin_err']} pts")
-    print(f"  Saved: data/weekly.json")
+    print("  Saved: data/weekly.json")
 
 
 if __name__ == "__main__":
