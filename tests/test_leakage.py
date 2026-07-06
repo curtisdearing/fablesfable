@@ -124,3 +124,98 @@ def test_team_week_features_do_not_leak_future_weeks(pbp_fast):
         assert not mismatched.any(), f"team_week leakage in '{col}': {mismatched.sum()} row(s) changed"
 
 
+# --------------------------------------------------------------------------- #
+# Phase 7.1: the calibration fit is a NEW walk-forward surface. The calibrator
+# corrects the base model's probabilities, and it must never be fit on a
+# prediction the base made for a season the base trained on (in-sample), nor on
+# any data from a season it will later help score. Two guards below.
+# --------------------------------------------------------------------------- #
+def _calib_frame(seasons):
+    from test_ml import _frame  # same synthetic builder used by the ML tests
+    return _frame(n=180 * len(seasons), seasons=seasons, weeks=range(1, 7))
+
+
+def test_calibration_no_fold_trains_on_its_own_season():
+    """No fold sees its own correction: for every expanding fold that predicts
+    season s, the base model that generated those (to-be-calibrated) OOS
+    predictions may train only on seasons < s. cal_fold_spans is the witness."""
+    from nflvalue import ml_ranker as mlr
+    f = _calib_frame((2021, 2022, 2023, 2024))
+    m = mlr.MLRanker("gbdt", max_iter=40, calibrate="platt_permkt").fit(f, f["y_over"])
+    assert m.calibrator is not None and m.cal_fold_spans, "calibrator did not fit"
+    for predict_season, train_min, train_max in m.cal_fold_spans:
+        assert train_max < predict_season, (
+            f"calibration leak: a fold predicting {predict_season} trained through "
+            f"{train_max} -- the calibrator would be learning from predictions the "
+            f"base made on data it had trained on")
+
+
+def test_calibrated_prediction_does_not_leak_future_seasons():
+    """The calibrated P(over) for a season S must be byte-identical whether or
+    not seasons after S exist in the frame -- neither the base fold (<S) nor the
+    calibrator (OOS folds within <S) may touch data >= S. Mirrors the feature
+    tests: delete the future, the past must not move."""
+    import numpy as np
+    from nflvalue import ml_ranker as mlr
+
+    full = _calib_frame((2021, 2022, 2023, 2024))
+    S = 2023
+    kw = dict(model="gbdt", max_iter=40, calibrate="platt_permkt")
+
+    def calibrated_for_S(frame):
+        train = frame[frame["season"] < S]
+        test = frame[frame["season"] == S]
+        m = mlr.MLRanker(**kw).fit(train, train["y_over"])
+        return m.predict_p_over(test)
+
+    with_future = calibrated_for_S(full)                       # 2024 present
+    without_future = calibrated_for_S(full[full["season"] <= S])  # 2024 removed
+    assert np.array_equal(with_future, without_future), (
+        "calibrated predictions for season S changed when a later season was "
+        "removed -- future data is leaking through the calibration fit")
+
+
+# --------------------------------------------------------------------------- #
+# Phase 7.2: the ensemble meta-learner is a NEW walk-forward surface (its
+# training pairs are OOS member predictions from expanding folds) -- same two
+# guards as the calibrator: no fold trains on the season it later helps
+# combine, and calibration wrapped around an ensemble doesn't leak either.
+# --------------------------------------------------------------------------- #
+def test_meta_learner_no_fold_trains_on_its_own_season():
+    from nflvalue import ml_ranker as mlr
+    f = _calib_frame((2021, 2022, 2023, 2024))
+    m = mlr.MLRanker("ensemble", members=["gbdt", "rf"], combiner="meta",
+                     seed=mlr.SEED).fit(f, f["y_over"])
+    assert m.meta is not None and m.meta_fold_spans, "meta-learner did not fit"
+    for predict_season, train_min, train_max in m.meta_fold_spans:
+        assert train_max < predict_season, (
+            f"meta-learner leak: a fold predicting {predict_season} used member "
+            f"predictions trained through {train_max}")
+
+
+def test_ensemble_calibrated_prediction_does_not_leak_future_seasons():
+    """Mirrors test_calibrated_prediction_does_not_leak_future_seasons for the
+    ensemble path: the calibrator's internal folds refit a NESTED ensemble
+    (_oos_fold_predict) rather than a single clf -- confirm that nesting
+    doesn't open a new leakage surface."""
+    import numpy as np
+    from nflvalue import ml_ranker as mlr
+
+    full = _calib_frame((2021, 2022, 2023, 2024))
+    S = 2023
+    kw = dict(model="ensemble", members=["gbdt", "rf"], combiner="avg",
+             seed=mlr.SEED, calibrate="platt_permkt")
+
+    def calibrated_for_S(frame):
+        train = frame[frame["season"] < S]
+        test = frame[frame["season"] == S]
+        m = mlr.MLRanker(**kw).fit(train, train["y_over"])
+        return m.predict_p_over(test)
+
+    with_future = calibrated_for_S(full)
+    without_future = calibrated_for_S(full[full["season"] <= S])
+    assert np.allclose(with_future, without_future, atol=1e-9), (
+        "ensemble-calibrated predictions for season S changed when a later "
+        "season was removed -- future data is leaking through the nested fit")
+
+

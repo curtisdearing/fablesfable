@@ -1,0 +1,65 @@
+{
+  "eval_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "grid": [
+    {
+      "n_estimators": 400,
+      "min_samples_leaf": 25,
+      "max_features": "sqrt",
+      "pooled_log_loss": 0.62067,
+      "n": 44350
+    },
+    {
+      "n_estimators": 400,
+      "min_samples_leaf": 25,
+      "max_features": "log2",
+      "pooled_log_loss": 0.62067,
+      "n": 44350
+    },
+    {
+      "n_estimators": 600,
+      "min_samples_leaf": 25,
+      "max_features": "sqrt",
+      "pooled_log_loss": 0.62072,
+      "n": 44350
+    },
+    {
+      "n_estimators": 200,
+      "min_samples_leaf": 25,
+      "max_features": "sqrt",
+      "pooled_log_loss": 0.62094,
+      "n": 44350
+    },
+    {
+      "n_estimators": 400,
+      "min_samples_leaf": 50,
+      "max_features": "sqrt",
+      "pooled_log_loss": 0.62103,
+      "n": 44350
+    },
+    {
+      "n_estimators": 400,
+      "min_samples_leaf": 10,
+      "max_features": "sqrt",
+      "pooled_log_loss": 0.6213,
+      "n": 44350
+    }
+  ],
+  "default": {
+    "n_estimators": 400,
+    "min_samples_leaf": 25,
+    "max_features": "sqrt"
+  },
+  "ship_rf": {
+    "n_estimators": 400,
+    "min_samples_leaf": 25,
+    "max_features": "sqrt",
+    "pooled_log_loss": 0.62067,
+    "n": 44350
+  },
+  "note": "raw (uncalibrated) pooled log-loss, 2022-2025 -- the same window the ensemble decision and final calibrated check use. In-sample argmax across this small grid (disclosed; RF's per-fit cost ruled out a full walk-forward selection loop here) -- the final choice is re-checked on the real calibrated metric."
+}

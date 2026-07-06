@@ -1,0 +1,193 @@
+{
+  "eval_seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "n_eval": 44350,
+  "baseline": {
+    "model": "gbdt (all 67 features, 7.1 shipped)",
+    "calibrated": {
+      "n": 44350,
+      "log_loss": 0.62448,
+      "ece": 0.0118,
+      "mce": 0.0281,
+      "brier": 0.21798,
+      "reliability": 0.00023,
+      "resolution": 0.01271,
+      "uncertainty": 0.23095,
+      "per_market": {
+        "receiving_yards": {
+          "n": 9108,
+          "over_rate": 0.4037,
+          "log_loss": 0.67085,
+          "brier": 0.23899,
+          "ece": 0.014
+        },
+        "receptions": {
+          "n": 9108,
+          "over_rate": 0.409,
+          "log_loss": 0.67062,
+          "brier": 0.23888,
+          "ece": 0.0192
+        },
+        "rushing_yards": {
+          "n": 3581,
+          "over_rate": 0.3985,
+          "log_loss": 0.66676,
+          "brier": 0.237,
+          "ece": 0.0243
+        },
+        "passing_yards": {
+          "n": 2337,
+          "over_rate": 0.481,
+          "log_loss": 0.67132,
+          "brier": 0.23929,
+          "ece": 0.026
+        },
+        "pass_attempts": {
+          "n": 2337,
+          "over_rate": 0.4801,
+          "log_loss": 0.67203,
+          "brier": 0.23962,
+          "ece": 0.035
+        },
+        "rush_attempts": {
+          "n": 3581,
+          "over_rate": 0.4203,
+          "log_loss": 0.67821,
+          "brier": 0.24258,
+          "ece": 0.021
+        },
+        "anytime_td": {
+          "n": 14298,
+          "over_rate": 0.243,
+          "log_loss": 0.52607,
+          "brier": 0.17333,
+          "ece": 0.0205
+        }
+      }
+    },
+    "leans": {
+      "n": 5435,
+      "hit_rate": 0.6585,
+      "units_at_110": 1397.64,
+      "top1_hit_rate": 0.6872
+    }
+  },
+  "final": {
+    "model": "rf (default hp, all 67 features -- SHIPPED)",
+    "calibrated": {
+      "n": 44350,
+      "log_loss": 0.62118,
+      "ece": 0.0108,
+      "mce": 0.0178,
+      "brier": 0.21654,
+      "reliability": 0.00014,
+      "resolution": 0.01403,
+      "uncertainty": 0.23095,
+      "per_market": {
+        "receiving_yards": {
+          "n": 9108,
+          "over_rate": 0.4037,
+          "log_loss": 0.6686,
+          "brier": 0.23791,
+          "ece": 0.0187
+        },
+        "receptions": {
+          "n": 9108,
+          "over_rate": 0.409,
+          "log_loss": 0.66593,
+          "brier": 0.23665,
+          "ece": 0.0116
+        },
+        "rushing_yards": {
+          "n": 3581,
+          "over_rate": 0.3985,
+          "log_loss": 0.66608,
+          "brier": 0.23673,
+          "ece": 0.02
+        },
+        "passing_yards": {
+          "n": 2337,
+          "over_rate": 0.481,
+          "log_loss": 0.67254,
+          "brier": 0.23989,
+          "ece": 0.0196
+        },
+        "pass_attempts": {
+          "n": 2337,
+          "over_rate": 0.4801,
+          "log_loss": 0.66781,
+          "brier": 0.23757,
+          "ece": 0.0272
+        },
+        "rush_attempts": {
+          "n": 3581,
+          "over_rate": 0.4203,
+          "log_loss": 0.67713,
+          "brier": 0.24208,
+          "ece": 0.0295
+        },
+        "anytime_td": {
+          "n": 14298,
+          "over_rate": 0.243,
+          "log_loss": 0.5212,
+          "brier": 0.1714,
+          "ece": 0.0109
+        }
+      }
+    },
+    "leans": {
+      "n": 5435,
+      "hit_rate": 0.6784,
+      "units_at_110": 1603.82,
+      "top1_hit_rate": 0.7157
+    }
+  },
+  "significance_vs_baseline": {
+    "d_logloss": 0.00329,
+    "t": 6.75,
+    "n": 44350
+  },
+  "per_market_significance_vs_baseline": {
+    "anytime_td": {
+      "d_logloss": 0.00486,
+      "t": 4.68,
+      "n": 14298
+    },
+    "pass_attempts": {
+      "d_logloss": 0.00422,
+      "t": 1.74,
+      "n": 2337
+    },
+    "passing_yards": {
+      "d_logloss": -0.00123,
+      "t": -0.54,
+      "n": 2337
+    },
+    "receiving_yards": {
+      "d_logloss": 0.00226,
+      "t": 2.7,
+      "n": 9108
+    },
+    "receptions": {
+      "d_logloss": 0.00469,
+      "t": 4.77,
+      "n": 9108
+    },
+    "rush_attempts": {
+      "d_logloss": 0.00108,
+      "t": 0.78,
+      "n": 3581
+    },
+    "rushing_yards": {
+      "d_logloss": 0.00068,
+      "t": 0.48,
+      "n": 3581
+    }
+  },
+  "no_market_regression": true,
+  "beats_baseline": true
+}

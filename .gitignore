@@ -1,11 +1,15 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+.DS_Store
 # large regenerable data + build artifacts
 *.parquet
 data/*.db
 data/*.db-journal
 *.db-journal
+# raw per-row prediction caches (7.2 ablation store) -- summary JSON (the
+# measured results) stays tracked, the underlying per-row cache doesn't
+data/*_preds.pkl
 
 # secrets (webhooks, API keys) live here — NEVER tracked
 config.local.json

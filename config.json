@@ -42,6 +42,6 @@
                "reliability_k": 50, "reliability_clip": 0.15, "window_weeks": 12},
   "context_learning": {"enabled_tags": []},
 
-  "ml_ranker": {"enabled": true, "model": "gbdt", "path": "data/ml_ranker.joblib",
-                "provenance": "walk-forward OOS 2021-2025 at synthetic lines: GBDT 63.2-67.1%, RF 63.8-69.0%, tuned composite 57.1-59.5% (reports/ml_improvement_test.md). Shipped artifact = GBDT (fits on 2 cores); upgrade to RF offline: python3 ml_test.py --stage fit --models rf. Weekly retrain: --stage frame --append, then --stage fit."}
+  "ml_ranker": {"enabled": true, "model": "rf", "path": "data/ml_ranker.joblib",
+                "provenance": "Phase 7.2 (docs/decisions_p7.md): ensemble bake-off (avg/meta of GBDT+RF OOS) found RF ALONE beats both, on the 7.1 calibrated-log-loss metric OOS 2022-2025 (0.62448->0.62118, t=6.75); walk-forward HP search found no improvement over RF's defaults (400 trees, min_leaf 25, sqrt features) or worth shipping for GBDT either (tuned GBDT still loses to RF, t=2.44). Feature pruning via ablation found real pooled dead weight but broke a per-market guardrail (passing_yards) when applied to RF -- NOT shipped; all 67 features retained. Shipped: RF, default hyperparams, all features, platt_permkt calibration (7.1, unchanged). Regenerate: python3 ml_test.py --stage fit --models rf --calibrate platt_permkt (or scripts/ship_rf.py's checkpointed stages on compute-constrained environments). Weekly retrain: --stage frame --append, then --stage fit."}
 }

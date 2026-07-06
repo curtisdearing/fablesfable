@@ -289,6 +289,9 @@ def main() -> None:
     ap.add_argument("--season", type=int, default=None)
     ap.add_argument("--models", nargs="*", default=["gbdt", "rf"])
     ap.add_argument("--append", action="store_true")
+    ap.add_argument("--calibrate", default="platt_permkt",
+                    help="walk-forward calibration for the fit artifact "
+                         "(platt_permkt | platt_pooled | none); Phase 7.1")
     ap.add_argument("--pw"), ap.add_argument("--opd"), ap.add_argument("--tw"), ap.add_argument("--sched")
     args = ap.parse_args()
 
@@ -309,9 +312,12 @@ def main() -> None:
         # production fit: train on EVERYTHING graded so far, save for the pipeline
         frame = augment_with_real_lines(frame)
         model_name = (args.models or ["rf"])[0]
-        model = mlr.MLRanker(model=model_name).fit(frame, frame["y_over"])
+        calibrate = None if str(args.calibrate).lower() == "none" else args.calibrate
+        model = mlr.MLRanker(model=model_name, calibrate=calibrate).fit(frame, frame["y_over"])
         path = model.save()
-        print(f"fitted {model_name} on {len(frame):,} rows through "
+        cal = (f"calibrated={model.calibrate}" if model.calibrator is not None
+               else "calibrator=none")
+        print(f"fitted {model_name} ({cal}) on {len(frame):,} rows through "
               f"{model.train_max} -> {path}")
         return
     if args.stage == "eval":

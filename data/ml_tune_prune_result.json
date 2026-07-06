@@ -1,0 +1,810 @@
+{
+  "eval_seasons": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "n_eval": 55860,
+  "ablation_model": "gbdt (7.2-tuned hp) -- see module docstring for why RF wasn't used as the ablation vehicle",
+  "full_log_loss": 0.62461,
+  "per_feature": [
+    {
+      "feature": "game_script",
+      "drop_log_loss": 0.62619,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00159,
+      "t_full_vs_drop": 4.76,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "qb_chem_delta",
+      "drop_log_loss": 0.62598,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00137,
+      "t_full_vs_drop": 3.94,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "qb_continuity",
+      "drop_log_loss": 0.62593,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00133,
+      "t_full_vs_drop": 3.76,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_air_yards",
+      "drop_log_loss": 0.62579,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00118,
+      "t_full_vs_drop": 3.73,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_pace",
+      "drop_log_loss": 0.62577,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00116,
+      "t_full_vs_drop": 3.62,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "key_teammate_absent",
+      "drop_log_loss": 0.62545,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00085,
+      "t_full_vs_drop": 3.59,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "rz_carry_share",
+      "drop_log_loss": 0.62562,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00101,
+      "t_full_vs_drop": 3.36,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "week",
+      "drop_log_loss": 0.62562,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00102,
+      "t_full_vs_drop": 3.35,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "wind",
+      "drop_log_loss": 0.6257,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00109,
+      "t_full_vs_drop": 3.31,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "total_line",
+      "drop_log_loss": 0.62565,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00104,
+      "t_full_vs_drop": 3.28,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_epa_play",
+      "drop_log_loss": 0.62568,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00107,
+      "t_full_vs_drop": 3.26,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_pressure_rate",
+      "drop_log_loss": 0.62577,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00116,
+      "t_full_vs_drop": 3.24,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_epa_factor",
+      "drop_log_loss": 0.6256,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00099,
+      "t_full_vs_drop": 3.2,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_adot",
+      "drop_log_loss": 0.62556,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00095,
+      "t_full_vs_drop": 3.16,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_ypt",
+      "drop_log_loss": 0.62559,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00098,
+      "t_full_vs_drop": 3.15,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_no_huddle_rate",
+      "drop_log_loss": 0.62561,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.001,
+      "t_full_vs_drop": 3.09,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "proj_efficiency",
+      "drop_log_loss": 0.6256,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00099,
+      "t_full_vs_drop": 3.08,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "inj_out_count_2y",
+      "drop_log_loss": 0.62559,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00098,
+      "t_full_vs_drop": 3.03,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_targets",
+      "drop_log_loss": 0.62557,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00097,
+      "t_full_vs_drop": 3.02,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_carry_share",
+      "drop_log_loss": 0.62555,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00094,
+      "t_full_vs_drop": 2.99,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_edp",
+      "drop_log_loss": 0.62556,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00095,
+      "t_full_vs_drop": 2.93,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "age_years",
+      "drop_log_loss": 0.62557,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00097,
+      "t_full_vs_drop": 2.91,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "own_motion_rate",
+      "drop_log_loss": 0.6252,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00059,
+      "t_full_vs_drop": 2.9,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_rz_td_factor",
+      "drop_log_loss": 0.62552,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00091,
+      "t_full_vs_drop": 2.89,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_carries",
+      "drop_log_loss": 0.62541,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00081,
+      "t_full_vs_drop": 2.66,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "p_over",
+      "drop_log_loss": 0.62539,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00078,
+      "t_full_vs_drop": 2.63,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "shotgun_tilt_tgt",
+      "drop_log_loss": 0.62553,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00092,
+      "t_full_vs_drop": 2.63,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_ypc",
+      "drop_log_loss": 0.62544,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00083,
+      "t_full_vs_drop": 2.61,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "shotgun_tilt_carry",
+      "drop_log_loss": 0.62543,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00083,
+      "t_full_vs_drop": 2.58,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_short_pass_share",
+      "drop_log_loss": 0.62539,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00079,
+      "t_full_vs_drop": 2.57,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "home",
+      "drop_log_loss": 0.62531,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.0007,
+      "t_full_vs_drop": 2.55,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_ypa",
+      "drop_log_loss": 0.62537,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00076,
+      "t_full_vs_drop": 2.49,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "sd_over_line",
+      "drop_log_loss": 0.62558,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00097,
+      "t_full_vs_drop": 2.45,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "def_out_db",
+      "drop_log_loss": 0.6253,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00069,
+      "t_full_vs_drop": 2.44,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_box_avg",
+      "drop_log_loss": 0.62511,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.0005,
+      "t_full_vs_drop": 2.39,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_blitz_rate",
+      "drop_log_loss": 0.62512,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00051,
+      "t_full_vs_drop": 2.38,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_target_share",
+      "drop_log_loss": 0.62534,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00073,
+      "t_full_vs_drop": 2.26,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_catch_rate",
+      "drop_log_loss": 0.62534,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00074,
+      "t_full_vs_drop": 2.26,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_short_tgt_share",
+      "drop_log_loss": 0.62522,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00062,
+      "t_full_vs_drop": 2.0,
+      "keep": true,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "def_out_total",
+      "drop_log_loss": 0.6252,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00059,
+      "t_full_vs_drop": 1.98,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_games",
+      "drop_log_loss": 0.62519,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00059,
+      "t_full_vs_drop": 1.96,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "is_contract_year",
+      "drop_log_loss": 0.62531,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.0007,
+      "t_full_vs_drop": 1.94,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "proj_volume",
+      "drop_log_loss": 0.62524,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00063,
+      "t_full_vs_drop": 1.93,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "opp_absence_factor",
+      "drop_log_loss": 0.62517,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00056,
+      "t_full_vs_drop": 1.86,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "ngs_ay_share",
+      "drop_log_loss": 0.62513,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00052,
+      "t_full_vs_drop": 1.69,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "teammate_out_boost",
+      "drop_log_loss": 0.62512,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00052,
+      "t_full_vs_drop": 1.65,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "ngs_yac_aoe",
+      "drop_log_loss": 0.62513,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00052,
+      "t_full_vs_drop": 1.56,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "own_pa_rate",
+      "drop_log_loss": 0.62494,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00033,
+      "t_full_vs_drop": 1.53,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_early_exit_rate",
+      "drop_log_loss": 0.62507,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00046,
+      "t_full_vs_drop": 1.52,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "line",
+      "drop_log_loss": 0.62506,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00045,
+      "t_full_vs_drop": 1.51,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    },
+    {
+      "feature": "roll_pass_attempts",
+      "drop_log_loss": 0.62507,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00046,
+      "t_full_vs_drop": 1.49,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "revenge_game",
+      "drop_log_loss": 0.62481,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00021,
+      "t_full_vs_drop": 1.48,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "roll_mid_tgt_share",
+      "drop_log_loss": 0.62503,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00042,
+      "t_full_vs_drop": 1.32,
+      "keep": true,
+      "keep_reason": "group override (depth_location, t=+2.61)"
+    },
+    {
+      "feature": "team_cpoe",
+      "drop_log_loss": 0.62502,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00041,
+      "t_full_vs_drop": 1.29,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "mean",
+      "drop_log_loss": 0.625,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00039,
+      "t_full_vs_drop": 1.28,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    },
+    {
+      "feature": "temp",
+      "drop_log_loss": 0.62501,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.0004,
+      "t_full_vs_drop": 1.25,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_neutral_proe",
+      "drop_log_loss": 0.62496,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00035,
+      "t_full_vs_drop": 1.1,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_margin",
+      "drop_log_loss": 0.62493,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00032,
+      "t_full_vs_drop": 0.94,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "team_shotgun_rate",
+      "drop_log_loss": 0.62488,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00027,
+      "t_full_vs_drop": 0.88,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "z",
+      "drop_log_loss": 0.62488,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00028,
+      "t_full_vs_drop": 0.72,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    },
+    {
+      "feature": "opp_factor",
+      "drop_log_loss": 0.62482,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00022,
+      "t_full_vs_drop": 0.69,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    },
+    {
+      "feature": "ngs_separation",
+      "drop_log_loss": 0.62478,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00017,
+      "t_full_vs_drop": 0.53,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "mean_minus_line",
+      "drop_log_loss": 0.62476,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00015,
+      "t_full_vs_drop": 0.45,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    },
+    {
+      "feature": "oline_outs",
+      "drop_log_loss": 0.62471,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.0001,
+      "t_full_vs_drop": 0.36,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "rz_tgt_share",
+      "drop_log_loss": 0.62452,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": -9e-05,
+      "t_full_vs_drop": -0.28,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "is_birthday_week",
+      "drop_log_loss": 0.62445,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": -0.00015,
+      "t_full_vs_drop": -0.77,
+      "keep": false,
+      "keep_reason": "individual"
+    },
+    {
+      "feature": "sd",
+      "drop_log_loss": 0.62424,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": -0.00036,
+      "t_full_vs_drop": -1.19,
+      "keep": true,
+      "keep_reason": "group override (core_belief, t=+3.22)"
+    }
+  ],
+  "phase6_groups": {
+    "depth_location": {
+      "features": [
+        "roll_short_tgt_share",
+        "roll_mid_tgt_share",
+        "roll_short_pass_share"
+      ],
+      "kept": [
+        "roll_short_tgt_share",
+        "roll_short_pass_share"
+      ],
+      "dropped": [
+        "roll_mid_tgt_share"
+      ]
+    },
+    "rz_shares": {
+      "features": [
+        "rz_tgt_share",
+        "rz_carry_share",
+        "opp_rz_td_factor"
+      ],
+      "kept": [
+        "rz_carry_share",
+        "opp_rz_td_factor"
+      ],
+      "dropped": [
+        "rz_tgt_share"
+      ]
+    },
+    "durability": {
+      "features": [
+        "roll_early_exit_rate",
+        "inj_out_count_2y"
+      ],
+      "kept": [
+        "inj_out_count_2y"
+      ],
+      "dropped": [
+        "roll_early_exit_rate"
+      ]
+    },
+    "opp_absence": {
+      "features": [
+        "opp_absence_factor"
+      ],
+      "kept": [],
+      "dropped": [
+        "opp_absence_factor"
+      ]
+    }
+  },
+  "group_drops": [
+    {
+      "group": "core_belief",
+      "features": [
+        "z",
+        "mean",
+        "sd",
+        "line",
+        "mean_minus_line",
+        "sd_over_line",
+        "opp_factor"
+      ],
+      "drop_log_loss": 0.62623,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00162,
+      "t_full_vs_drop": 3.22,
+      "keep_group": true
+    },
+    {
+      "group": "depth_location",
+      "features": [
+        "roll_short_tgt_share",
+        "roll_mid_tgt_share",
+        "roll_short_pass_share"
+      ],
+      "drop_log_loss": 0.62546,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00086,
+      "t_full_vs_drop": 2.61,
+      "keep_group": true
+    },
+    {
+      "group": "rz_shares",
+      "features": [
+        "rz_tgt_share",
+        "rz_carry_share",
+        "opp_rz_td_factor"
+      ],
+      "drop_log_loss": 0.62529,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00068,
+      "t_full_vs_drop": 1.97,
+      "keep_group": false
+    },
+    {
+      "group": "opp_absence",
+      "features": [
+        "opp_absence_factor"
+      ],
+      "drop_log_loss": 0.62517,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": 0.00056,
+      "t_full_vs_drop": 1.86,
+      "keep_group": false
+    },
+    {
+      "group": "durability",
+      "features": [
+        "roll_early_exit_rate",
+        "inj_out_count_2y"
+      ],
+      "drop_log_loss": 0.6244,
+      "full_log_loss": 0.62461,
+      "delta_vs_full": -0.00021,
+      "t_full_vs_drop": -0.65,
+      "keep_group": false
+    }
+  ],
+  "kept_features": [
+    "game_script",
+    "qb_chem_delta",
+    "qb_continuity",
+    "roll_air_yards",
+    "team_pace",
+    "key_teammate_absent",
+    "rz_carry_share",
+    "week",
+    "wind",
+    "total_line",
+    "team_epa_play",
+    "opp_pressure_rate",
+    "opp_epa_factor",
+    "roll_adot",
+    "roll_ypt",
+    "team_no_huddle_rate",
+    "proj_efficiency",
+    "inj_out_count_2y",
+    "roll_targets",
+    "roll_carry_share",
+    "team_edp",
+    "age_years",
+    "own_motion_rate",
+    "opp_rz_td_factor",
+    "roll_carries",
+    "p_over",
+    "shotgun_tilt_tgt",
+    "roll_ypc",
+    "shotgun_tilt_carry",
+    "roll_short_pass_share",
+    "home",
+    "roll_ypa",
+    "sd_over_line",
+    "def_out_db",
+    "opp_box_avg",
+    "opp_blitz_rate",
+    "roll_target_share",
+    "roll_catch_rate",
+    "roll_short_tgt_share",
+    "line",
+    "roll_mid_tgt_share",
+    "mean",
+    "z",
+    "opp_factor",
+    "mean_minus_line",
+    "sd"
+  ],
+  "dropped_features": [
+    "def_out_total",
+    "roll_games",
+    "is_contract_year",
+    "proj_volume",
+    "opp_absence_factor",
+    "ngs_ay_share",
+    "teammate_out_boost",
+    "ngs_yac_aoe",
+    "own_pa_rate",
+    "roll_early_exit_rate",
+    "roll_pass_attempts",
+    "revenge_game",
+    "team_cpoe",
+    "temp",
+    "team_neutral_proe",
+    "team_margin",
+    "team_shotgun_rate",
+    "ngs_separation",
+    "oline_outs",
+    "rz_tgt_share",
+    "is_birthday_week"
+  ],
+  "n_kept": 46,
+  "n_dropped": 21,
+  "note": "t_full_vs_drop >= 2.0 keeps a feature (dropping it would measurably hurt pooled walk-forward log-loss); below that bar it's dropped UNLESS a combined-group drop test (group_drops) shows the feature's whole collinear cluster matters, in which case every member is kept (individual leave-one-out can't see redundancy within a cluster). Raw (uncalibrated) log-loss, GBDT ablation vehicle, 2021-2025."
+}

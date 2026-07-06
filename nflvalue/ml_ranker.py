@@ -42,6 +42,12 @@ import pandas as pd
 SEED = 20260701
 MODEL_PATH_DEFAULT = "data/ml_ranker.joblib"
 
+# Phase 7.1 calibration: below this many rows in a per-market calibrator-train
+# slice, fall back to the pooled map (thin passing/TD slices can't support a
+# stable per-market fit -- the 7.1 audit measured isotonic overfitting there).
+CALIB_PERMARKET_MIN = 500
+_CAL_EPS = 1e-6
+
 MARKETS7 = ("receiving_yards", "receptions", "rushing_yards", "passing_yards",
             "pass_attempts", "rush_attempts", "anytime_td")
 POSITIONS = ("QB", "RB", "WR", "TE")
@@ -115,7 +121,11 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
                  "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
                  "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
                  "roll_early_exit_rate"]
-    pw_slim = pw[["season", "week", "player_id"] + roll_cols].drop_duplicates(
+    # a caller's pw fixture may predate a later roll_* addition (Phase 6.1/6.5)
+    # -- select only what exists and let the NUMERIC_FEATURES NaN-fill below
+    # cover the rest, instead of a hard KeyError on an incomplete frame.
+    have_roll = [c for c in roll_cols if c in pw.columns]
+    pw_slim = pw[["season", "week", "player_id"] + have_roll].drop_duplicates(
         subset=["season", "week", "player_id"])
     f = f.drop(columns=[c for c in roll_cols if c in f.columns], errors="ignore")
     f = f.merge(pw_slim, on=["season", "week", "player_id"], how="left")
@@ -132,8 +142,13 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
     return f
 
 
-def feature_columns() -> List[str]:
-    return NUMERIC_FEATURES + [f"mkt_{m}" for m in MARKETS7] + [f"pos_{p}" for p in POSITIONS]
+def feature_columns(numeric: Optional[List[str]] = None) -> List[str]:
+    """Full model-ready column list. ``numeric=None`` (default) uses every
+    feature in NUMERIC_FEATURES -- pass a subset (Phase 7.2 walk-forward
+    pruning, ``MLRanker(..., features=[...])``) to drop dead ones; the market
+    and position dummies are structural and always included."""
+    base = NUMERIC_FEATURES if numeric is None else list(numeric)
+    return base + [f"mkt_{m}" for m in MARKETS7] + [f"pos_{p}" for p in POSITIONS]
 
 
 def label_over(frame: pd.DataFrame, actuals: Dict[tuple, float]) -> pd.Series:
@@ -150,17 +165,105 @@ def label_over(frame: pd.DataFrame, actuals: Dict[tuple, float]) -> pd.Series:
     return pd.Series(y, index=frame.index)
 
 
+def _logit(p: np.ndarray) -> np.ndarray:
+    p = np.clip(np.asarray(p, float), _CAL_EPS, 1 - _CAL_EPS)
+    return np.log(p / (1 - p))
+
+
+class Calibrator:
+    """Walk-forward probability calibrator for the ranker's P(over).
+
+    Chosen from the Phase 7.1 audit (scripts/audit_calibration.py,
+    docs/decisions_p7.md): **per-market Platt** — a 2-parameter logistic map on
+    the logit of P(over), fit separately per market with a pooled fallback on
+    thin slices. It won pooled out-of-sample log-loss (paired t=+7.2 vs the raw
+    GBDT), tied beta calibration (t=1.4, so the simpler map is chosen), and beat
+    per-market isotonic (t=+4.1; isotonic overfit the thin passing/TD slices).
+    The raw GBDT is well-calibrated in aggregate but OVERCONFIDENT at the tails
+    (top decile predicted .61, observed .53) — exactly the region edge and Kelly
+    read — so the fix concentrates where it matters even when the pooled gain is
+    modest, and shrinks toward zero as the base model's training history grows.
+
+    Fit ONLY on out-of-sample base predictions (``MLRanker._fit_calibrator``
+    generates them by expanding-season folds strictly before each fold), so the
+    calibrator never sees a row it later corrects. Maps P(over) -> calibrated
+    P(over); the caller sets p_under = 1 - calibrated exactly as before, so the
+    composite edge interface (edge = calibrated P(side) - de-vigged market prob)
+    is unchanged."""
+
+    def __init__(self, method: str = "platt", per_market: bool = True,
+                 permarket_min: int = CALIB_PERMARKET_MIN):
+        self.method = method
+        self.per_market = per_market
+        self.permarket_min = permarket_min
+        self.pooled = None
+        self.by_market: Dict[str, object] = {}
+
+    @staticmethod
+    def _fit_map(p: np.ndarray, y: np.ndarray):
+        # Platt scaling: logistic on logit(p). Weak regularization (C large) so
+        # it is ~MLE yet steady on thin slices; the identity (A=1, B=0) is in
+        # the family, so an already-calibrated market maps to ~itself.
+        from sklearn.linear_model import LogisticRegression
+        x = _logit(p).reshape(-1, 1)
+        return LogisticRegression(C=1e6, solver="lbfgs").fit(x, np.asarray(y, int))
+
+    @staticmethod
+    def _apply_map(lr, p: np.ndarray) -> np.ndarray:
+        return lr.predict_proba(_logit(p).reshape(-1, 1))[:, 1]
+
+    def fit(self, p, y, markets) -> "Calibrator":
+        p, y, markets = np.asarray(p, float), np.asarray(y, int), np.asarray(markets)
+        self.pooled = self._fit_map(p, y)
+        self.by_market = {}
+        if self.per_market:
+            for m in np.unique(markets):
+                mask = markets == m
+                if int(mask.sum()) >= self.permarket_min:
+                    self.by_market[str(m)] = self._fit_map(p[mask], y[mask])
+        return self
+
+    def transform(self, p, markets) -> np.ndarray:
+        p, markets = np.asarray(p, float), np.asarray(markets)
+        out = self._apply_map(self.pooled, p)
+        for m, lr in self.by_market.items():
+            mask = markets == m
+            if mask.any():
+                out[mask] = self._apply_map(lr, p[mask])
+        return np.clip(out, 0.0, 1.0)
+
+
 class WalkForwardViolation(RuntimeError):
     """Train data at/after predict data -- the one unforgivable ML bug here."""
 
 
 class MLRanker:
-    def __init__(self, model: str = "gbdt", seed: int = SEED, **kw):
+    def __init__(self, model: str = "gbdt", seed: int = SEED,
+                 calibrate: Optional[str] = None,
+                 features: Optional[List[str]] = None, **kw):
         self.model_name = model
         self.seed = seed
+        self.calibrate = calibrate      # None | "platt_permkt" | "platt_pooled"
+        # Phase 7.2 walk-forward feature pruning: None = every NUMERIC_FEATURES
+        # column (unchanged default behavior); a list drops the rest. Persisted
+        # with the artifact so inference uses the identical trained columns.
+        self.features = features
         self.kw = kw
         self.clf = None
+        self.calibrator: Optional[Calibrator] = None
         self.train_max: Optional[Tuple[int, int]] = None
+        # Phase 7.2 ensemble (model="ensemble"): kw={"members": [...],
+        # "combiner": "avg"|"meta"}. members/meta populated by _fit_ensemble.
+        self.members: Dict[str, object] = {}
+        self.meta = None
+        self.meta_fold_spans: List[Tuple[int, int, int]] = []
+        self.combiner: Optional[str] = None
+
+    def _cols(self) -> List[str]:
+        return feature_columns(self.features)
+
+    def _member_clf(self, name: str):
+        return MLRanker(name, seed=self.seed, features=self.features)._new_clf()
 
     def _new_clf(self):
         if self.model_name == "rf":
@@ -181,15 +284,125 @@ class MLRanker:
             random_state=self.seed)
 
     def fit(self, frame: pd.DataFrame, y: pd.Series) -> "MLRanker":
-        cols = feature_columns()
         mask = y.notna()
-        X = frame.loc[mask, cols]
-        if self.model_name == "rf":
-            X = X.fillna(-999.0)          # RF can't take NaN; sentinel is fine for trees
-        self.clf = self._new_clf().fit(X, y[mask].astype(int))
-        self.train_max = (int(frame.loc[mask, "season"].max()),
-                          int(frame.loc[mask].query("season == season.max()")["week"].max()))
+        f, yy = frame.loc[mask], y[mask].astype(int)
+        self.train_max = (int(f["season"].max()),
+                          int(f.query("season == season.max()")["week"].max()))
+        if self.model_name == "ensemble":
+            self._fit_ensemble(f, yy)
+        else:
+            cols = self._cols()
+            X = f[cols]
+            if self.model_name == "rf":
+                X = X.fillna(-999.0)          # RF can't take NaN; sentinel is fine for trees
+            self.clf = self._new_clf().fit(X, yy)
+        if self.calibrate:
+            self._fit_calibrator(f, yy)
         return self
+
+    # -- Phase 7.2 ensemble (GBDT + RF) -------------------------------------- #
+    def _fit_ensemble(self, frame: pd.DataFrame, y: pd.Series) -> None:
+        """Fit each member on the full train pool (production quality), and --
+        if ``combiner=="meta"`` -- a logistic meta-learner on strictly
+        out-of-sample member predictions generated by expanding-season folds
+        (the same discipline as the calibrator's ``cal_fold_spans``: no fold's
+        meta-training row was ever predicted by a member that trained on it)."""
+        members: List[str] = list(self.kw.get("members", ["gbdt", "rf"]))
+        self.combiner = self.kw.get("combiner", "avg")
+        cols = self._cols()
+        self.members = {}
+        for name in members:
+            X = frame[cols]
+            if name == "rf":
+                X = X.fillna(-999.0)
+            self.members[name] = self._member_clf(name).fit(X, y)
+        if self.combiner == "meta":
+            self._fit_meta(frame, y, cols, members)
+
+    def _fit_meta(self, frame: pd.DataFrame, y: pd.Series, cols: List[str],
+                 members: List[str]) -> None:
+        seasons = sorted(frame["season"].unique().tolist())
+        self.meta_fold_spans = []
+        if len(seasons) < 2:
+            self.meta = None
+            return
+        oos_p: Dict[str, List[np.ndarray]] = {m: [] for m in members}
+        ys: List[np.ndarray] = []
+        for s in seasons[1:]:
+            tr = frame[frame["season"] < s]
+            te = frame[frame["season"] == s]
+            for name in members:
+                Xtr, Xte = tr[cols], te[cols]
+                if name == "rf":
+                    Xtr, Xte = Xtr.fillna(-999.0), Xte.fillna(-999.0)
+                fold = self._member_clf(name).fit(Xtr, y.loc[tr.index])
+                oos_p[name].append(fold.predict_proba(Xte)[:, 1])
+            ys.append(y.loc[te.index].to_numpy())
+            self.meta_fold_spans.append(
+                (int(s), int(tr["season"].min()), int(tr["season"].max())))
+        from sklearn.linear_model import LogisticRegression
+        X_meta = np.column_stack([_logit(np.concatenate(oos_p[m])) for m in members])
+        self.meta = LogisticRegression(C=1e6, solver="lbfgs").fit(X_meta, np.concatenate(ys))
+
+    def _oos_fold_predict(self, tr: pd.DataFrame, te: pd.DataFrame,
+                         y: pd.Series) -> np.ndarray:
+        """One expanding-fold OOS prediction, dispatching on model type --
+        shared by the calibrator fit (any model) and, for ensembles, by the
+        calibrator's ensemble folds. A single-model fold trains a fresh clf on
+        ``tr`` and predicts ``te``; an ensemble fold trains a fresh temporary
+        ensemble (members + its OWN nested meta-learner, if any, fit only on
+        ``tr``'s own history) so no fold ever sees a prediction its members or
+        meta-learner were trained on."""
+        if self.model_name == "ensemble":
+            temp = MLRanker("ensemble", seed=self.seed, features=self.features,
+                            **self.kw)
+            temp.fit(tr, y.loc[tr.index])
+            return temp.predict_p_over(te, enforce=False)
+        cols = self._cols()
+        Xtr, Xte = tr[cols], te[cols]
+        if self.model_name == "rf":
+            Xtr, Xte = Xtr.fillna(-999.0), Xte.fillna(-999.0)
+        fold = self._new_clf().fit(Xtr, y.loc[tr.index])
+        return fold.predict_proba(Xte)[:, 1]
+
+    def _fit_calibrator(self, frame: pd.DataFrame, y: pd.Series) -> None:
+        """Fit the walk-forward calibrator on OUT-OF-SAMPLE base predictions.
+
+        The base clf above is fit on ALL training rows (it produces the shipped
+        numbers). The calibrator, however, must learn from predictions the base
+        made on data it did NOT train on -- otherwise it corrects overconfident
+        in-sample fits, not the real out-of-sample distortion. So we regenerate
+        base predictions by EXPANDING-SEASON folds: for each season s (after the
+        first), a fold model trains on seasons < s and predicts s. Those pooled
+        OOS predictions -- none of which the fold ever trained on -- are what the
+        calibrator is fit on. Fewer than two seasons of history -> no calibrator
+        (identity), stated rather than faked."""
+        spec = {"platt_permkt": ("platt", True),
+                "platt_pooled": ("platt", False)}.get(self.calibrate)
+        if spec is None:
+            raise ValueError(f"unknown calibrate={self.calibrate!r} "
+                             "(expected 'platt_permkt' or 'platt_pooled')")
+        method, per_market = spec
+        seasons = sorted(frame["season"].unique().tolist())
+        if len(seasons) < 2:
+            self.calibrator = None
+            self.cal_fold_spans = []
+            return
+        ps, ys, ms = [], [], []
+        # provenance + leakage witness: for each fold predicting season s, the
+        # (min, max) train season -- a test asserts train_max < s (no fold ever
+        # trains on the season it will help calibrate). See tests/test_leakage.py.
+        self.cal_fold_spans: List[Tuple[int, int, int]] = []
+        for s in seasons[1:]:
+            tr = frame[frame["season"] < s]
+            te = frame[frame["season"] == s]
+            ps.append(self._oos_fold_predict(tr, te, y))
+            ys.append(y.loc[te.index].to_numpy())
+            ms.append(te["market"].to_numpy())
+            self.cal_fold_spans.append(
+                (int(s), int(tr["season"].min()), int(tr["season"].max())))
+        self.calibrator = Calibrator(method, per_market).fit(
+            np.concatenate(ps), np.concatenate(ys), np.concatenate(ms))
 
     def assert_walk_forward(self, frame: pd.DataFrame) -> None:
         if self.train_max is None:
@@ -203,28 +416,63 @@ class MLRanker:
                 f"{sorted(set(zip(bad['season'], bad['week'])))[:5]} ... -- "
                 "an ML ranker may never score a week it trained on")
 
-    def predict_p_over(self, frame: pd.DataFrame, enforce: bool = True) -> np.ndarray:
+    def predict_p_over(self, frame: pd.DataFrame, enforce: bool = True,
+                       raw: bool = False) -> np.ndarray:
+        """Calibrated P(over) (the shipped quantity). ``raw=True`` returns the
+        uncalibrated base probability -- used only by the audit; production and
+        the pipeline call this with defaults and receive calibrated output, so
+        the interface (p_over, and p_under = 1 - p_over downstream) is unchanged."""
         if enforce:
             self.assert_walk_forward(frame)
-        X = frame[feature_columns()]
-        if self.model_name == "rf":
-            X = X.fillna(-999.0)
-        return self.clf.predict_proba(X)[:, 1]
+        if self.model_name == "ensemble":
+            cols = self._cols()
+            preds: Dict[str, np.ndarray] = {}
+            for name, clf in self.members.items():
+                X = frame[cols]
+                if name == "rf":
+                    X = X.fillna(-999.0)
+                preds[name] = clf.predict_proba(X)[:, 1]
+            if self.combiner == "meta" and self.meta is not None:
+                order = list(self.members.keys())
+                X_meta = np.column_stack([_logit(preds[m]) for m in order])
+                p = self.meta.predict_proba(X_meta)[:, 1]
+            else:
+                p = np.mean(np.column_stack(list(preds.values())), axis=1)
+        else:
+            X = frame[self._cols()]
+            if self.model_name == "rf":
+                X = X.fillna(-999.0)
+            p = self.clf.predict_proba(X)[:, 1]
+        if self.calibrator is not None and not raw:
+            p = self.calibrator.transform(p, frame["market"].to_numpy())
+        return p
 
     # -- persistence -------------------------------------------------------- #
     def save(self, path: str = MODEL_PATH_DEFAULT) -> str:
         import joblib
         os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump({"model_name": self.model_name, "seed": self.seed,
-                     "kw": self.kw, "clf": self.clf, "train_max": self.train_max}, path)
+                     "calibrate": self.calibrate, "calibrator": self.calibrator,
+                     "features": self.features,
+                     "kw": self.kw, "clf": self.clf, "train_max": self.train_max,
+                     "members": self.members, "meta": self.meta,
+                     "meta_fold_spans": self.meta_fold_spans,
+                     "combiner": self.combiner}, path)
         return path
 
     @classmethod
     def load(cls, path: str = MODEL_PATH_DEFAULT) -> "MLRanker":
         import joblib
         blob = joblib.load(path)
-        obj = cls(blob["model_name"], blob["seed"], **blob.get("kw", {}))
+        obj = cls(blob["model_name"], blob["seed"],
+                  calibrate=blob.get("calibrate"), features=blob.get("features"),
+                  **blob.get("kw", {}))
         obj.clf, obj.train_max = blob["clf"], tuple(blob["train_max"])
+        obj.calibrator = blob.get("calibrator")
+        obj.members = blob.get("members", {})
+        obj.meta = blob.get("meta")
+        obj.meta_fold_spans = blob.get("meta_fold_spans", [])
+        obj.combiner = blob.get("combiner")
         return obj
 
 

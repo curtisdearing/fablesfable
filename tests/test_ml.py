@@ -131,6 +131,115 @@ def test_rank_game_uses_ml_score_only_when_stamped():
     assert mixed["leans"][0]["player_id"] == "A"
 
 
+def test_calibrated_ranker_contract():
+    """Calibration wraps the base without altering the interface: raw==base,
+    calibrated is bounded, the Platt map is monotone, and it survives save/load."""
+    f = _frame(n=1200, seasons=(2021, 2022, 2023), weeks=range(1, 10))
+    tr, te = f[f["season"] < 2023], f[f["season"] == 2023]
+    cal = mlr.MLRanker("gbdt", max_iter=80, calibrate="platt_permkt").fit(tr, tr["y_over"])
+    assert cal.calibrator is not None
+    p_cal = cal.predict_p_over(te)
+    p_base = cal.predict_p_over(te, raw=True)
+    # base is untouched; a plain ranker on the same data matches raw()
+    plain = mlr.MLRanker("gbdt", max_iter=80).fit(tr, tr["y_over"]).predict_p_over(te)
+    assert np.allclose(p_base, plain)
+    assert p_cal.min() >= 0.0 and p_cal.max() <= 1.0
+    assert not np.allclose(p_cal, p_base)              # calibration actually moved something
+    # the calibration map is monotone increasing (a valid probability map)
+    grid = np.linspace(0.02, 0.98, 50)
+    mapped = cal.calibrator.transform(grid, np.array(["receiving_yards"] * 50))
+    assert np.all(np.diff(mapped) >= -1e-9)
+    # p_under = 1 - p_over is what composite consumes -- interface preserved
+    assert np.allclose([1 - x for x in p_cal], 1 - p_cal)
+
+
 def test_implied_units():
     assert mlr.implied_units_at_110(60, 100) == pytest.approx(60 * 100 / 110 - 40, abs=0.01)
     assert mlr.implied_units_at_110(0, 0) == 0.0
+
+
+# --------------------------------------------------------------------------- #
+# Phase 7.2: pruned feature subsets + the GBDT/RF ensemble (avg + meta)
+# --------------------------------------------------------------------------- #
+def test_feature_columns_subset():
+    full = mlr.feature_columns()
+    subset = mlr.feature_columns(["p_over", "z", "mean"])
+    assert len(subset) == 3 + len(mlr.MARKETS7) + len(mlr.POSITIONS)
+    assert len(subset) < len(full)
+    # market/position dummies are structural -- always included, never pruned
+    for m in mlr.MARKETS7:
+        assert f"mkt_{m}" in subset
+    for p in mlr.POSITIONS:
+        assert f"pos_{p}" in subset
+
+
+def test_ranker_with_pruned_features_trains_and_predicts(frame):
+    """features= is persisted and used consistently at fit + predict time --
+    the pruned artifact must not silently fall back to the full column set."""
+    train = frame[frame["season"] == 2022]
+    test = frame[frame["season"] == 2023]
+    kept = ["p_over", "z", "mean", "roll_target_share"]
+    m = mlr.MLRanker("gbdt", max_iter=60, features=kept).fit(train, train["y_over"])
+    assert m.features == kept
+    p = m.predict_p_over(test)
+    assert len(p) == len(test) and ((p >= 0) & (p <= 1)).all()
+    # a model trained on ALL columns is a materially different fit (kept
+    # columns actually constrained training, not a no-op)
+    full = mlr.MLRanker("gbdt", max_iter=60).fit(train, train["y_over"]).predict_p_over(test)
+    assert not np.allclose(p, full)
+
+
+def test_ensemble_avg_and_meta_fit_predict_save_load(tmp_path):
+    f = _frame(n=1600, seasons=(2021, 2022, 2023, 2024), weeks=range(1, 8))
+    train = f[f["season"] < 2024]
+    test = f[f["season"] == 2024]
+
+    avg = mlr.MLRanker("ensemble", members=["gbdt", "rf"], combiner="avg",
+                       seed=mlr.SEED).fit(train, train["y_over"])
+    assert set(avg.members) == {"gbdt", "rf"}
+    p_avg = avg.predict_p_over(test)
+    assert len(p_avg) == len(test) and ((p_avg >= 0) & (p_avg <= 1)).all()
+
+    meta = mlr.MLRanker("ensemble", members=["gbdt", "rf"], combiner="meta",
+                        seed=mlr.SEED).fit(train, train["y_over"])
+    assert meta.meta is not None and meta.meta_fold_spans
+    p_meta = meta.predict_p_over(test)
+    assert len(p_meta) == len(test) and ((p_meta >= 0) & (p_meta <= 1)).all()
+    # avg and meta actually combine differently (meta isn't a silent no-op)
+    assert not np.allclose(p_avg, p_meta)
+
+    # save/load round-trips the ensemble (members + meta), predictions match
+    # to within RF's documented n_jobs=-1 float-ULP nondeterminism
+    path = meta.save(str(tmp_path / "ens.joblib"))
+    reloaded = mlr.MLRanker.load(path)
+    assert reloaded.combiner == "meta" and set(reloaded.members) == {"gbdt", "rf"}
+    p_reload = reloaded.predict_p_over(test)
+    assert np.allclose(p_meta, p_reload, atol=1e-9)
+
+
+def test_ensemble_meta_fold_spans_never_train_on_predict_season():
+    """Same discipline as the calibrator's cal_fold_spans: the meta-learner's
+    training pairs come from expanding folds strictly before the season they
+    predict -- no fold sees a member prediction made on data it trained on."""
+    f = _frame(n=1600, seasons=(2021, 2022, 2023, 2024), weeks=range(1, 8))
+    m = mlr.MLRanker("ensemble", members=["gbdt", "rf"], combiner="meta",
+                     seed=mlr.SEED).fit(f, f["y_over"])
+    assert m.meta_fold_spans
+    for predict_season, train_min, train_max in m.meta_fold_spans:
+        assert train_max < predict_season
+
+
+def test_calibrator_wraps_ensemble_output():
+    """7.1's calibration layer is model-agnostic -- it must work identically
+    on top of an ensemble's combined probability, via the shared
+    _oos_fold_predict dispatch (calibrator folds refit a fresh nested
+    ensemble, not a single clf)."""
+    f = _frame(n=1600, seasons=(2021, 2022, 2023, 2024), weeks=range(1, 8))
+    tr, te = f[f["season"] < 2024], f[f["season"] == 2024]
+    m = mlr.MLRanker("ensemble", members=["gbdt", "rf"], combiner="avg",
+                     seed=mlr.SEED, calibrate="platt_permkt").fit(tr, tr["y_over"])
+    assert m.calibrator is not None
+    p_cal = m.predict_p_over(te)
+    p_raw = m.predict_p_over(te, raw=True)
+    assert p_cal.min() >= 0.0 and p_cal.max() <= 1.0
+    assert not np.allclose(p_cal, p_raw)

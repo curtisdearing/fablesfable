@@ -1,0 +1,147 @@
+{
+  "grid_size": 19,
+  "eval_seasons": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "walk_forward": [
+    {
+      "eval_season": 2021,
+      "chosen_on_train": {
+        "learning_rate": 0.06,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 40,
+        "l2": 1.0,
+        "max_iter": 400
+      },
+      "train_pooled_log_loss": 0.6568,
+      "oos_log_loss": 0.6391011362108117,
+      "default_oos_log_loss": 0.6474861013106271,
+      "n": 11510
+    },
+    {
+      "eval_season": 2022,
+      "chosen_on_train": {
+        "learning_rate": 0.06,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 40,
+        "l2": 1.0,
+        "max_iter": 400
+      },
+      "train_pooled_log_loss": 0.64756,
+      "oos_log_loss": 0.625457081934756,
+      "default_oos_log_loss": 0.631346253482924,
+      "n": 11198
+    },
+    {
+      "eval_season": 2023,
+      "chosen_on_train": {
+        "learning_rate": 0.03,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 40,
+        "l2": 1.0,
+        "max_iter": 200
+      },
+      "train_pooled_log_loss": 0.63932,
+      "oos_log_loss": 0.6159950904432562,
+      "default_oos_log_loss": 0.6248630968593214,
+      "n": 11045
+    },
+    {
+      "eval_season": 2024,
+      "chosen_on_train": {
+        "learning_rate": 0.03,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 40,
+        "l2": 1.0,
+        "max_iter": 200
+      },
+      "train_pooled_log_loss": 0.63351,
+      "oos_log_loss": 0.6292945760214415,
+      "default_oos_log_loss": 0.6364610091417072,
+      "n": 11162
+    },
+    {
+      "eval_season": 2025,
+      "chosen_on_train": {
+        "learning_rate": 0.03,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 40,
+        "l2": 1.0,
+        "max_iter": 200
+      },
+      "train_pooled_log_loss": 0.63266,
+      "oos_log_loss": 0.6209540529999065,
+      "default_oos_log_loss": 0.6247978219875948,
+      "n": 10945
+    }
+  ],
+  "pooled_top5": [
+    {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 63,
+      "min_samples_leaf": 40,
+      "l2": 1.0,
+      "max_iter": 200,
+      "pooled_log_loss": 0.63073,
+      "n": 66408
+    },
+    {
+      "learning_rate": 0.06,
+      "max_leaf_nodes": 15,
+      "min_samples_leaf": 40,
+      "l2": 1.0,
+      "max_iter": 400,
+      "pooled_log_loss": 0.63206,
+      "n": 66408
+    },
+    {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 40,
+      "l2": 1.0,
+      "max_iter": 400,
+      "pooled_log_loss": 0.6324,
+      "n": 66408
+    },
+    {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 15,
+      "min_samples_leaf": 80,
+      "l2": 5.0,
+      "max_iter": 800,
+      "pooled_log_loss": 0.6336,
+      "n": 66408
+    },
+    {
+      "learning_rate": 0.06,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 40,
+      "l2": 1.0,
+      "max_iter": 200,
+      "pooled_log_loss": 0.63379,
+      "n": 66408
+    }
+  ],
+  "default": {
+    "learning_rate": 0.06,
+    "max_leaf_nodes": 31,
+    "min_samples_leaf": 40,
+    "l2": 1.0,
+    "max_iter": 400
+  },
+  "ship_hp": {
+    "learning_rate": 0.03,
+    "max_leaf_nodes": 63,
+    "min_samples_leaf": 40,
+    "l2": 1.0,
+    "max_iter": 200,
+    "pooled_log_loss": 0.63073,
+    "n": 66408
+  },
+  "note": "walk_forward rows choose each season's config from PRIOR seasons' pooled raw log-loss only (never in-sample argmax); pooled_top5 is in-sample across all seasons, shown for transparency; ship_hp = pooled argmin, same convention as tune_weights.py's ship_for_2026. Raw (uncalibrated) log-loss -- the cheap search proxy; the final choice is re-checked on the real calibrated metric before shipping."
+}
