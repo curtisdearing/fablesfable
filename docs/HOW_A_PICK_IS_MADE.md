@@ -121,7 +121,14 @@ version: `docs/EXPLAINER_staking.md`.
 Every pick is graded; every miss attributed (volume miss / efficiency miss /
 availability surprise / script flip / tail variance — queryable via the RAG
 CLI). Per-market bias and reliability adjust next week's run (bounded,
-walk-forward, from the full candidate pool to avoid selection bias). The ML
+walk-forward, from the full candidate pool to avoid selection bias). A
+**player-level ledger** (Phase 7.12, `player_learning.py`) also records, every
+graded week, what each player did versus projection — *where* (home/away,
+opponent) and *how* (volume vs efficiency) — and derives a heavily-shrunk,
+player-specific mean correction for the next week (empirical-Bayes toward the
+market average, a min-games floor, a tight cap). It is **off by default and a
+no-op until live weeks accrue** — the ledger fills from week one so the
+correction is ready to apply the moment there's enough data to trust it. The ML
 retrains weekly, and its training labels migrate from synthetic reference
 lines to **real lines** as they accumulate — a row flips only once it has both a
 real decision-time line *and* a graded outcome, proven un-leakable in the tests.

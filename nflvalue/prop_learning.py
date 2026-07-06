@@ -351,7 +351,8 @@ def rebuild_state(conn, params: Optional[Dict] = None,
 
 
 def grade_and_learn(conn, season: int, week: int, inputs, clock: str = "wed",
-                    params: Optional[Dict] = None) -> Dict:
+                    params: Optional[Dict] = None,
+                    player_params: Optional[Dict] = None) -> Dict:
     """The Tuesday step: grade last week's leans, attribute the misses,
     fold the week into the learning state, persist next week's adjustments."""
     from .candidates import enumerate_candidates
@@ -374,10 +375,27 @@ def grade_and_learn(conn, season: int, week: int, inputs, clock: str = "wed",
     state = rebuild_state(conn, params=params)
     nxt_week = week + 1
     state.persist(conn, season, nxt_week)
+
+    # player-level sequential layer: record this week's ledger (what each player
+    # did, where, how) and persist next week's SHRUNK player adjustments. The
+    # ledger accrues even while the APPLY layer is OFF in config -- so the system
+    # is "ready to take data" from week one. Guarded so it can never break the
+    # market loop above.
+    try:
+        from . import player_learning as plmod
+        n_res = plmod.record_player_residuals(conn, season, week, cands, inputs.pw)
+        padj = plmod.compute_player_adjustments(conn, before=(season, nxt_week),
+                                                params=(player_params or None))
+        plmod.persist_player_adjustments(conn, season, nxt_week, padj)
+    except Exception as exc:  # noqa: BLE001
+        n_res, padj = 0, {}
+        print(f"[learn] player-residual layer skipped ({exc})")
     return {"graded": int(len(outcomes)),
             "hit_rate": (round(float(outcomes["hit"].mean()), 4) if len(outcomes) else None),
             "adjustments_effective": (season, nxt_week),
             "adjustments": state.adjustments(),
+            "player_residuals_recorded": n_res,
+            "player_adjustments_effective": len(padj),
             "why": why_report(conn, season)}
 
 

@@ -1232,3 +1232,63 @@ mislabeled, multiple picks/game, blocked-run hygiene, T-90 without
 injection, thresholds move labels) plus tz + pairing + movement-invariance.
 Suite: 347 passed, 0 failed. Honesty framing unchanged: leans not locks,
 advisory/research only, no bet placement, 1-800-GAMBLER.
+
+---
+
+## 7.12 — Player-level sequential learning (ready-to-fill) (2026-07-06)
+
+The market loop (`prop_learning.py`) corrects each *market's* average projection
+bias week to week; the ML ranker retrains weekly on rolling features. Neither
+carries a **per-player structural correction** — "even after its trailing
+usage/efficiency, does the model systematically mis-project *this* player, and
+does that depend on *where* (home/away, opponent) and *how* (volume vs
+efficiency)?" 7.12 adds that layer, built to **come alive safely as live weeks
+accrue** rather than to do anything today. `nflvalue/player_learning.py`.
+
+**Two halves.**
+
+- **The ledger** (`record_player_residuals` → new `player_week_residuals` table):
+  after every graded week, one row per (player, market) over the FULL screened
+  pool (selection-bias-safe) — projected mean vs actual, the log residual, its
+  **volume/efficiency split (HOW)**, and **home/away + opponent (WHERE)**. Pure
+  recording; it changes no projection. This is the "ready to take data" piece —
+  evidence accrues from week one, queryable/segmentable
+  (`player_residual_report`), long before it's trusted enough to act on. It
+  accrues **even while the apply-layer is off**.
+- **The player bias** (`compute_player_adjustments` / `apply_player_bias` → new
+  `player_adjustments` table): a heavily-**shrunk**, player-*specific* mean
+  multiplier for next week. Per-player samples are the #1 noise trap, so it is
+  deliberately timid: it **isolates** the part of a player's actual/pred ratio
+  not already explained by the market's pooled ratio (a player who tracks the
+  market gets ≈1.0, never double-counting the market bias); empirical-Bayes
+  shrinkage toward that market ratio with `shrink_k=8` pseudo-games; a
+  `min_games=4` floor before any bias applies; a tight `bias_clip=0.12`. Measured
+  behaviour: a player 30% under-projected over 6 games earns only a **+6%**
+  correction.
+
+**Walk-forward + off by default.** Adjustments persist effective-at week+1 from
+strictly-prior data; `load_player_adjustments` uses the same effective-at `<=`
+semantics as the market loop (a truncation-invariance test proves the compute is
+leak-free). The whole apply-layer is **`config "player_learning".enabled=false`**,
+and — like the market bias — is only applied on the deterministic/composite path,
+never when the ML ranker (which subsumes mean corrections and would be shifted
+off-distribution) is on. So with today's shipped config (ML on, layer off) the
+projection is **byte-identical**; the ledger still fills every graded week.
+
+**Wired into the weekly loop.** `prop_learning.grade_and_learn` now also records
+the ledger and persists next week's player adjustments each Tuesday (guarded so it
+can never break the market loop); `pipeline_weekly` loads + applies them on the
+deterministic path when enabled. (Tiered-pick grading + `picks_record()` by tier
+were already wired into `run_grade`; the missing `scripts/tune_selector_
+thresholds.py` the selector referenced is now built — advisory only, reads
+accumulated picks-by-tier + CLV, prints realized hit-rate per edge bar and
+suggested moves, never edits config.)
+
+**Future work (documented, not built):** once samples allow, segment the applied
+bias by context (home/away, opponent tier) — the ledger already records it — and/or
+expose the player bias as an explicit ML feature rather than a deterministic-path
+mean multiplier (a 7.2-style validated change). Tests:
+`tests/test_player_learning.py` (12: ledger where/how, walk-forward truncation
+invariance, min-games floor, shrinkage + clip, effective-at load, off-by-default
+no-op, report). Full suite green. Synthetic-line caveat and honesty framing
+unchanged — nothing here is a profit claim.

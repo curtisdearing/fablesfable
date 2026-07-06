@@ -177,6 +177,28 @@ SCHEMA = {
             PRIMARY KEY (as_of_season, as_of_week, market)
         );
     """,
+    # -- Player-level sequential learning (player_learning.py): the ledger of
+    # what each player did, WHERE (home/away, opp) and HOW (volume/efficiency),
+    # per graded week -- ready to fill from live weeks, selection-bias-safe ---- #
+    "player_week_residuals": """
+        CREATE TABLE IF NOT EXISTS player_week_residuals (
+            season INTEGER, week INTEGER, player_id TEXT, name TEXT,
+            team TEXT, opp TEXT, home INTEGER, market TEXT,
+            proj_mean REAL, actual REAL, log_resid REAL,
+            volume_log_err REAL, efficiency_log_err REAL, primary_reason TEXT,
+            created_at TEXT,
+            PRIMARY KEY (season, week, player_id, market)
+        );
+    """,
+    # -- Player-level walk-forward mean corrections (weeks < as_of), shrunk ---- #
+    "player_adjustments": """
+        CREATE TABLE IF NOT EXISTS player_adjustments (
+            as_of_season INTEGER, as_of_week INTEGER, player_id TEXT, market TEXT,
+            bias_mult REAL,             -- player-specific mean multiplier, clipped
+            n_games INTEGER, shrunk_ratio REAL, updated_at TEXT,
+            PRIMARY KEY (as_of_season, as_of_week, player_id, market)
+        );
+    """,
     # -- Learning loop: per-week candidate-pool aggregates (bias is learned from
     # the FULL screened pool, never just the picks -- selection-bias guard) ---- #
     "candidate_aggregates": """

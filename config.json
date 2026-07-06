@@ -64,6 +64,8 @@
 
   "learning": {"enabled": true, "lr": 0.35, "bias_clip": 0.08,
                "reliability_k": 50, "reliability_clip": 0.15, "window_weeks": 12},
+  "player_learning": {"enabled": false, "min_games": 4, "shrink_k": 8.0, "lr": 0.5,
+                      "bias_clip": 0.12, "window_weeks": 40, "min_market_n": 100},
   "context_learning": {"enabled_tags": []},
 
   "ml_ranker": {"enabled": true, "model": "rf", "path": "data/ml_ranker.joblib",

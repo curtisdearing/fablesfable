@@ -481,6 +481,16 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         from nflvalue import context_study, prop_learning
         adjustments = prop_learning.load_adjustments(conn, season, week)
         cands = prop_learning.apply_to_candidates(cands, adjustments, enabled=True)
+        # player-level, walk-forward SHRUNK mean correction (what each player did,
+        # where, how) -- effective-at (season, week), OFF by default until earned.
+        # Same off-distribution rule as the market bias: only applied on the
+        # deterministic/composite path, never when the ML ranker (which subsumes
+        # mean corrections) is on. The ledger still accrues every week regardless.
+        from nflvalue import player_learning as plmod
+        pl_cfg = plmod.player_config(cfg)
+        if pl_cfg.get("enabled"):
+            player_adj = plmod.load_player_adjustments(conn, season, week)
+            cands = plmod.apply_player_bias(cands, player_adj, enabled=True)
         ctx_mults = context_study.enabled_multipliers(cfg, conn)
         if ctx_mults:
             cands = context_study.apply_context_multipliers(cands, conn, season, week, ctx_mults)
@@ -816,7 +826,8 @@ def run_grade(season: int, week: int, inputs: Optional[candmod.WeekInputs] = Non
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
     res = prop_learning.grade_and_learn(conn, season, week, inputs,
-                                        params=cfg.get("learning"))
+                                        params=cfg.get("learning"),
+                                        player_params=cfg.get("player_learning"))
     # the model learns from EVERY selected pick, not just the top-5 leans:
     # grade both clocks' active picks and surface the by-tier record (the
     # feedback the selector thresholds are tuned from, alongside forward CLV)
