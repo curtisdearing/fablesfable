@@ -150,6 +150,11 @@ def rank_game(cands: List[Dict], weights: Optional[Dict] = None,
         "screened": f"{top} of {n_screened}",
         "screened_n": n_screened,
         "leans": leans,
+        # the FULL scored pool (every candidate, evaluated): consumed by the
+        # post-projection selector (nflvalue/selector.py) so best-picks
+        # selection can only ever happen AFTER everything was scored; callers
+        # that don't need it (report.generate pops it before persisting)
+        "scored_pool": scored,
     }
 
 

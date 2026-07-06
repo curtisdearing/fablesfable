@@ -34,6 +34,25 @@
     "tuning_provenance": "walk-forward grid 2019-2025 (tune_weights.py, reports/weight_tuning.md); conf_share=0.8, z_cap=1.5 chosen by majority of out-of-sample season selections"
   },
   "shortlist": {"top_n": 5, "max_per_player": 2},
+  "selector": {
+    "enabled": true,
+    "max_picks_per_game": 5,
+    "max_per_player": 2,
+    "stale_line_hours": 24.0,
+    "corr_downgrade_rho": 0.5,
+    "min_model_prob": {"playable": 0.52, "strong": 0.55},
+    "thresholds": {
+      "default":         {"lean": 0.020, "playable": 0.045, "strong": 0.080, "ev_min": 0.0},
+      "receiving_yards": {"lean": 0.020, "playable": 0.040, "strong": 0.070, "ev_min": 0.0},
+      "rushing_yards":   {"lean": 0.020, "playable": 0.040, "strong": 0.070, "ev_min": 0.0},
+      "passing_yards":   {"lean": 0.020, "playable": 0.040, "strong": 0.070, "ev_min": 0.0},
+      "receptions":      {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
+      "rush_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
+      "pass_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
+      "anytime_td":      {"lean": 0.040, "playable": 0.080, "strong": 0.130, "ev_min": 0.02}
+    },
+    "provenance": "post-projection best-picks layer (nflvalue/selector.py): tiers PASS/LEAN/PLAYABLE/STRONG on model-vs-fair probability edge with EV + calibration floors; yardage bars lower, count markets moderate, anytime_td highest (one-sided raw-implied pricing + variance). Starting defaults — tune from forward CLV (clv table) and selector.picks_record() replay hit-rates by tier."
+  },
   "correlation": {"enabled": true, "discount_strength": 1.0, "sgp_readout": true,
                   "provenance": "Phase 7.6 (docs/decisions_p7.md): correlation-aware MMR-style greedy selection using the 7.5 shrunk-rho artifact (data/correlation_structure.json); discounts a candidate's effective score by its max POSITIVE rho vs already-selected leans in the same game (never penalizes negative/diversifying pairs). See 7.6 section for the walk-forward ablation verdict."},
   "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},

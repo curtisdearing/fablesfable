@@ -19,6 +19,14 @@ row persists the (shared) ``prob_kind`` so nobody mistakes one for the other.
 
 Close is approximate by design (last pre-kickoff snapshot, however old).
 ``close_ts`` is stored so staleness is always visible.
+
+DIRECTIONALITY RULE: CLV is AFTER-THE-FACT feedback only. It grades whether
+past entries beat the market and tunes future selection thresholds
+(kill-check, selector.picks_record). It must never flow forward into a live
+pick's value -- a line that moved toward our side does NOT make the currently
+available number better (if anything, the remaining value is smaller). The
+post-projection selector (selector.py) therefore takes no movement/entry-
+history inputs at all, and a test pins that invariance.
 """
 
 from __future__ import annotations
@@ -93,19 +101,38 @@ def snapshot_prob(conn, game_id: str, market: str, player_id: str, side: str,
     ts = df["ts"].max()
     snap = df[df["ts"] == ts]
 
-    probs, points, prob_kind = [], [], "devig"
-    for book, grp in snap.groupby("book"):
+    # over/under are paired ONLY within the same (book, point) -- alt lines at
+    # a book must never de-vig against each other. When a book quotes several
+    # two-sided points, the MAJORITY point across books wins (deterministic
+    # tie-break toward the lowest point), and probs average at that point only.
+    pairs: List[tuple] = []                 # (book, point, over_price, under_price)
+    yes_rows: List[tuple] = []              # (book, point, over_price)
+    for (book, point), grp in snap.groupby(["book", "point"]):
         over = grp[grp["side"] == "over"]
         under = grp[grp["side"] == "under"]
         if not over.empty and not under.empty:
-            po, pu = oddsmath.devig_multiplicative(
-                [float(over.iloc[0]["price"]), float(under.iloc[0]["price"])])
-            probs.append(po if side == "over" else pu)
-            points.append(float(over.iloc[0]["point"]))
+            pairs.append((book, float(point), float(over.iloc[0]["price"]),
+                          float(under.iloc[0]["price"])))
         elif market == "anytime_td" and not over.empty and side == "over":
-            prob_kind = "raw_implied"          # one-sided market: vig NOT removed
-            probs.append(oddsmath.implied_prob(float(over.iloc[0]["price"])))
-            points.append(float(over.iloc[0]["point"]))
+            yes_rows.append((book, float(point), float(over.iloc[0]["price"])))
+
+    probs, points, prob_kind = [], [], "devig"
+    if pairs:
+        counts: Dict[float, int] = {}
+        for _, pt, _, _ in pairs:
+            counts[pt] = counts.get(pt, 0) + 1
+        main_pt = sorted(counts, key=lambda p: (-counts[p], p))[0]
+        for _, pt, over_p, under_p in pairs:
+            if pt != main_pt:
+                continue
+            po, pu = oddsmath.devig_multiplicative([over_p, under_p])
+            probs.append(po if side == "over" else pu)
+            points.append(pt)
+    elif yes_rows:
+        prob_kind = "raw_implied"           # one-sided market: vig NOT removed
+        for _, pt, price in yes_rows:
+            probs.append(oddsmath.implied_prob(price))
+            points.append(pt)
     if not probs:
         return None
     return {"ts": ts, "prob": sum(probs) / len(probs),

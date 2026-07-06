@@ -162,6 +162,36 @@ def fetch_team_injuries() -> Dict:
             "n_teams": len(raw.get("injuries", []))}
 
 
+def find_espn_event_id(gameday: str, home_abbr: str, away_abbr: str) -> Optional[str]:
+    """ESPN event id for a game via the (free) scoreboard endpoint.
+
+    The T-90 actives feed needs ESPN's own event id, which is unrelated to
+    the nflverse game_id. Previously nothing in the normal CLI/scheduler path
+    ever discovered it -- ``gather_live_feeds(clock="t90")`` received no
+    ``game_event_ids`` and silently produced zero inactive rows unless a test
+    injected them. This resolves it: scoreboard for the game date, match by
+    competitor abbreviations (either order; ESPN uses e.g. 'WSH' for WAS --
+    normalized below).
+    """
+    _ESPN_ABBR_FIX = {"WSH": "WAS", "LAR": "LA", "JAC": "JAX"}
+    try:
+        day = str(gameday).replace("-", "")
+        raw = get_json(f"{SITE}/scoreboard", params={"dates": day})
+    except Exception as exc:  # noqa: BLE001 -- caller degrades loudly via the gate
+        print(f"[availability] scoreboard lookup failed for {gameday}: {exc}")
+        return None
+    want = {home_abbr, away_abbr}
+    for ev in raw.get("events", []) or []:
+        comps = ((ev.get("competitions") or [{}])[0].get("competitors")) or []
+        abbrs = set()
+        for c in comps:
+            ab = str(((c.get("team") or {}).get("abbreviation")) or "").upper()
+            abbrs.add(_ESPN_ABBR_FIX.get(ab, ab))
+        if want <= abbrs and ev.get("id"):
+            return str(ev["id"])
+    return None
+
+
 def fetch_event_rosters(event_id: str) -> Dict:
     """T-90 actives for one event -> {"rows": [...], "fetched_at": iso}.
 

@@ -126,6 +126,20 @@ def render_markdown(season: int, week: int, games: List[Dict],
             f"## {g['matchup']}  ·  top {len(g['leans'])} of {g['screened_n']} screened",
             "",
         ]
+        picks = g.get("picks") or []
+        research = g.get("research_leans") or []
+        if picks or research:
+            lines += ["**Best picks** *(post-projection selection — every candidate "
+                      "was fully evaluated first; tiers are market-specific and "
+                      "configurable; leans, not locks)*", ""]
+            for i, p in enumerate(picks, start=1):
+                lines.append(f"{i}. **[{p['tier']}]** {p['writeup']}")
+            if not picks:
+                lines.append("_No real-market edge cleared this game's bars — "
+                             "nothing playable here._")
+            for r in research:
+                lines.append(f"- **[RESEARCH — no market]** {r['writeup']}")
+            lines += [""]
         if g.get("notes"):
             lines += ["**Game notes** *(display-only — never scored)*", ""]
             lines += [f"- {n}" for n in g["notes"]]
@@ -223,7 +237,8 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
              line_note: Optional[str] = None,
              candidates_df: Optional[pd.DataFrame] = None,
              corr=None, as_of_season: Optional[int] = None,
-             corr_discount_strength: Optional[float] = None) -> Dict:
+             corr_discount_strength: Optional[float] = None,
+             line_age_hours: Optional[float] = None) -> Dict:
     """Candidates -> composite -> shortlist -> context -> markdown/JSON/DB.
 
     ``candidates_df``: pre-built (possibly availability-filtered) candidate
@@ -268,6 +283,14 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
         g["sgp"] = (slmod.sgp_readouts(g, corr, as_of_season)
                     if (corr is not None and sgp_enabled) else [])
 
+    # POST-PROJECTION best-picks layer (selector.py): runs strictly after
+    # every candidate was scored, on each game's FULL scored pool. Consumes
+    # (and removes) g["scored_pool"]; stamps g["picks"] / g["research_leans"].
+    from . import selector as selmod
+    selmod.picks_for_games(games, cfg=cfg, availability=availability,
+                           line_age_hours=line_age_hours,
+                           corr=corr, as_of_season=as_of_season)
+
     conn = dbmod.connect()
     notes = load_manual_notes(conn, season, week)
     contexts = {}
@@ -296,7 +319,13 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
         cfgmod.save_json(WEEKLY_PROPS_JSON, json_payload)
         result["json_path"] = WEEKLY_PROPS_JSON
     if persist:
-        persist_leans(conn, season, week, clock, games, as_of)
+        # a freshness-blocked run must NOT persist as active betting evidence:
+        # blocked rows keep the audit trail but every evidence consumer (CLV,
+        # grading, learning, kill-check) filters status='active'
+        status = "active" if publish else "blocked"
+        persist_leans(conn, season, week, clock, games, as_of, status=status)
+        from . import selector as selmod
+        selmod.persist_picks(conn, season, week, clock, games, as_of, status=status)
     conn.close()
     return result
 

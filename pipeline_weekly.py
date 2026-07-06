@@ -31,6 +31,7 @@ Every injectable seam (feeds, fetchers, inputs) exists so tests run offline.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
@@ -54,12 +55,24 @@ from nflvalue.sources import sleeper as slpmod
 # Small helpers
 # --------------------------------------------------------------------------- #
 def kickoffs_for(slate: pd.DataFrame) -> Dict[str, str]:
-    """{game_id: iso kickoff} from schedules' gameday+gametime (ET naive ->
-    stored as-is; CLV only needs a consistent ordering vs snapshot ts)."""
+    """{game_id: iso UTC kickoff} from schedules' gameday+gametime.
+
+    Schedule gametimes are EASTERN. The old version stamped them with a 'Z'
+    unconverted, which shifted every close-window comparison by 4-5 hours
+    against the genuinely-UTC line-snapshot timestamps (a 1pm ET Sunday kick
+    read as 1pm UTC = 8/9am ET -- the close window ended before the real
+    close snapshots were even taken). One timezone-aware conversion, DST
+    handled by zoneinfo, everywhere."""
+    from zoneinfo import ZoneInfo
+    et, utc = ZoneInfo("America/New_York"), dt.timezone.utc
     out = {}
     for g in slate.itertuples(index=False):
-        t = f"{g.gameday}T{(g.gametime or '13:00')}:00Z"
-        out[g.game_id] = t
+        try:
+            local = dt.datetime.strptime(
+                f"{g.gameday} {(g.gametime or '13:00')}", "%Y-%m-%d %H:%M").replace(tzinfo=et)
+            out[g.game_id] = local.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        except (ValueError, TypeError):
+            out[g.game_id] = f"{g.gameday}T17:00:00Z"   # ET afternoon fallback, still UTC-labeled
     return out
 
 
@@ -525,13 +538,16 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # walk-forward as_of_season is for the backtest harness, not here)
     corr = load_correlation(cfg)
 
-    # 4. rank + report (context panel via synthesis on the ranked leans)
+    # 4. rank + report (context panel via synthesis on the ranked leans).
+    # line_age_hours: a fresh live pull is age ~0; without real lines the
+    # selector never uses it (everything is RESEARCH anyway).
+    line_age = 0.0 if (prop_lines is not None and not prop_lines.empty) else None
     result = rptmod.generate(
         season, week, inputs=inputs, prop_lines=prop_lines,
         synthesis_by_game=None, availability=statuses or None,
         clock=clock, mode=mode, publish=publish, publish_reasons=publish_reasons,
         write_files=False, persist=False, line_note=line_note,
-        candidates_df=cands, corr=corr)
+        candidates_df=cands, corr=corr, line_age_hours=line_age)
 
     if mode == "live":
         from nflvalue.game_notes import attach_notes
@@ -562,7 +578,15 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     from nflvalue.document import write_drop
     result["drop_path"] = write_drop(result, result.get("contexts"))
     cfgmod.save_json(rptmod.WEEKLY_PROPS_JSON, {k: v for k, v in result.items() if k != "markdown"})
-    rptmod.persist_leans(conn, season, week, clock, result["games"], result["as_of"])
+    # freshness-blocked runs persist as NON-ACTIVE evidence: the audit trail
+    # keeps them, but CLV resolution, grading, learning and the kill-check all
+    # filter status='active', so a gate failure can never contaminate the record
+    persist_status = "active" if publish else "blocked"
+    rptmod.persist_leans(conn, season, week, clock, result["games"], result["as_of"],
+                         status=persist_status)
+    from nflvalue import selector as selmod
+    selmod.persist_picks(conn, season, week, clock, result["games"], result["as_of"],
+                         status=persist_status)
 
     # 6. dashboard + (flag-gated) discord
     dash = update_dashboard(result, conn)
@@ -578,10 +602,35 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
 # --------------------------------------------------------------------------- #
 # T-90 refresh for one game: void inactive players, re-rank, regenerate
 # --------------------------------------------------------------------------- #
+def latest_stored_prop_lines(conn, game_id: str, players: pd.DataFrame):
+    """Most recent stored line snapshot for one game -> (prop_lines frame,
+    snapshot age in hours). The T-90 re-rank must use the LATEST REAL market
+    lines when any exist -- previously it silently re-enumerated with
+    synthetic lines even when Wednesday's pull had real ones on file."""
+    snap = dbmod.query_df(conn, "SELECT * FROM lines WHERE game_id=?", (game_id,))
+    if snap.empty:
+        return None, None
+    ts = snap["ts"].max()
+    rows = oapmod.match_player_ids(snap[snap["ts"] == ts].to_dict("records"),
+                                   players.rename(columns={"player_name": "name"}))
+    frame = oapmod.to_prop_lines_frame(rows)
+    if frame.empty:
+        return None, None
+    try:
+        age_h = (dt.datetime.now(dt.timezone.utc)
+                 - dt.datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+                 ).total_seconds() / 3600.0
+    except (ValueError, TypeError):
+        age_h = None
+    return frame, age_h
+
+
 def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             inputs: Optional[candmod.WeekInputs] = None,
             inject_feeds: Optional[Dict] = None, discord: bool = False,
-            discord_dry_run: bool = True) -> Dict:
+            discord_dry_run: bool = True,
+            odds_fetch: Optional[Callable] = None,
+            list_events_fn: Optional[Callable] = None) -> Dict:
     cfg = cfgmod.load_config()
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
@@ -596,6 +645,34 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     if cands.empty:
         conn.close()
         raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+
+    # Real market lines for the re-rank: optionally resnap the freshest
+    # pre-kick prices (budgeted, dedup-guarded), then re-enumerate against the
+    # LATEST stored snapshot -- never a silent synthetic fallback.
+    prop_lines, line_age_h = None, None
+    if mode == "live":
+        if bool(cfg.get("fetch_props")) and cfg.get("odds_api_key"):
+            try:
+                slate_row = candmod.games_for_week(season, week, inputs.schedules)
+                slate_row = slate_row[slate_row["game_id"] == game_id]
+                kick = kickoffs_for(slate_row).get(game_id)
+                close_h = float((cfg.get("clv") or {}).get(
+                    "close_window_hours", clvmod.DEFAULT_CLOSE_WINDOW_H))
+                if kick and not clvmod.has_close_snapshot(conn, game_id, kick, close_h):
+                    emap = build_event_map(cfg, slate_row, list_events_fn=list_events_fn)
+                    if emap.get(game_id):
+                        oapmod.resnap_lines(cfg, {game_id: emap[game_id]}, conn=conn,
+                                            fetch=odds_fetch)
+            except Exception as exc:  # noqa: BLE001 -- stored snapshot still serves
+                print(f"[pipeline] t90 resnap unavailable ({exc}); using stored lines")
+        prop_lines, line_age_h = latest_stored_prop_lines(
+            conn, game_id, _players_frame(cands))
+        if prop_lines is not None:
+            cands = candmod.enumerate_candidates(
+                season, week, inputs=inputs,
+                min_usage=(cfg.get("candidates") or {}).get("min_usage"),
+                prop_lines=prop_lines, roster_mode=roster_mode)
+            cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -618,8 +695,26 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         cands = candmod.apply_weather_adjustment(
             cands, _apply_forecast_weather(adv, _t90_slate[_t90_slate["game_id"] == game_id]))
     cands = _maybe_stamp_ml(cfg, cands, inputs)
+
+    # T-90 actives need ESPN's event id -- discovered in the NORMAL path now
+    # (scoreboard lookup by date + teams), not only when tests inject rows.
+    game_event_ids: List[str] = []
+    if mode == "live" and "inactive_rows" not in (inject_feeds or {}):
+        try:
+            srow = candmod.games_for_week(season, week, inputs.schedules)
+            srow = srow[srow["game_id"] == game_id]
+            if not srow.empty:
+                r = srow.iloc[0]
+                eid = avmod.find_espn_event_id(str(r["gameday"]), r["home_team"], r["away_team"])
+                if eid:
+                    game_event_ids = [eid]
+                else:
+                    print(f"[pipeline] no ESPN event id found for {game_id} — "
+                          "inactives feed will be empty and the gate will say so")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[pipeline] ESPN event id lookup failed ({exc})")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
-                             inject=inject_feeds)
+                             game_event_ids=game_event_ids, inject=inject_feeds)
     statuses = live["statuses"]
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
@@ -655,6 +750,10 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     sgp_enabled = bool((cfg.get("correlation") or {}).get("sgp_readout", True))
     for gm in games:
         gm["sgp"] = slmod.sgp_readouts(gm, corr) if (corr is not None and sgp_enabled) else []
+    # post-projection best picks for the refreshed game (full scored pool)
+    from nflvalue import selector as selmod
+    selmod.picks_for_games(games, cfg=cfg, availability=statuses,
+                           line_age_hours=line_age_h, corr=corr)
     from nflvalue.game_notes import attach_notes
     attach_notes(games, cands2, inputs.schedules, season, week, corr=corr)
     contexts = {gm["game_id"]: slmod.build_context_panel(
@@ -670,7 +769,9 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}_t90_{game_id}.md")
     with open(md_path, "w") as f:
         f.write(md)
-    rptmod.persist_leans(conn, season, week, "t90", games, as_of)
+    t90_status = "active" if g["publish"] else "blocked"
+    rptmod.persist_leans(conn, season, week, "t90", games, as_of, status=t90_status)
+    selmod.persist_picks(conn, season, week, "t90", games, as_of, status=t90_status)
 
     payload = {"season": season, "week": week, "clock": "t90", "as_of": as_of,
                "publish": g["publish"], "publish_reasons": g["reasons"],
@@ -710,11 +811,19 @@ def resolve_clv(season: int, week: int,
 def run_grade(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None) -> Dict:
     """The Tuesday learning step: grade last week, attribute, update adjustments."""
     from nflvalue import prop_learning
+    from nflvalue import selector as selmod
     cfg = cfgmod.load_config()
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
     res = prop_learning.grade_and_learn(conn, season, week, inputs,
                                         params=cfg.get("learning"))
+    # the model learns from EVERY selected pick, not just the top-5 leans:
+    # grade both clocks' active picks and surface the by-tier record (the
+    # feedback the selector thresholds are tuned from, alongside forward CLV)
+    picks_graded = {clk: selmod.grade_picks(conn, season, week, inputs.pw, clock=clk)
+                    for clk in ("wed", "t90")}
+    res["picks_graded"] = picks_graded
+    res["picks_record"] = selmod.picks_record(conn)
     conn.close()
     return res
 

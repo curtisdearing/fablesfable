@@ -182,6 +182,10 @@ function renderLeans(){
       ${kc.verdict?` · kill-check: <b>${esc(kc.verdict)}</b>`:""}
       <div class="sub">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live (Phase 3).")}</div></div>`;
   const sideLabel = l => l.market==="anytime_td" ? "YES" : (l.side||"").toUpperCase();
+  const tierColor = t => t==="STRONG"?"#7be0a8":t==="PLAYABLE"?"#8fc7ff":t==="LEAN"?"#ffd479":"#9aa7bd";
+  const pickRow = (p,i) => `<div class="sub" style="margin:5px 0 0 0">
+      <span class="pill" style="border-color:${tierColor(p.tier)};color:${tierColor(p.tier)}"><b>${esc(p.tier)}</b></span>
+      ${i!=null?`<b>#${i+1}</b> `:""}${esc(p.writeup||"")}</div>`;
   const games = w.games.map(g=>{
     const ctx=(w.contexts||{})[g.game_id];
     const rows=g.leans.map(l=>`<tr>
@@ -193,6 +197,12 @@ function renderLeans(){
       <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
       <td class="price">${esc(l.composite)}</td></tr>`).join("");
     const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
+    const picksBlock = ((g.picks&&g.picks.length)||(g.research_leans&&g.research_leans.length))
+      ? `<div class="note"><b>Best picks — post-projection selection (every candidate evaluated first; leans, not locks):</b>`
+        + (g.picks||[]).map((p,i)=>pickRow(p,i)).join("")
+        + ((g.picks||[]).length? "" : `<div class="sub">No real-market edge cleared this game's bars.</div>`)
+        + (g.research_leans||[]).map(p=>pickRow(p,null)).join("")
+        + `</div>` : "";
     const notesBlock = (g.notes && g.notes.length)
       ? `<div class="note"><b>Game notes — display only, never scored:</b>${g.notes.map(n=>`<div class="sub">• ${esc(n)}</div>`).join("")}</div>` : "";
     const sgpBlock = (g.sgp && g.sgp.length)
@@ -204,7 +214,7 @@ function renderLeans(){
     return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
       <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      ${notesBlock}${sgpBlock}
+      ${picksBlock}${notesBlock}${sgpBlock}
       ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;
   }).join("");
   el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>

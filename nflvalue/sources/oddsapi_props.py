@@ -204,10 +204,14 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
     df = pd.DataFrame(matched)
     out = []
     for (gid, market, pid), grp in df.groupby(["game_id", "market", "player_id"]):
-        # books quoting BOTH sides, keyed by point
+        # books quoting BOTH sides, keyed by point. Over/under prices are only
+        # ever paired from the SAME book at the SAME point -- a book carrying
+        # alternate lines used to get its first over row paired with its first
+        # under row regardless of point, de-vigging e.g. over 82.5 against
+        # under 74.5 into a nonsense "fair" probability.
         two_sided: Dict[float, Dict[str, tuple]] = {}
         yes_only: Dict[str, float] = {}
-        for book, b in grp.groupby("book"):
+        for (book, pt), b in grp.groupby(["book", "point"]):
             overs = b[b["side"] == "over"]
             unders = b[b["side"] == "under"]
             if overs.empty:
@@ -215,11 +219,10 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
             over = overs.iloc[0]
             if unders.empty:
                 if market == "anytime_td" and over["price"]:
-                    yes_only[book] = float(over["price"])
+                    yes_only[book] = max(float(over["price"]), yes_only.get(book, 0.0))
                 continue
-            pt = float(over["point"])
-            two_sided.setdefault(pt, {})[book] = (float(over["price"]),
-                                                  float(unders.iloc[0]["price"]))
+            two_sided.setdefault(float(pt), {})[book] = (float(over["price"]),
+                                                         float(unders.iloc[0]["price"]))
         if two_sided:
             # consensus point: most two-sided books; ties -> alphabetically
             # first book's point (deterministic)

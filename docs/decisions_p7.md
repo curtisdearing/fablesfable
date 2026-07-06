@@ -1179,3 +1179,56 @@ verified), the feature builders (all strictly prior-week), the RAG layer, the
 Monte Carlos, and the weight-tuning were all audited across four rounds and are
 clean. Every fix above is behavior-preserving on valid inputs and covered by a
 test.
+
+## 7.11 Post-projection best-picks selector + operational hardening (2026-07-06)
+
+**Selector (`nflvalue/selector.py`)** — a final selection layer that runs
+strictly AFTER every candidate is fully evaluated (projection, injuries,
+weather, reallocation, ML probability, market pricing, composite).
+`shortlist.rank_game` now returns the game's full `scored_pool`;
+`selector.picks_for_games` consumes (and removes) it, so best-picks selection
+structurally cannot front-run evaluation — a test pins that a candidate the
+ML ranker left out of the top-5 leans still becomes the #1 pick on market
+edge. Side selection is the existing two-sided model-vs-de-vigged-fair edge
+comparison (overs AND unders; anytime_td YES-only, no artificial unders).
+Tiers: RESEARCH (no real line — never a best bet) / PASS / LEAN / PLAYABLE /
+STRONG, from market-specific configurable thresholds (config `selector`:
+yardage bars lowest, count markets moderate, anytime_td highest) on
+probability edge + EV-at-best-price floor + model-probability calibration
+floors, with one-tier downgrades for availability RISK, stale line
+snapshots, and high positive correlation with an already-selected pick
+(reasons recorded in `tier_notes`). Sentence writeups are factual (pick, why
+this side, model vs market prob, edge/EV, projection basis, risks — no
+hype). Picks persist to a new `picks` table (replace-the-run, status-aware),
+are graded on the Tuesday pass (`grade_picks`, both clocks), and
+`picks_record()` reports hit rates by tier — the feedback the thresholds are
+tuned from alongside forward CLV. The top-5 leans/learning population is
+untouched. LINE MOVEMENT IS NOT AN INPUT: the selector sees only the current
+line/price; CLV stays after-the-fact feedback (invariance test pins it).
+
+**Operational fixes shipped with it:**
+1. Freshness-blocked runs persist leans AND picks with `status='blocked'` —
+   audit trail kept, but CLV resolution, grading, learning, and the
+   kill-check (all `status='active'`-filtered) can no longer be contaminated
+   by a gate-failed run.
+2. T-90 discovers ESPN event ids in the NORMAL path (new
+   `availability.find_espn_event_id` scoreboard lookup by date+teams) — the
+   inactives feed previously only worked when tests injected rows.
+3. T-90 re-rank uses the LATEST REAL market lines (optionally resnapping
+   inside the close window with the dedup guard, then re-enumerating from
+   the newest stored snapshot via `latest_stored_prop_lines`) instead of
+   silently falling back to synthetic lines.
+4. `kickoffs_for` now does one tz-aware ET→UTC conversion (zoneinfo, DST
+   correct). The old code stamped Eastern clock times with a 'Z': every
+   close-window comparison vs genuinely-UTC snapshot timestamps was 4-5h
+   off — 1pm ET kicks had close windows that ended before the real close.
+5. Over/under prices pair only from the SAME book at the SAME point, in both
+   `to_prop_lines_frame` (consensus/de-vig) and `clv.snapshot_prob`
+   (majority-point selection; mismatched-point pairs refused).
+
+Tests: 15 new (`test_selector.py`, `test_ops_fixes.py`) covering the seven
+required proofs (post-evaluation selection, overs+unders, synthetic never
+mislabeled, multiple picks/game, blocked-run hygiene, T-90 without
+injection, thresholds move labels) plus tz + pairing + movement-invariance.
+Suite: 347 passed, 0 failed. Honesty framing unchanged: leans not locks,
+advisory/research only, no bet placement, 1-800-GAMBLER.

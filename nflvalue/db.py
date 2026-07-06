@@ -105,6 +105,23 @@ SCHEMA = {
             PRIMARY KEY (season, week, clock, game_id, player_id, market)
         );
     """,
+    # -- Post-projection best picks (selector.py): tiered, writeup-carrying,
+    # status-aware (freshness-blocked runs persist as 'blocked' and are
+    # excluded from grading/evidence by the status filter) ------------------- #
+    "picks": """
+        CREATE TABLE IF NOT EXISTS picks (
+            season INTEGER, week INTEGER, clock TEXT,
+            game_id TEXT, rank INTEGER, player_id TEXT, name TEXT, market TEXT,
+            side TEXT, line REAL, line_source TEXT, price REAL, book TEXT,
+            tier TEXT,                    -- LEAN | PLAYABLE | STRONG
+            edge REAL, ev REAL, model_prob REAL, market_prob REAL, mean REAL,
+            writeup TEXT,
+            status TEXT DEFAULT 'active', -- 'active' | 'blocked' | 'voided'
+            hit INTEGER, actual REAL,
+            as_of TEXT, created_at TEXT,
+            PRIMARY KEY (season, week, clock, game_id, player_id, market)
+        );
+    """,
     # -- Phase 3: prop-line snapshots (market history for edge + CLV) --------- #
     "lines": """
         CREATE TABLE IF NOT EXISTS lines (
