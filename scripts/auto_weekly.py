@@ -125,11 +125,23 @@ def job_t90() -> int:
     if cfg.get("odds_api_key"):
         try:
             from nflvalue.sources import oddsapi_props as oap
+            from nflvalue import clv as clvmod
             import pipeline_weekly as pwmod
+            close_window_h = float((cfg.get("clv") or {}).get(
+                "close_window_hours", clvmod.DEFAULT_CLOSE_WINDOW_H))
             have_lines = set(dbmod.query_df(
                 conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
+            # Scheduling guard: this job can fire several times while a game
+            # sits inside its close window (cron granularity > window width);
+            # resnap_lines has no dedup of its own, so skip games that already
+            # have a snapshot in-window -- at most one close pull/game/week,
+            # matching the Gap #2 budget reservation's assumption.
             targets = [g.game_id for g in soon.itertuples(index=False)
-                       if g.game_id in have_lines]
+                       if g.game_id in have_lines
+                       and not clvmod.has_close_snapshot(
+                           conn, g.game_id,
+                           g.kickoff.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                           close_window_h)]
             if targets:
                 emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
                 res = oap.resnap_lines(cfg, emap, conn=conn)

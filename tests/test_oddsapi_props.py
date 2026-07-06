@@ -45,8 +45,15 @@ def _cfg(**kw):
 # --------------------------------------------------------------------------- #
 def test_budget_never_exceeded_over_a_simulated_month(conn, payload):
     """Hammer pull_week_props far past the budget; the ledger must stop at the
-    ceiling (500-50=450) and skipped games must be reported, not fetched."""
-    cfg = _cfg(max_prop_games_per_run=100)          # cap wide open: budget is the only brake
+    ceiling (500-50=450) no matter how wide the per-run game cap is opened.
+
+    Phase 7.3 GAP #2: entries now ALSO self-limit via the reservation rule
+    (entries may spend at most half the remaining budget, so closes are never
+    crowded out) -- so total entry pulls stop well short of 450/cost_per_event
+    even with ``max_prop_games_per_run`` wide open. That's the point: budget
+    is no longer the ONLY brake. The ceiling itself must still never be
+    crossed, which this test keeps proving."""
+    cfg = _cfg(max_prop_games_per_run=100)           # cap wide open: budget/reservation are the brakes
     calls = {"n": 0}
 
     def fake_fetch(url, params=None):
@@ -55,23 +62,64 @@ def test_budget_never_exceeded_over_a_simulated_month(conn, payload):
 
     cost_per_event = 5.0                             # 5 markets x 1 region
     total_pulled = 0
-    for week in range(1, 30):                        # way more weeks than a month holds
+    for week in range(1, 60):                        # way more weeks than a month holds
         event_map = {f"2023_{week:02d}_G{i}": f"evt{week}_{i}" for i in range(16)}
         res = oap.pull_week_props(cfg, event_map, conn=conn, fetch=fake_fetch,
                                   ts=f"2023-11-{week:02d}T12:00:00Z")
         total_pulled += len(res["pulled"])
-        if res["skipped_budget"]:
+        if res["skipped_budget"] or (not res["pulled"] and res["skipped_cap"]):
             break
 
     budget = oap.CreditBudget(conn, 500, 50)         # fresh instance reads the ledger
-    assert budget.used <= 450.0
+    assert budget.used <= 450.0                      # the ceiling is NEVER crossed
     assert budget.used == pytest.approx(total_pulled * cost_per_event)
     assert calls["n"] == total_pulled                # skipped games were never fetched
-    assert total_pulled == int(450 // cost_per_event)
+    # the reservation rule holds entries back HARDER than the raw ceiling --
+    # total spend stays comfortably below what the ceiling alone would allow
+    assert total_pulled < int(450 // cost_per_event)
 
-    # and even a FORCED overspend raises rather than spends
+    # and even a FORCED overspend past whatever remains raises rather than
+    # spends (the reservation rule can stall entries with slack still on the
+    # books -- below the ceiling but above a single event's cost -- so force
+    # an amount that's definitely past the true ceiling, not just one event)
     with pytest.raises(oap.BudgetExceeded):
-        budget.spend(cost_per_event)
+        budget.spend(budget.remaining + cost_per_event)
+
+
+# --------------------------------------------------------------------------- #
+# Phase 7.3 GAP #2: coupled budget reservation -- entries may never spend
+# more than half the remaining monthly budget, so a close pull later in the
+# week can always be afforded.
+# --------------------------------------------------------------------------- #
+def test_entry_pulls_reserve_half_the_budget_for_closes(conn, payload):
+    cfg = _cfg(max_prop_games_per_run=1000)          # config cap wide open
+    event_map = {f"2023_10_G{i}": f"evt{i}" for i in range(200)}   # far more games than affordable
+
+    def fake_fetch(url, params=None):
+        return json.loads(json.dumps(payload))
+
+    res = oap.pull_week_props(cfg, event_map, conn=conn, fetch=fake_fetch,
+                              ts="2023-11-08T12:00:00Z")
+    budget = oap.CreditBudget(conn, 500, 50)
+    cost_per_event = 5.0
+    # the cap is computed against the FULL 450 ceiling (nothing spent yet,
+    # since this is the first pull on a fresh conn/month)
+    pre = oap.CreditBudget(conn, 500, 50, month=budget.month)
+    pre.used = 0.0
+    expected_cap = oap.entry_event_cap(pre, cost_per_event)
+    assert res["entry_cap_reserved"] == expected_cap
+    assert len(res["pulled"]) == expected_cap
+    # at least half the ceiling remains untouched -- available for closes
+    assert budget.remaining >= 450.0 / 2 - cost_per_event
+
+
+def test_entry_event_cap_formula():
+    class _FakeBudget:
+        remaining = 450.0
+    # floor((450/4.3) / (2*5)) = floor(104.651.../10) = 10
+    assert oap.entry_event_cap(_FakeBudget(), 5.0) == 10
+    _FakeBudget.remaining = 0.0
+    assert oap.entry_event_cap(_FakeBudget(), 5.0) == 0
 
 
 def test_budget_ledger_persists_across_instances(conn):

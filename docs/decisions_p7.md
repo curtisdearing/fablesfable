@@ -324,3 +324,415 @@ noise, no guardrail violation). Full per-market table in
 
 Artifact regenerable via `python3 ml_test.py --stage fit --models rf
 --calibrate platt_permkt` (gitignored, per `data/*.joblib`).
+
+---
+
+## 7.3 — Real-line capture + re-label + CLV harness — design
+
+The binding constraint on every number in this repo is that grading is
+**synthetic** (trailing-mean lines), not real. This job designs the pipeline
+that lets the model be graded and *re-trained* against real sportsbook prices,
+and specifies the CLV accrual + kill-check that is the project's actual
+referendum. **7.4 builds it; this is design + spec only** — no production logic
+changes here. A worked example (`scripts/clv_worked_example.py`) proves the math
+end to end on the synthetic fixture, since no live key exists and July is the
+offseason.
+
+Most of the machinery already exists (Phase-3 "Block A", `docs/decisions_p3-5.md`).
+This section **pins the ambiguous definitions, names the three gaps 7.4 must
+close, and writes out the leakage/look-ahead proof** — it does not re-invent
+what works.
+
+**Reuse (Block A, unchanged):** `sources/oddsapi_props.py` (`CreditBudget`
+450/mo ledger, `pull_week_props` rotating entry pull, `resnap_lines` targeted
+close pull, `to_prop_lines_frame`/`consensus_two_way` sharp-weighted de-vig),
+`clv.py` (`snapshot_prob`, `log_close_for_week` → `clv` table, `rolling_clv`),
+`killcheck.py` (the pre-committed verdict), `ml_test.augment_with_real_lines`
+(the re-label path), and the `lines` / `leans` / `lean_outcomes` / `clv` /
+`api_credits` tables in `db.py`.
+
+### 1. Real prop-line capture
+
+- **Markets:** the 7 shipped markets via `ODDS_TO_MARKET` (receiving_yards,
+  receptions, rushing_yards, rush_attempts, passing_yards, pass_attempts,
+  anytime_td). **Books:** the user's own books (config `books`, e.g.
+  draftkings/fanduel/betmgm) — a specific book list is both a comparable price
+  basis and cheaper than a whole-region pull; fall back to `regions="us"`.
+- **Cadence (open → close), two snapshots per resolvable lean:**
+  - **ENTRY** (`wed` clock) — the earliest affordable pull, taken as early as
+    props are posted (props post later than sides, typically ~2–3 days out).
+    `pull_week_props`, rotating least-recently-pulled first, `max_prop_games_
+    per_run`. This is the number we would transact at.
+  - **CLOSE** (`t90` clock) — `resnap_lines` targeted at games that already have
+    an entry line and kick soon; the last snapshot before kickoff.
+- **Storage schema:** the `lines` table, unchanged — `(ts, game_id, book,
+  market, player_name, side, point, price, player_id)`, PK `(ts, game_id, book,
+  market, player_name, side)` (snapshots idempotent). Book `player_name` is
+  matched to gsis ids by normalized name (+ first-initial variant); unmatched
+  rows persist with `player_id=NULL` — visible, never guessed, and can never
+  mint an edge or a CLV row.
+- **The exact "closing" snapshot (GAP #1):** the latest `lines` snapshot whose
+  `ts` falls in the window **`[kickoff − CLOSE_WINDOW_H, kickoff]`**
+  (`CLOSE_WINDOW_H` default **6h**, config). If no snapshot lands in that
+  window, the lean is **UNRESOLVED** — *not* resolved against a stale entry-era
+  snapshot (which would fake CLV ≈ 0). Today `snapshot_prob(at_or_before=kickoff)`
+  accepts any old ≤-kickoff snapshot; 7.4 adds the `at_or_after_ts` floor.
+- **Budget (GAP #2 — coupled reservation):** 450 credits/mo, hard-stopped by
+  the existing ledger; cost = `markets × regions` per event (= 5 × 1 = **5
+  credits/event** with a book list). Every *resolvable* lean needs **two** pulls
+  (entry + close), so entries must not consume the whole budget:
+
+  | quantity | value |
+  |---|---|
+  | monthly ceiling | 450 credits |
+  | cost / event-pull | 5 (5 markets × 1 region) |
+  | event-pulls / month | 90 |
+  | in-season weeks / month | ~4.3 → ~21 pulls/week |
+  | fully-resolved games/week (entry+close) | ~10 |
+  | resolved leans/week (≈3–4 survive two-sided at both snaps) | ~30–40 |
+  | **weeks to reach n ≥ 150** | **~4** |
+
+  **Reservation rule:** cap entry events so ≥50% of the remaining weekly budget
+  is held for closes — `max_entry_events_per_week = floor(weekly_budget /
+  (2 · cost_per_event))`; never pull an entry for a game you can't also afford
+  to close. Without this the rotation can spend everything on entries and
+  resolve *nothing*.
+
+### 2. Label migration (synthetic → real) + leakage proof
+
+- **Which line is the label:** the **decision-time (entry) real line** =
+  `leans.line` where `line_source='odds_api'` — the point we can actually
+  transact at. **Not** the closing line (that is CLV's job, a different
+  question). `augment_with_real_lines` already reads `leans.line`; this is
+  correct and pinned. `anytime_td`: `y = scored` (nominal point 0.5), unchanged.
+- **When a row flips:** exactly when **both** hold — (a) a real decision-time
+  line exists for that lean, and (b) the game is **graded** (an `actual` exists
+  in `lean_outcomes`). The `lean_outcomes ⋈ leans` join enforces both. Rows with
+  no real line keep the synthetic label. Migration is automatic and weekly.
+- **What changes on flip:** `line ← real`; `y_over ← (actual > real line)`;
+  recompute `z`, `mean_minus_line`, `sd_over_line` against the real line.
+  `mean`, `sd`, and every usage/efficiency/context feature are **UNCHANGED** —
+  they never depended on the line.
+- **Leakage / look-ahead — the proof (this is the whole game):**
+  1. Re-labeling changes only a row's own label and its own line-derived
+     features; it never changes the row's `(season, week)`. A re-labeled week-t
+     row is still a week-t row, so the walk-forward split (`train < T`) is
+     untouched.
+  2. The real line is captured **before kickoff** (decision-time), so it carries
+     no in-game information about its own outcome.
+  3. A row can flip only **after its game is graded**, which is strictly in the
+     past of any training cutoff `T` that would use it (you retrain for week `T`
+     only once weeks `< T` are complete). A live retrain for `T` therefore sees
+     real labels only for weeks `< T` — automatically walk-forward.
+  4. **Forbidden and structurally prevented:** re-labeling the current/future
+     week from a closing line before its game is played. No `lean_outcomes` row
+     exists until the game is graded, so the join yields nothing and the row
+     stays synthetic. *7.4 must not add any path that writes a real label from a
+     line without a graded `actual`.*
+  5. The 7.1 calibrator inherits this cleanly: it fits on OOS base predictions
+     of seasons `< S`; those rows may now carry real labels but are still `< S`,
+     so the `train_max < predict_season` fold-span guard is unaffected.
+- **Worked example (`clv_worked_example.py`, step 2):** synthetic line 47.0,
+  actual 50.0 → synthetic `y=1`; real decision line 52.5 → **`y` flips to 0**;
+  `z` 0.444 → 0.139, `mean_minus_line` +8.00 → +2.50, `mean`/`sd` unchanged.
+  Asserted.
+
+### 3. CLV harness — complete + monitorable
+
+- **Per-lean CLV, de-vigged consensus prob space:** `entry_prob` = consensus
+  fair P(side) from the latest snapshot ≤ `lean.as_of`; `close_prob` = consensus
+  fair P(side) from the closing snapshot (§1); **`clv_prob = close_prob −
+  entry_prob`**. Comparing de-vigged probabilities means a book fattening its
+  margin can't masquerade as line movement. `anytime_td` is one-sided → raw
+  implied at both ends (`prob_kind='raw_implied'`); the *difference* is still
+  meaningful, and the flag prevents mixing the two kinds.
+- **Two-snapshot resolution rule:** a lean resolves **iff** it has (a) an entry
+  snapshot ≤ `as_of`, (b) a distinct closing snapshot in the pre-kickoff window
+  with `close.ts > entry.ts`, and (c) `status='active'` (voided leans — player
+  ruled out at t90 — never resolve). Otherwise UNRESOLVED: visibly absent, never
+  faked.
+- **Gaps 7.4 closes:**
+  - **#1 close-window floor** (§1) — add `at_or_after_ts` to `snapshot_prob`.
+  - **#3 clock dedup** — the `clv` PK omits `clock`, so a `wed` + `t90` pair for
+    the same `(season, week, game, player, market, side)` collide. **Rule:**
+    resolve against the **earliest active `as_of`** (the `wed` entry captures the
+    most line movement — premortem F5), one `clv` row per key. 7.4 selects
+    `MIN(as_of)` among active leans before computing `entry_prob`.
+- **Monitorability — the 7.4 dashboard tab reads exactly these** (from `clv` +
+  `leans`): `resolved_n = COUNT(clv)`; `logged_n = COUNT(leans WHERE
+  status='active')`; **coverage = resolved_n / logged_n** (a low value warns the
+  close-snapshot budget is too thin to resolve the log); `lifetime_mean` &
+  `rolling(50)` avg `clv_prob`; `positive_rate = AVG(clv_prob > 0)`;
+  `avg_point_move`; and the GO/NO_GO/INSUFFICIENT banner. `rolling_clv` and
+  `killcheck.report` already return all but `coverage`.
+- **Kill-check — pre-committed thresholds, NOT moved** (Phase-3 / PREMORTEM
+  §248): **n ≥ 150** resolved leans; **GO** iff lifetime avg CLV > 0 **AND**
+  positive-CLV rate ≥ **52%**; otherwise **NO_GO** — "revert to
+  projection/entertainment tool, stop staking." `n < 150` → INSUFFICIENT_SAMPLE.
+
+### 4. The prop-CLV honesty caveat
+
+PREMORTEM §285: props are lower-liquidity than main markets, where CLV is a
+**weaker** edge proxy. So positive prop-CLV is **necessary, not sufficient** — a
+GO is "consistent with edge," not proof of profit. Two forces still bite even at
+positive CLV: soft books limit winners in ~20 bets (F4), and a Wednesday entry
+already sits near-closing (F5, the worst moment for the stated edge). The
+referendum remains CLV, framed this honestly; a real-money decision is a 7.9
+call, not a CLV-crosses-zero reflex.
+
+### Worked example + acceptance tests for 7.4
+
+`scripts/clv_worked_example.py` drives the **real** code paths on the synthetic
+fixture (`tests/fixtures/oddsapi_event_props_synthetic.json`) + a throwaway DB:
+capture two snapshots → re-label a row (y flips 1→0) → CLV (`+0.0236` prob-points,
+market moved toward our over) → monitor (`INSUFFICIENT_SAMPLE`, n=1). All
+assertions pass. This is the fixture proof; it changes no production logic.
+
+7.4 is done when, on recorded/synthetic fixtures: (a) an entry+close capture runs
+within a coupled budget that reserves close credits; (b) `snapshot_prob` honors
+the `CLOSE_WINDOW_H` floor and marks out-of-window leans UNRESOLVED; (c) CLV
+dedups to one row per lean key against the earliest active `as_of`; (d) the
+re-label path flips only graded rows with a real line, proven by an extended
+`tests/test_leakage.py` case; (e) the dashboard shows resolved-n vs 150,
+coverage, avg CLV, positive-rate, and the GO/NO-GO banner; (f) the kill-check
+thresholds are the unchanged pre-committed ones.
+
+---
+
+## 7.4 — Real-line capture + re-label + CLV harness — implementation
+
+Built 7.3's design against the real code paths (`clv.py`, `killcheck.py`,
+`oddsapi_props.py`, `ml_test.augment_with_real_lines`, `pipeline_weekly.py`,
+`dashboard.py`, `scripts/auto_weekly.py`). No live Odds API key exists in this
+environment and it's the offseason, so every number in this section is proven
+on fixtures/synthetic data or on the real (empty) local warehouse -- never
+presented as a live result. Checkpoint B (dry-run) evidence: `python3
+scripts/clv_worked_example.py`.
+
+### GAP #1 -- close-window floor (`clv.py`)
+
+`snapshot_prob` gained an `at_or_after_ts` floor and `log_close_for_week` now
+computes `window_start = kickoff - close_window_hours` (config
+`clv.close_window_hours`, default 6.0) and requires the close snapshot to fall
+in `[window_start, kickoff]`. A snapshot that predates the window no longer
+silently passes as a "close" -- it resolves to nothing (visibly absent, not a
+faked ~0 CLV). Proven in `tests/test_clv_killcheck.py`
+(`test_close_window_floor_rejects_stale_snapshot`,
+`test_close_window_floor_accepts_in_window_snapshot`) and worked-example step 5.
+
+### GAP #2 -- entry-event budget reservation (`oddsapi_props.py`)
+
+`entry_event_cap(budget, cost_per_event)` implements
+`floor(weekly_budget / (2 * cost_per_event))` with `weekly_budget =
+budget.remaining / 4.3` (weeks/month), so an in-season week never pulls more
+ENTRY events than leaves room for a paired CLOSE pull per game later that same
+week. `pull_week_props`'s per-run cap is now `min(config
+max_prop_games_per_run, entry_event_cap(...))` and returns the reserved cap
+for visibility (`entry_cap_reserved`). Also fixed a real, previously-silent
+bug while doing this: `config.json` had no `prop_markets_internal` key, so the
+capture path always fell back to a hardcoded 5-market list missing
+`rush_attempts` and `pass_attempts` -- both are now in the config's 7-market
+list. Proven in `tests/test_oddsapi_props.py`
+(`test_entry_event_cap_formula`,
+`test_entry_pulls_reserve_half_the_budget_for_closes`, and the rewritten
+`test_budget_never_exceeded_over_a_simulated_month`) and worked-example step 7.
+
+### GAP #3 -- clock dedup (`clv.py`)
+
+The `clv` table's primary key omits `clock` (a `wed` and `t90` lean for the
+same game/player/market/side would collide on upsert), so
+`log_close_for_week` now dedups the input leans to one row per
+`(game_id, player_id, market, side)`, keeping the **earliest** active
+`as_of` (the Wednesday entry captures the most line movement, matching
+PREMORTEM F5's framing of the entry point). Proven in
+`tests/test_clv_killcheck.py` (`test_clock_dedup_resolves_one_row_against_earliest_as_of`)
+and worked-example step 6.
+
+### Re-label leakage proof
+
+Extended `tests/test_leakage.py` with
+`test_augment_with_real_lines_only_flips_graded_rows_with_real_line`: three
+rows -- (a) real line + graded -> flips, season/week unchanged, non-line
+features (`mean`, `sd`) untouched; (b) real line but **ungraded** (no
+`lean_outcomes` row -- a future/in-progress week) -> stays fully synthetic;
+(c) graded but `line_source != 'odds_api'` -> stays fully synthetic. This is
+the structural proof that a real label can never be written without both a
+real line AND a graded outcome (7.3 §2, point 4's "forbidden path").
+
+### Monitorability: coverage + dashboard tab
+
+`killcheck.report` gained `coverage = resolved_n / logged_n` (warns when the
+close-snapshot budget is too thin to resolve the log even though leans are
+being generated). `nflvalue/dashboard.py` gained a dedicated **CLV /
+Kill-Check** tab: a colored GO/NO_GO/INSUFFICIENT_SAMPLE banner, a progress
+bar toward the pre-committed n=150 gate, cards for resolved-n, lifetime and
+rolling(50) avg CLV, positive-CLV rate (vs the 52% bar), and coverage, plus
+the §4 honesty caveat (prop CLV is a weaker edge proxy than main-market CLV).
+Verified by rendering the template with jsdom for all three verdict states
+(GO / NO_GO / INSUFFICIENT_SAMPLE) and by regenerating the committed
+`dashboard.html` from the real (currently empty -- offseason, no key) local
+`data/latest.json`, which honestly shows `INSUFFICIENT_SAMPLE`, n=0 resolved,
+70 leans logged.
+
+### Scheduler
+
+`scripts/auto_weekly.py`'s three jobs (`wed`, `t90`, `tuesday`) already
+self-detect the offseason and no-op cleanly (verified: no upcoming REG week
+within 8 days / no kickoffs in the T-90 window / no completed week all exit 0
+with a one-line log). One real gap found while wiring in-season cadence:
+`resnap_lines` has no internal dedup, so a `t90` job firing hourly across a
+game's ~2.75h pre-kickoff window would pay for the close snapshot repeatedly.
+Added `clv.has_close_snapshot(conn, game_id, kickoff, close_window_hours)` and
+wired it into `job_t90` as a filter so at most one close pull happens per game
+per week, matching GAP #2's assumption. Proven in `tests/test_clv_killcheck.py`
+(`test_has_close_snapshot_false_when_nothing_in_window`,
+`test_has_close_snapshot_true_once_in_window`). Installed three Cowork
+scheduled tasks that shell out to `scripts/auto_weekly.py`: `wed` (Wednesdays
+10am ET), `t90` (hourly on Thu/Sun/Mon -- NFL gamedays), `tuesday` (Tuesdays
+8am ET) -- all run year-round and rely on the script's own no-op guards rather
+than the schedule encoding season boundaries.
+
+### Checkpoint B status
+
+Done, on fixtures: `scripts/clv_worked_example.py` runs capture → re-label →
+CLV → monitor → all three gaps end to end (7 steps, all assertions pass); the
+dashboard renders the referendum state (verified GO/NO_GO/INSUFFICIENT_SAMPLE
+banners + regenerated from real, honestly-empty local data); the scheduler is
+installed and self-detects the offseason. Full test suite: 250/250 passed
+(`tests/`, run in batches due to sandbox time limits). No number in this
+section, the dashboard, or the worked example came from a live sportsbook --
+this environment has no Odds API key and it's the offseason.
+
+---
+
+## 7.5 — Same-game prop correlation modeling
+
+Two leans in the same game are not two independent edges, and a same-game
+parlay's true price depends on how the legs move together. This job **measures**
+that structure walk-forward, shrinks it so thin pairs can't invent correlation,
+and **exposes** it as an artifact for 7.6 (selection) and 7.7 (staking). It
+changes no selection/staking behavior — measure and expose only. Plain-language
+companion: `docs/EXPLAINER_correlation.md`.
+
+### Method
+
+- **Standardized residuals, not raw outcomes.** For every prop we take
+  `r = (actual − projection mean) / projection sd` from `data/ml_frame.parquet`
+  (projection) joined to `player_week` (actual). Standardizing makes a QB's
+  300-yard game and a WR's 90-yard game comparable and strips the projection's
+  own level, so we measure *co-movement*, not shared trend.
+- **Pair taxonomy.** Within each game, pairs are typed as
+  `relationship | posA.familyA ~ posB.familyB`, relationship ∈ {sameplayer,
+  sameteam, opponent}, families {pass, rec, rush, td}. Cross-player pairs use one
+  market per family (yardage + td) so a player can't be double-counted;
+  same-player keeps every market. Classification lives in `nflvalue.correlation.
+  classify_pair` (shared by the measurement script and the read side).
+- **Pooled Pearson ρ per type**, over 1,823 game-weeks (2019–2025).
+- **Walk-forward.** ρ for consumption at season S is estimated only from pairs
+  in seasons `< S`; the artifact carries these slices and a leakage test proves
+  each slice is byte-identical when seasons ≥ S are removed.
+- **Shrinkage toward zero** (empirical-Bayes, Fisher-z): `z=atanh(ρ)`,
+  `SE²=1/(n−3)`; between-type signal variance `τ²=0.071` estimated across types;
+  each `z` pulled toward 0 by `τ²/(τ²+SE²)`. Thin/noisy types collapse to ~0.
+- **REAL vs NOISE is an effect-size + stability call, deliberately NOT t≥2.**
+  With tens of thousands of pairs, t is enormous for economically-zero ρ (two
+  same-team WRs: ρ=0.03 but t≈3). A type is **REAL** iff `|ρ_shrunk| ≥ 0.05`
+  **and** its per-season sign is stable; else NOISE (consumed as 0).
+
+### Measured structure — what's real
+
+*Reproduce: `python3 scripts/fit_correlation.py` → `reports/correlation_structure.md`,
+`data/correlation_structure.json`. Synthetic-line caveat: residuals are vs the
+projection, not real prices.*
+
+**Same-player (mechanical — near-duplicate legs):** two markets on one player are
+almost the same bet.
+
+| type | n | ρ raw → shrunk |
+|---|---|---|
+| QB passing_yards ↔ pass_attempts | 3,813 | +0.785 → **+0.783** |
+| TE receiving_yards ↔ receptions | 4,202 | +0.775 → **+0.774** |
+| WR receiving_yards ↔ receptions | 11,045 | +0.765 → **+0.764** |
+| RB rushing_yards ↔ carries | 5,974 | +0.764 → **+0.763** |
+| RB rushing_yards ↔ anytime_td | 11,948 | +0.353 → **+0.352** |
+| WR receiving_yards ↔ anytime_td | 22,090 | +0.332 → **+0.332** |
+| TE receiving_yards ↔ anytime_td | 8,404 | +0.269 → **+0.268** |
+
+**Same-team, cross-player (the SGP-relevant structure):**
+
+| type | n | ρ raw → shrunk | reading |
+|---|---|---|---|
+| QB pass ↔ WR rec | 11,660 | +0.297 → **+0.297** | QB throws well → his WR gains |
+| QB pass ↔ TE rec | 4,443 | +0.245 → **+0.244** | same, tight end |
+| QB pass ↔ WR td | 12,001 | +0.113 → **+0.113** | more passing → more WR TDs |
+| QB pass ↔ TE td | 4,495 | +0.090 → **+0.090** | weak but stable |
+| QB pass ↔ RB rush | 6,291 | −0.080 → **−0.080** | pass game vs run game (script trade-off) |
+
+**Opponent, cross-team (game flow):**
+
+| type | n | ρ raw → shrunk | reading |
+|---|---|---|---|
+| QB pass ↔ opp QB pass | 2,014 | +0.110 → **+0.110** | shootouts: both QBs throw |
+| RB rush ↔ opp RB rush | 4,919 | −0.100 → **−0.100** | one team runs (leading) → other passes |
+| QB pass ↔ opp WR rec | 11,568 | +0.052 → **+0.052** | faint shootout echo |
+| QB pass ↔ opp WR td | 11,912 | +0.051 → **+0.051** | faint shootout echo |
+
+### What's NOISE (consumed as 0)
+
+- **Two same-team WRs' receiving: ρ=0.03** (n=17,978, t≈3). The DFS "stack"
+  intuition does **not** survive here — within a game, target competition roughly
+  cancels the shared game-script lift. This is the headline noise finding, and
+  the clearest case of why the t≥2 culture had to be dropped for effect size.
+- Two opponent WRs (0.03), essentially every TD↔TD cross pair (|ρ|<0.05), and
+  rare types (two same-team passing QBs, n=393, sign-unstable) → all 0.
+
+### Real vs noise, stated plainly
+
+The structure a bettor actually needs is small and stable: **same-player
+multi-market pairs are near-duplicates (~0.76)**; a **same-team QB + his
+pass-catcher move together at ~0.30**; **run vs pass legs (same team, or
+opposing RBs) hedge at ~−0.08 to −0.10**; **shootout (opposing QBs) is a mild
++0.11**. Everything else — including the popular two-WR stack — is noise. All
+real types are sign-stable across all seven seasons and across the walk-forward
+slices (e.g. QB↔WR: 0.31, 0.31, 0.30, 0.29, 0.30 for as-of 2021→2025).
+
+### Recommended use (7.6 / 7.7) — honest scope
+
+- **Correlation-aware selection (7.6): clearly worth building.** Don't count two
+  correlated leans as two edges. The load-bearing cases: (a) a player's own two
+  markets are ~one bet (ρ≈0.76) — never let a slip carry both as independent;
+  (b) a same-team QB-over + pass-catcher-over is ~1.3 bets, not 2 (ρ≈0.30) —
+  discount or cap. Negative pairs (QB-pass vs RB-rush; opposing RBs) are
+  *diversifying*, not redundant — leave them.
+- **SGP joint pricing (7.7): worth it only for the handful of real types, not a
+  general engine.** A Gaussian copula on the standardized residuals, using these
+  ρ, can price the same-team QB↔WR/TE receiving stack and the same-player pairs
+  honestly. It should **not** price arbitrary same-game parlays — most leg-pairs
+  are noise, and a copula fed noise invents precision. Recommendation: expose the
+  joint estimate as an **optional, clearly-labeled readout for the real cross-
+  player types only**, never as a synthetic-line "edge."
+
+### Artifact interface (what 7.6 / 7.7 read)
+
+- `data/correlation_structure.json` — per pair type: `rho_raw`, `rho_shrunk`,
+  `n_pairs`, `se`, `per_season`, `sign_stable`, `verdict`; plus `walk_forward`
+  slices (ρ from `< S` for each S) and the shrinkage metadata (`tau2`,
+  `rho_floor`, `min_n`). Gitignored/regenerable (`data/*` derived).
+- `nflvalue/correlation.py` — `classify_pair(...) → type key`;
+  `CorrelationStructure.load()`; `.rho(ptype, as_of_season=None)` and
+  `.rho_for(pos_i, market_i, player_i, team_i, pos_j, market_j, player_j, team_j,
+  as_of_season=None)` → **shrunk ρ, and 0.0 for any NOISE or unknown type** (a
+  consumer is never handed structure the audit called noise); `.real_types()`.
+  `as_of_season` returns the strict walk-forward slice for a backtest; omit it
+  for the production (all-history) value live.
+- Leakage-tested in `tests/test_correlation.py`: order-independent
+  classification, cross-player volume-market exclusion, shrinkage collapses thin
+  types, the accessor zeroes noise/unknown, and the **walk-forward slice for S is
+  unchanged when seasons ≥ S are deleted**.
+
+### Done
+
+Correlations measured walk-forward with shrinkage and a leakage test; the
+real-vs-noise call is explicit and effect-size based; the artifact is ready for
+7.6/7.7 to consume without further design. No selection or staking behavior
+changed in this job.

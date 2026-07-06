@@ -52,6 +52,10 @@ ODDS_TO_MARKET = {
     "player_anytime_td": "anytime_td",
 }
 MARKET_TO_ODDS = {v: k for k, v in ODDS_TO_MARKET.items()}
+# Phase 7.3 §1: capture all 7 shipped markets by default -- config
+# "prop_markets_internal" overrides. (A prior default here silently omitted
+# rush_attempts/pass_attempts; config.json now sets this explicitly too.)
+DEFAULT_PROP_MARKETS_INTERNAL = list(ODDS_TO_MARKET.values())
 
 
 class BudgetExceeded(RuntimeError):
@@ -100,6 +104,25 @@ class CreditBudget:
     @property
     def remaining(self) -> float:
         return max(self.ceiling - self.used, 0.0)
+
+
+# Phase 7.3 GAP #2 (coupled budget reservation): every RESOLVABLE lean needs
+# TWO pulls (entry + close). An entry pull for a game the budget can't also
+# afford to close later resolves nothing -- so entries may spend at most half
+# of the month's remaining budget, spread evenly over the in-season weeks
+# left in the calendar month (~4.3 weeks/month; docs/decisions_p7.md 7.3 §1).
+WEEKS_PER_MONTH_APPROX = 4.3
+
+
+def entry_event_cap(budget: "CreditBudget", cost_per_event: float,
+                    weeks_per_month: float = WEEKS_PER_MONTH_APPROX) -> int:
+    """Max entry-event pulls this week so >=50% of the remaining monthly
+    budget stays reserved for close snapshots. Never negative; 0 if the
+    month's budget is already too thin to afford even one entry+close pair."""
+    if cost_per_event <= 0:
+        return 0
+    weekly_budget = budget.remaining / max(weeks_per_month, 1e-9)
+    return max(0, int(weekly_budget // (2.0 * cost_per_event)))
 
 
 # --------------------------------------------------------------------------- #
@@ -263,12 +286,14 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     budget = budget or CreditBudget(conn, int(ob.get("monthly_credits", 500)),
                                     int(ob.get("reserve", 50)))
     markets = [MARKET_TO_ODDS[m] for m in
-               (cfg.get("prop_markets_internal")
-                or ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"])
+               (cfg.get("prop_markets_internal") or DEFAULT_PROP_MARKETS_INTERNAL)
                if m in MARKET_TO_ODDS]
     regions = str(cfg.get("regions", "us"))
     cost_per_event = float(len(markets) * len(regions.split(",")))
-    cap = int(cfg.get("max_prop_games_per_run", 4))
+    # the tighter of the config cap and the reservation cap wins -- reserving
+    # close budget always takes precedence over max_prop_games_per_run
+    reserved_cap = entry_event_cap(budget, cost_per_event)
+    cap = min(int(cfg.get("max_prop_games_per_run", 4)), reserved_cap)
     ts = ts or stamp_now()
 
     ordered = rotation_order(conn, list(event_map))
@@ -307,7 +332,8 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                                ["ts", "game_id", "book", "market", "player_name", "side"])
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "rows_written": written, "credits_spent": spent,
-            "budget_remaining": budget.remaining, "ts": ts}
+            "budget_remaining": budget.remaining, "ts": ts,
+            "entry_cap_reserved": reserved_cap}
 
 
 def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
@@ -322,8 +348,7 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     budget = CreditBudget(conn, int(ob.get("monthly_credits", 500)),
                           int(ob.get("reserve", 50)))
     markets = [MARKET_TO_ODDS[m] for m in
-               (cfg.get("prop_markets_internal")
-                or ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"])
+               (cfg.get("prop_markets_internal") or DEFAULT_PROP_MARKETS_INTERNAL)
                if m in MARKET_TO_ODDS]
     regions = str(cfg.get("regions", "us"))
     cost = float(len(markets) * len(regions.split(",")))

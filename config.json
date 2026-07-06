@@ -4,6 +4,8 @@
   "regions": "us",
   "game_markets": ["h2h", "spreads", "totals"],
   "prop_markets": ["player_pass_yds", "player_rush_yds", "player_reception_yds", "player_anytime_td"],
+  "prop_markets_internal": ["receiving_yards", "receptions", "rushing_yards", "rush_attempts",
+                            "passing_yards", "pass_attempts", "anytime_td"],
   "fetch_props": true,
   "max_prop_games_per_run": 4,
 
@@ -35,6 +37,7 @@
   "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},
 
   "odds_budget": {"monthly_credits": 500, "reserve": 50},
+  "clv": {"close_window_hours": 6.0},
   "discord_enabled": true,
   "rag": {"vectorstore_enabled": false, "row_cap": 200},
 

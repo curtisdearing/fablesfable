@@ -71,6 +71,17 @@ tr:hover td{background:#172033}
 .note{color:var(--muted);font-size:12px;margin-top:10px}
 .empty{padding:26px;text-align:center;color:var(--muted)}
 .disclaimer{margin-top:26px;padding:14px 16px;background:#160f12;border:1px solid #3a1f25;border-radius:10px;color:#d9a7af;font-size:12px}
+.banner{border-radius:12px;padding:16px 18px;margin-bottom:16px;border:1px solid var(--line)}
+.banner .verdict{font-size:18px;font-weight:800;letter-spacing:.4px}
+.banner.go{background:#10331f;border-color:#1f6b40}
+.banner.go .verdict{color:var(--green)}
+.banner.nogo{background:#301418;border-color:#6b2530}
+.banner.nogo .verdict{color:var(--red)}
+.banner.insufficient{background:#241d0f;border-color:#6b521f}
+.banner.insufficient .verdict{color:var(--yellow)}
+.gatebar{height:10px;background:#0c1320;border-radius:6px;overflow:hidden;margin:10px 0 4px;position:relative}
+.gatebar .fill{position:absolute;top:0;bottom:0;left:0;border-radius:6px}
+.gatebar.go .fill{background:var(--green)} .gatebar.nogo .fill{background:var(--red)} .gatebar.insufficient .fill{background:var(--yellow)}
 </style>
 </head>
 <body>
@@ -91,6 +102,7 @@ tr:hover td{background:#172033}
     <div class="tab" data-t="bets">Value Bets</div>
     <div class="tab" data-t="props">Player Props</div>
     <div class="tab" data-t="leans">Weekly Leans</div>
+    <div class="tab" data-t="clv">CLV / Kill-Check</div>
     <div class="tab" data-t="mc">Monte Carlo</div>
     <div class="tab" data-t="games">All Games</div>
     <div class="tab" data-t="perf">Model &amp; Learning</div>
@@ -101,6 +113,7 @@ tr:hover td{background:#172033}
   <div class="panel" id="bets"></div>
   <div class="panel" id="props"></div>
   <div class="panel" id="leans"></div>
+  <div class="panel" id="clv"></div>
   <div class="panel" id="mc"></div>
   <div class="panel" id="games"></div>
   <div class="panel" id="perf"></div>
@@ -187,6 +200,45 @@ function renderLeans(){
   }).join("");
   el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>
     ${pub}${clvBox}${games}`;
+}
+
+function renderClvKillcheck(){
+  const el=document.getElementById("clv");
+  const kc=DATA.leans_killcheck||{};
+  const clv=DATA.leans_clv||{};
+  const n=kc.n!=null?kc.n:(clv.n||0);
+  const logged=kc.leans_logged!=null?kc.leans_logged:null;
+  const minSample=kc.min_sample||150;
+  const verdict=kc.verdict||"INSUFFICIENT_SAMPLE";
+  const cls=verdict==="GO"?"go":verdict==="NO_GO"?"nogo":"insufficient";
+  const label=verdict==="GO"?"GO — leans beat the close":
+              verdict==="NO_GO"?"NO-GO — kill criterion met":
+              "INSUFFICIENT SAMPLE — no conclusion yet";
+  const pct=Math.min(100,Math.round((n/minSample)*100));
+  const lifetime=kc.lifetime_mean!=null?kc.lifetime_mean:clv.lifetime_mean;
+  const rolling=kc.rolling_mean!=null?kc.rolling_mean:clv.rolling_mean;
+  const posRate=kc.positive_rate!=null?kc.positive_rate:clv.positive_rate;
+  const window=kc.window||clv.window||50;
+  const coverage=kc.coverage;
+  el.innerHTML=`
+    <div class="banner ${cls}">
+      <div class="verdict">${esc(label)}</div>
+      <div class="sub" style="margin-top:6px">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live.")}</div>
+      <div class="gatebar ${cls}"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="sub">${n} of ${minSample} resolved leans needed for a decision${logged!=null?` &middot; ${logged} logged total`:""}</div>
+    </div>
+    <div class="cards" style="margin:0 0 16px">
+      <div class="card"><div class="k">Resolved leans</div><div class="val">${n}</div></div>
+      <div class="card"><div class="k">Lifetime avg CLV</div><div class="val ${lifetime!=null?(lifetime>=0?'ev pos':'ev neg'):''}">${lifetime!=null?fmtPct(lifetime):"—"}</div></div>
+      <div class="card"><div class="k">Rolling(${window}) avg CLV</div><div class="val ${rolling!=null?(rolling>=0?'ev pos':'ev neg'):''}">${rolling!=null?fmtPct(rolling):"—"}</div></div>
+      <div class="card"><div class="k">Positive-CLV rate</div><div class="val">${posRate!=null?fmtP(posRate):"—"}</div><div class="sub">bar: 52%</div></div>
+      <div class="card"><div class="k">Coverage</div><div class="val">${coverage!=null?fmtP(coverage):"—"}</div><div class="sub">resolved / logged</div></div>
+    </div>
+    <div class="box">
+      <h3>What is CLV, and why it matters</h3>
+      <div class="note">Closing-Line Value compares our entry price against the same side at the book-consensus close. A strategy with zero timing/informational skill scores ~0 here; systematically beating the close (avg CLV &gt; 0, hit rate &ge; 52%) across ${minSample}+ resolved leans is the pre-committed bar for "this composite finds real prop edges." Below that bar at n &ge; ${minSample}, the honest response is to revert to a projection/entertainment tool and stop staking — not explain the sample away.</div>
+      <div class="note" style="margin-top:8px"><b>Honesty caveat:</b> prop-market CLV is a weaker edge proxy than main-market (spread/total/ML) CLV — prop books re-price less efficiently and liquidity is thinner, so a positive prop CLV signal should be trusted less, all else equal, than the same signal in the main markets.</div>
+    </div>`;
 }
 
 function renderGames(){
@@ -396,7 +448,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderClvKillcheck();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;

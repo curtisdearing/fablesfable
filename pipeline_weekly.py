@@ -659,11 +659,16 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
 # Post-slate CLV resolution
 # --------------------------------------------------------------------------- #
 def resolve_clv(season: int, week: int,
-                inputs: Optional[candmod.WeekInputs] = None) -> Dict:
+                inputs: Optional[candmod.WeekInputs] = None,
+                cfg: Optional[Dict] = None) -> Dict:
+    cfg = cfg or cfgmod.load_config()
+    close_window_h = float((cfg.get("clv") or {}).get(
+        "close_window_hours", clvmod.DEFAULT_CLOSE_WINDOW_H))
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
     slate = candmod.games_for_week(season, week, inputs.schedules)
-    resolved = clvmod.log_close_for_week(conn, season, week, kickoffs_for(slate))
+    resolved = clvmod.log_close_for_week(conn, season, week, kickoffs_for(slate),
+                                         close_window_hours=close_window_h)
     stats = clvmod.rolling_clv(conn)
     verdict = kcmod.report(conn)
     conn.close()

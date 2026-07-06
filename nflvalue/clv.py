@@ -20,6 +20,7 @@ Close is approximate by design (last pre-kickoff snapshot, however old).
 
 from __future__ import annotations
 
+import datetime as dt
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -27,19 +28,59 @@ import pandas as pd
 from . import db as dbmod
 from . import oddsmath
 
+# Phase 7.3 GAP #1: the closing snapshot must fall within this many hours of
+# kickoff -- a snapshot older than that is stale-entry-era, not a close, and
+# resolving against it would fake CLV ~= 0. Config "clv.close_window_hours".
+DEFAULT_CLOSE_WINDOW_H = 6.0
+
+
+def _shift_hours(ts: str, hours: float) -> str:
+    """ISO8601 UTC timestamp shifted by ``hours`` (may be negative)."""
+    t = dt.datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    t = t + dt.timedelta(hours=hours)
+    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def has_close_snapshot(conn, game_id: str, kickoff: str,
+                       close_window_hours: float = DEFAULT_CLOSE_WINDOW_H) -> bool:
+    """True if ``lines`` already has ANY snapshot for ``game_id`` inside the
+    closing window ``[kickoff - close_window_hours, kickoff]``.
+
+    Scheduling guard (Phase 7.4): the in-season T-90 job may run several
+    times while a game sits inside its close window (cron granularity is
+    coarser than the window), and ``resnap_lines`` has no built-in dedup --
+    every call spends budget again. Callers should skip games where this
+    returns True so at most one close snapshot is paid for per game, per the
+    Gap #2 budget reservation (which assumes exactly one close pull/game)."""
+    window_start = _shift_hours(kickoff, -close_window_hours)
+    n = dbmod.query_df(conn, """
+        SELECT COUNT(*) AS n FROM lines
+        WHERE game_id=? AND ts >= ? AND ts <= ?
+        """, (game_id, window_start, kickoff)).iloc[0]["n"]
+    return bool(int(n) > 0)
+
 
 # --------------------------------------------------------------------------- #
 # Snapshot -> consensus de-vigged prob for one (game, market, player, side)
 # --------------------------------------------------------------------------- #
 def snapshot_prob(conn, game_id: str, market: str, player_id: str, side: str,
-                  at_or_before_ts: Optional[str] = None) -> Optional[Dict]:
+                  at_or_before_ts: Optional[str] = None,
+                  at_or_after_ts: Optional[str] = None) -> Optional[Dict]:
     """Consensus fair probability of ``side`` from the latest snapshot at or
-    before ``at_or_before_ts`` (or the latest overall). None if no lines."""
+    before ``at_or_before_ts`` (or the latest overall). None if no lines.
+
+    ``at_or_after_ts`` (Phase 7.3 GAP #1) is a FLOOR -- pass the start of the
+    closing window (``kickoff - CLOSE_WINDOW_H``) to require a snapshot that
+    actually falls in that window; without it, a snapshot from days earlier
+    would silently pass as a "close" and fake CLV ~= 0."""
     params: List = [game_id, market, player_id]
     ts_clause = ""
     if at_or_before_ts:
-        ts_clause = "AND ts <= ?"
+        ts_clause += " AND ts <= ?"
         params.append(at_or_before_ts)
+    if at_or_after_ts:
+        ts_clause += " AND ts >= ?"
+        params.append(at_or_after_ts)
     df = dbmod.query_df(conn, f"""
         SELECT * FROM lines
         WHERE game_id=? AND market=? AND player_id=? {ts_clause}
@@ -73,19 +114,32 @@ def snapshot_prob(conn, game_id: str, market: str, player_id: str, side: str,
 # Entry + close logging
 # --------------------------------------------------------------------------- #
 def log_close_for_week(conn, season: int, week: int,
-                       kickoffs: Dict[str, str]) -> pd.DataFrame:
+                       kickoffs: Dict[str, str],
+                       close_window_hours: float = DEFAULT_CLOSE_WINDOW_H) -> pd.DataFrame:
     """For every ACTIVE lean of (season, week) with a real (odds_api) line,
-    compute entry prob (latest snapshot <= lean.as_of) and close prob (latest
-    snapshot <= kickoff), upsert into ``clv``. Returns the resolved rows.
+    compute entry prob (latest snapshot <= lean.as_of) and close prob (the
+    closing-window snapshot, GAP #1), upsert into ``clv``. Returns the
+    resolved rows.
 
     ``kickoffs``: {game_id: iso kickoff ts} (from the schedules table).
     Leans without any line snapshots resolve to nothing -- visibly absent,
     never faked.
+
+    GAP #3 (clock dedup): a ``wed`` and a ``t90`` lean can exist for the same
+    (game, player, market, side) -- the ``clv`` table's PK omits ``clock``, so
+    both would collide on upsert. Resolved against the EARLIEST active
+    ``as_of`` per key (the wed entry captures the most line movement --
+    premortem F5) so exactly one candidate row is computed per key.
     """
     leans = dbmod.query_df(conn, """
         SELECT * FROM leans
         WHERE season=? AND week=? AND status='active' AND line_source='odds_api'
         """, (season, week))
+    if leans.empty:
+        return pd.DataFrame()
+    leans = leans.sort_values("as_of").drop_duplicates(
+        subset=["game_id", "player_id", "market", "side"], keep="first")
+
     rows: List[Dict] = []
     for l in leans.itertuples(index=False):
         kickoff = kickoffs.get(l.game_id)
@@ -93,10 +147,11 @@ def log_close_for_week(conn, season: int, week: int,
             continue
         entry = snapshot_prob(conn, l.game_id, l.market, l.player_id, l.side,
                               at_or_before_ts=l.as_of)
+        window_start = _shift_hours(kickoff, -close_window_hours)
         close = snapshot_prob(conn, l.game_id, l.market, l.player_id, l.side,
-                              at_or_before_ts=kickoff)
+                              at_or_before_ts=kickoff, at_or_after_ts=window_start)
         if entry is None or close is None or close["ts"] <= entry["ts"]:
-            continue  # need two distinct snapshots to say anything
+            continue  # need two distinct snapshots (close inside the window) to say anything
         rows.append({
             "season": season, "week": week, "game_id": l.game_id,
             "player_id": l.player_id, "market": l.market, "side": l.side,

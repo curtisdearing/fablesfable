@@ -36,6 +36,9 @@ def report(conn=None, min_sample: int = DEFAULT_MIN_SAMPLE, window: int = 50) ->
 
     leans_n = int(dbmod.query_df(
         conn, "SELECT COUNT(*) AS n FROM leans WHERE status='active'").iloc[0]["n"])
+    # Phase 7.3 monitorability: coverage warns when the close-snapshot budget
+    # is too thin to resolve the log (resolved CLV rows vs logged active leans)
+    coverage = round(n / leans_n, 4) if leans_n else None
 
     if n < min_sample:
         verdict = "INSUFFICIENT_SAMPLE"
@@ -55,8 +58,8 @@ def report(conn=None, min_sample: int = DEFAULT_MIN_SAMPLE, window: int = 50) ->
                   "the close. Revert to projection/entertainment tool; stop staking. "
                   "(PROP_SHORTLISTER_SPEC.md §5.3 — this outcome was pre-committed.)")
 
-    return {**stats, "leans_logged": leans_n, "min_sample": min_sample,
-            "verdict": verdict, "detail": detail}
+    return {**stats, "leans_logged": leans_n, "coverage": coverage,
+            "min_sample": min_sample, "verdict": verdict, "detail": detail}
 
 
 def main() -> None:  # pragma: no cover - thin CLI

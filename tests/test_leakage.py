@@ -176,6 +176,105 @@ def test_calibrated_prediction_does_not_leak_future_seasons():
 
 
 # --------------------------------------------------------------------------- #
+# Phase 7.3/7.4: real-line re-labeling is a NEW leakage surface --
+# ``ml_test.augment_with_real_lines`` may flip a row's label ONLY when BOTH a
+# real (odds_api) decision-time line exists AND the game is graded
+# (lean_outcomes). A row for an ungraded/future week must never flip, even if
+# a real line already sits in ``leans`` (the closing line existing before
+# kickoff carries no outcome information -- the forbidden path is writing a
+# real label from a line WITHOUT a graded ``actual``; see docs/decisions_p7.md
+# 7.3 §2, point 4).
+# --------------------------------------------------------------------------- #
+def _relabel_frame():
+    import pandas as pd
+    return pd.DataFrame([
+        # row A: will be graded + has a real line -> MUST flip
+        {"season": 2023, "week": 10, "player_id": "00-A1", "market": "receiving_yards",
+         "mean": 55.0, "sd": 18.0, "line": 47.0,
+         "mean_minus_line": 55.0 - 47.0, "sd_over_line": 18.0 / 47.0,
+         "z": (55.0 - 47.0) / 18.0, "y_over": 1.0},
+        # row B: has a real line in `leans` but is NOT YET graded (no
+        # lean_outcomes row -- e.g. the game hasn't been played) -> must NOT
+        # flip, even though a real closing line exists for it right now
+        {"season": 2023, "week": 11, "player_id": "00-A2", "market": "receiving_yards",
+         "mean": 60.0, "sd": 15.0, "line": 50.0,
+         "mean_minus_line": 10.0, "sd_over_line": 0.3,
+         "z": 10.0 / 15.0, "y_over": 1.0},
+        # row C: graded, but line_source is NOT odds_api (synthetic) -> must
+        # NOT flip even though lean_outcomes exists for it
+        {"season": 2023, "week": 10, "player_id": "00-A3", "market": "rushing_yards",
+         "mean": 40.0, "sd": 12.0, "line": 35.0,
+         "mean_minus_line": 5.0, "sd_over_line": 35.0 / 35.0,
+         "z": 5.0 / 12.0, "y_over": 1.0},
+    ])
+
+
+def test_augment_with_real_lines_only_flips_graded_rows_with_real_line(tmp_path):
+    import ml_test
+    from nflvalue import db as dbmod
+
+    conn = dbmod.connect(str(tmp_path / "relabel_test.db"))
+    # row A: real line + graded (actual crosses the two lines -> y flips)
+    dbmod.upsert(conn, "leans", [{
+        "season": 2023, "week": 10, "clock": "wed", "game_id": "G1",
+        "player_id": "00-A1", "name": "A1", "market": "receiving_yards",
+        "side": "over", "line": 52.5, "line_source": "odds_api", "price": 1.87,
+        "book": "draftkings", "status": "active", "as_of": "2023-11-08T12:00:00Z",
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+    dbmod.upsert(conn, "lean_outcomes", [{
+        "season": 2023, "week": 10, "clock": "wed", "game_id": "G1",
+        "player_id": "00-A1", "market": "receiving_yards", "actual": 50.0, "hit": 0,
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+    # row B: real line exists but NOT graded (no lean_outcomes row) --
+    # a "future" or in-progress week
+    dbmod.upsert(conn, "leans", [{
+        "season": 2023, "week": 11, "clock": "wed", "game_id": "G2",
+        "player_id": "00-A2", "name": "A2", "market": "receiving_yards",
+        "side": "over", "line": 50.0, "line_source": "odds_api", "price": 1.9,
+        "book": "draftkings", "status": "active", "as_of": "2023-11-15T12:00:00Z",
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+    # row C: graded, but the lean's line_source is synthetic, not odds_api
+    dbmod.upsert(conn, "leans", [{
+        "season": 2023, "week": 10, "clock": "wed", "game_id": "G3",
+        "player_id": "00-A3", "name": "A3", "market": "rushing_yards",
+        "side": "over", "line": 35.0, "line_source": "synthetic", "price": None,
+        "book": None, "status": "active", "as_of": "2023-11-08T12:00:00Z",
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+    dbmod.upsert(conn, "lean_outcomes", [{
+        "season": 2023, "week": 10, "clock": "wed", "game_id": "G3",
+        "player_id": "00-A3", "market": "rushing_yards", "actual": 42.0, "hit": 1,
+    }], ["season", "week", "clock", "game_id", "player_id", "market"])
+
+    before = _relabel_frame()
+    after = ml_test.augment_with_real_lines(before.copy(), conn)
+
+    # (season, week) are never touched by the join
+    assert (after["season"] == before["season"]).all()
+    assert (after["week"] == before["week"]).all()
+
+    a = after[after["player_id"] == "00-A1"].iloc[0]
+    b = after[after["player_id"] == "00-A2"].iloc[0]
+    c = after[after["player_id"] == "00-A3"].iloc[0]
+
+    # row A: graded + real line -> flips
+    assert a["line"] == 52.5 and a["y_over"] == 0.0
+    assert a["mean"] == 55.0 and a["sd"] == 18.0        # non-line features untouched
+    assert abs(a["z"] - (55.0 - 52.5) / 18.0) < 1e-9
+
+    # row B: real line but UNGRADED -> must stay exactly synthetic
+    orig_b = before[before["player_id"] == "00-A2"].iloc[0]
+    assert b["line"] == orig_b["line"] == 50.0
+    assert b["y_over"] == orig_b["y_over"]
+    assert b["z"] == orig_b["z"]
+
+    # row C: graded but synthetic line_source -> must stay exactly synthetic
+    orig_c = before[before["player_id"] == "00-A3"].iloc[0]
+    assert c["line"] == orig_c["line"] == 35.0
+    assert c["y_over"] == orig_c["y_over"]
+    conn.close()
+
+
+# --------------------------------------------------------------------------- #
 # Phase 7.2: the ensemble meta-learner is a NEW walk-forward surface (its
 # training pairs are OOS member predictions from expanding folds) -- same two
 # guards as the calibrator: no fold trains on the season it later helps
