@@ -41,6 +41,7 @@ from nflvalue.projection import MARKETS
 from nflvalue.shortlist import shortlist_week
 
 BREAKEVEN = 0.5238  # win rate needed at standard -110 juice
+UNIT_WIN = 100.0 / 110.0   # profit (in units) per 1u win at standard -110 juice
 
 
 # --------------------------------------------------------------------------- #
@@ -111,7 +112,15 @@ def grade(row: Dict, actuals: Dict[tuple, float]) -> Optional[Dict]:
 
 def _rate(frame: pd.DataFrame) -> Dict:
     n = len(frame)
-    return {"n": n, "hit_rate": round(float(frame["hit"].mean()), 4) if n else None}
+    if not n:
+        return {"n": 0, "hit_rate": None, "units": None}
+    hits = frame["hit"].astype(bool)
+    # standard -110 juice, flat 1u/lean -- NOT a claim these are real tradeable
+    # prices (see module docstring: synthetic-line grading); purely so the
+    # correlation-aware ablation has a units delta alongside hit-rate.
+    units = float(hits.sum()) * UNIT_WIN - float((~hits).sum())
+    return {"n": n, "hit_rate": round(float(hits.mean()), 4),
+           "units": round(units, 2)}
 
 
 # --------------------------------------------------------------------------- #
@@ -119,11 +128,22 @@ def _rate(frame: pd.DataFrame) -> Dict:
 # --------------------------------------------------------------------------- #
 def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
         write_files: bool = True, learn: bool = False,
-        learn_params: Optional[Dict] = None) -> Dict:
+        learn_params: Optional[Dict] = None,
+        corr_aware: bool = False, corr_discount_strength: float = 1.0,
+        out_suffix: str = "") -> Dict:
     """``learn=True`` replays ADAPTIVELY: each week is ranked with the bias/
     reliability adjustments learned from the weeks already graded (walk-
     forward -- week W never sees week W's outcomes), exactly like the live
-    Tuesday --grade loop would have applied them."""
+    Tuesday --grade loop would have applied them.
+
+    ``corr_aware=True`` (Phase 7.6 ablation): selection reads the 7.5
+    correlation artifact with a STRICT walk-forward rho (``as_of_season=
+    season`` -- only prior seasons inform it, exactly like every other
+    walk-forward artifact in this repo). Missing/empty artifact degrades
+    loudly to ``corr_aware`` having no effect (identical to False).
+    ``out_suffix``: appended to the written filenames so a baseline and a
+    corr-aware run don't clobber each other on disk.
+    """
     from nflvalue import prop_learning
 
     cfg = cfgmod.load_config()
@@ -131,6 +151,21 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
     params = (cfg.get("composite") or {}).get("params")
     min_usage = (cfg.get("candidates") or {}).get("min_usage")
     state = prop_learning.LearningState(learn_params or cfg.get("learning")) if learn else None
+
+    corr = None
+    if corr_aware:
+        import os
+        from nflvalue.correlation import ART_PATH, CorrelationStructure
+        if os.path.exists(ART_PATH):
+            cs = CorrelationStructure.load()
+            if cs.pair_types:
+                corr = cs
+            else:
+                print("[lean_backtest] correlation artifact is empty -- "
+                      "corr_aware has no effect this run.")
+        else:
+            print(f"[lean_backtest] correlation artifact missing ({ART_PATH}) -- "
+                  "corr_aware has no effect this run.")
 
     all_weeks = sorted(inputs.schedules[
         (inputs.schedules["season"] == season)
@@ -181,7 +216,9 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
         cands = (prop_learning.apply_to_candidates(cands_raw, state.adjustments(), enabled=True)
                  if state is not None else cands_raw)
         actuals = _actuals_for_week(inputs.pw, season, wk)
-        games = shortlist_week(cands, weights=weights, params=params)
+        games = shortlist_week(cands, weights=weights, params=params,
+                               corr=corr, as_of_season=(season if corr is not None else None),
+                               corr_discount_strength=corr_discount_strength)
 
         lean_keys = set()
         for g in games:
@@ -194,8 +231,11 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
                     "season": season, "week": wk, "game_id": g["game_id"],
                     "matchup": g["matchup"], "rank": rank,
                     "player_id": l["player_id"], "name": l["name"], "pos": l["pos"],
+                    "team": l.get("team"),
                     "market": l["market"], "side": l["side"], "line": l["line"],
                     "mean": l["mean"], "composite": l["composite"],
+                    "corr_discount": l.get("corr_discount", 0.0),
+                    "corr_with": (l.get("corr_with") or {}).get("name"),
                     "screened_n": g["screened_n"], **graded,
                 })
         # baseline: EVERY screened candidate, model side at the same line
@@ -234,11 +274,13 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
     cands_all = pd.DataFrame(cand_rows)
 
     report = {
-        "season": season, "weeks": weeks,
+        "season": season, "weeks": weeks, "corr_aware": corr is not None,
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "framing": ("Directional grading at SYNTHETIC trailing-mean lines -- the lines the "
                     "tool would have published. NOT price-beating/profit; breakeven at a real "
-                    f"-110 line would be {BREAKEVEN:.2%}."),
+                    f"-110 line would be {BREAKEVEN:.2%}. Units at flat 1u/lean, standard -110 juice "
+                    "-- a units delta between selection policies is informative even though the "
+                    "underlying win rate is synthetic-line directional, not price-beating."),
         "leans": {
             "overall": _rate(leans),
             "top1_per_game": _rate(leans[leans["rank"] == 1]),
@@ -261,9 +303,9 @@ def run(season: int, inputs: WeekInputs, weeks: Optional[List[int]] = None,
 
     if write_files:
         os.makedirs("reports", exist_ok=True)
-        cfgmod.save_json(os.path.join(cfgmod.DATA_DIR, f"lean_replay_{season}.json"),
+        cfgmod.save_json(os.path.join(cfgmod.DATA_DIR, f"lean_replay_{season}{out_suffix}.json"),
                          {**report, "lean_rows": lean_rows})
-        with open(os.path.join("reports", f"lean_replay_{season}.md"), "w") as f:
+        with open(os.path.join("reports", f"lean_replay_{season}{out_suffix}.md"), "w") as f:
             f.write(render_md(report, leans))
     return {"report": report, "leans": leans, "candidates": cands_all}
 
@@ -277,9 +319,11 @@ def render_md(report: Dict, leans: pd.DataFrame) -> str:
         "Gambling problem? **1-800-GAMBLER**.",
         "",
         f"- Leans graded: **{L['overall']['n']}** across {report['n_games']} games "
-        f"(avg {report['avg_screened_per_game']} candidates screened per game)",
+        f"(avg {report['avg_screened_per_game']} candidates screened per game)"
+        + (" — **correlation-aware selection**" if report.get("corr_aware") else " — baseline selection"),
         f"- **Overall hit rate: {L['overall']['hit_rate']:.1%}** "
-        f"(directional, vs {BREAKEVEN:.1%} breakeven if these were real -110 lines)",
+        f"(directional, vs {BREAKEVEN:.1%} breakeven if these were real -110 lines) · "
+        f"units: {L['overall']['units']:+.1f}u flat 1u/lean at -110",
         f"- Top-1 pick per game: {L['top1_per_game']['hit_rate']:.1%} (n={L['top1_per_game']['n']})",
         f"- All-candidates baseline: {report['baseline_all_candidates']['overall']['hit_rate']:.1%} "
         f"(n={report['baseline_all_candidates']['overall']['n']}) — the composite must beat this "
@@ -308,6 +352,8 @@ def main() -> None:
     ap.add_argument("--weeks", type=int, nargs="*", default=None)
     ap.add_argument("--learn", action="store_true",
                     help="adaptive replay: apply the weekly learning loop walk-forward")
+    ap.add_argument("--corr-aware", action="store_true",
+                    help="Phase 7.6: correlation-aware selection (walk-forward rho)")
     args = ap.parse_args()
     if args.pw:
         inputs = WeekInputs(pd.read_parquet(args.pw), pd.read_parquet(args.opd),
@@ -315,7 +361,8 @@ def main() -> None:
     else:
         from nflvalue.candidates import build_week_inputs
         inputs = build_week_inputs()
-    res = run(args.season, inputs, weeks=args.weeks, learn=args.learn)
+    res = run(args.season, inputs, weeks=args.weeks, learn=args.learn,
+             corr_aware=args.corr_aware, out_suffix=("_corraware" if args.corr_aware else ""))
     r = res["report"]["leans"]["overall"]
     print(f"{args.season}: {r['n']} leans, hit rate {r['hit_rate']:.1%} "
           f"(baseline {res['report']['baseline_all_candidates']['overall']['hit_rate']:.1%})")

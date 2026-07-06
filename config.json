@@ -34,6 +34,8 @@
     "tuning_provenance": "walk-forward grid 2019-2025 (tune_weights.py, reports/weight_tuning.md); conf_share=0.8, z_cap=1.5 chosen by majority of out-of-sample season selections"
   },
   "shortlist": {"top_n": 5, "max_per_player": 2},
+  "correlation": {"enabled": true, "discount_strength": 1.0, "sgp_readout": true,
+                  "provenance": "Phase 7.6 (docs/decisions_p7.md): correlation-aware MMR-style greedy selection using the 7.5 shrunk-rho artifact (data/correlation_structure.json); discounts a candidate's effective score by its max POSITIVE rho vs already-selected leans in the same game (never penalizes negative/diversifying pairs). See 7.6 section for the walk-forward ablation verdict."},
   "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},
 
   "odds_budget": {"monthly_credits": 500, "reserve": 50},

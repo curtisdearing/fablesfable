@@ -736,3 +736,211 @@ Correlations measured walk-forward with shrinkage and a leakage test; the
 real-vs-noise call is explicit and effect-size based; the artifact is ready for
 7.6/7.7 to consume without further design. No selection or staking behavior
 changed in this job.
+
+---
+
+## 7.6 — Correlation-aware selection + reporting
+
+Wires 7.5's shrunk-rho artifact into the shortlist itself, so a top-5 isn't
+secretly five bets on one game outcome, and surfaces the effect everywhere a
+human reads a slip. No change to composite scoring, the ML ranker, or the
+data going INTO a candidate's score -- this job only changes which candidates
+get selected, and what's displayed alongside them.
+
+### Selection rule
+
+`shortlist.rank_game`/`shortlist_week` gain optional `corr`, `as_of_season`,
+`corr_discount_strength` params. `corr=None` (the default) reproduces the
+exact pre-7.6 selection byte-for-byte -- every existing caller is unaffected
+until it's explicitly opted in.
+
+When `corr` is given, selection becomes an MMR-style greedy walk: at each of
+the `top_n` slots, pick the REMAINING candidate with the highest *discounted*
+score, where the discount is `redundancy_discount(rho) = clip(max(0, rho), 0,
+0.95) * strength` -- the largest POSITIVE shrunk rho vs any lean ALREADY
+selected in that game (same-player pairs ~0.76, same-team QB+pass-catcher
+~0.30). A near-duplicate leg that would have filled a slot on raw composite
+alone can lose it to a lower-composite but genuinely independent candidate
+further down the list. Negative/diversifying rho (QB-pass vs RB-rush,
+opposing RBs) is never penalized -- 7.5 found those legs *help*, exactly as
+recommended. A discount is never total (capped at 0.95): a fully-duplicate
+leg can still fill an otherwise-empty slot rather than being hard-banned.
+Each selected lean carries `corr_discount` (0 if none) and `corr_with`
+(`{player_id, name, market, rho}` of the leg it was discounted against, or
+`None`) for the report to explain itself.
+
+`as_of_season`: strict walk-forward rho (only seasons `< as_of_season`
+informed it) for the backtest; omitted (production/all-history value) for
+every live call site (`pipeline_weekly.run_week`/`run_t90` via
+`load_correlation`, which degrades loudly -- one printed line, `corr=None` --
+if the artifact is disabled, missing, or empty, never inventing structure).
+
+### Reporting
+
+`game_notes.correlation_notes_for_game` flags pairs of SELECTED leans whose
+type cleared 7.5's REAL bar, appended into the SAME display-only `g["notes"]`
+list every renderer already reads (`report.py` markdown, `document.py` HTML
+drop, and -- newly wired this phase, since it turned out `dashboard.py` never
+rendered `notes` at all before now -- the dashboard's Weekly Leans tab). A
+positive pair reads "move together"; a negative pair reads "hedge against
+each other". The dashboard additionally shows a small "corr −N%" badge next
+to a discounted lean's market, with the partner leg on hover.
+
+### SGP joint-probability readout (7.5's narrow green-light)
+
+`correlation.sgp_joint_prob(p_i, side_i, p_j, side_j, rho)`: a Gaussian
+copula over each leg's OWN model probability (never a synthetic-line "edge")
+and the measured rho, via the correct bivariate-normal quadrant
+(inclusion-exclusion on `scipy.stats.multivariate_normal`'s CDF, side-aware).
+`shortlist.sgp_readouts` computes this for every pair of SELECTED leans whose
+type cleared the REAL bar, returning `{leg_a, leg_b, rho, independent_joint_prob,
+copula_joint_prob, label}` -- `label` states plainly this is informational
+only and prices nothing until a real SGP market exists. Wired into
+`report.generate` (`g["sgp"]`, rendered in the markdown and the dashboard) and
+`pipeline_weekly.run_t90`; gated by config `correlation.sgp_readout` (default
+true). Verified: independence (`rho=0`) falls back to the plain product;
+positive rho raises an over/over joint above independence and lowers an
+over/under joint below it (the hedge direction); symmetric under leg swap;
+degenerate probabilities (0/1) return `None` rather than a meaningless number.
+
+### Ablation (Checkpoint C) — honest result: KEEP, pooled positive
+
+`scripts/ablate_correlation.py` replays `lean_backtest.run` twice per season
+(baseline vs `corr_aware=True`, same frozen policy: `top_n=5,
+max_per_player=2`) over 2022-2025 on real historical data (not fixtures --
+this is the same walk-forward directional-hit-rate replay every other phase's
+backtest uses, with the same synthetic-line caveat: NOT price-beating/profit).
+`reports/correlation_ablation.md` / `data/correlation_ablation.json`:
+
+| | n | hit rate | units (flat 1u, -110) |
+|---|---|---|---|
+| Baseline (shipped) | 5,435 | 58.1% | +595.8u |
+| Correlation-aware | 5,435 | **58.6%** | **+645.5u** |
+
+| Season | Baseline hit / units | Corr-aware hit / units | Δhit | Δunits |
+|---|---|---|---|---|
+| 2022 | 59.0% / +172.3u | 58.4% / +155.1u | **−0.66%** | **−17.2u** |
+| 2023 | 58.2% / +152.0u | 58.8% / +165.4u | +0.51% | +13.4u |
+| 2024 | 58.7% / +163.4u | 59.5% / +184.4u | +0.81% | +21.0u |
+| 2025 | 56.5% / +108.1u | 57.8% / +140.6u | +1.25% | +32.5u |
+
+Top-1-per-game is (correctly) unchanged -- a single pick per game has nothing
+to discount against. Diversification: baseline slips average ~4.38 "effective
+independent bets" per 5-leg slip (1 minus max positive pairwise rho vs each
+earlier-selected leg); correlation-aware slips average ~4.95 -- measurably
+closer to 5 genuinely independent bets, with 257 selected legs (of ~5,435,
+~4.7%) carrying a nonzero discount over the 4 seasons.
+
+**Honest characterization:** pooled result is positive on BOTH hit-rate and
+units, and diversification improved as designed -- 3 of 4 seasons beat
+baseline on both metrics; 2022 alone is mildly worse (−0.66pt hit,
+−17u), plausibly season-level noise given the same order of magnitude of
+year-to-year variance already documented in 6.7/6.8's policy-search work. This
+clears the pre-committed bar ("keep it only if it helps or is
+neutral-with-better-diversification") on the stronger of the two conditions
+-- it helps, pooled and in most seasons, not just diversifies. Shipped
+enabled by default (`config.json` `"correlation": {"enabled": true,
+"discount_strength": 1.0, "sgp_readout": true}`).
+
+### Tests
+
+`tests/test_correlation.py`: `redundancy_discount` (positive-only, strength
+scaling, 0.95 cap), `sgp_joint_prob` (independence fallback, degenerate-input
+None, leg-swap symmetry, positive rho raises the aligned joint / lowers the
+hedge joint) -- 7 new tests, 11 total in the file.
+`tests/test_shortlist.py`: `corr=None` byte-identical to baseline; a
+near-duplicate leg loses its slot to an independent one; discount/partner
+tagging; negative rho never penalizes; determinism under input reordering;
+`shortlist_week` threads `corr` per game; `sgp_readouts` returns the real
+pair and empty when `corr` is `None` or no real type is present -- 8 new
+tests, 20 total. `tests/test_game_notes_auto.py`: correlation notes appended
+only when `corr` is given, negative rho reads "hedge", existing story notes
+untouched by default -- 5 new tests, 10 total. Full suite: 270/270 passed.
+
+### Done
+
+Selection consumes the 7.5 artifact (byte-identical when not opted in); the
+report/dashboard/document all show correlation flags and, where a real
+cross-player pair exists among the selected legs, a clearly-labeled SGP
+readout; tests cover the discount math, the selection behavior change, and
+the reporting; the walk-forward ablation is honestly reported and the feature
+ships because it helped, not merely because it was neutral.
+
+---
+
+## 7.7 — Staking / bankroll module
+
+Bet sizing is where a good model still goes broke. This job turns calibrated
+edges into **advisory** stake sizes that respect estimation error, correlation
+(7.5), and a hard drawdown tolerance, sized to survive the 6.8 variance
+envelope. **The module never places a bet, moves money, or initiates a transfer**
+— output is a recommendation a human may act on, ignore, or override. Every input
+probability is model-estimated and, until real CLV accrues, graded at synthetic
+lines. Plain-language companion: `docs/EXPLAINER_staking.md`.
+
+### The sizing rule (`nflvalue/staking.py`, deterministic + pure)
+
+Per lean, given calibrated `p` (model prob of the side), the real price `d`
+(`b = d−1`), and de-vigged `market_prob`:
+
+1. `edge = p − market_prob`; **`≤ 0` → stake 0** (never size a non-edge).
+2. **Estimation-error shrink** (`s_edge = 0.5`): regress the edge toward the
+   market prior — the market is efficient and `p` is a noisy estimate, so size as
+   if the edge is half what it looks. `p_s = market_prob + s_edge·edge`.
+3. **Full Kelly on the shrunk prob** at the real price: `f* = (b·p_s−(1−p_s))/b`.
+4. **Fractional Kelly** (`κ = 0.25`, quarter-Kelly — matches 6.8; absorbs
+   parameter + correlation uncertainty). Effective ≈ ⅛ of raw Kelly.
+5. **Correlation adjust** (7.5): `f / (1 + Σ_{j≠i, same game} max(ρ_ij, 0))`.
+   Two same-team QB+WR overs (ρ≈0.30) each shrink ×1/1.30; a player's own two
+   markets (ρ≈0.76) shrink so together they ≈ one bet. Negative (hedging) ρ gets
+   **no bonus** — conservative.
+6. **Per-bet cap** `min(f, 0.02)` (below the 58% quarter-Kelly of 2.95%).
+7. **Portfolio**: scale a slate down if stakes sum past `max_slate = 0.10`; then a
+   global `dd_scale ≤ 1` lets the 6.8 MC pin the fraction to a drawdown cap.
+
+`1u ≡ 1% of bankroll` (6.8 convention). A p=0.55 side at −110 (fair 0.5238) sizes
+to **0.69% of bankroll** (0.69u) — half of plain quarter-Kelly's 1.37%, the
+estimation-error discount made concrete.
+
+### Bankroll Monte Carlo (`scripts/staking_mc.py`)
+
+The 6.8 machinery, run at **plausible real-line edges (52–58%), NOT the synthetic
+66–68%** (which compounds to fiction — 6.8 makes the point, we honor it). A ~306-
+bet season with within-game legs correlated at ρ=0.30 (Gaussian copula from the
+7.5 artifact, so the correlation adjustment is exercised). Start 100u; ruin = lost
+≥80%.
+
+| true hit | strategy | median end | p95 max DD | P(ruin) |
+|---|---|---|---|---|
+| 54% | plain ¼-Kelly | 106.9 | 24.6% | 0 |
+| 54% | **shrunk (shipped)** | **103.6** | **11.1%** | **0** |
+| 55% | plain ¼-Kelly | 119.3 | 33.4% | 0 |
+| 55% | **shrunk** | **108.2** | **14.6%** | **0** |
+| 58% | plain ¼-Kelly | 227.4 | 48.1% | 0 |
+| 58% | **shrunk** | **119.7** | **10.7%** | **0** |
+
+The shipped rule grows the bankroll far slower than raw quarter-Kelly but holds
+p95 drawdown to **~10–15%** (inside the 20% tolerance, so the default `dd_scale=1`
+needs no further scaling) with **zero ruin** — the whole point of shrinking an
+edge you only estimated. At 52.38% (breakeven) the rule bets nothing (edge ≤ 0):
+**no sizing manufactures an edge that isn't there.** Reproduce:
+`python3 scripts/staking_mc.py` → `reports/staking_mc.md`, `data/staking_mc.json`.
+
+### Advisory-only, and the honest chain
+
+The module's docstring and the report both carry the disclaimer, and
+`recommend_stakes` returns it in every payload. Staking is a **new advisory
+layer**: it consumes composite/model fields + the 7.5 artifact and changes no
+selection or composite behavior. The 6.8 honest chain still governs — synthetic-
+line skill (measured) → real-line hit rate (unknown until CLV accrues) → profit
+(variance-dominated). These sizes say *how much to risk IF the edge is real*; the
+CLV kill-check (7.3/7.4), not this module, decides whether it is.
+
+### Done
+
+Staking is deterministic, shrunk for estimation error, correlation- and
+drawdown-aware, capped, advisory-only, and tested (`tests/test_staking.py`, 9
+cases: determinism, no-edge→0, monotonic in edge, shrink reduces size, per-bet +
+slate caps, correlation reduces correlated stakes, negative-ρ gets no bonus,
+disclaimer/units). Every projection is at real-line-plausible edges with the
+synthetic caveat stated.

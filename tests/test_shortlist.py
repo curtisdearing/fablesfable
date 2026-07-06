@@ -7,12 +7,15 @@ import copy
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from nflvalue.composite import score_candidate  # noqa: E402
-from nflvalue.shortlist import build_context_panel, rank_game  # noqa: E402
+from nflvalue.correlation import CorrelationStructure  # noqa: E402
+from nflvalue.shortlist import (build_context_panel, rank_game,  # noqa: E402
+                                sgp_readouts, shortlist_week)
 
 
 def _cand(pid="P1", name="Alpha One", market="receiving_yards", mean=78.0, sd=25.0,
@@ -170,3 +173,127 @@ def test_low_confidence_multiplier_applied():
     tagged["low_confidence"] = True
     assert score_candidate(tagged)["composite"] == pytest.approx(
         score_candidate(base)["composite"] * 0.8, abs=0.02)
+
+
+# --------------------------------------------------------------------------- #
+# Phase 7.6 -- correlation-aware selection
+# --------------------------------------------------------------------------- #
+def _corr(real_types):
+    """``real_types``: {pair_type_key: rho_shrunk}."""
+    return CorrelationStructure({
+        "pair_types": {k: {"rho_shrunk": v, "verdict": "real"} for k, v in real_types.items()},
+        "walk_forward": {},
+    })
+
+
+def _game_cands():
+    """One game: P1 has two near-duplicate WR receiving markets (would both
+    make a raw top-5), P2 a same-team QB correlated with P1, P3/P4/P5
+    independent legs of lower composite than P1's second market."""
+    p2 = _cand(pid="P2", name="Bravo", market="passing_yards", mean=280, sd=40,
+              line=230.5, p_over=0.65, opp_factor=1.0, game_script=1.0)
+    p2["pos"] = "QB"
+    return [
+        _cand(pid="P1", name="Alpha", market="receiving_yards", mean=90, sd=20,
+             line=60.5, p_over=0.75),
+        _cand(pid="P1", name="Alpha", market="receptions", mean=7.5, sd=2.0,
+             line=5.5, p_over=0.70),
+        p2,
+        _cand(pid="P3", name="Charlie", market="rushing_yards", mean=70, sd=20,
+             line=55.5, p_over=0.60, opp_factor=1.0, game_script=1.0),
+        _cand(pid="P4", name="Delta", market="receiving_yards", mean=65, sd=18,
+             line=50.5, p_over=0.58, opp_factor=1.0, game_script=1.0),
+        _cand(pid="P5", name="Echo", market="receiving_yards", mean=40, sd=12,
+             line=35.5, p_over=0.55, opp_factor=1.0, game_script=1.0),
+    ]
+
+
+def test_rank_game_corr_none_is_byte_identical_to_baseline():
+    """The default (corr=None) must reproduce the exact pre-7.6 selection --
+    no new required behavior for any existing caller."""
+    cands = _game_cands()
+    a = rank_game(cands, max_per_player=2)
+    b = rank_game(cands, max_per_player=2, corr=None)
+    assert [(l["player_id"], l["market"], l["composite"]) for l in a["leans"]] == \
+           [(l["player_id"], l["market"], l["composite"]) for l in b["leans"]]
+    assert all("corr_discount" not in l for l in a["leans"])
+
+
+def test_correlation_aware_selection_drops_near_duplicate_for_independent_leg():
+    """P1's second market (receptions) near-duplicates its first
+    (rho=0.76) and should lose its slot to a genuinely independent, lower-
+    composite candidate -- "a top-5 isn't secretly five bets on one outcome."""
+    cands = _game_cands()
+    corr = _corr({"sameplayer|WR.rec~WR.rec": 0.76})
+    baseline = rank_game(cands, max_per_player=2)
+    aware = rank_game(cands, max_per_player=2, corr=corr)
+    baseline_keys = {(l["player_id"], l["market"]) for l in baseline["leans"]}
+    aware_keys = {(l["player_id"], l["market"]) for l in aware["leans"]}
+    assert ("P1", "receptions") in baseline_keys        # raw composite alone picks it
+    assert ("P1", "receptions") not in aware_keys        # correlation-aware drops it
+    assert len(aware["leans"]) == 5                      # still fills all 5 slots
+
+
+def test_correlation_aware_selection_tags_discount_and_partner():
+    cands = _game_cands()
+    corr = _corr({"sameplayer|WR.rec~WR.rec": 0.76, "sameteam|QB.pass~WR.rec": 0.30})
+    aware = rank_game(cands, max_per_player=2, corr=corr)
+    p2 = next(l for l in aware["leans"] if l["player_id"] == "P2")
+    assert p2["corr_discount"] == pytest.approx(0.30)
+    assert p2["corr_with"]["player_id"] == "P1"
+    # legs with no correlated partner selected before them carry no discount
+    p3 = next(l for l in aware["leans"] if l["player_id"] == "P3")
+    assert p3["corr_discount"] == 0.0 and p3["corr_with"] is None
+
+
+def test_correlation_aware_selection_never_penalizes_negative_rho():
+    """Negative (diversifying) rho must never discount -- selection with a
+    negative-only artifact must equal the baseline (no positive rho exists to
+    discount anything)."""
+    cands = _game_cands()
+    corr = _corr({"sameplayer|WR.rec~WR.rec": -0.40})
+    baseline = rank_game(cands, max_per_player=2)
+    aware = rank_game(cands, max_per_player=2, corr=corr)
+    assert [(l["player_id"], l["market"]) for l in baseline["leans"]] == \
+           [(l["player_id"], l["market"]) for l in aware["leans"]]
+
+
+def test_correlation_aware_selection_deterministic():
+    cands = _game_cands()
+    corr = _corr({"sameplayer|WR.rec~WR.rec": 0.76, "sameteam|QB.pass~WR.rec": 0.30})
+    a = rank_game(list(cands), max_per_player=2, corr=corr)
+    b = rank_game(list(reversed(cands)), max_per_player=2, corr=corr)
+    assert [(l["player_id"], l["market"]) for l in a["leans"]] == \
+           [(l["player_id"], l["market"]) for l in b["leans"]]
+
+
+def test_shortlist_week_threads_corr_through_each_game():
+    df = pd.DataFrame(_game_cands())
+    corr = _corr({"sameplayer|WR.rec~WR.rec": 0.76})
+    games = shortlist_week(df, max_per_player=2, corr=corr)
+    assert len(games) == 1
+    keys = {(l["player_id"], l["market"]) for l in games[0]["leans"]}
+    assert ("P1", "receptions") not in keys
+
+
+def test_sgp_readouts_real_pair_present():
+    cands = _game_cands()
+    corr = _corr({"sameplayer|WR.rec~WR.rec": 0.76, "sameteam|QB.pass~WR.rec": 0.30})
+    aware = rank_game(cands, max_per_player=2, corr=corr)
+    sgp = sgp_readouts(aware, corr)
+    assert len(sgp) >= 1
+    pair = next(s for s in sgp if {s["leg_a"]["player_id"], s["leg_b"]["player_id"]} == {"P1", "P2"})
+    assert pair["rho"] == pytest.approx(0.30)
+    assert 0.0 < pair["independent_joint_prob"] < 1.0
+    assert 0.0 < pair["copula_joint_prob"] < 1.0
+    assert "SGP" in pair["label"] and "not a synthetic-line" in pair["label"].lower() \
+        or "not a synthetic-line" in pair["label"]
+
+
+def test_sgp_readouts_empty_when_corr_none_or_no_real_pair():
+    cands = _game_cands()
+    aware_no_corr = rank_game(cands, max_per_player=2)
+    assert sgp_readouts(aware_no_corr, None) == []
+    corr_no_pairs = _corr({})
+    aware = rank_game(cands, max_per_player=2, corr=corr_no_pairs)
+    assert sgp_readouts(aware, corr_no_pairs) == []

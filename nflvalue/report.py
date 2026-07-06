@@ -131,6 +131,16 @@ def render_markdown(season: int, week: int, games: List[Dict],
             lines += ["**Game notes** *(display-only — never scored)*", ""]
             lines += [f"- {n}" for n in g["notes"]]
             lines += [""]
+        if g.get("sgp"):
+            lines += ["**SGP joint estimate** *(informational only — not a synthetic-line edge)*", ""]
+            for s in g["sgp"]:
+                a, b = s["leg_a"], s["leg_b"]
+                lines.append(
+                    f"- {a['name']} {a['market'].replace('_', ' ')} {a['side'].upper()} + "
+                    f"{b['name']} {b['market'].replace('_', ' ')} {b['side'].upper()}: "
+                    f"independent {s['independent_joint_prob']:.1%} → copula {s['copula_joint_prob']:.1%} "
+                    f"(ρ≈{s['rho']:+.2f})")
+            lines += [""]
         lines += [
             "| Player | Market | Line | Side | Proj | Conf | Edge | Composite | Why |",
             "|---|---|---|---|---|---|---|---|---|",
@@ -212,12 +222,23 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
              weights: Optional[Dict] = None, params: Optional[Dict] = None,
              write_files: bool = True, persist: bool = True,
              line_note: Optional[str] = None,
-             candidates_df: Optional[pd.DataFrame] = None) -> Dict:
+             candidates_df: Optional[pd.DataFrame] = None,
+             corr=None, as_of_season: Optional[int] = None,
+             corr_discount_strength: Optional[float] = None) -> Dict:
     """Candidates -> composite -> shortlist -> context -> markdown/JSON/DB.
 
     ``candidates_df``: pre-built (possibly availability-filtered) candidate
     frame; when given, enumeration is skipped -- the pipeline uses this to
     keep OUT players away from the ranker.
+
+    ``corr`` (Phase 7.6, optional): a ``correlation.CorrelationStructure``.
+    When given, selection is correlation-aware (``shortlist.rank_game``) and
+    each game additionally carries ``g["sgp"]`` -- an optional, clearly
+    labeled same-game-parlay joint-probability readout for real-type pairs
+    among that game's selected leans (``[]`` when ``corr`` is None).
+    ``as_of_season``: strict walk-forward rho for a backtest; omit it (None)
+    for the production/live value. ``corr_discount_strength``: overrides the
+    config default when given.
     """
     cfg = cfgmod.load_config()
     weights = weights or (cfg.get("composite") or {}).get("weights")
@@ -225,6 +246,9 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
     top_n = int((cfg.get("shortlist") or {}).get("top_n", slmod.DEFAULT_TOP_N))
     max_pp = int((cfg.get("shortlist") or {}).get("max_per_player", slmod.DEFAULT_MAX_PER_PLAYER))
     min_usage = (cfg.get("candidates") or {}).get("min_usage")
+    if corr_discount_strength is None:
+        corr_discount_strength = float((cfg.get("correlation") or {}).get(
+            "discount_strength", slmod.DEFAULT_CORR_DISCOUNT_STRENGTH))
 
     inputs = inputs or candmod.build_week_inputs()
     as_of = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -237,7 +261,13 @@ def generate(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None
             roster_mode="as_played" if mode == "historical" else "carry_forward",
         )
     games = slmod.shortlist_week(cands, weights=weights, params=params,
-                                 top_n=top_n, max_per_player=max_pp)
+                                 top_n=top_n, max_per_player=max_pp,
+                                 corr=corr, as_of_season=as_of_season,
+                                 corr_discount_strength=corr_discount_strength)
+    sgp_enabled = bool((cfg.get("correlation") or {}).get("sgp_readout", True))
+    for g in games:
+        g["sgp"] = (slmod.sgp_readouts(g, corr, as_of_season)
+                    if (corr is not None and sgp_enabled) else [])
 
     conn = dbmod.connect()
     notes = load_manual_notes(conn, season, week)

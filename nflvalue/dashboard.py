@@ -186,16 +186,25 @@ function renderLeans(){
     const ctx=(w.contexts||{})[g.game_id];
     const rows=g.leans.map(l=>`<tr>
       <td><div class="pick">${esc(l.name)}</div><div class="sub">${esc(l.pos)} · ${esc(l.team)}</div></td>
-      <td>${esc(String(l.market||"").replace(/_/g," "))}</td>
+      <td>${esc(String(l.market||"").replace(/_/g," "))}${l.corr_discount?` <span class="pill n" title="discounted ${(l.corr_discount*100).toFixed(0)}% for correlation with ${esc((l.corr_with||{}).name||'another leg')}">corr −${(l.corr_discount*100).toFixed(0)}%</span>`:""}</td>
       <td class="price">${esc(l.line)}${l.line_source==="odds_api"?"":"†"}</td>
       <td><b>${sideLabel(l)}</b></td>
       <td>${esc(l.mean)}</td>
       <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
       <td class="price">${esc(l.composite)}</td></tr>`).join("");
     const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
+    const notesBlock = (g.notes && g.notes.length)
+      ? `<div class="note"><b>Game notes — display only, never scored:</b>${g.notes.map(n=>`<div class="sub">• ${esc(n)}</div>`).join("")}</div>` : "";
+    const sgpBlock = (g.sgp && g.sgp.length)
+      ? `<div class="note"><b>SGP joint estimate — informational only, not a synthetic-line edge:</b>`
+        + g.sgp.map(s=>`<div class="sub">• ${esc(s.leg_a.name)} ${esc(String(s.leg_a.market||"").replace(/_/g," "))} ${esc((s.leg_a.side||"").toUpperCase())}
+           + ${esc(s.leg_b.name)} ${esc(String(s.leg_b.market||"").replace(/_/g," "))} ${esc((s.leg_b.side||"").toUpperCase())}:
+           independent ${fmtP(s.independent_joint_prob)} → copula ${fmtP(s.copula_joint_prob)} (ρ≈${s.rho>=0?"+":""}${s.rho.toFixed(2)})</div>`).join("")
+        + `</div>` : "";
     return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
       <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th></tr></thead>
       <tbody>${rows}</tbody></table>
+      ${notesBlock}${sgpBlock}
       ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;
   }).join("");
   el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>

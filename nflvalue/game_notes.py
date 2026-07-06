@@ -135,9 +135,46 @@ def build_game_notes(game_id: str, game_cands: List[Dict],
     return notes
 
 
+def correlation_notes_for_game(leans: List[Dict], corr, as_of_season: Optional[int] = None) -> List[str]:
+    """Display-only flags for pairs of SELECTED leans whose type the 7.5 audit
+    measured as real correlation -- so a reader can see when a "N leans" slip
+    is really fewer independent bets (or, for negative pairs, a hedge).
+    Computed AFTER selection; never feeds back into scores. ``corr`` is a
+    ``correlation.CorrelationStructure`` (or None -- returns [] then)."""
+    if corr is None or not leans:
+        return []
+    notes: List[str] = []
+    seen = set()
+    for i in range(len(leans)):
+        for j in range(i + 1, len(leans)):
+            a, b = leans[i], leans[j]
+            rho = corr.rho_for(a.get("pos"), a.get("market"), a.get("player_id"), a.get("team"),
+                               b.get("pos"), b.get("market"), b.get("player_id"), b.get("team"),
+                               as_of_season=as_of_season)
+            if rho == 0.0:
+                continue
+            key = tuple(sorted([f"{a.get('player_id')}:{a.get('market')}",
+                                f"{b.get('player_id')}:{b.get('market')}"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            direction = "move together" if rho > 0 else "hedge against each other"
+            strength = ("near-duplicate" if abs(rho) >= 0.5 else
+                       "moderately correlated" if abs(rho) >= 0.2 else "mildly correlated")
+            notes.append(
+                f"Correlated legs: {a.get('name')} {str(a.get('market') or '').replace('_', ' ')} "
+                f"and {b.get('name')} {str(b.get('market') or '').replace('_', ' ')} are {strength} "
+                f"and {direction} (ρ≈{rho:+.2f}) — not fully independent edges.")
+    return notes
+
+
 def attach_notes(games: List[Dict], cands: pd.DataFrame, schedules: pd.DataFrame,
-                 season: int, week: int) -> None:
-    """Stamp g['notes'] onto each shortlist game dict, in place."""
+                 season: int, week: int, corr=None, as_of_season: Optional[int] = None) -> None:
+    """Stamp g['notes'] onto each shortlist game dict, in place.
+
+    ``corr`` (Phase 7.6, optional): a ``correlation.CorrelationStructure`` --
+    when given, appends ``correlation_notes_for_game`` flags for this game's
+    SELECTED leans onto the same display-only notes list."""
     records = build_records(schedules)
     slate = schedules[(schedules["season"] == season) & (schedules["week"] == week)
                       & (schedules["game_type"] == "REG")]
@@ -149,3 +186,4 @@ def attach_notes(games: List[Dict], cands: pd.DataFrame, schedules: pd.DataFrame
         home, away = home_away.get(g["game_id"], ("", ""))
         g["notes"] = build_game_notes(g["game_id"], by_game.get(g["game_id"], []),
                                       records, season, week, home, away)
+        g["notes"].extend(correlation_notes_for_game(g.get("leans", []), corr, as_of_season))

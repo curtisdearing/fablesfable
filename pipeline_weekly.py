@@ -87,6 +87,30 @@ def build_event_map(cfg: Dict, slate: pd.DataFrame,
     return out
 
 
+def load_correlation(cfg: Dict):
+    """Phase 7.6: load the 7.5 correlation artifact if enabled + present.
+
+    Missing/disabled/empty -> a loud one-line message and None, which makes
+    every downstream call behave EXACTLY like correlation-awareness being
+    off (``shortlist.rank_game``'s pre-7.6 path) -- selection never silently
+    invents structure that wasn't actually measured."""
+    import os
+    corr_cfg = cfg.get("correlation") or {}
+    if not corr_cfg.get("enabled", True):
+        return None
+    from nflvalue.correlation import ART_PATH, CorrelationStructure
+    if not os.path.exists(ART_PATH):
+        print(f"[pipeline] correlation artifact missing ({ART_PATH}) -- selection is "
+              "NOT correlation-aware this run; run scripts/fit_correlation.py to build it.")
+        return None
+    cs = CorrelationStructure.load()
+    if not cs.pair_types:
+        print("[pipeline] correlation artifact is empty -- selection is NOT "
+              "correlation-aware this run.")
+        return None
+    return cs
+
+
 def _players_frame(cands: pd.DataFrame) -> pd.DataFrame:
     return (cands[["player_id", "name", "team"]].drop_duplicates()
             .rename(columns={"name": "player_name"}))
@@ -498,17 +522,21 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
 
+    # 4d. Phase 7.6: correlation-aware selection (live production value --
+    # walk-forward as_of_season is for the backtest harness, not here)
+    corr = load_correlation(cfg)
+
     # 4. rank + report (context panel via synthesis on the ranked leans)
     result = rptmod.generate(
         season, week, inputs=inputs, prop_lines=prop_lines,
         synthesis_by_game=None, availability=statuses or None,
         clock=clock, mode=mode, publish=publish, publish_reasons=publish_reasons,
         write_files=False, persist=False, line_note=line_note,
-        candidates_df=cands)
+        candidates_df=cands, corr=corr)
 
     if mode == "live":
         from nflvalue.game_notes import attach_notes
-        attach_notes(result["games"], cands, inputs.schedules, season, week)
+        attach_notes(result["games"], cands, inputs.schedules, season, week, corr=corr)
         syn = _synthesis_for_games(result["games"], statuses, sleeper_df,
                                    as_of, week, feeds_ts, news_by_player=news_by_player)
         notes = rptmod.load_manual_notes(conn, season, week)
@@ -617,14 +645,19 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     # 2. re-rank without OUT players; downgrade note for RISK
     out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
     cands2 = cands[~cands["player_id"].isin(out_ids)].reset_index(drop=True)
+    corr = load_correlation(cfg)   # Phase 7.6: correlation-aware re-rank too
     games = slmod.shortlist_week(cands2,
                                  weights=(cfg.get("composite") or {}).get("weights"),
                                  params=(cfg.get("composite") or {}).get("params"),
                                  top_n=int((cfg.get("shortlist") or {}).get("top_n", 5)),
                                  max_per_player=int((cfg.get("shortlist") or {})
-                                                    .get("max_per_player", 2)))
+                                                    .get("max_per_player", 2)),
+                                 corr=corr)
+    sgp_enabled = bool((cfg.get("correlation") or {}).get("sgp_readout", True))
+    for gm in games:
+        gm["sgp"] = slmod.sgp_readouts(gm, corr) if (corr is not None and sgp_enabled) else []
     from nflvalue.game_notes import attach_notes
-    attach_notes(games, cands2, inputs.schedules, season, week)
+    attach_notes(games, cands2, inputs.schedules, season, week, corr=corr)
     contexts = {gm["game_id"]: slmod.build_context_panel(
         gm, availability=statuses, mode=mode) for gm in games}
 

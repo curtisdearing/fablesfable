@@ -1,0 +1,282 @@
+{
+  "generated": "2026-07-06T05:51:32Z",
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "per_season": {
+    "2022": {
+      "baseline": {
+        "overall": {
+          "n": 1355,
+          "hit_rate": 0.5904,
+          "units": 172.27
+        },
+        "top1": {
+          "n": 271,
+          "hit_rate": 0.6494,
+          "units": 65.0
+        }
+      },
+      "corr_aware": {
+        "overall": {
+          "n": 1355,
+          "hit_rate": 0.5838,
+          "units": 155.09
+        },
+        "top1": {
+          "n": 271,
+          "hit_rate": 0.6494,
+          "units": 65.0
+        }
+      },
+      "delta_hit_rate": -0.0066,
+      "delta_units": -17.18
+    },
+    "2023": {
+      "baseline": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5824,
+          "units": 152.0
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.5993,
+          "units": 39.18
+        }
+      },
+      "corr_aware": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5875,
+          "units": 165.36
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.5993,
+          "units": 39.18
+        }
+      },
+      "delta_hit_rate": 0.0051,
+      "delta_units": 13.36
+    },
+    "2024": {
+      "baseline": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5868,
+          "units": 163.45
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.6176,
+          "units": 48.73
+        }
+      },
+      "corr_aware": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5949,
+          "units": 184.45
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.6176,
+          "units": 48.73
+        }
+      },
+      "delta_hit_rate": 0.0081,
+      "delta_units": 21.0
+    },
+    "2025": {
+      "baseline": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5654,
+          "units": 108.09
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.6103,
+          "units": 44.91
+        }
+      },
+      "corr_aware": {
+        "overall": {
+          "n": 1360,
+          "hit_rate": 0.5779,
+          "units": 140.55
+        },
+        "top1": {
+          "n": 272,
+          "hit_rate": 0.6103,
+          "units": 44.91
+        }
+      },
+      "delta_hit_rate": 0.0125,
+      "delta_units": 32.46
+    }
+  },
+  "pooled": {
+    "baseline": {
+      "overall": {
+        "n": 5435,
+        "hit_rate": 0.5812,
+        "units": 595.82
+      },
+      "top1": {
+        "n": 1087,
+        "hit_rate": 0.6191,
+        "units": 197.82
+      },
+      "effective_bets": {
+        "n_slips": 1087,
+        "avg_leans_per_slip": 5.0,
+        "avg_effective_per_slip": 4.38
+      }
+    },
+    "corr_aware": {
+      "overall": {
+        "n": 5435,
+        "hit_rate": 0.586,
+        "units": 645.45
+      },
+      "top1": {
+        "n": 1087,
+        "hit_rate": 0.6191,
+        "units": 197.82
+      },
+      "effective_bets": {
+        "n_slips": 1087,
+        "avg_leans_per_slip": 5.0,
+        "avg_effective_per_slip": 4.954
+      },
+      "n_discounted_legs": 257
+    }
+  },
+  "example_slips": [
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_BAL_NYJ",
+      "matchup": "BAL @ NYJ",
+      "baseline": [
+        "M.Davis rush_attempts over (composite 35.38)",
+        "E.Moore receptions under (composite 34.4)",
+        "Mi.Carter rushing_yards under (composite 28.86)",
+        "J.Flacco passing_yards over (composite 27.77)",
+        "M.Davis rushing_yards over (composite 26.93)"
+      ],
+      "corr_aware": [
+        "M.Davis rush_attempts over (composite 35.38)",
+        "E.Moore receptions under (composite 34.4)",
+        "Mi.Carter rushing_yards under (composite 28.86)",
+        "J.Flacco passing_yards over (composite 27.77)",
+        "D.Duvernay receptions under (composite 23.44)"
+      ]
+    },
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_BUF_LA",
+      "matchup": "BUF @ LA",
+      "baseline": [
+        "C.Kupp receiving_yards under (composite 90.54)",
+        "M.Stafford passing_yards under (composite 42.33)",
+        "C.Akers rush_attempts under (composite 37.32)",
+        "C.Akers rushing_yards under (composite 31.71)",
+        "D.Henderson rushing_yards over (composite 29.1)"
+      ],
+      "corr_aware": [
+        "C.Kupp receiving_yards under (composite 90.54)",
+        "C.Akers rush_attempts under (composite 37.32)",
+        "M.Stafford passing_yards under (composite 42.33, discounted 31% vs C.Kupp)",
+        "D.Henderson rushing_yards over (composite 29.1)",
+        "S.Diggs receptions over (composite 28.6)"
+      ]
+    },
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_DEN_SEA",
+      "matchup": "DEN @ SEA",
+      "baseline": [
+        "R.Penny rushing_yards under (composite 57.93)",
+        "M.Gordon rushing_yards under (composite 39.28)",
+        "T.Lockett receiving_yards under (composite 36.35)",
+        "M.Goodwin receiving_yards under (composite 27.43)",
+        "R.Penny rush_attempts under (composite 25.44)"
+      ],
+      "corr_aware": [
+        "R.Penny rushing_yards under (composite 57.93)",
+        "M.Gordon rushing_yards under (composite 39.28)",
+        "T.Lockett receiving_yards under (composite 36.35)",
+        "M.Goodwin receiving_yards under (composite 27.43)",
+        "J.Williams rushing_yards under (composite 24.3)"
+      ]
+    },
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_GB_MIN",
+      "matchup": "GB @ MIN",
+      "baseline": [
+        "A.Thielen receptions under (composite 37.56)",
+        "J.Jefferson receiving_yards under (composite 36.2)",
+        "A.Thielen receiving_yards under (composite 30.8)",
+        "K.Cousins passing_yards under (composite 28.83)",
+        "R.Tonyan receiving_yards over (composite 28.1)"
+      ],
+      "corr_aware": [
+        "A.Thielen receptions under (composite 37.56)",
+        "J.Jefferson receiving_yards under (composite 36.2)",
+        "R.Tonyan receiving_yards over (composite 28.1)",
+        "R.Cobb receptions under (composite 23.35)",
+        "I.Smith receptions under (composite 23.17)"
+      ]
+    },
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_IND_HOU",
+      "matchup": "IND @ HOU",
+      "baseline": [
+        "P.Campbell receptions under (composite 40.01)",
+        "B.Cooks receiving_yards under (composite 37.36)",
+        "J.Taylor rushing_yards over (composite 35.2)",
+        "J.Taylor rush_attempts over (composite 32.46)",
+        "C.Moore receiving_yards under (composite 30.33)"
+      ],
+      "corr_aware": [
+        "P.Campbell receptions under (composite 40.01)",
+        "B.Cooks receiving_yards under (composite 37.36)",
+        "J.Taylor rushing_yards over (composite 35.2)",
+        "C.Moore receiving_yards under (composite 30.33)",
+        "C.Conley receptions over (composite 27.81)"
+      ]
+    },
+    {
+      "season": 2022,
+      "week": 1,
+      "game_id": "2022_01_JAX_WAS",
+      "matchup": "JAX @ WAS",
+      "baseline": [
+        "L.Thomas receptions under (composite 46.87)",
+        "C.Samuel receiving_yards under (composite 32.36)",
+        "J.Agnew receiving_yards over (composite 30.49)",
+        "L.Thomas receiving_yards under (composite 26.22)",
+        "C.Kirk receptions under (composite 26.06)"
+      ],
+      "corr_aware": [
+        "L.Thomas receptions under (composite 46.87)",
+        "C.Samuel receiving_yards under (composite 32.36)",
+        "J.Agnew receiving_yards over (composite 30.49)",
+        "C.Kirk receptions under (composite 26.06)",
+        "E.Engram receiving_yards under (composite 23.33)"
+      ]
+    }
+  ]
+}
