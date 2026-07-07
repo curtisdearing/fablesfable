@@ -5,7 +5,14 @@ from __future__ import annotations
 
 import math
 
-from nflvalue.projection import MARKETS, MIN_GAMES_ELIGIBLE, p_over, project
+from nflvalue.projection import (
+    DEFAULT_SD_FRACTION,
+    MARKETS,
+    MIN_GAMES_ELIGIBLE,
+    SD_FRACTION_BY_MARKET,
+    p_over,
+    project,
+)
 
 
 def test_p_over_decreases_as_line_increases():
@@ -35,6 +42,48 @@ def test_project_without_a_line_leaves_p_over_none():
     result = project(player_row, "passing_yards", line=None, sd=50.0)
     assert result["p_over"] is None and result["p_under"] is None
     assert result["mean"] > 0
+
+
+def test_pass_completions_mean_is_attempts_times_completion_rate():
+    """pass_completions mean = projected pass_attempts x trailing completion
+    rate (roll_comp_rate), the same volume-x-efficiency shape as the other
+    non-anytime_td markets. No opp factor, no game script here -> the mean is
+    exactly attempts * comp_rate and the volume/efficiency components echo the
+    inputs."""
+    player_row = {"player_id": "00-QB", "player_name": "Test QB", "team": "TST",
+                  "defteam": "OPP", "role": "QB", "roll_games": 8,
+                  "roll_pass_attempts": 34.0, "roll_comp_rate": 0.66}
+    result = project(player_row, "pass_completions", line=21.5)
+    assert result["dist"] == "negbinom"          # bounded count, like receptions/pass_attempts
+    assert math.isclose(result["mean"], 34.0 * 0.66, abs_tol=1e-6)
+    assert math.isclose(result["components"]["volume"], 34.0, abs_tol=1e-6)
+    assert math.isclose(result["components"]["efficiency"], 0.66, abs_tol=1e-6)
+    assert result["p_over"] is not None and result["p_under"] is not None
+    assert math.isclose(result["p_over"] + result["p_under"], 1.0, abs_tol=1e-6)
+
+
+def test_pass_completions_fallback_sd_is_tighter_than_generic():
+    """A bounded count is far less dispersed than the generic 0.45 yardage
+    prior; the fallback SD (when no measured sd is supplied) must use the
+    per-market override, not DEFAULT_SD_FRACTION."""
+    assert SD_FRACTION_BY_MARKET["pass_completions"] < DEFAULT_SD_FRACTION
+    player_row = {"player_id": "00-QB", "player_name": "Test QB", "team": "TST",
+                  "defteam": "OPP", "role": "QB", "roll_games": 8,
+                  "roll_pass_attempts": 34.0, "roll_comp_rate": 0.66}
+    result = project(player_row, "pass_completions", line=21.5)  # no sd passed
+    expected_sd = max(result["mean"] * SD_FRACTION_BY_MARKET["pass_completions"], 0.75)
+    assert math.isclose(result["sd"], round(expected_sd, 3), abs_tol=1e-3)
+    # and it is genuinely tighter than the generic prior would have produced
+    assert result["sd"] < result["mean"] * DEFAULT_SD_FRACTION
+
+
+def test_pass_completions_measured_sd_overrides_fallback():
+    """A supplied walk-forward sd still wins over the per-market fallback."""
+    player_row = {"player_id": "00-QB", "player_name": "Test QB", "team": "TST",
+                  "defteam": "OPP", "role": "QB", "roll_games": 8,
+                  "roll_pass_attempts": 34.0, "roll_comp_rate": 0.66}
+    result = project(player_row, "pass_completions", line=21.5, sd=3.1)
+    assert math.isclose(result["sd"], 3.1, abs_tol=1e-6)
 
 
 def test_low_confidence_flag_matches_market_registry():

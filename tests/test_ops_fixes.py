@@ -76,7 +76,7 @@ def test_snapshot_prob_uses_matching_points_only(tmp_path):
         _row("beta", "over", 82.5, 1.91), _row("beta", "under", 82.5, 1.91),
     ]
     dbmod.upsert(conn, "lines", rows,
-                 ["ts", "game_id", "book", "market", "player_name", "side"])
+                 ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     from nflvalue.clv import snapshot_prob
     snap = snapshot_prob(conn, "g1", "receiving_yards", "P1", "over")
     assert snap is not None

@@ -165,8 +165,8 @@ def test_parse_and_idempotent_upsert(conn, payload):
     td = [r for r in rows if r["market"] == "anytime_td"][0]
     assert td["side"] == "over" and td["point"] == 0.5   # Yes -> over @ 0.5
 
-    n1 = dbmod.upsert(conn, "lines", rows, ["ts", "game_id", "book", "market", "player_name", "side"])
-    dbmod.upsert(conn, "lines", rows, ["ts", "game_id", "book", "market", "player_name", "side"])
+    n1 = dbmod.upsert(conn, "lines", rows, ["ts", "game_id", "book", "market", "player_name", "side", "point"])
+    dbmod.upsert(conn, "lines", rows, ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     count = dbmod.query_df(conn, "SELECT COUNT(*) AS n FROM lines").iloc[0]["n"]
     assert n1 == count                               # idempotent snapshot
 
@@ -354,3 +354,48 @@ def test_fetch_scores_degrades_and_skips_malformed(monkeypatch):
     res = oapi.fetch_scores(_cfg_game())             # must NOT KeyError on g1
     assert "g1" not in res                            # incomplete scores skipped
     assert res["g2"]["home_score"] == 27.0 and res["g2"]["away_score"] == 13.0
+
+
+# --------------------------------------------------------------------------- #
+# Surgical spend (opt-in): trim markets to the convicted ones, cover more games
+# --------------------------------------------------------------------------- #
+def test_surgical_markets_keeps_only_convicted_pairs():
+    cands = pd.DataFrame([
+        {"game_id": "G_A", "market": "receiving_yards", "p_over": 0.70},  # convicted -> keep
+        {"game_id": "G_A", "market": "receptions", "p_over": 0.52},       # coinflip  -> drop
+        {"game_id": "G_A", "market": "rushing_yards", "p_over": None},    # no prob   -> drop
+        {"game_id": "G_B", "market": "passing_yards", "p_over": 0.50},    # coinflip  -> game drops
+    ])
+    cfg = _cfg(surgical_spend={"enabled": True, "min_conviction": 0.06})
+    assert oap.surgical_markets(cands, cfg) == {"G_A": ["receiving_yards"]}
+
+
+def test_surgical_pull_reserves_closes_and_never_exceeds_budget(conn, payload):
+    cfg = _cfg(surgical_spend={"enabled": True, "min_conviction": 0.06})   # 5-market full basis
+    cands = pd.DataFrame([{"game_id": f"2023_01_G{i}", "market": "receiving_yards",
+                           "p_over": 0.75} for i in range(120)])
+    event_map = {f"2023_01_G{i}": f"evt{i}" for i in range(120)}
+
+    def fake_fetch(url, params=None):
+        assert params["markets"] == "player_reception_yds"   # only the convicted market
+        return json.loads(json.dumps(payload))
+
+    res = oap.pull_week_props(cfg, event_map, conn=conn, fetch=fake_fetch,
+                              candidates=cands, ts="2023-11-08T10:00:00Z")
+    assert res["surgical"] is True
+    budget = oap.CreditBudget(conn, 500, 50)
+    assert budget.used <= 450.0                              # ceiling never crossed
+    # entries + reserved full-cost closes fit inside the starting budget
+    assert res["credits_spent"] + res["close_budget_reserved"] <= 450.0 + 1e-9
+    # trimming 5 markets -> 1 covers far MORE games than a full pull's entry half
+    # (450/2 / 5 = 45 games) could ever reach
+    assert len(res["pulled"]) > 45
+
+
+def test_surgical_off_by_default_even_with_candidates(conn, payload):
+    cfg = _cfg()                                             # no surgical_spend key
+    cands = pd.DataFrame([{"game_id": "2023_01_G0", "market": "receiving_yards", "p_over": 0.9}])
+    res = oap.pull_week_props(cfg, {"2023_01_G0": "evt0"}, conn=conn,
+                              fetch=lambda u, p=None: json.loads(json.dumps(payload)),
+                              candidates=cands, ts="2023-11-08T10:00:00Z")
+    assert "surgical" not in res                             # full rotating path taken

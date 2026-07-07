@@ -124,7 +124,7 @@ def test_phase7_end_to_end_chain():
                               player_id=pid, player_name="WR One", side="over", point=70.5, price=px))
             lines.append(dict(ts=ts, game_id=gid, book=book, market=market,
                               player_id=pid, player_name="WR One", side="under", point=70.5, price=1.95))
-    dbmod.upsert(conn, "lines", lines, ["ts", "game_id", "book", "market", "player_name", "side"])
+    dbmod.upsert(conn, "lines", lines, ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     dbmod.upsert(conn, "leans", [dict(
         season=2023, week=10, clock="wed", game_id=gid, player_id=pid, name="WR One",
         market=market, side="over", line=70.5, line_source="odds_api", price=1.91,

@@ -51,7 +51,8 @@ SCHEDULES_PATH = os.path.join(ROOT, "historical", "historical_lines.parquet")
 ACTUAL_COL = {
     "receiving_yards": "rec_yards", "receptions": "receptions",
     "rushing_yards": "rush_yards", "passing_yards": "pass_yards",
-    "pass_attempts": "pass_attempts", "rush_attempts": "carries",
+    "pass_attempts": "pass_attempts", "pass_completions": "completions",
+    "rush_attempts": "carries",
 }
 
 # minimum trailing usage so the candidate pool isn't scrubs (configurable via
@@ -149,11 +150,14 @@ def build_week_inputs(pbp: Optional[pd.DataFrame] = None,
             pbp = ingest.load_all_pbp()
         else:
             pbp = load_pbp()
+    # schedules load FIRST: the Phase 8.3/8.4 rest-game cleaning inside the
+    # three builders needs them (one shared tagging lens, one flag)
+    schedules = schedules if schedules is not None else load_schedules()
     return WeekInputs(
-        pw=build_player_week(pbp),
-        opd=build_opp_pos_def(pbp),
-        tw=build_team_week(pbp),
-        schedules=schedules if schedules is not None else load_schedules(),
+        pw=build_player_week(pbp, schedules=schedules),
+        opd=build_opp_pos_def(pbp, schedules=schedules),
+        tw=build_team_week(pbp, schedules=schedules),
+        schedules=schedules,
     )
 
 

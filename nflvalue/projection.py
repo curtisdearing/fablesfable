@@ -64,6 +64,18 @@ MARKETS: Dict[str, Dict] = {
                            use_opp_factor=True, dist="normal", low_confidence=False),
     "pass_attempts": dict(role=("QB",), opportunity="pass_attempts", efficiency=None,
                            use_opp_factor=False, dist="negbinom", low_confidence=False),
+    # completions = projected pass_attempts x trailing completion RATE
+    # (roll_comp_rate, a leakage-safe shrunk efficiency built in features.py
+    # exactly like roll_ypa/roll_catch_rate). Bounded count -> negbinom, same
+    # family as pass_attempts/receptions; use_opp_factor=False because the
+    # opp pass-D factor is expressed in YARDS-per-play (roll_ypa_allowed_factor),
+    # which prices efficiency not completion likelihood -- multiplying it onto a
+    # completion count would double-count the pass-D signal already inside the
+    # projected attempts basis. Opponent effect on completion% can enter later
+    # as its own factor (see final report); for now it is deliberately absent
+    # rather than borrowed from the yards factor.
+    "pass_completions": dict(role=("QB",), opportunity="pass_attempts", efficiency="roll_comp_rate",
+                              use_opp_factor=False, dist="negbinom", low_confidence=False),
     "rush_attempts": dict(role=("RB",), opportunity="carries", efficiency=None,
                            use_opp_factor=False, dist="negbinom", low_confidence=False),
     "anytime_td": dict(role=("RB", "WR", "TE"), opportunity=None, efficiency=None,
@@ -126,6 +138,20 @@ def shape_tilts(player_row: Dict, opp_row: Optional[Dict], market: str) -> Dict[
 
 # Fallback SD used only when the caller doesn't supply a measured one.
 DEFAULT_SD_FRACTION = 0.45  # sd ~= 45% of the mean, a generic count/yardage prior
+
+# Per-market SD-fraction overrides for the FALLBACK path only (a measured
+# walk-forward sd from prop_backtest still wins whenever one is passed in).
+# pass_completions is a BOUNDED count: a starting QB completes ~60-70% of a
+# fairly stable attempt volume, so the realized completion total is far LESS
+# dispersed than the generic 0.45 yardage/count prior implies. Mirroring the
+# reasoning that makes receptions a chunky-but-narrow count, 0.22 keeps the
+# fallback distribution honest (e.g. mean ~22 -> sd ~4.8, roughly one
+# completion under/over on a typical night) instead of the ~9.9 that 0.45
+# would give. This is a documented judgment-call prior, NOT a fit; it only
+# ever applies when no measured residual sd exists (cold markets / no history).
+SD_FRACTION_BY_MARKET = {
+    "pass_completions": 0.22,
+}
 
 # ---- Phase 6.2: anytime-TD red-zone path ----------------------------------- #
 # TD_BLEND_W: weight on the RZ-share path vs the overall-rate path. MEASURED,
@@ -416,7 +442,8 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
         gs = game_script or {"pass_mult": 1.0, "rush_mult": 1.0}
         gs_component = gs.get("pass_mult") if spec["opportunity"] in ("targets", "pass_attempts") else gs.get("rush_mult")
         dist = spec["dist"]
-        sd_ = sd if sd is not None else max(mean_ * DEFAULT_SD_FRACTION, 0.75)
+        sd_frac = SD_FRACTION_BY_MARKET.get(market, DEFAULT_SD_FRACTION)
+        sd_ = sd if sd is not None else max(mean_ * sd_frac, 0.75)
         components = {"volume": round(float(volume), 3), "efficiency": round(float(efficiency), 4),
                       "opp_factor": round(float(opp_factor), 4), "game_script": round(float(gs_component or 1.0), 4)}
         if tilts:

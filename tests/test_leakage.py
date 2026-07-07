@@ -30,6 +30,10 @@ ROLL_COLS_PLAYER = [
     "roll_games", "roll_targets", "roll_target_share", "roll_air_yards", "roll_adot",
     "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
     "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
+    # pass_completions market driver: trailing completion RATE, shift-1-then-roll
+    # + shrunk exactly like the other efficiencies. If a future week ever leaked
+    # into it, deleting that week would move a pre-cutoff value and fail here.
+    "roll_comp_rate",
     "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
     # Phase 6.1: depth/location profiles + the archetype label itself (it
     # feeds the shrinkage prior, so a leaked label would leak the prior)
@@ -78,6 +82,37 @@ def test_player_week_features_do_not_leak_future_weeks(pbp_fast):
             f"changed when future weeks were removed -- future data is leaking into a "
             f"past feature.\n{merged.loc[mismatched, ['season','week','player_id', f'{col}_full', f'{col}_trunc']].head()}"
         )
+
+
+def test_pass_completions_rate_cannot_see_the_week_it_predicts(pbp_fast):
+    """Focused guard for the new pass_completions market: its ONLY history-
+    derived input beyond projected attempts is roll_comp_rate (trailing
+    completions/attempts). Poison the future (drop every play at/after the
+    cutoff) and assert not a single pre-cutoff completion-rate value moves --
+    i.e. the feature that prices completions never sees the week/season it is
+    used to predict. (roll_comp_rate is also in ROLL_COLS_PLAYER above; this
+    isolates it so a regression names the market, not just a column.)"""
+    full = build_player_week(pbp_fast)
+    trunc = build_player_week(_truncated(pbp_fast))
+
+    full_before = full[_before_cutoff(full)].sort_values(
+        ["player_id", "season", "week"]).reset_index(drop=True)
+    trunc_before = trunc.sort_values(
+        ["player_id", "season", "week"]).reset_index(drop=True)
+    assert len(full_before) == len(trunc_before)
+
+    key_cols = ["season", "week", "player_id"]
+    merged = full_before[key_cols + ["roll_comp_rate"]].merge(
+        trunc_before[key_cols + ["roll_comp_rate"]], on=key_cols, suffixes=("_full", "_trunc"))
+    a, b = merged["roll_comp_rate_full"], merged["roll_comp_rate_trunc"]
+    mismatched = ~(a.eq(b) | (a.isna() & b.isna()))
+    if mismatched.any():
+        close = (a - b).abs() < 1e-9
+        mismatched = mismatched & ~close.fillna(False)
+    assert not mismatched.any(), (
+        f"pass_completions leakage: {mismatched.sum()} pre-cutoff roll_comp_rate "
+        f"value(s) changed when future weeks were removed -- the completion-rate "
+        f"feature is seeing the week it predicts")
 
 
 def test_opp_pos_def_features_do_not_leak_future_weeks(pbp_fast):

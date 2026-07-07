@@ -80,7 +80,7 @@ def main() -> None:
     entry_rows = _snapshot_rows(payload, ENTRY_TS, price_shift=0.0)
     close_rows = _snapshot_rows(payload, CLOSE_TS, price_shift=0.17)  # over shortens
     dbmod.upsert(conn, "lines", entry_rows + close_rows,
-                 ["ts", "game_id", "book", "market", "player_name", "side"])
+                 ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     matched = sum(1 for r in entry_rows if r["player_id"] is not None)
     print(f"[1] capture: {len(entry_rows)} entry + {len(close_rows)} close line rows "
           f"({matched}/{len(entry_rows)} matched to gsis ids; "
@@ -156,7 +156,7 @@ def main() -> None:
     stale_rows = _snapshot_rows(payload, "2023-11-08T17:00:00Z")   # entry only
     stale_rows2 = _snapshot_rows(payload, "2023-11-09T09:00:00Z")  # >6h pre-kick, still stale
     dbmod.upsert(conn2, "lines", stale_rows + stale_rows2,
-                 ["ts", "game_id", "book", "market", "player_name", "side"])
+                 ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     dbmod.upsert(conn2, "leans", [{
         "season": SEASON, "week": WEEK, "clock": CLOCK, "game_id": GAME_ID,
         "player_id": ANDREWS, "name": "Mark Andrews", "market": "receiving_yards",
@@ -179,7 +179,7 @@ def main() -> None:
     entry_rows3 = _snapshot_rows(payload, ENTRY_TS, price_shift=0.0)
     close_rows3 = _snapshot_rows(payload, CLOSE_TS, price_shift=0.17)
     dbmod.upsert(conn3, "lines", entry_rows3 + close_rows3,
-                 ["ts", "game_id", "book", "market", "player_name", "side"])
+                 ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     dbmod.upsert(conn3, "leans", [{
         "season": SEASON, "week": WEEK, "clock": "wed", "game_id": GAME_ID,
         "player_id": ANDREWS, "name": "Mark Andrews", "market": "receiving_yards",

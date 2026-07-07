@@ -219,8 +219,8 @@ def test_blocked_status_excluded_from_evidence(tmp_path):
     # grading skips blocked picks entirely
     pw_frame = pd.DataFrame([{"season": 2025, "week": 9, "player_id": "B1",
                               "rec_yards": 99.0, "receptions": 9, "rush_yards": 0,
-                              "pass_yards": 0, "pass_attempts": 0, "carries": 0,
-                              "rush_tds": 0, "rec_tds": 1}])
+                              "pass_yards": 0, "pass_attempts": 0, "completions": 0,
+                              "carries": 0, "rush_tds": 0, "rec_tds": 1}])
     assert sel.grade_picks(conn, 2025, 9, pw_frame)["graded"] == 0
     assert sel.picks_record(conn)["n"] == 0
     # CLV resolution sees no active leans
@@ -243,8 +243,8 @@ def test_active_picks_are_graded_and_recorded(tmp_path):
     sel.persist_picks(conn, 2025, 9, "wed", [g], "2025-11-05T15:00:00Z", status="active")
     pw_frame = pd.DataFrame([{"season": 2025, "week": 9, "player_id": "A1",
                               "rec_yards": 88.0, "receptions": 7, "rush_yards": 0,
-                              "pass_yards": 0, "pass_attempts": 0, "carries": 0,
-                              "rush_tds": 0, "rec_tds": 1}])
+                              "pass_yards": 0, "pass_attempts": 0, "completions": 0,
+                              "carries": 0, "rush_tds": 0, "rec_tds": 1}])
     assert sel.grade_picks(conn, 2025, 9, pw_frame)["graded"] == 1
     rec = sel.picks_record(conn)
     assert rec["n"] == 1

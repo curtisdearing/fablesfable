@@ -1,0 +1,1063 @@
+{
+  "season": 2025,
+  "week": 9,
+  "clock": "wed",
+  "as_of": "2025-11-05T18:30:00Z",
+  "publish": true,
+  "publish_reasons": [],
+  "mode": "sample",
+  "sample": true,
+  "sample_note": "ILLUSTRATIVE sample \u2014 no live week has been generated in this environment. Tiers, writeups and decision chains are produced by the REAL nflvalue.selector on hand-authored candidate inputs, to demonstrate the transparency UI. Numbers are not live picks.",
+  "games": [
+    {
+      "game_id": "2025_09_MIN_CHI",
+      "matchup": "MIN @ CHI",
+      "screened": "5 of 5",
+      "screened_n": 5,
+      "leans": [
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.4667,
+          "player_id": "DM",
+          "name": "D.J. Moore",
+          "pos": "WR",
+          "team": "CHI",
+          "market": "receiving_yards",
+          "side": "over",
+          "mean": 55.0,
+          "sd": 15.400000000000002,
+          "line": 64.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.58,
+          "p_under": 0.42,
+          "prices": {
+            "over": 1.86,
+            "under": 1.96,
+            "book": "dk",
+            "consensus_p_over": 0.47,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 7.03,
+            "efficiency": 8.5,
+            "opp_factor": 0.92,
+            "game_script": 1.0
+          },
+          "composite": 68.59,
+          "edge": 0.11,
+          "confidence": 0.3084,
+          "components": {
+            "edge_raw": 0.11,
+            "edge_component": 1.0,
+            "market_prob": 0.47,
+            "model_prob": 0.58,
+            "z": -0.617,
+            "opp_sub": 0.3667,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0788,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5333,
+          "player_id": "JJ",
+          "name": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receiving_yards",
+          "side": "over",
+          "mean": 94.1,
+          "sd": 26.348000000000003,
+          "line": 82.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.585,
+          "p_under": 0.415,
+          "prices": {
+            "over": 1.95,
+            "under": 1.87,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 10.25,
+            "efficiency": 8.5,
+            "opp_factor": 1.08,
+            "game_script": 1.0,
+            "shape_tilts": {
+              "depth": 1.03
+            }
+          },
+          "composite": 52.27,
+          "edge": 0.07,
+          "confidence": 0.2201,
+          "components": {
+            "edge_raw": 0.07,
+            "edge_component": 0.7,
+            "market_prob": 0.515,
+            "model_prob": 0.585,
+            "z": 0.44,
+            "opp_sub": 0.6333,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.1407,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5208,
+          "player_id": "JJ",
+          "name": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receptions",
+          "side": "over",
+          "mean": 6.8,
+          "sd": 1.9040000000000001,
+          "line": 5.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.61,
+          "p_under": 0.39,
+          "prices": {
+            "over": 1.98,
+            "under": 1.85,
+            "book": "dk",
+            "consensus_p_over": 0.55,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 0.76,
+            "efficiency": 8.5,
+            "opp_factor": 1.05,
+            "game_script": 1.0
+          },
+          "composite": 50.66,
+          "edge": 0.06,
+          "confidence": 0.3414,
+          "components": {
+            "edge_raw": 0.06,
+            "edge_component": 0.6,
+            "market_prob": 0.55,
+            "model_prob": 0.61,
+            "z": 0.683,
+            "opp_sub": 0.5833,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.2078,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5417,
+          "player_id": "AJ",
+          "name": "Aaron Jones",
+          "pos": "RB",
+          "team": "MIN",
+          "market": "rushing_yards",
+          "side": "over",
+          "mean": 71.0,
+          "sd": 19.880000000000003,
+          "line": 64.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.56,
+          "p_under": 0.44,
+          "prices": {
+            "over": 1.93,
+            "under": 1.89,
+            "book": "dk",
+            "consensus_p_over": 0.52,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 7.59,
+            "efficiency": 8.5,
+            "opp_factor": 1.1,
+            "game_script": 1.0
+          },
+          "composite": 35.74,
+          "edge": 0.04,
+          "confidence": 0.1635,
+          "components": {
+            "edge_raw": 0.04,
+            "edge_component": 0.4,
+            "market_prob": 0.52,
+            "model_prob": 0.56,
+            "z": 0.327,
+            "opp_sub": 0.6667,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0808,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5167,
+          "player_id": "SD",
+          "name": "Sam Darnold",
+          "pos": "QB",
+          "team": "MIN",
+          "market": "passing_yards",
+          "side": "over",
+          "mean": 251.0,
+          "sd": 70.28,
+          "line": 244.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.535,
+          "p_under": 0.465,
+          "prices": {
+            "over": 1.91,
+            "under": 1.91,
+            "book": "dk",
+            "consensus_p_over": 0.52,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 28.39,
+            "efficiency": 8.5,
+            "opp_factor": 1.04,
+            "game_script": 1.0
+          },
+          "composite": 19.22,
+          "edge": 0.015,
+          "confidence": 0.0462,
+          "components": {
+            "edge_raw": 0.015,
+            "edge_component": 0.15,
+            "market_prob": 0.52,
+            "model_prob": 0.535,
+            "z": 0.092,
+            "opp_sub": 0.5667,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0218,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        }
+      ],
+      "picks": [
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.4667,
+          "player_id": "DM",
+          "name": "D.J. Moore",
+          "pos": "WR",
+          "team": "CHI",
+          "market": "receiving_yards",
+          "side": "over",
+          "mean": 55.0,
+          "sd": 15.400000000000002,
+          "line": 64.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.58,
+          "p_under": 0.42,
+          "prices": {
+            "over": 1.86,
+            "under": 1.96,
+            "book": "dk",
+            "consensus_p_over": 0.47,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 7.03,
+            "efficiency": 8.5,
+            "opp_factor": 0.92,
+            "game_script": 1.0
+          },
+          "composite": 68.59,
+          "edge": 0.11,
+          "confidence": 0.3084,
+          "components": {
+            "edge_raw": 0.11,
+            "edge_component": 1.0,
+            "market_prob": 0.47,
+            "model_prob": 0.58,
+            "z": -0.617,
+            "opp_sub": 0.3667,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0788,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "STRONG",
+          "tier_notes": [],
+          "writeup": "D.J. Moore over 64.5 receiving yards is selected because the model projects 55.0 and gives this side a 58% chance, against a 47% market-implied fair probability \u2014 a +11.0-point probability edge and +7.9% expected value at the best available price (1.86, dk). Projection basis: 7.03 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.92. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability."
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5333,
+          "player_id": "JJ",
+          "name": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receiving_yards",
+          "side": "over",
+          "mean": 94.1,
+          "sd": 26.348000000000003,
+          "line": 82.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.585,
+          "p_under": 0.415,
+          "prices": {
+            "over": 1.95,
+            "under": 1.87,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 10.25,
+            "efficiency": 8.5,
+            "opp_factor": 1.08,
+            "game_script": 1.0,
+            "shape_tilts": {
+              "depth": 1.03
+            }
+          },
+          "composite": 52.27,
+          "edge": 0.07,
+          "confidence": 0.2201,
+          "components": {
+            "edge_raw": 0.07,
+            "edge_component": 0.7,
+            "market_prob": 0.515,
+            "model_prob": 0.585,
+            "z": 0.44,
+            "opp_sub": 0.6333,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.1407,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "STRONG",
+          "tier_notes": [],
+          "writeup": "Justin Jefferson over 82.5 receiving yards is selected because the model projects 94.1 and gives this side a 58% chance, against a 52% market-implied fair probability \u2014 a +7.0-point probability edge and +14.1% expected value at the best available price (1.95, dk). Projection basis: 10.25 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.08. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability."
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5208,
+          "player_id": "JJ",
+          "name": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receptions",
+          "side": "over",
+          "mean": 6.8,
+          "sd": 1.9040000000000001,
+          "line": 5.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.61,
+          "p_under": 0.39,
+          "prices": {
+            "over": 1.98,
+            "under": 1.85,
+            "book": "dk",
+            "consensus_p_over": 0.55,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 0.76,
+            "efficiency": 8.5,
+            "opp_factor": 1.05,
+            "game_script": 1.0
+          },
+          "composite": 50.66,
+          "edge": 0.06,
+          "confidence": 0.3414,
+          "components": {
+            "edge_raw": 0.06,
+            "edge_component": 0.6,
+            "market_prob": 0.55,
+            "model_prob": 0.61,
+            "z": 0.683,
+            "opp_sub": 0.5833,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.2078,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "PLAYABLE",
+          "tier_notes": [],
+          "writeup": "Justin Jefferson over 5.5 receptions is selected because the model projects 6.8 and gives this side a 61% chance, against a 55% market-implied fair probability \u2014 a +6.0-point probability edge and +20.8% expected value at the best available price (1.98, dk). Projection basis: 0.76 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.05. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability."
+        },
+        {
+          "game_id": "2025_09_MIN_CHI",
+          "matchup": 0.5417,
+          "player_id": "AJ",
+          "name": "Aaron Jones",
+          "pos": "RB",
+          "team": "MIN",
+          "market": "rushing_yards",
+          "side": "over",
+          "mean": 71.0,
+          "sd": 19.880000000000003,
+          "line": 64.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.56,
+          "p_under": 0.44,
+          "prices": {
+            "over": 1.93,
+            "under": 1.89,
+            "book": "dk",
+            "consensus_p_over": 0.52,
+            "n_books": 4
+          },
+          "proj_components": {
+            "volume": 7.59,
+            "efficiency": 8.5,
+            "opp_factor": 1.1,
+            "game_script": 1.0
+          },
+          "composite": 35.74,
+          "edge": 0.04,
+          "confidence": 0.1635,
+          "components": {
+            "edge_raw": 0.04,
+            "edge_component": 0.4,
+            "market_prob": 0.52,
+            "model_prob": 0.56,
+            "z": 0.327,
+            "opp_sub": 0.6667,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0808,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "PLAYABLE",
+          "tier_notes": [],
+          "writeup": "Aaron Jones over 64.5 rushing yards is selected because the model projects 71.0 and gives this side a 56% chance, against a 52% market-implied fair probability \u2014 a +4.0-point probability edge and +8.1% expected value at the best available price (1.93, dk). Projection basis: 7.59 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.1. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability."
+        }
+      ],
+      "research_leans": []
+    },
+    {
+      "game_id": "2025_09_BUF_MIA",
+      "matchup": "BUF @ MIA",
+      "screened": "4 of 4",
+      "screened_n": 4,
+      "leans": [
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5125,
+          "player_id": "JA",
+          "name": "Josh Allen",
+          "pos": "QB",
+          "team": "BUF",
+          "market": "passing_yards",
+          "side": "under",
+          "mean": 228.0,
+          "sd": 63.84,
+          "line": 249.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.4,
+          "p_under": 0.6,
+          "prices": {
+            "over": 1.94,
+            "under": 1.88,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "wx_pass_mult": 0.91,
+          "proj_components": {
+            "volume": 27.65,
+            "efficiency": 8.5,
+            "opp_factor": 0.97,
+            "game_script": 1.0
+          },
+          "composite": 65.3,
+          "edge": 0.115,
+          "confidence": 0.1684,
+          "components": {
+            "edge_raw": 0.115,
+            "edge_component": 1.0,
+            "market_prob": 0.485,
+            "model_prob": 0.6,
+            "z": -0.337,
+            "opp_sub": 0.55,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.128,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5208,
+          "player_id": "TH",
+          "name": "Tyreek Hill",
+          "pos": "WR",
+          "team": "MIA",
+          "market": "receiving_yards",
+          "side": "under",
+          "mean": 61.0,
+          "sd": 17.080000000000002,
+          "line": 72.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.435,
+          "p_under": 0.565,
+          "prices": {
+            "over": 1.9,
+            "under": 1.92,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "wx_pass_mult": 0.9,
+          "proj_components": {
+            "volume": 7.55,
+            "efficiency": 8.5,
+            "opp_factor": 0.95,
+            "game_script": 1.0
+          },
+          "composite": 60.52,
+          "edge": 0.08,
+          "confidence": 0.3367,
+          "components": {
+            "edge_raw": 0.08,
+            "edge_component": 0.8,
+            "market_prob": 0.485,
+            "model_prob": 0.565,
+            "z": -0.673,
+            "opp_sub": 0.5833,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0848,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5,
+          "player_id": "RB2",
+          "name": "Raheem Mostert",
+          "pos": "RB",
+          "team": "MIA",
+          "market": "rushing_yards",
+          "side": "over",
+          "mean": 58.0,
+          "sd": 16.240000000000002,
+          "line": 49.5,
+          "line_source": "synthetic_trailing_mean",
+          "no_market": true,
+          "p_over": 0.57,
+          "p_under": 0.43,
+          "prices": null,
+          "proj_components": {
+            "volume": 6.82,
+            "efficiency": 8.5,
+            "opp_factor": 1.0,
+            "game_script": 1.0
+          },
+          "composite": 35.7,
+          "edge": null,
+          "confidence": 0.2617,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.57,
+            "z": 0.523,
+            "opp_sub": 0.5,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": null,
+            "n_books": null,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        },
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.55,
+          "player_id": "JC",
+          "name": "James Cook",
+          "pos": "RB",
+          "team": "BUF",
+          "market": "anytime_td",
+          "side": "over",
+          "mean": 0.58,
+          "sd": 1.2,
+          "line": 0.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.44,
+          "p_under": 0.56,
+          "prices": {
+            "over": 2.1,
+            "under": null,
+            "book": "dk",
+            "consensus_p_over": 0.455,
+            "n_books": 3
+          },
+          "proj_components": {
+            "volume": 0.06,
+            "efficiency": 8.5,
+            "opp_factor": 1.12,
+            "game_script": 1.0
+          },
+          "composite": 11.0,
+          "edge": -0.015,
+          "confidence": 0.0,
+          "components": {
+            "edge_raw": -0.015,
+            "edge_component": 0.0,
+            "market_prob": 0.455,
+            "model_prob": 0.44,
+            "z": 0.067,
+            "opp_sub": 0.7,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": -0.076,
+            "n_books": 3,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          }
+        }
+      ],
+      "picks": [
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5125,
+          "player_id": "JA",
+          "name": "Josh Allen",
+          "pos": "QB",
+          "team": "BUF",
+          "market": "passing_yards",
+          "side": "under",
+          "mean": 228.0,
+          "sd": 63.84,
+          "line": 249.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.4,
+          "p_under": 0.6,
+          "prices": {
+            "over": 1.94,
+            "under": 1.88,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "wx_pass_mult": 0.91,
+          "proj_components": {
+            "volume": 27.65,
+            "efficiency": 8.5,
+            "opp_factor": 0.97,
+            "game_script": 1.0
+          },
+          "composite": 65.3,
+          "edge": 0.115,
+          "confidence": 0.1684,
+          "components": {
+            "edge_raw": 0.115,
+            "edge_component": 1.0,
+            "market_prob": 0.485,
+            "model_prob": 0.6,
+            "z": -0.337,
+            "opp_sub": 0.55,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.128,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "STRONG",
+          "tier_notes": [],
+          "writeup": "Josh Allen under 249.5 passing yards is selected because the model projects 228.0 and gives this side a 60% chance, against a 48% market-implied fair probability \u2014 a +11.5-point probability edge and +12.8% expected value at the best available price (1.88, dk). Projection basis: 27.65 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.97. The market probability is the de-vigged consensus across 4 book(s). Main risks: weather-adjusted (\u00d70.91); late injury/news can change availability."
+        },
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5208,
+          "player_id": "TH",
+          "name": "Tyreek Hill",
+          "pos": "WR",
+          "team": "MIA",
+          "market": "receiving_yards",
+          "side": "under",
+          "mean": 61.0,
+          "sd": 17.080000000000002,
+          "line": 72.5,
+          "line_source": "odds_api",
+          "no_market": false,
+          "p_over": 0.435,
+          "p_under": 0.565,
+          "prices": {
+            "over": 1.9,
+            "under": 1.92,
+            "book": "dk",
+            "consensus_p_over": 0.515,
+            "n_books": 4
+          },
+          "wx_pass_mult": 0.9,
+          "proj_components": {
+            "volume": 7.55,
+            "efficiency": 8.5,
+            "opp_factor": 0.95,
+            "game_script": 1.0
+          },
+          "composite": 60.52,
+          "edge": 0.08,
+          "confidence": 0.3367,
+          "components": {
+            "edge_raw": 0.08,
+            "edge_component": 0.8,
+            "market_prob": 0.485,
+            "model_prob": 0.565,
+            "z": -0.673,
+            "opp_sub": 0.5833,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "edge": 0.5,
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": 0.0848,
+            "n_books": 4,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "STRONG",
+          "tier_notes": [],
+          "writeup": "Tyreek Hill under 72.5 receiving yards is selected because the model projects 61.0 and gives this side a 56% chance, against a 48% market-implied fair probability \u2014 a +8.0-point probability edge and +8.5% expected value at the best available price (1.92, dk). Projection basis: 7.55 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.95. The market probability is the de-vigged consensus across 4 book(s). Main risks: weather-adjusted (\u00d70.90); late injury/news can change availability."
+        }
+      ],
+      "research_leans": [
+        {
+          "game_id": "2025_09_BUF_MIA",
+          "matchup": 0.5,
+          "player_id": "RB2",
+          "name": "Raheem Mostert",
+          "pos": "RB",
+          "team": "MIA",
+          "market": "rushing_yards",
+          "side": "over",
+          "mean": 58.0,
+          "sd": 16.240000000000002,
+          "line": 49.5,
+          "line_source": "synthetic_trailing_mean",
+          "no_market": true,
+          "p_over": 0.57,
+          "p_under": 0.43,
+          "prices": null,
+          "proj_components": {
+            "volume": 6.82,
+            "efficiency": 8.5,
+            "opp_factor": 1.0,
+            "game_script": 1.0
+          },
+          "composite": 35.7,
+          "edge": null,
+          "confidence": 0.2617,
+          "components": {
+            "edge_raw": null,
+            "edge_component": null,
+            "market_prob": null,
+            "model_prob": 0.57,
+            "z": 0.523,
+            "opp_sub": 0.5,
+            "script_sub": 0.5,
+            "pace_sub": 0.5,
+            "epa_sub": 0.5,
+            "absence_sub": 0.5,
+            "matchup_weights": {
+              "opp": 0.25,
+              "script": 0.2,
+              "pace": 0.2,
+              "epa": 0.2,
+              "opp_absence": 0.15
+            },
+            "weights_used": {
+              "confidence": 0.3,
+              "matchup": 0.2
+            },
+            "calibration_gate": true,
+            "ev_best_price": null,
+            "n_books": null,
+            "reliability_mult": null,
+            "context_mult": null,
+            "bias_mult": null
+          },
+          "tier": "RESEARCH",
+          "tier_notes": [
+            "no real market line \u2014 synthetic reference; research only"
+          ],
+          "writeup": "Raheem Mostert over 49.5 rushing yards is a NO-MARKET research lean: the 49.5 reference is the player's own trailing mean (synthetic), not a sportsbook price, so no edge or EV can be computed. The model projects 58.0 and this is tracked for learning only. Main risks: no real market line \u2014 synthetic reference; research only; late injury/news can change availability."
+        }
+      ]
+    }
+  ]
+}

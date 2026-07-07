@@ -57,6 +57,12 @@ FRAME_PATH = os.path.join(cfgmod.DATA_DIR, "ml_frame.parquet")
 REPORT_MD = "reports/correlation_structure.md"
 
 RESID_CLIP = 8.0        # guard against absurd residuals from a tiny projection sd
+CLEAN_LABEL_CONTEXT = True   # Phase 8.4: drop truncated / rest-week rows from
+                             # the residual panel (a hamstring-on-drive-one line
+                             # or a resting starter's stat pair says nothing
+                             # about same-game correlation); same lens/flag
+                             # family as features.RECENCY_FIT. Takes effect at
+                             # the next artifact regeneration.
 MIN_N = 300             # don't even report a type below this many pooled pairs
 RHO_FLOOR = 0.05        # |shrunk rho| below this is economically noise
 WALK_FORWARD_SEASONS = [2021, 2022, 2023, 2024, 2025]
@@ -76,6 +82,13 @@ def build_residuals(frame: pd.DataFrame, pw: pd.DataFrame) -> pd.DataFrame:
     act = pd.concat(parts, ignore_index=True)
 
     d = frame.merge(act, on=["season", "week", "player_id", "market"], how="inner")
+    if CLEAN_LABEL_CONTEXT:
+        for col in ("early_exit", "game_meaningless"):
+            if col in pw.columns:
+                tag = pw[["season", "week", "player_id", col]].drop_duplicates(
+                    subset=["season", "week", "player_id"])
+                d = d.merge(tag, on=["season", "week", "player_id"], how="left")
+                d = d[d[col].fillna(0) == 0].drop(columns=[col])
     d["resid"] = ((d["actual"] - d["mean"]) / d["sd"].clip(lower=1e-6)).clip(-RESID_CLIP, RESID_CLIP)
     d["pos"] = "NA"
     for p in POSITIONS:

@@ -50,6 +50,7 @@ ACTUAL_COL = {
     "rushing_yards": "rush_yards",
     "passing_yards": "pass_yards",
     "pass_attempts": "pass_attempts",
+    "pass_completions": "completions",
     "rush_attempts": "carries",
 }
 

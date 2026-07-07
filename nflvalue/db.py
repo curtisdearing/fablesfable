@@ -24,7 +24,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # undeletable stale journal file from local debugging in this environment
 # (some mounted/synced project folders don't allow removing a written file);
 # there was never a design reason for the literal filename "nfl.db".
-DEFAULT_DB_PATH = os.path.join(ROOT, "data", "nfl_props.db")
+# NFLDB_PATH lets an environment redirect the warehouse DB to reliable local
+# storage. Needed because some synced/fuse project mounts (e.g. the Cowork
+# sandbox) are unreliable for SQLite's commit/fsync path and forbid unlink(),
+# which strands hot journals; scheduled runs point this at an ext4 temp copy
+# and sync the file back afterward. Unset -> unchanged in-repo default.
+DEFAULT_DB_PATH = os.environ.get("NFLDB_PATH") or os.path.join(ROOT, "data", "nfl_props.db")
 
 
 # --------------------------------------------------------------------------- #
@@ -47,6 +52,7 @@ SCHEMA = {
             roll_carries REAL, roll_carry_share REAL,
             roll_pass_attempts REAL, roll_completions REAL,
             roll_ypt REAL, roll_catch_rate REAL, roll_ypc REAL, roll_ypa REAL,
+            roll_comp_rate REAL,
             roll_pass_td_rate REAL, roll_rush_td_rate REAL, roll_rec_td_rate REAL,
             PRIMARY KEY (season, week, player_id)
         );
@@ -123,12 +129,19 @@ SCHEMA = {
         );
     """,
     # -- Phase 3: prop-line snapshots (market history for edge + CLV) --------- #
+    # `point` MUST be in the PK: a book quoting alternate lines for the same
+    # side (e.g. Over 5.5 @ -110 AND Over 4.5 @ -130) shares every other key
+    # column, so without `point` here the second INSERT OR REPLACE silently
+    # overwrote the first and alternate-line markets never made it into the
+    # table at all (see nflvalue/db.py _migrate_lines_pk for the upgrade path
+    # on existing DBs, and oddsapi_props.to_prop_lines_frame / clv.snapshot_prob
+    # for where the recovered alt-line rows get compared).
     "lines": """
         CREATE TABLE IF NOT EXISTS lines (
             ts TEXT, game_id TEXT, book TEXT, market TEXT,
             player_id TEXT, player_name TEXT, side TEXT,
             point REAL, price REAL,
-            PRIMARY KEY (ts, game_id, book, market, player_name, side)
+            PRIMARY KEY (ts, game_id, book, market, player_name, side, point)
         );
     """,
     # -- Phase 3: closing-line-value log per lean ------------------------------ #
@@ -186,6 +199,9 @@ SCHEMA = {
             team TEXT, opp TEXT, home INTEGER, market TEXT,
             proj_mean REAL, actual REAL, log_resid REAL,
             volume_log_err REAL, efficiency_log_err REAL, primary_reason TEXT,
+            early_exit INTEGER DEFAULT 0,        -- Phase 8.4: the graded week was
+            game_meaningless INTEGER DEFAULT 0,  -- truncated / a rest week -- the
+                                                 -- bias learner skips these rows
             created_at TEXT,
             PRIMARY KEY (season, week, player_id, market)
         );
@@ -220,6 +236,41 @@ SCHEMA = {
 }
 
 
+def _table_pk_cols(conn: sqlite3.Connection, table: str) -> List[str]:
+    """Declared PRIMARY KEY columns of ``table``, in PK order (``[]`` if the
+    table doesn't exist or has no PK)."""
+    info = conn.execute(f"PRAGMA table_info({table})").fetchall()
+    # row = (cid, name, type, notnull, dflt_value, pk); pk is the column's
+    # 1-based position within the PK, or 0 if it isn't part of it.
+    pk_rows = sorted((r for r in info if r[5] > 0), key=lambda r: r[5])
+    return [r[1] for r in pk_rows]
+
+
+def _migrate_lines_pk(conn: sqlite3.Connection) -> None:
+    """Upgrade an existing ``lines`` table whose PK predates ``point``.
+
+    ``CREATE TABLE IF NOT EXISTS`` never touches a table that already exists,
+    so a DB created before ``point`` was added to the PK would otherwise keep
+    silently dropping alternate-line rows forever. Rebuilds the table in
+    place (rename -> recreate -> copy -> drop) so existing snapshots survive
+    the upgrade; rows that already collided under the old PK were lost before
+    this migration ever runs, there's nothing left to recover for those."""
+    if "lines" not in table_names(conn):
+        return  # fresh DB; the CREATE TABLE IF NOT EXISTS below handles it
+    if "point" in _table_pk_cols(conn, "lines"):
+        return  # already migrated
+    conn.execute("ALTER TABLE lines RENAME TO lines_pre_point_pk")
+    conn.execute(SCHEMA["lines"])
+    conn.execute("""
+        INSERT OR IGNORE INTO lines
+            (ts, game_id, book, market, player_id, player_name, side, point, price)
+        SELECT ts, game_id, book, market, player_id, player_name, side, point, price
+        FROM lines_pre_point_pk
+    """)
+    conn.execute("DROP TABLE lines_pre_point_pk")
+    conn.commit()
+
+
 def connect(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
     """Open (and initialize) the warehouse DB, creating tables if needed."""
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -227,7 +278,12 @@ def connect(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
     # WAL needs shared-memory mmap, which some mounted/synced project folders
     # don't support (raises "disk I/O error" on the first write); try modes in
     # order from most to least durable and keep whichever actually works.
-    for mode in ("DELETE", "MEMORY", "OFF"):
+    # TRUNCATE is tried first because some synced/fuse mounts (e.g. the Cowork
+    # project mount) forbid unlink(): DELETE mode unlink()s its journal on every
+    # commit and so fails there with "disk I/O error", stranding a hot journal
+    # that blocks the NEXT open. TRUNCATE is equally crash-safe but only
+    # truncates the journal to 0 bytes (no unlink), so it works and self-heals.
+    for mode in ("TRUNCATE", "DELETE", "MEMORY", "OFF"):
         try:
             conn.execute(f"PRAGMA journal_mode={mode};")
             conn.execute("CREATE TABLE IF NOT EXISTS _mode_probe (x INTEGER);")
@@ -236,10 +292,26 @@ def connect(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
             break
         except (sqlite3.OperationalError, sqlite3.DatabaseError):
             continue
+    _migrate_lines_pk(conn)
     for ddl in SCHEMA.values():
         conn.execute(ddl)
     conn.commit()
     return conn
+
+
+def ensure_columns(conn: sqlite3.Connection, table: str,
+                   columns: Mapping[str, str]) -> None:
+    """ALTER-in any missing columns (idempotent). CREATE TABLE IF NOT EXISTS
+    can't evolve an existing warehouse; this is the minimal migration path for
+    additive, defaulted columns (Phase 8.4 ledger context tags)."""
+    try:
+        have = {r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        for col, decl in columns.items():
+            if col not in have:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {decl}")
+        conn.commit()
+    except sqlite3.Error as exc:  # noqa: BLE001 -- loud, never silent
+        print(f"[db] ensure_columns({table}) failed: {exc}")
 
 
 def upsert(conn: sqlite3.Connection, table: str, rows: Iterable[Mapping], key_cols: Sequence[str]) -> int:

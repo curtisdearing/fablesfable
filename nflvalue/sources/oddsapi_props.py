@@ -49,12 +49,13 @@ ODDS_TO_MARKET = {
     "player_receptions": "receptions",
     "player_rush_attempts": "rush_attempts",
     "player_pass_attempts": "pass_attempts",
+    "player_pass_completions": "pass_completions",
     "player_anytime_td": "anytime_td",
 }
 MARKET_TO_ODDS = {v: k for k, v in ODDS_TO_MARKET.items()}
-# Phase 7.3 §1: capture all 7 shipped markets by default -- config
-# "prop_markets_internal" overrides. (A prior default here silently omitted
-# rush_attempts/pass_attempts; config.json now sets this explicitly too.)
+# Capture all shipped markets by default -- config "prop_markets_internal"
+# overrides. (A prior default here silently omitted rush_attempts/
+# pass_attempts; config.json now sets this explicitly too.)
 DEFAULT_PROP_MARKETS_INTERNAL = list(ODDS_TO_MARKET.values())
 
 
@@ -271,10 +272,91 @@ def rotation_order(conn, game_ids: List[str]) -> List[str]:
     return sorted(game_ids, key=lambda g: (last.get(g) or "", g))
 
 
+def surgical_markets(candidates, cfg: Dict) -> Dict[str, List[str]]:
+    """{game_id -> [internal_market,...]} keeping only (game, market) pairs that
+    hold at least one candidate whose model conviction vs its SYNTHETIC line
+    (``|p_over - 0.5|``) clears ``surgical_spend.min_conviction`` (default 0.06).
+    Coinflip-only games/markets are dropped so credits land where a real edge is
+    at all plausible -- the edge is still judged later against the REAL line;
+    this only decides WHERE to look. Since the API bills per market x region,
+    trimming markets per game multiplies how many games one budget can cover.
+    Pure; consulted only when ``surgical_spend.enabled`` is set.
+    """
+    sp = cfg.get("surgical_spend") or {}
+    thr = float(sp.get("min_conviction", 0.06))
+    allowed = set(cfg.get("prop_markets_internal") or DEFAULT_PROP_MARKETS_INTERNAL)
+    out: Dict[str, List[str]] = {}
+    if candidates is None or len(candidates) == 0 or "game_id" not in candidates:
+        return out
+    for gid, grp in candidates.groupby("game_id"):
+        mks: List[str] = []
+        for market, g2 in grp.groupby("market"):
+            if market not in allowed or market not in MARKET_TO_ODDS:
+                continue
+            po = pd.to_numeric(g2.get("p_over"), errors="coerce")
+            if po.notna().any() and float(po.sub(0.5).abs().max()) >= thr:
+                mks.append(str(market))
+        if mks:
+            out[str(gid)] = mks
+    return out
+
+
+def _pull_surgical(cfg: Dict, event_map: Dict[str, str], surg: Dict[str, List[str]],
+                   *, conn, fetch: Callable, budget: "CreditBudget", ts: str,
+                   regions: str, full_markets: List[str]) -> Dict:
+    """Surgical entry pull: request only the promising markets per game (from
+    :func:`surgical_markets`), spending the per-game surgical cost while
+    RESERVING a full-cost close for every entry -- so CLV still resolves and the
+    monthly ceiling is never risked. The BUDGET (not a fixed per-run count) is
+    the brake, which is how trimmed markets become wider game coverage. Games
+    with no promising market are tagged ``no_promise`` and cost nothing."""
+    n_reg = max(len(regions.split(",")), 1)
+    full_cost = float(len(full_markets) * n_reg)          # conservative close basis
+    R0 = budget.remaining
+    ordered = rotation_order(conn, list(event_map))
+    pulled, skipped_budget, no_promise = [], [], []
+    entry_spent, reserved_closes = 0.0, 0.0
+    all_rows: List[Dict] = []
+    for game_id in ordered:
+        odds_markets = [MARKET_TO_ODDS[m] for m in surg.get(game_id, [])
+                        if m in MARKET_TO_ODDS]
+        if not odds_markets:
+            no_promise.append(game_id)
+            continue
+        c = float(len(odds_markets) * n_reg)
+        # every entry must leave room for a full-cost close of itself AND all
+        # prior entries, and never brush the hard ceiling
+        if (entry_spent + c) + (reserved_closes + full_cost) > R0 or not budget.can_spend(c):
+            skipped_budget.append(game_id)
+            continue
+        params = {"apiKey": cfg.get("odds_api_key", ""),
+                  "markets": ",".join(odds_markets), "oddsFormat": "decimal"}
+        if cfg.get("books"):
+            params["bookmakers"] = ",".join(cfg["books"])
+        else:
+            params["regions"] = regions
+        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_map[game_id]}/odds", params)
+        headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
+        budget.spend(c, headers=headers)
+        entry_spent += c
+        reserved_closes += full_cost
+        for r in parse_event_props(payload, ts):
+            r["game_id"] = game_id
+            all_rows.append(r)
+        pulled.append(game_id)
+    written = dbmod.upsert(conn, "lines", all_rows,
+                           ["ts", "game_id", "book", "market", "player_name", "side", "point"]) if all_rows else 0
+    return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": [],
+            "no_promise": no_promise, "rows_written": written, "credits_spent": entry_spent,
+            "budget_remaining": budget.remaining, "ts": ts, "surgical": True,
+            "close_budget_reserved": reserved_closes}
+
+
 def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                     fetch: Optional[Callable] = None,
                     budget: Optional[CreditBudget] = None,
-                    ts: Optional[str] = None) -> Dict:
+                    ts: Optional[str] = None,
+                    candidates=None) -> Dict:
     """Pull props for a rotating, budget-capped subset of the week's games.
 
     ``event_map``: {nflverse game_id -> odds-api event id} (built by the
@@ -298,6 +380,14 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     reserved_cap = entry_event_cap(budget, cost_per_event)
     cap = min(int(cfg.get("max_prop_games_per_run", 4)), reserved_cap)
     ts = ts or stamp_now()
+
+    # Surgical spend (opt-in): request only the promising markets per game so the
+    # same budget covers more games. Off unless enabled AND the candidate pool is
+    # passed; the rotating full-market path below is otherwise unchanged.
+    if candidates is not None and (cfg.get("surgical_spend") or {}).get("enabled"):
+        surg = surgical_markets(candidates, cfg)
+        return _pull_surgical(cfg, event_map, surg, conn=conn, fetch=fetch,
+                              budget=budget, ts=ts, regions=regions, full_markets=markets)
 
     ordered = rotation_order(conn, list(event_map))
     pulled, skipped_budget, skipped_cap = [], [], []
@@ -332,7 +422,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     written = 0
     if all_rows:
         written = dbmod.upsert(conn, "lines", all_rows,
-                               ["ts", "game_id", "book", "market", "player_name", "side"])
+                               ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "rows_written": written, "credits_spent": spent,
             "budget_remaining": budget.remaining, "ts": ts,
@@ -375,6 +465,6 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
             rows.append(r)
         pulled.append(game_id)
     written = dbmod.upsert(conn, "lines", rows,
-                           ["ts", "game_id", "book", "market", "player_name", "side"]) if rows else 0
+                           ["ts", "game_id", "book", "market", "player_name", "side", "point"]) if rows else 0
     return {"pulled": pulled, "skipped_budget": skipped, "rows_written": written,
             "ts": ts, "budget_remaining": budget.remaining}

@@ -93,6 +93,9 @@ def record_player_residuals(conn, season: int, week: int, cands: pd.DataFrame,
     screened pool, not just published picks. Records nothing it can't grade."""
     if cands is None or cands.empty:
         return 0
+    dbmod.ensure_columns(conn, "player_week_residuals",
+                         {"early_exit": "INTEGER DEFAULT 0",
+                          "game_meaningless": "INTEGER DEFAULT 0"})
     wk = pw[(pw["season"] == season) & (pw["week"] == week)]
     arows = {r["player_id"]: r for r in wk.to_dict("records")}
     rows: List[Dict] = []
@@ -115,7 +118,14 @@ def record_player_residuals(conn, season: int, week: int, cands: pd.DataFrame,
             if act_vol is not None and float(act_vol) > 0:
                 v_err = math.log(float(act_vol) / float(proj_vol))
                 e_err = (log_resid - v_err) if log_resid is not None else None
-        if log_resid is not None and abs(log_resid) <= 0.15:
+        # Phase 8.4 observation-quality context: a truncated or rest-flagged
+        # game is an AVAILABILITY story, not a model-error story -- tagged so
+        # the bias learner below never chases it as signal
+        ee = int(bool(arow.get("early_exit"))) if arow is not None else 0
+        mg = int(bool(arow.get("game_meaningless"))) if arow is not None else 0
+        if ee or mg:
+            reason = "availability_truncated" if ee else "rest_week_context"
+        elif log_resid is not None and abs(log_resid) <= 0.15:
             reason = "on_projection"          # landed close; not a volume/eff story
         elif v_err is None:
             reason = "level"                  # no usage split available for this market
@@ -131,7 +141,8 @@ def record_player_residuals(conn, season: int, week: int, cands: pd.DataFrame,
             "log_resid": round(log_resid, 5) if log_resid is not None else None,
             "volume_log_err": round(v_err, 5) if v_err is not None else None,
             "efficiency_log_err": round(e_err, 5) if e_err is not None else None,
-            "primary_reason": reason, "created_at": _now(),
+            "primary_reason": reason, "early_exit": ee, "game_meaningless": mg,
+            "created_at": _now(),
         })
     if rows:
         dbmod.upsert(conn, "player_week_residuals", rows,
@@ -155,6 +166,14 @@ def compute_player_adjustments(conn, before: Optional[Tuple[int, int]] = None,
     df = dbmod.query_df(conn, "SELECT * FROM player_week_residuals ORDER BY season, week")
     if df.empty:
         return {}
+    # Phase 8.4: context-tagged rows (truncated / rest weeks) are excluded
+    # from the player-bias fit -- they measure availability, not model error
+    if p.get("clean_context", True):
+        for col in ("early_exit", "game_meaningless"):
+            if col in df.columns:
+                df = df[df[col].fillna(0) == 0]
+        if df.empty:
+            return {}
     if before is not None:
         s0, w0 = before
         df = df[(df["season"] < s0) | ((df["season"] == s0) & (df["week"] < w0))]

@@ -17,3 +17,7 @@ data/*.joblib
 
 # test fixtures are small recorded samples, deliberately tracked
 !nflvalue/sources/fixtures/*.parquet
+# perm-test + db-backup debris (environment artifacts, never source)
+data/__perm_*
+data/*.db.bak_*
+data/*.db-journal.bak_*

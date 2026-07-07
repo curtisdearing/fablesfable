@@ -5,7 +5,7 @@
   "game_markets": ["h2h", "spreads", "totals"],
   "prop_markets": ["player_pass_yds", "player_rush_yds", "player_reception_yds", "player_anytime_td"],
   "prop_markets_internal": ["receiving_yards", "receptions", "rushing_yards", "rush_attempts",
-                            "passing_yards", "pass_attempts", "anytime_td"],
+                            "passing_yards", "pass_attempts", "pass_completions", "anytime_td"],
   "fetch_props": true,
   "max_prop_games_per_run": 4,
 
@@ -49,6 +49,7 @@
       "receptions":      {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
       "rush_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
       "pass_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
+      "pass_completions": {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
       "anytime_td":      {"lean": 0.040, "playable": 0.080, "strong": 0.130, "ev_min": 0.02}
     },
     "provenance": "post-projection best-picks layer (nflvalue/selector.py): tiers PASS/LEAN/PLAYABLE/STRONG on model-vs-fair probability edge with EV + calibration floors; yardage bars lower, count markets moderate, anytime_td highest (one-sided raw-implied pricing + variance). Starting defaults — tune from forward CLV (clv table) and selector.picks_record() replay hit-rates by tier."
@@ -58,6 +59,8 @@
   "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},
 
   "odds_budget": {"monthly_credits": 500, "reserve": 50},
+  "surgical_spend": {"enabled": false, "min_conviction": 0.06,
+                     "provenance": "Opt-in credit optimizer (nflvalue/sources/oddsapi_props.py surgical_markets/_pull_surgical): request only the prop markets per game holding a candidate whose |p_over-0.5| vs its synthetic line clears min_conviction, so the same 450/mo budget covers more games (cost bills per market x region). Reserves a FULL-cost close per entry so CLV still resolves; the monthly ceiling is never risked. OFF by default -- flip enabled:true to widen weekly coverage. Tune min_conviction from forward hit-rate once live."},
   "clv": {"close_window_hours": 6.0},
   "discord_enabled": true,
   "rag": {"vectorstore_enabled": false, "row_cap": 200},

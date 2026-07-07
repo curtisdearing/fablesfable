@@ -45,7 +45,7 @@ def test_devig_and_snapshot_prob(conn):
     dbmod.upsert(conn, "lines", [
         _line("2023-11-08T10:00:00Z", "over", 1.87),
         _line("2023-11-08T10:00:00Z", "under", 1.95),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     snap = clvmod.snapshot_prob(conn, "2023_10_CLE_BAL", "receiving_yards", "00-A1", "over")
     expected_over, _ = devig_multiplicative([1.87, 1.95])
     assert snap["prob"] == pytest.approx(expected_over, abs=1e-9)
@@ -63,7 +63,7 @@ def test_clv_entry_vs_close_math(conn):
         _line("2023-11-12T17:00:00Z", "under", 2.10),
         _line("2023-11-12T19:00:00Z", "over", 3.00),  # post-kick junk: must be ignored
         _line("2023-11-12T19:00:00Z", "under", 1.30),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     _seed_lean(conn)
 
     out = clvmod.log_close_for_week(conn, 2023, 10,
@@ -85,7 +85,7 @@ def test_clv_needs_two_distinct_snapshots(conn):
     dbmod.upsert(conn, "lines", [
         _line("2023-11-08T10:00:00Z", "over", 1.87),
         _line("2023-11-08T10:00:00Z", "under", 1.95),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     _seed_lean(conn)
     out = clvmod.log_close_for_week(conn, 2023, 10,
                                     kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"})
@@ -105,7 +105,7 @@ def test_close_window_floor_rejects_stale_snapshot(conn):
         # 6h before kickoff (2023-11-12T18:00:00Z), so nothing should resolve
         _line("2023-11-09T09:00:00Z", "over", 1.80),
         _line("2023-11-09T09:00:00Z", "under", 2.05),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     _seed_lean(conn)
     out = clvmod.log_close_for_week(conn, 2023, 10,
                                     kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"},
@@ -119,7 +119,7 @@ def test_close_window_floor_accepts_in_window_snapshot(conn):
         _line("2023-11-08T10:00:00Z", "under", 1.95),
         _line("2023-11-12T15:00:00Z", "over", 1.72),   # 3h pre-kickoff -- inside a 6h window
         _line("2023-11-12T15:00:00Z", "under", 2.10),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     _seed_lean(conn)
     out = clvmod.log_close_for_week(conn, 2023, 10,
                                     kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"},
@@ -143,7 +143,7 @@ def test_has_close_snapshot_false_when_nothing_in_window(conn):
     dbmod.upsert(conn, "lines", [
         _line("2023-11-08T10:00:00Z", "over", 1.87),  # entry-era, way outside window
         _line("2023-11-08T10:00:00Z", "under", 1.95),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     assert clvmod.has_close_snapshot(
         conn, "2023_10_CLE_BAL", "2023-11-12T18:00:00Z", close_window_hours=6.0) is False
 
@@ -154,7 +154,7 @@ def test_has_close_snapshot_true_once_in_window(conn):
         _line("2023-11-08T10:00:00Z", "under", 1.95),
         _line("2023-11-12T15:00:00Z", "over", 1.72),   # 3h pre-kickoff -- in a 6h window
         _line("2023-11-12T15:00:00Z", "under", 2.10),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     assert clvmod.has_close_snapshot(
         conn, "2023_10_CLE_BAL", "2023-11-12T18:00:00Z", close_window_hours=6.0) is True
     # a narrower window that excludes the same snapshot must say False
@@ -172,7 +172,7 @@ def test_clock_dedup_resolves_one_row_against_earliest_as_of(conn):
         _line("2023-11-08T10:00:00Z", "under", 1.95),
         _line("2023-11-12T15:00:00Z", "over", 1.72),
         _line("2023-11-12T15:00:00Z", "under", 2.10),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     # wed entry (earlier as_of) + a t90 lean for the SAME key (later as_of)
     dbmod.upsert(conn, "leans", [{
         "season": 2023, "week": 10, "clock": "wed", "game_id": "2023_10_CLE_BAL",
@@ -216,7 +216,7 @@ def test_mixed_prob_kind_not_resolved(conn):
         # close (inside 6h window): one-sided Yes-only -> raw implied
         _line("2023-11-12T15:00:00Z", "over", 1.65, point=0.0,
               market="anytime_td", player_id="00-TD", name="Anytime Guy"),
-    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    ], ["ts", "game_id", "book", "market", "player_name", "side", "point"])
     dbmod.upsert(conn, "leans", [{
         "season": 2023, "week": 10, "clock": "wed", "game_id": gid,
         "player_id": "00-TD", "name": "Anytime Guy", "market": "anytime_td",

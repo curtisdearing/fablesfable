@@ -79,6 +79,7 @@ DEFAULT_SELECTOR_CFG: Dict = {
         "receptions":      {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
         "rush_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
         "pass_attempts":   {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
+        "pass_completions": {"lean": 0.025, "playable": 0.050, "strong": 0.085, "ev_min": 0.0},
         "anytime_td":      {"lean": 0.040, "playable": 0.080, "strong": 0.130, "ev_min": 0.02},
     },
     "tuning_note": ("starting defaults -- tune from forward CLV + historical replay "

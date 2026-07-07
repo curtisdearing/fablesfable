@@ -90,6 +90,25 @@ GARBAGE_Q4_MARGIN = 17
 GARBAGE_WP_BAND = (0.05, 0.95)
 GARBAGE_FILTER_ENABLED = False
 
+# ---- Phase 8.3: FITTED recency weight + rest-game cleaning (shipped ON) ---- #
+# scripts/fit_recency_weight.py + merge_recency_shards.py, walk-forward OOS
+# next-game MAE over 2019-2025 (data/recency_weight_fit.json):
+#   * EWM span 8 beats BOTH the flat-8 window production actually shipped and
+#     the ewm-4 the 1B docstring intended, in ALL 7 markets, 6/6 seasons each
+#     (pooled 5.379 -> 5.293; receiving alone -0.11 MAE every season).
+#   * drop_rest (zero-weighting prior games the player's team entered with its
+#     playoff fate settled -- game_context.meaningless_game_flags, a COARSE
+#     labeled proxy) adds a further consistent sliver (pooled 5.298 -> 5.293)
+#     and wins/ties per-market.
+#   * drop_injury was measured WORSE (pooled 5.320) -- injury-shortened games
+#     still carry role information; they are NOT dropped from the means (the
+#     tag ships as a feature/ledger annotation instead, 8.4).
+# Attempts markets marginally prefer span 6 (1.3295 vs 1.3324 at 8); one
+# global span keeps the volume/efficiency decomposition coherent, documented
+# as the accepted rounding. Flip "enabled" (or pass recency_fit=False) to
+# reproduce the flat-8 world byte-for-byte.
+RECENCY_FIT = {"enabled": True, "ewm_span": 8, "drop_rest": True}
+
 
 def _garbage_mask(pbp: pd.DataFrame) -> pd.Series:
     """True = garbage-time play. NaN-tolerant: missing wp falls back to the
@@ -338,7 +357,8 @@ def _safe_ratio(num: pd.Series, den: pd.Series) -> pd.Series:
     return r
 
 
-def _rolling_shifted(s: pd.Series, window: int = ROLL_WINDOW, how: str = "mean") -> pd.Series:
+def _rolling_shifted(s: pd.Series, window: int = ROLL_WINDOW, how: str = "mean",
+                     span: Optional[int] = None) -> pd.Series:
     """PRIOR-weeks-only feature from a player's/team's own history.
 
     ``how="mean"`` is a FLAT trailing average (window=``ROLL_WINDOW``); ``how="ewm"``
@@ -358,7 +378,10 @@ def _rolling_shifted(s: pd.Series, window: int = ROLL_WINDOW, how: str = "mean")
     if how == "mean":
         return shifted.rolling(window, min_periods=1).mean()
     if how == "ewm":
-        return shifted.ewm(span=EWM_SPAN, min_periods=1).mean()
+        # NaN inputs (Phase 8.3 rest-masked games) keep their ABSOLUTE age in
+        # the decay (pandas ignore_na=False) -- identical semantics to the
+        # sweep's zero-weighted dropped games in scripts/fit_recency_weight.py
+        return shifted.ewm(span=span or EWM_SPAN, min_periods=1).mean()
     if how == "count":
         return shifted.rolling(window, min_periods=1).count()
     raise ValueError(how)
@@ -453,7 +476,9 @@ def _assign_archetype(pw: pd.DataFrame) -> pd.Series:
 
 
 def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None,
-                      garbage_filter: Optional[bool] = None) -> pd.DataFrame:
+                      garbage_filter: Optional[bool] = None,
+                      schedules: Optional[pd.DataFrame] = None,
+                      recency_fit: Optional[object] = None) -> pd.DataFrame:
     if pbp is None:
         pbp = load_pbp()
     team_week = _team_week(pbp)
@@ -505,6 +530,10 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw["_catch_rate"] = _safe_ratio(_col("receptions"), _col("targets"))
     pw["_ypc"] = _safe_ratio(_col("rush_yards"), _col("carries"))
     pw["_ypa"] = _safe_ratio(_col("pass_yards"), _col("pass_attempts"))
+    # completion rate (completions / attempts) -- the trailing efficiency the
+    # pass_completions market multiplies onto projected attempts. Shrunk toward
+    # the QB league/archetype prior below exactly like _ypa/_catch_rate.
+    pw["_comp_rate"] = _safe_ratio(_col("completions"), _col("pass_attempts"))
     pw["_pass_td_rate"] = _safe_ratio(_col("pass_tds"), _col("pass_attempts"))
     pw["_rush_td_rate"] = _safe_ratio(_col("rush_tds"), _col("carries"))
     pw["_rec_td_rate"] = _safe_ratio(_col("rec_tds"), _col("targets"))
@@ -515,6 +544,7 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
             "_carry_share": ("carries", "team_rush_att"),
             "_ypt": ("rec_yards", "targets"), "_catch_rate": ("receptions", "targets"),
             "_ypc": ("rush_yards", "carries"), "_ypa": ("pass_yards", "pass_attempts"),
+            "_comp_rate": ("completions", "pass_attempts"),
             "_pass_td_rate": ("pass_tds", "pass_attempts"),
             "_rush_td_rate": ("rush_tds", "carries"), "_rec_td_rate": ("rec_tds", "targets"),
         }
@@ -533,16 +563,64 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw["_rz_carry_share"] = _safe_ratio(pw["rz_car"], pw["team_rz_car"])
     pw["_gl_carry_share"] = _safe_ratio(pw["gl_car"], pw["team_gl_car"])
 
+    # ---- Phase 8.3: FITTED recency weight + rest-game cleaning --------------- #
+    # (see RECENCY_FIT provenance note above). When enabled: every rolling MEAN
+    # below switches from the flat-8 window to EWM span-8, and prior games the
+    # player's team entered with its playoff fate settled are ZERO-WEIGHTED in
+    # those means (their raw inputs masked to NaN pre-roll; ACTUALS untouched,
+    # so grading/synthetic lines never change). roll_games (the eligibility
+    # sample count) deliberately stays a literal count of games played.
+    rf = RECENCY_FIT if recency_fit is None else (
+        dict(recency_fit) if isinstance(recency_fit, dict)
+        else {**RECENCY_FIT, "enabled": bool(recency_fit)})
+    rf_on = bool(rf.get("enabled"))
+    rf_span = int(rf.get("ewm_span", 8))
+    pw["game_meaningless"] = 0.0
+    if rf_on and rf.get("drop_rest", True):
+        try:
+            if schedules is None:
+                from . import ingest as _ingest      # lazy: avoids import cycle
+                schedules = _ingest.load_all_schedules()
+            from . import game_context as _gc
+            mg = _gc.meaningless_game_flags(schedules)
+            if len(mg):
+                fmap = {(int(r.season), int(r.week), r.team): float(r.meaningless)
+                        for r in mg.itertuples(index=False)}
+                pw["game_meaningless"] = [
+                    fmap.get((int(s), int(w), t), 0.0)
+                    for s, w, t in zip(pw["season"], pw["week"], pw["team"])]
+        except Exception as exc:  # noqa: BLE001 -- loud degrade: fit runs un-cleaned
+            print(f"[features] rest-game flags unavailable ({exc}); "
+                  "recency fit runs without drop_rest")
+    _keep = pw["game_meaningless"].to_numpy() == 0.0
+    _mask_rest = rf_on and rf.get("drop_rest", True) and not _keep.all()
+    _ROLL_INPUTS = ["targets", "_target_share", "air_yards_sum", "_adot",
+                    "carries", "_carry_share", "pass_attempts", "completions",
+                    "_ypt", "_catch_rate", "_ypc", "_ypa", "_comp_rate",
+                    "_pass_td_rate", "_rush_td_rate", "_rec_td_rate",
+                    "_short_tgt_share", "_mid_tgt_share", "_short_pass_share",
+                    "_rz_tgt_share", "_rz_carry_share", "_gl_carry_share"]
+    if _mask_rest:
+        for c in _ROLL_INPUTS:
+            pw[f"_rf_{c}"] = pw[c].where(_keep)
+
+    def _IN(col: str) -> str:
+        """Name of the roll INPUT column (rest-masked copy when cleaning)."""
+        return f"_rf_{col}" if _mask_rest else col
+
+    _mean_roll = ((lambda s: _rolling_shifted(s, how="ewm", span=rf_span))
+                  if rf_on else _rolling_shifted)
+
     g = pw.groupby("player_id")
     pw["roll_games"] = g["targets"].transform(lambda s: _rolling_shifted(s, how="count"))
-    pw["roll_targets"] = g["targets"].transform(_rolling_shifted)
-    pw["roll_target_share"] = g["_target_share"].transform(_rolling_shifted)
-    pw["roll_air_yards"] = g["air_yards_sum"].transform(_rolling_shifted)
-    pw["roll_adot"] = g["_adot"].transform(_rolling_shifted)
-    pw["roll_carries"] = g["carries"].transform(_rolling_shifted)
-    pw["roll_carry_share"] = g["_carry_share"].transform(_rolling_shifted)
-    pw["roll_pass_attempts"] = g["pass_attempts"].transform(_rolling_shifted)
-    pw["roll_completions"] = g["completions"].transform(_rolling_shifted)
+    pw["roll_targets"] = g[_IN("targets")].transform(_mean_roll)
+    pw["roll_target_share"] = g[_IN("_target_share")].transform(_mean_roll)
+    pw["roll_air_yards"] = g[_IN("air_yards_sum")].transform(_mean_roll)
+    pw["roll_adot"] = g[_IN("_adot")].transform(_mean_roll)
+    pw["roll_carries"] = g[_IN("carries")].transform(_mean_roll)
+    pw["roll_carry_share"] = g[_IN("_carry_share")].transform(_mean_roll)
+    pw["roll_pass_attempts"] = g[_IN("pass_attempts")].transform(_mean_roll)
+    pw["roll_completions"] = g[_IN("completions")].transform(_mean_roll)
 
     # Cold start (a player's very first row has no own history -> NaN above):
     # fall back to the role's PRIOR-weeks-only league average rather than
@@ -564,6 +642,7 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_catch_rate": "_catch_rate",
         "roll_ypc": "_ypc",
         "roll_ypa": "_ypa",
+        "roll_comp_rate": "_comp_rate",
         "roll_pass_td_rate": "_pass_td_rate",
         "roll_rush_td_rate": "_rush_td_rate",
         "roll_rec_td_rate": "_rec_td_rate",
@@ -574,18 +653,20 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_short_pass_share": "_short_pass_share",
     }
     for out_col, raw_col in raw_eff.items():
-        pw[f"_raw_{out_col}"] = g[raw_col].transform(_rolling_shifted)
+        pw[f"_raw_{out_col}"] = g[_IN(raw_col)].transform(_mean_roll)
 
     # Phase 6.2: RZ/GL shares roll over a LONGER window (16) -- red-zone
     # events are ~10x sparser than targets, so an 8-game window is mostly
     # noise; matches the 16-game window advanced_features already uses.
+    # Phase 8.3 note: the sweep fit the CORE window; RZ shares keep their own
+    # sparse-event window (flat-16) but do take the rest-game mask.
     raw_eff_rz = {
         "roll_rz_tgt_share": "_rz_tgt_share",
         "roll_rz_carry_share": "_rz_carry_share",
         "roll_gl_carry_share": "_gl_carry_share",
     }
     for out_col, raw_col in raw_eff_rz.items():
-        pw[f"_raw_{out_col}"] = g[raw_col].transform(
+        pw[f"_raw_{out_col}"] = g[_IN(raw_col)].transform(
             lambda s: _rolling_shifted(s, window=16))
     raw_eff = {**raw_eff, **raw_eff_rz}
 
@@ -601,6 +682,12 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     g = pw.groupby("player_id")  # re-group after the merge (fresh frame)
     pw["roll_early_exit_rate"] = g["early_exit"].transform(
         lambda s: _rolling_shifted(s, window=32)).fillna(0.0)  # no history = no exits observed
+    # Phase 8.4: "was his LAST game injury-shortened?" -- strictly-prior by
+    # construction (shift), pbp-only. Rides the pw frame + ML frame as a
+    # RETRAIN-GATED feature (ml_ranker.RETRAIN_PENDING_FEATURES) and tags the
+    # player-learning ledger so an availability-truncated game is never
+    # attributed as model error.
+    pw["prev_early_exit"] = g["early_exit"].transform(lambda s: s.shift(1)).fillna(0.0)
 
     # ---- archetype (Phase 6.1): assigned from trailing-only rolls, used as
     # the FIRST shrinkage tier; coarse role remains the fallback tier ---------- #
@@ -631,29 +718,84 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "team_rz_tgt", "team_rz_car", "team_gl_car",
         "roll_games", "roll_targets", "roll_target_share", "roll_air_yards", "roll_adot",
         "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
-        "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
+        "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa", "roll_comp_rate",
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
         "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
         "roll_rz_tgt_share", "roll_rz_carry_share", "roll_gl_carry_share",
         "roll_early_exit_rate",
+        # Phase 8.3/8.4 observation-quality tags: game_meaningless is PRE-GAME
+        # knowable (records strictly before the week); prev_early_exit is the
+        # shift-1 of a realized flag -- both leak-safe by construction.
+        # early_exit is the REALIZED-week truncation flag: exported for LABEL
+        # context only (ledger attribution, calibration-frame cleaning) --
+        # never a pre-game feature, exactly like the actual stat columns.
+        "game_meaningless", "prev_early_exit", "early_exit",
     ]
     return pw[keep].reset_index(drop=True)
+
+
+def _meaningless_keys(schedules: Optional[pd.DataFrame],
+                      recency_fit: Optional[object]) -> set:
+    """{(season, week, team)} rest/meaningless flags (Phase 8.3 proxy), shared
+    by the player means, the opponent-defense factors and the team-pace basis
+    (§8.4: one tagging lens, one switch). Empty set when the fit is off or
+    schedules are unavailable (loud degrade)."""
+    rf = RECENCY_FIT if recency_fit is None else (
+        dict(recency_fit) if isinstance(recency_fit, dict)
+        else {**RECENCY_FIT, "enabled": bool(recency_fit)})
+    if not (rf.get("enabled") and rf.get("drop_rest", True)):
+        return set()
+    try:
+        if schedules is None:
+            from . import ingest as _ingest
+            schedules = _ingest.load_all_schedules()
+        from . import game_context as _gc
+        mg = _gc.meaningless_game_flags(schedules)
+        return {(int(r.season), int(r.week), r.team)
+                for r in mg.itertuples(index=False) if r.meaningless > 0}
+    except Exception as exc:  # noqa: BLE001
+        print(f"[features] rest-game flags unavailable ({exc}); no rest cleaning")
+        return set()
 
 
 # --------------------------------------------------------------------------- #
 # Opponent-vs-role defense table
 # --------------------------------------------------------------------------- #
-def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None,
+                      schedules: Optional[pd.DataFrame] = None,
+                      recency_fit: Optional[object] = None) -> pd.DataFrame:
     """Rolling defense-vs-role factors. Phase 1B split: WR and TE are now
     tracked SEPARATELY (a defense can be tough on WRs but soft on TEs, or vice
     versa -- a real signal real positions unlock that the old combined REC
     bucket couldn't see), using each play's actual targeted receiver position.
+
+    Phase 8.4 (same lens as the player means, one flag): defense-weeks spent
+    facing an OFFENSE whose playoff fate was settled (rest/meaningless proxy)
+    are zero-weighted in the rolling factors -- a defense that padded its
+    numbers against three resting offenses looked better than it was. Rows
+    still exist (values masked, never deleted), so missingness can't encode
+    week-W information.
     """
     if pbp is None:
         pbp = load_pbp()
     if rosters is None:
         seasons = sorted(pbp["season"].unique().tolist())
         rosters = rostersmod.fetch_rosters_weekly(seasons)
+
+    # (season, week, defteam) -> the offense faced that week; a defense-week is
+    # masked when THAT offense was rest-flagged
+    rest_keys = _meaningless_keys(schedules, recency_fit)
+    faced: dict = {}
+    if rest_keys:
+        f = pbp.dropna(subset=["posteam", "defteam"]).groupby(
+            ["season", "week", "defteam"])["posteam"].first()
+        faced = {(int(s), int(w), d): p for (s, w, d), p in f.items()}
+
+    def _rest_masked_def_keys() -> set:
+        return {k for k, off in faced.items()
+                if (k[0], k[1], off) in rest_keys}
+
+    masked_def_weeks = _rest_masked_def_keys() if rest_keys else set()
 
     pass_plays = pbp[pbp["pass_attempt"] == 1].copy()
     recv_pos = rosters[["season", "week", "player_id", "position"]].rename(
@@ -708,6 +850,16 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     )
     opp["_epa_pp"] = _safe_ratio(opp["epa_allowed_sum"], opp["plays_faced"])
 
+    # Phase 8.4: zero-weight defense-weeks vs rest-flagged offenses in the
+    # rolling factors (values masked to NaN pre-roll; ROWS always remain, so
+    # missingness can't encode week-W info, and the league priors average the
+    # same cleaned panel -- consistent level anchor)
+    if masked_def_weeks:
+        _dw_key = list(zip(opp["season"].astype(int), opp["week"].astype(int), opp["defteam"]))
+        _dw_mask = pd.Series([k in masked_def_weeks for k in _dw_key], index=opp.index)
+        opp["_ypp"] = opp["_ypp"].where(~_dw_mask)
+        opp["_epa_pp"] = opp["_epa_pp"].where(~_dw_mask)
+
     g = opp.groupby(["defteam", "role"])
     opp["roll_games"] = g["plays_faced"].transform(lambda s: _rolling_shifted(s, how="count"))
     opp["_roll_ypp"] = g["_ypp"].transform(_rolling_shifted)
@@ -751,8 +903,8 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     # its trailing value), so row-missingness can never encode current-week
     # information (the AsOfLookup lesson from the advanced-features build). -- #
     grid = opp[["season", "week", "defteam"]].drop_duplicates().reset_index(drop=True)
-    shape = _build_def_shape(pbp, grid)
-    rz = _build_rz_def(pbp, grid)
+    shape = _build_def_shape(pbp, grid, masked_keys=masked_def_weeks)
+    rz = _build_rz_def(pbp, grid, masked_keys=masked_def_weeks)
     opp = opp.merge(shape, on=["season", "week", "defteam"], how="left")
     opp = opp.merge(rz, on=["season", "week", "defteam"], how="left")
 
@@ -770,12 +922,19 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
 
 
 def _def_roll_factor(d: pd.DataFrame, num: str, den: str, out: str,
-                     clip: tuple = (0.6, 1.6)) -> pd.DataFrame:
+                     clip: tuple = (0.6, 1.6),
+                     masked_keys: Optional[set] = None) -> pd.DataFrame:
     """Shared walk-forward defense-factor idiom: per-week rate -> shift(1)
     rolling mean per defteam -> ratio to the prior-weeks-only league mean,
-    clipped. Returns d with column ``out`` added."""
+    clipped. Returns d with column ``out`` added. ``masked_keys`` (Phase 8.4):
+    {(season, week, defteam)} whose rate is zero-weighted (rest-flagged
+    opposing offense) -- masked, never deleted."""
     d = d.sort_values(["defteam", "season", "week"]).reset_index(drop=True)
     d["_rate"] = _safe_ratio(d[num], d[den])
+    if masked_keys:
+        keys = list(zip(d["season"].astype(int), d["week"].astype(int), d["defteam"]))
+        d["_rate"] = d["_rate"].where(pd.Series([k not in masked_keys for k in keys],
+                                                index=d.index))
     d["_roll"] = d.groupby("defteam")["_rate"].transform(_rolling_shifted)
     weekly = (d.groupby(["season", "week"])["_rate"].mean()
               .reset_index().sort_values(["season", "week"]))
@@ -786,7 +945,8 @@ def _def_roll_factor(d: pd.DataFrame, num: str, den: str, out: str,
     return d.drop(columns=["_rate", "_roll", "_lp"])
 
 
-def _build_def_shape(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
+def _build_def_shape(pbp: pd.DataFrame, grid: pd.DataFrame,
+                     masked_keys: Optional[set] = None) -> pd.DataFrame:
     """Per-defense depth/location SHAPE factors (Phase 6.1).
 
     Free-data feasibility verdict (constraint: no fake matchup data): man/zone
@@ -819,7 +979,7 @@ def _build_def_shape(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
                           ("_y_deep", "_a_deep", "roll_shape_deep"),
                           ("_y_mid", "_a_mid", "roll_shape_mid"),
                           ("_y_out", "_a_out", "roll_shape_out")):
-        d = _def_roll_factor(d, num, den, out)
+        d = _def_roll_factor(d, num, den, out, masked_keys=masked_keys)
 
     # league band mix (prior-weeks-only): what share of known-depth targets are
     # short / known-location targets are middle -- the tilt's neutral point
@@ -836,7 +996,8 @@ def _build_def_shape(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
               "league_short_share", "league_mid_share"]]
 
 
-def _build_rz_def(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
+def _build_rz_def(pbp: pd.DataFrame, grid: pd.DataFrame,
+                  masked_keys: Optional[set] = None) -> pd.DataFrame:
     """Red-zone defense (Phase 6.1): TDs allowed per red-zone TRIP, as a
     walk-forward factor vs league (>1 = bleeds TDs once opponents reach the
     20). A trip = a distinct (game, drive) with at least one snap at
@@ -852,17 +1013,25 @@ def _build_rz_def(pbp: pd.DataFrame, grid: pd.DataFrame) -> pd.DataFrame:
          .reset_index())
     d = grid.merge(d, on=["season", "week", "defteam"], how="left")
     d[["rz_tds_allowed", "rz_trips_faced"]] = d[["rz_tds_allowed", "rz_trips_faced"]].fillna(0.0)
-    d = _def_roll_factor(d, "rz_tds_allowed", "rz_trips_faced", "roll_rz_td_factor")
+    d = _def_roll_factor(d, "rz_tds_allowed", "rz_trips_faced", "roll_rz_td_factor",
+                         masked_keys=masked_keys)
     return d[["season", "week", "defteam", "roll_rz_td_factor"]]
 
 
-def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+def build_team_week(pbp: Optional[pd.DataFrame] = None,
+                    schedules: Optional[pd.DataFrame] = None,
+                    recency_fit: Optional[object] = None) -> pd.DataFrame:
     """Rolling, PRIOR-WEEKS-ONLY team pass/rush volume (for expected-volume math).
 
     This is the team-level analog of ``roll_pass_attempts``/``roll_carries`` on
     ``player_week``: how many pass/rush plays a team is expected to run THIS
     week, based on its own trailing games. ``projection.py`` multiplies this by
     a player's rolling target/carry SHARE to get expected targets/carries.
+
+    Phase 8.4 (same lens/flag as the player means): a team RESTING starters
+    tanks its own volume/pace/PROE basis, so its rest-flagged weeks are
+    zero-weighted in the team rolls (inputs masked pre-roll; actuals and
+    league fallbacks keep every week's ROW).
     """
     if pbp is None:
         pbp = load_pbp()
@@ -881,17 +1050,28 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     else:
         tw["_proe"] = np.nan
 
+    rest_keys = _meaningless_keys(schedules, recency_fit)
+    if rest_keys:
+        _tk = list(zip(tw["season"].astype(int), tw["week"].astype(int), tw["team"]))
+        _t_keep = pd.Series([k not in rest_keys for k in _tk], index=tw.index)
+        for c in ("team_pass_att", "team_rush_att", "_plays", "_proe",
+                  "team_rz_tgt", "team_rz_car"):
+            tw[f"_rf_{c}"] = tw[c].where(_t_keep)
+
+    def _TIN(col: str) -> str:
+        return f"_rf_{col}" if rest_keys else col
+
     # every team-grouped transform runs BEFORE any season/week merges so the
     # groupby view can never go stale against a reordered frame
     g = tw.groupby("team")
-    tw["roll_team_pass_att"] = g["team_pass_att"].transform(_rolling_shifted)
-    tw["roll_team_rush_att"] = g["team_rush_att"].transform(_rolling_shifted)
-    tw["roll_team_plays"] = g["_plays"].transform(_rolling_shifted)          # 6.3 pace basis
-    tw["roll_team_neutral_proe"] = g["_proe"].transform(_rolling_shifted)   # 6.3 intent
+    tw["roll_team_pass_att"] = g[_TIN("team_pass_att")].transform(_rolling_shifted)
+    tw["roll_team_rush_att"] = g[_TIN("team_rush_att")].transform(_rolling_shifted)
+    tw["roll_team_plays"] = g[_TIN("_plays")].transform(_rolling_shifted)          # 6.3 pace basis
+    tw["roll_team_neutral_proe"] = g[_TIN("_proe")].transform(_rolling_shifted)   # 6.3 intent
     # Phase 6.2: expected red-zone opportunity volume (anytime-TD's RZ path)
-    tw["roll_team_rz_tgt"] = g["team_rz_tgt"].transform(
+    tw["roll_team_rz_tgt"] = g[_TIN("team_rz_tgt")].transform(
         lambda s: _rolling_shifted(s, window=16))
-    tw["roll_team_rz_car"] = g["team_rz_car"].transform(
+    tw["roll_team_rz_car"] = g[_TIN("team_rz_car")].transform(
         lambda s: _rolling_shifted(s, window=16))
 
     # Phase 6.3: prior-weeks-only league mean plays (the neutral point the

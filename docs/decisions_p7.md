@@ -353,9 +353,14 @@ close pull, `to_prop_lines_frame`/`consensus_two_way` sharp-weighted de-vig),
 
 ### 1. Real prop-line capture
 
-- **Markets:** the 7 shipped markets via `ODDS_TO_MARKET` (receiving_yards,
+- **Markets:** the 8 shipped markets via `ODDS_TO_MARKET` (receiving_yards,
   receptions, rushing_yards, rush_attempts, passing_yards, pass_attempts,
-  anytime_td). **Books:** the user's own books (config `books`, e.g.
+  anytime_td, pass_completions). `pass_completions` was added after Phase 7
+  (completions = projected pass_attempts × shrunk trailing `roll_comp_rate`,
+  fallback SD fraction 0.22); it projects and screens, but until the RF is
+  retrained its market one-hot is absent — so it uses the deterministic +
+  selector path, not yet an ML-calibrated probability. **Books:** the user's
+  own books (config `books`, e.g.
   draftkings/fanduel/betmgm) — a specific book list is both a comparable price
   basis and cheaper than a whole-region pull; fall back to `regions="us"`.
 - **Cadence (open → close), two snapshots per resolvable lean:**

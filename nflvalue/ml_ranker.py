@@ -42,6 +42,26 @@ import pandas as pd
 SEED = 20260701
 MODEL_PATH_DEFAULT = "data/ml_ranker.joblib"
 
+# Phase 8.4 -- RETRAIN-GATED features. These columns ride the training frame
+# (build_features stamps them) but are NOT in NUMERIC_FEATURES yet: the
+# shipped RF artifact is frozen to its 67-feature space, and predict() on a
+# widened feature list would crash against it (same reason 8.1 kept
+# pass_completions out of MARKETS7). Move them into NUMERIC_FEATURES at the
+# next retrain:
+#   game_meaningless   PRE-GAME knowable (records strictly before the week):
+#                      "is this a likely rest week for this team?"
+#   prev_early_exit    shift-1 of the realized truncation flag: "did he fail
+#                      to finish his LAST game?"
+RETRAIN_PENDING_FEATURES = ["game_meaningless", "prev_early_exit"]
+# Label-context column (REALIZED-week truncation): never a feature; used only
+# to drop non-representative LABELS from calibration/correlation fits.
+LABEL_CONTEXT_COLS = ["early_exit", "game_meaningless"]
+# Phase 8.4 cleaning, same lens/verdict as the mean fit (drop_rest cleared,
+# drop_injury measured WORSE for the means -- but a truncated week's LABEL is
+# non-representative regardless of what it says about the mean, so both flags
+# gate the CALIBRATOR fit; takes effect at the next retrain).
+CLEAN_LABEL_CONTEXT = True
+
 # Phase 7.1 calibration: below this many rows in a per-market calibrator-train
 # slice, fall back to the pooled map (thin passing/TD slices can't support a
 # stable per-market fit -- the 7.1 audit measured isotonic overfitting there).
@@ -120,7 +140,10 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
                  "roll_carry_share", "roll_pass_attempts", "roll_adot", "roll_air_yards",
                  "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
                  "roll_short_tgt_share", "roll_mid_tgt_share", "roll_short_pass_share",
-                 "roll_early_exit_rate"]
+                 "roll_early_exit_rate",
+                 # Phase 8.4: retrain-gated features + label-context columns
+                 # (early_exit is NEVER a feature -- calibration cleaning only)
+                 "game_meaningless", "prev_early_exit", "early_exit"]
     # a caller's pw fixture may predate a later roll_* addition (Phase 6.1/6.5)
     # -- select only what exists and let the NUMERIC_FEATURES NaN-fill below
     # cover the rest, instead of a hard KeyError on an incomplete frame.
@@ -388,6 +411,14 @@ class MLRanker:
             self.calibrator = None
             self.cal_fold_spans = []
             return
+        # Phase 8.4: a truncated (early-exit) or rest-flagged week produces a
+        # LABEL that says nothing about calibration quality -- drop those rows
+        # from the calibrator fit (flag-gated; takes effect at next retrain)
+        if CLEAN_LABEL_CONTEXT:
+            for col in LABEL_CONTEXT_COLS:
+                if col in frame.columns:
+                    keep = frame[col].fillna(0) == 0
+                    frame, y = frame[keep], y[keep]
         ps, ys, ms = [], [], []
         # provenance + leakage witness: for each fold predicting season s, the
         # (min, max) train season -- a test asserts train_max < s (no fold ever
