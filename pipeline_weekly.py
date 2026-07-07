@@ -391,7 +391,27 @@ def update_dashboard(report_payload: Dict, conn) -> str:
     data.setdefault("refresh_seconds", 90)
     data.setdefault("generated", stamp_now())
     cfgmod.save_json(cfgmod.LATEST_PATH, data)
+    _refresh_transparency_site()
     return write_dashboard(data)
+
+
+def _refresh_transparency_site() -> None:
+    """Regenerate the static transparency site bundle (site/data/*.json) after
+    a run, so the deployed glass-box UI stays in sync. Best-effort: a failure
+    here never breaks the pipeline."""
+    try:
+        import runpy
+        import os
+        script = os.path.join(cfgmod.ROOT, "scripts", "export_site.py")
+        if os.path.exists(script):
+            sys_argv_bak = __import__("sys").argv
+            __import__("sys").argv = [script]
+            try:
+                runpy.run_path(script, run_name="__main__")
+            finally:
+                __import__("sys").argv = sys_argv_bak
+    except Exception as exc:  # noqa: BLE001
+        print(f"[pipeline] transparency site refresh skipped ({exc})")
 
 
 # --------------------------------------------------------------------------- #
@@ -445,7 +465,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     prop_lines, line_note = None, None
     if live_odds and cfg.get("odds_api_key"):
         event_map = build_event_map(cfg, slate, list_events_fn=list_events_fn)
-        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch)
+        # candidates carry pre-pull conviction (p_over vs synthetic line); passed
+        # so surgical spend can trim markets. Ignored unless surgical_spend.enabled.
+        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
+                                      candidates=cands)
         feeds_ts["lines"] = pull["ts"]
         snap = dbmod.query_df(conn, "SELECT * FROM lines WHERE ts=?", (pull["ts"],))
         rows = oapmod.match_player_ids(snap.to_dict("records"), _players_frame(cands)

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fablesfable — NFL prop model, glass box</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <span class="logo">◆</span>
+      <div>
+        <h1>fablesfable</h1>
+        <p class="tag">An NFL player-prop model you can see inside. Every pick traces back to a projection, an adjustment, and a <em>measured</em> decision — never a black box.</p>
+      </div>
+    </div>
+    <nav id="tabs">
+      <button data-tab="picks" class="active">Picks &amp; why</button>
+      <button data-tab="how">How it works</button>
+      <button data-tab="model">The model</button>
+      <button data-tab="constants">Measured constants</button>
+      <button data-tab="evidence">Evidence</button>
+    </nav>
+  </div>
+</header>
+
+<div id="banner" class="wrap"></div>
+
+<main class="wrap">
+  <section id="picks" class="tab-panel active"></section>
+  <section id="how" class="tab-panel"></section>
+  <section id="model" class="tab-panel"></section>
+  <section id="constants" class="tab-panel"></section>
+  <section id="evidence" class="tab-panel"></section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p id="disclaimer"></p>
+    <p class="small">Static site — reads <code>site/data/*.json</code> exported by <code>scripts/export_site.py</code>. Regenerate after each weekly run. Branch <code>phase6</code>.</p>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

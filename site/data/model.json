@@ -1,0 +1,211 @@
+{
+  "stages": [
+    {
+      "n": 1,
+      "name": "Enumerate candidates",
+      "what": "Every eligible (player, market) for every game \u2014 the full pool, before any selection.",
+      "where": "nflvalue/candidates.py"
+    },
+    {
+      "n": 2,
+      "name": "Project the mean",
+      "what": "mean = expected volume \u00d7 trailing efficiency \u00d7 opponent factor, all walk-forward (only prior weeks).",
+      "where": "nflvalue/projection.py, features.py"
+    },
+    {
+      "n": 3,
+      "name": "Apply measured adjustments",
+      "what": "Weather, injuries/availability, usage reallocation, backup-QB, game script, red-zone TD path \u2014 each a FITTED constant.",
+      "where": "candidates.py, factors.py, projection.py"
+    },
+    {
+      "n": 4,
+      "name": "Score: composite + ML probability",
+      "what": "Deterministic composite (edge/confidence/matchup) AND a calibrated RandomForest P(over). Both explainable.",
+      "where": "composite.py, ml_ranker.py"
+    },
+    {
+      "n": 5,
+      "name": "Compare to the market",
+      "what": "Model probability vs de-vigged consensus fair probability \u2192 edge and EV at the best available price.",
+      "where": "oddsapi_props.py, composite.py"
+    },
+    {
+      "n": 6,
+      "name": "Select the best picks (post-projection)",
+      "what": "ONLY after every candidate is scored: rank by edge, tier PASS/LEAN/PLAYABLE/STRONG, write the reason.",
+      "where": "nflvalue/selector.py"
+    },
+    {
+      "n": 7,
+      "name": "Grade forward on CLV",
+      "what": "Log each pick, compare entry vs closing line. CLV \u2014 not profit \u2014 is the honest edge test (kill-check).",
+      "where": "clv.py, killcheck.py"
+    }
+  ],
+  "features": [
+    "p_over",
+    "z",
+    "mean",
+    "sd",
+    "line",
+    "mean_minus_line",
+    "sd_over_line",
+    "opp_factor",
+    "game_script",
+    "proj_volume",
+    "proj_efficiency",
+    "roll_games",
+    "roll_targets",
+    "roll_target_share",
+    "roll_carries",
+    "roll_carry_share",
+    "roll_pass_attempts",
+    "roll_adot",
+    "roll_air_yards",
+    "roll_ypt",
+    "roll_catch_rate",
+    "roll_ypc",
+    "roll_ypa",
+    "team_margin",
+    "total_line",
+    "home",
+    "week",
+    "is_birthday_week",
+    "revenge_game",
+    "def_out_total",
+    "def_out_db",
+    "opp_epa_factor",
+    "roll_short_tgt_share",
+    "roll_mid_tgt_share",
+    "roll_short_pass_share",
+    "opp_rz_td_factor",
+    "opp_absence_factor",
+    "roll_early_exit_rate",
+    "team_neutral_proe",
+    "team_edp",
+    "team_pace",
+    "team_epa_play",
+    "team_shotgun_rate",
+    "team_no_huddle_rate",
+    "team_cpoe",
+    "ngs_separation",
+    "ngs_ay_share",
+    "ngs_yac_aoe",
+    "rz_tgt_share",
+    "rz_carry_share",
+    "qb_continuity",
+    "oline_outs",
+    "is_contract_year",
+    "age_years",
+    "temp",
+    "wind",
+    "inj_out_count_2y",
+    "shotgun_tilt_tgt",
+    "shotgun_tilt_carry",
+    "qb_chem_delta",
+    "key_teammate_absent",
+    "teammate_out_boost",
+    "opp_pressure_rate",
+    "own_pa_rate",
+    "own_motion_rate",
+    "opp_blitz_rate",
+    "opp_box_avg"
+  ],
+  "composite_weights": {
+    "edge": 0.5,
+    "confidence": 0.4,
+    "matchup": 0.1
+  },
+  "selector": {
+    "tiers": [
+      "RESEARCH",
+      "PASS",
+      "LEAN",
+      "PLAYABLE",
+      "STRONG"
+    ],
+    "thresholds": {
+      "default": {
+        "lean": 0.02,
+        "playable": 0.045,
+        "strong": 0.08,
+        "ev_min": 0.0
+      },
+      "receiving_yards": {
+        "lean": 0.02,
+        "playable": 0.04,
+        "strong": 0.07,
+        "ev_min": 0.0
+      },
+      "rushing_yards": {
+        "lean": 0.02,
+        "playable": 0.04,
+        "strong": 0.07,
+        "ev_min": 0.0
+      },
+      "passing_yards": {
+        "lean": 0.02,
+        "playable": 0.04,
+        "strong": 0.07,
+        "ev_min": 0.0
+      },
+      "receptions": {
+        "lean": 0.025,
+        "playable": 0.05,
+        "strong": 0.085,
+        "ev_min": 0.0
+      },
+      "rush_attempts": {
+        "lean": 0.025,
+        "playable": 0.05,
+        "strong": 0.085,
+        "ev_min": 0.0
+      },
+      "pass_attempts": {
+        "lean": 0.025,
+        "playable": 0.05,
+        "strong": 0.085,
+        "ev_min": 0.0
+      },
+      "pass_completions": {
+        "lean": 0.025,
+        "playable": 0.05,
+        "strong": 0.085,
+        "ev_min": 0.0
+      },
+      "anytime_td": {
+        "lean": 0.04,
+        "playable": 0.08,
+        "strong": 0.13,
+        "ev_min": 0.02
+      }
+    },
+    "min_model_prob": {
+      "playable": 0.52,
+      "strong": 0.55
+    },
+    "stale_line_hours": 24.0
+  },
+  "matchup_subweights": {
+    "opp": 0.25,
+    "script": 0.2,
+    "pace": 0.2,
+    "epa": 0.2,
+    "opp_absence": 0.15
+  },
+  "market_dummies": [
+    "receiving_yards",
+    "receptions",
+    "rushing_yards",
+    "passing_yards",
+    "pass_attempts",
+    "rush_attempts",
+    "anytime_td"
+  ],
+  "retrain_pending_features": [
+    "game_meaningless",
+    "prev_early_exit"
+  ],
+  "base_model": "RandomForest (calibrated, per-market Platt) \u2014 Phase 7.2 bake-off winner"
+}

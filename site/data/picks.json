@@ -1,0 +1,262 @@
+{
+  "season": 2025,
+  "week": 9,
+  "clock": "wed",
+  "as_of": "2025-11-05T18:30:00Z",
+  "publish": true,
+  "publish_reasons": [],
+  "is_sample": true,
+  "sample_note": "ILLUSTRATIVE sample \u2014 no live week has been generated in this environment. Tiers, writeups and decision chains are produced by the REAL nflvalue.selector on hand-authored candidate inputs, to demonstrate the transparency UI. Numbers are not live picks.",
+  "games": [
+    {
+      "game_id": "2025_09_MIN_CHI",
+      "matchup": "MIN @ CHI",
+      "screened": "5 of 5",
+      "screened_n": 5,
+      "picks": [
+        {
+          "player": "D.J. Moore",
+          "pos": "WR",
+          "team": "CHI",
+          "market": "receiving_yards",
+          "side": "over",
+          "line": 64.5,
+          "line_source": "odds_api",
+          "tier": "STRONG",
+          "mean": 55.0,
+          "edge": 0.11,
+          "ev": 0.0788,
+          "model_prob": 0.58,
+          "market_prob": 0.47,
+          "writeup": "D.J. Moore over 64.5 receiving yards is selected because the model projects 55.0 and gives this side a 58% chance, against a 47% market-implied fair probability \u2014 a +11.0-point probability edge and +7.9% expected value at the best available price (1.86, dk). Projection basis: 7.03 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.92. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 7.03 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 0.92 opponent-vs-position factor \u2192 mean 55.0"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(over) = 58% vs de-vigged market fair 47% \u2192 edge +11.0 pts, EV +7.9% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier STRONG \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        },
+        {
+          "player": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receiving_yards",
+          "side": "over",
+          "line": 82.5,
+          "line_source": "odds_api",
+          "tier": "STRONG",
+          "mean": 94.1,
+          "edge": 0.07,
+          "ev": 0.1407,
+          "model_prob": 0.585,
+          "market_prob": 0.515,
+          "writeup": "Justin Jefferson over 82.5 receiving yards is selected because the model projects 94.1 and gives this side a 58% chance, against a 52% market-implied fair probability \u2014 a +7.0-point probability edge and +14.1% expected value at the best available price (1.95, dk). Projection basis: 10.25 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.08. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 10.25 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 1.08 opponent-vs-position factor \u2192 mean 94.1"
+            },
+            {
+              "stage": "adjustment",
+              "detail": "depth/location matchup tilt: {'depth': 1.03}"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(over) = 58% vs de-vigged market fair 52% \u2192 edge +7.0 pts, EV +14.1% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier STRONG \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        },
+        {
+          "player": "Justin Jefferson",
+          "pos": "WR",
+          "team": "MIN",
+          "market": "receptions",
+          "side": "over",
+          "line": 5.5,
+          "line_source": "odds_api",
+          "tier": "PLAYABLE",
+          "mean": 6.8,
+          "edge": 0.06,
+          "ev": 0.2078,
+          "model_prob": 0.61,
+          "market_prob": 0.55,
+          "writeup": "Justin Jefferson over 5.5 receptions is selected because the model projects 6.8 and gives this side a 61% chance, against a 55% market-implied fair probability \u2014 a +6.0-point probability edge and +20.8% expected value at the best available price (1.98, dk). Projection basis: 0.76 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.05. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 0.76 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 1.05 opponent-vs-position factor \u2192 mean 6.8"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(over) = 61% vs de-vigged market fair 55% \u2192 edge +6.0 pts, EV +20.8% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier PLAYABLE \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        },
+        {
+          "player": "Aaron Jones",
+          "pos": "RB",
+          "team": "MIN",
+          "market": "rushing_yards",
+          "side": "over",
+          "line": 64.5,
+          "line_source": "odds_api",
+          "tier": "PLAYABLE",
+          "mean": 71.0,
+          "edge": 0.04,
+          "ev": 0.0808,
+          "model_prob": 0.56,
+          "market_prob": 0.52,
+          "writeup": "Aaron Jones over 64.5 rushing yards is selected because the model projects 71.0 and gives this side a 56% chance, against a 52% market-implied fair probability \u2014 a +4.0-point probability edge and +8.1% expected value at the best available price (1.93, dk). Projection basis: 7.59 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 1.1. The market probability is the de-vigged consensus across 4 book(s). Main risks: late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 7.59 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 1.1 opponent-vs-position factor \u2192 mean 71.0"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(over) = 56% vs de-vigged market fair 52% \u2192 edge +4.0 pts, EV +8.1% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier PLAYABLE \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        }
+      ],
+      "notes": [],
+      "sgp": []
+    },
+    {
+      "game_id": "2025_09_BUF_MIA",
+      "matchup": "BUF @ MIA",
+      "screened": "4 of 4",
+      "screened_n": 4,
+      "picks": [
+        {
+          "player": "Josh Allen",
+          "pos": "QB",
+          "team": "BUF",
+          "market": "passing_yards",
+          "side": "under",
+          "line": 249.5,
+          "line_source": "odds_api",
+          "tier": "STRONG",
+          "mean": 228.0,
+          "edge": 0.115,
+          "ev": 0.128,
+          "model_prob": 0.6,
+          "market_prob": 0.485,
+          "writeup": "Josh Allen under 249.5 passing yards is selected because the model projects 228.0 and gives this side a 60% chance, against a 48% market-implied fair probability \u2014 a +11.5-point probability edge and +12.8% expected value at the best available price (1.88, dk). Projection basis: 27.65 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.97. The market probability is the de-vigged consensus across 4 book(s). Main risks: weather-adjusted (\u00d70.91); late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 27.65 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 0.97 opponent-vs-position factor \u2192 mean 228.0"
+            },
+            {
+              "stage": "adjustment",
+              "detail": "fitted weather multiplier: \u00d70.91"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(under) = 60% vs de-vigged market fair 48% \u2192 edge +11.5 pts, EV +12.8% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier STRONG \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        },
+        {
+          "player": "Tyreek Hill",
+          "pos": "WR",
+          "team": "MIA",
+          "market": "receiving_yards",
+          "side": "under",
+          "line": 72.5,
+          "line_source": "odds_api",
+          "tier": "STRONG",
+          "mean": 61.0,
+          "edge": 0.08,
+          "ev": 0.0848,
+          "model_prob": 0.565,
+          "market_prob": 0.485,
+          "writeup": "Tyreek Hill under 72.5 receiving yards is selected because the model projects 61.0 and gives this side a 56% chance, against a 48% market-implied fair probability \u2014 a +8.0-point probability edge and +8.5% expected value at the best available price (1.92, dk). Projection basis: 7.55 expected opportunities \u00d7 8.5 efficiency, opponent-vs-position factor 0.95. The market probability is the de-vigged consensus across 4 book(s). Main risks: weather-adjusted (\u00d70.90); late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 7.55 expected opportunities \u00d7 8.5 per-opportunity efficiency \u00d7 0.95 opponent-vs-position factor \u2192 mean 61.0"
+            },
+            {
+              "stage": "adjustment",
+              "detail": "fitted weather multiplier: \u00d70.9"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "Model P(under) = 56% vs de-vigged market fair 48% \u2192 edge +8.0 pts, EV +8.5% at best price"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier STRONG \u2014 cleared the market-specific edge/EV bars"
+            }
+          ],
+          "research_only": false
+        },
+        {
+          "player": "Raheem Mostert",
+          "pos": "RB",
+          "team": "MIA",
+          "market": "rushing_yards",
+          "side": "over",
+          "line": 49.5,
+          "line_source": "synthetic_trailing_mean",
+          "tier": "RESEARCH",
+          "mean": 58.0,
+          "edge": null,
+          "ev": null,
+          "model_prob": 0.57,
+          "market_prob": null,
+          "writeup": "Raheem Mostert over 49.5 rushing yards is a NO-MARKET research lean: the 49.5 reference is the player's own trailing mean (synthetic), not a sportsbook price, so no edge or EV can be computed. The model projects 58.0 and this is tracked for learning only. Main risks: no real market line \u2014 synthetic reference; research only; late injury/news can change availability.",
+          "decision_chain": [
+            {
+              "stage": "projection",
+              "detail": "Projection: 6.82 expected opportunities \u00d7 8.5 per-opportunity efficiency \u2192 mean 58.0"
+            },
+            {
+              "stage": "market comparison",
+              "detail": "No real sportsbook line \u2014 synthetic reference only, no edge computable (RESEARCH)"
+            },
+            {
+              "stage": "tier decision",
+              "detail": "Tier RESEARCH \u2014 no real market line \u2014 synthetic reference; research only"
+            }
+          ],
+          "research_only": true
+        }
+      ],
+      "notes": [],
+      "sgp": []
+    }
+  ],
+  "empty": false
+}

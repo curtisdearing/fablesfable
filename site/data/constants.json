@@ -1,0 +1,54 @@
+{
+  "constants": [
+    {
+      "name": "Weather: wind penalty (\u226410 mph)",
+      "value": -2.46,
+      "unit": "pass yds per mph",
+      "provenance": "Fitted OLS on 2019-23 outdoor team-games (n=1,556), t=-3.4. Replaced the guessed 30mph-max shape.",
+      "fit_script": "scripts/fit_weather.py"
+    },
+    {
+      "name": "Weather: precipitation penalty",
+      "value": -38.0,
+      "unit": "pass yds",
+      "provenance": "The dominant weather term (t=-5.9). Cold FAILED the t\u22652 bar and was dropped.",
+      "fit_script": "scripts/fit_weather.py"
+    },
+    {
+      "name": "Opponent DB-out pass boost",
+      "value": 6.04,
+      "unit": "pass yds per DB Out",
+      "provenance": "Fitted 2019-23 (n=2,557 team-games, t=+2.0). Front-7/LB and OWN O-line outs cleared NOTHING and ship no multiplier.",
+      "fit_script": "scripts/fit_absence_opp.py"
+    },
+    {
+      "name": "Anytime-TD red-zone blend weight",
+      "value": 0.4,
+      "unit": "weight on RZ path",
+      "provenance": "Walk-forward log-loss grid 2019-23 (n=16,871). Opponent RZ factor FAILED the same fit \u2192 ML-feature only.",
+      "fit_script": "scripts/fit_td_blend.py"
+    },
+    {
+      "name": "Game-script PROE split coefficient",
+      "value": 0.1168,
+      "unit": "pass share per pass_oe/100",
+      "provenance": "OLS 2019-23 (t=+3.1). Opponent-pace VOLUME term FAILED (t=-0.3) and is not shipped.",
+      "fit_script": "scripts/fit_game_script.py"
+    },
+    {
+      "name": "Recency weight (EWM span)",
+      "value": 8,
+      "unit": "games",
+      "provenance": "Walk-forward next-game MAE sweep 2019-25: EWM span-8 beats flat-8 (production) AND ewm-4 in ALL 7 markets, 6/6 seasons each (pooled 5.379\u21925.293). drop_rest cleaning wins/ties per market; drop_injury measured WORSE (kept out).",
+      "fit_script": "scripts/fit_recency_weight.py"
+    },
+    {
+      "name": "Recency: drop rest/meaningless prior games",
+      "value": true,
+      "unit": "bool",
+      "provenance": "Same sweep \u2014 zero-weighting a team's playoff-fate-settled games improves every market. Extended to opponent-defense factors, team pace, ML frame, player-learning ledger, calibration & correlation (\u00a78.4).",
+      "fit_script": "scripts/fit_recency_weight.py + merge_recency_shards.py"
+    }
+  ],
+  "principle": "Every constant above is MEASURED from this project's own history with a printed t-stat / MAE verdict. If a candidate effect didn't clear the bar (t\u22652 or consistent OOS gain) it was rejected, not shipped \u2014 several were (garbage-time filter, opp-pace, cold weather, O-line multiplier, drop_injury)."
+}

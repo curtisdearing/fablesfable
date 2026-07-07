@@ -1,0 +1,582 @@
+{
+  "clv": {
+    "n": 0,
+    "rolling_mean": null,
+    "lifetime_mean": null,
+    "positive_rate": null,
+    "window": 50
+  },
+  "killcheck": {
+    "n": 0,
+    "rolling_mean": null,
+    "lifetime_mean": null,
+    "positive_rate": null,
+    "window": 50,
+    "leans_logged": 70,
+    "coverage": 0.0,
+    "min_sample": 150,
+    "verdict": "INSUFFICIENT_SAMPLE",
+    "detail": "0 leans with resolved CLV (of 70 logged; 150 needed). Keep logging; no conclusion yet \u2014 and no staking conclusions either way."
+  },
+  "recency_fit": {
+    "pooled_baseline_mae": 5.4158,
+    "pooled_top": [
+      {
+        "kind": "ewm",
+        "param": 8,
+        "clean": "drop_rest",
+        "n": 218715,
+        "mae": 5.2927
+      },
+      {
+        "kind": "ewm",
+        "param": 8,
+        "clean": "raw",
+        "n": 218813,
+        "mae": 5.298
+      },
+      {
+        "kind": "ewm",
+        "param": 8,
+        "clean": "dampen_injury",
+        "n": 218813,
+        "mae": 5.3096
+      },
+      {
+        "kind": "ewm",
+        "param": 8,
+        "clean": "drop_both",
+        "n": 218596,
+        "mae": 5.3149
+      },
+      {
+        "kind": "ewm",
+        "param": 8,
+        "clean": "drop_injury",
+        "n": 218701,
+        "mae": 5.3199
+      }
+    ],
+    "by_market": {
+      "pass_attempts": {
+        "baseline_ewm4_raw_mae": 1.1363,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 6,
+          "clean": "drop_rest",
+          "mae": 1.1264,
+          "n": 31245
+        },
+        "best_improvement_vs_baseline": 0.0099,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "drop_rest",
+          "mae": 1.1319
+        }
+      },
+      "pass_completions": {
+        "baseline_ewm4_raw_mae": 0.7331,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 8,
+          "clean": "drop_rest",
+          "mae": 0.7251,
+          "n": 31245
+        },
+        "best_improvement_vs_baseline": 0.008,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "drop_both",
+          "mae": 0.7301
+        }
+      },
+      "passing_yards": {
+        "baseline_ewm4_raw_mae": 8.7717,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 8,
+          "clean": "drop_rest",
+          "mae": 8.6358,
+          "n": 31245
+        },
+        "best_improvement_vs_baseline": 0.1359,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "drop_both",
+          "mae": 8.7339
+        }
+      },
+      "receiving_yards": {
+        "baseline_ewm4_raw_mae": 16.5896,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 8,
+          "clean": "raw",
+          "mae": 16.0849,
+          "n": 31259
+        },
+        "best_improvement_vs_baseline": 0.5047,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "raw",
+          "mae": 16.5896
+        }
+      },
+      "receptions": {
+        "baseline_ewm4_raw_mae": 1.2539,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 8,
+          "clean": "raw",
+          "mae": 1.218,
+          "n": 31259
+        },
+        "best_improvement_vs_baseline": 0.0359,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "raw",
+          "mae": 1.2539
+        }
+      },
+      "rush_attempts": {
+        "baseline_ewm4_raw_mae": 1.3417,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 6,
+          "clean": "drop_rest",
+          "mae": 1.3295,
+          "n": 31245
+        },
+        "best_improvement_vs_baseline": 0.0122,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "drop_rest",
+          "mae": 1.3409
+        }
+      },
+      "rushing_yards": {
+        "baseline_ewm4_raw_mae": 8.0845,
+        "best_scheme": {
+          "kind": "ewm",
+          "param": 8,
+          "clean": "drop_rest",
+          "mae": 7.9183,
+          "n": 31245
+        },
+        "best_improvement_vs_baseline": 0.1662,
+        "best_at_ewm4_cleaning_only": {
+          "clean": "raw",
+          "mae": 8.0845
+        }
+      }
+    },
+    "season_consistency": {
+      "pass_attempts": {
+        "winner": "ewm6/drop_rest",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.0117,
+          "2021": 0.0142,
+          "2022": 0.0123,
+          "2023": 0.0061,
+          "2024": -0.0046,
+          "2025": 0.0109
+        },
+        "seasons_improved": 5,
+        "seasons_total": 6
+      },
+      "pass_completions": {
+        "winner": "ewm8/drop_rest",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.0031,
+          "2021": 0.0169,
+          "2022": 0.0084,
+          "2023": 0.0037,
+          "2024": -0.0029,
+          "2025": 0.0131
+        },
+        "seasons_improved": 5,
+        "seasons_total": 6
+      },
+      "passing_yards": {
+        "winner": "ewm8/drop_rest",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.1342,
+          "2021": 0.1442,
+          "2022": 0.2015,
+          "2023": 0.0554,
+          "2024": 0.053,
+          "2025": 0.1699
+        },
+        "seasons_improved": 6,
+        "seasons_total": 6
+      },
+      "receiving_yards": {
+        "winner": "ewm8/raw",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.5822,
+          "2021": 0.5197,
+          "2022": 0.5126,
+          "2023": 0.4684,
+          "2024": 0.4756,
+          "2025": 0.4729
+        },
+        "seasons_improved": 6,
+        "seasons_total": 6
+      },
+      "receptions": {
+        "winner": "ewm8/raw",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.0371,
+          "2021": 0.0397,
+          "2022": 0.0392,
+          "2023": 0.0342,
+          "2024": 0.0312,
+          "2025": 0.0341
+        },
+        "seasons_improved": 6,
+        "seasons_total": 6
+      },
+      "rush_attempts": {
+        "winner": "ewm6/drop_rest",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.009,
+          "2021": 0.0079,
+          "2022": 0.016,
+          "2023": 0.0073,
+          "2024": 0.0134,
+          "2025": 0.0191
+        },
+        "seasons_improved": 6,
+        "seasons_total": 6
+      },
+      "rushing_yards": {
+        "winner": "ewm8/drop_rest",
+        "per_season_delta_vs_ewm4raw": {
+          "2020": 0.1711,
+          "2021": 0.1656,
+          "2022": 0.1872,
+          "2023": 0.0915,
+          "2024": 0.1908,
+          "2025": 0.1941
+        },
+        "seasons_improved": 6,
+        "seasons_total": 6
+      }
+    }
+  },
+  "selection_opt": {
+    "per_season": {
+      "2022": {
+        "policy": {
+          "p_min": 0.66,
+          "top_k": 5,
+          "per_player": 1,
+          "markets": "all",
+          "low_conf": true
+        },
+        "oos": {
+          "n": 1207,
+          "hit": 0.6413,
+          "units": 270.6
+        },
+        "baseline_policy": {
+          "n": 1355,
+          "hit": 0.6487,
+          "units": 323.1
+        }
+      },
+      "2023": {
+        "policy": {
+          "p_min": 0.66,
+          "top_k": 5,
+          "per_player": 2,
+          "markets": "all",
+          "low_conf": false
+        },
+        "oos": {
+          "n": 1333,
+          "hit": 0.6572,
+          "units": 339.4
+        },
+        "baseline_policy": {
+          "n": 1360,
+          "hit": 0.6529,
+          "units": 335.3
+        }
+      },
+      "2024": {
+        "policy": {
+          "p_min": 0.66,
+          "top_k": 5,
+          "per_player": 2,
+          "markets": "all",
+          "low_conf": false
+        },
+        "oos": {
+          "n": 1282,
+          "hit": 0.6544,
+          "units": 319.7
+        },
+        "baseline_policy": {
+          "n": 1360,
+          "hit": 0.6449,
+          "units": 314.3
+        }
+      },
+      "2025": {
+        "policy": {
+          "p_min": 0.66,
+          "top_k": 5,
+          "per_player": 2,
+          "markets": "all",
+          "low_conf": false
+        },
+        "oos": {
+          "n": 1156,
+          "hit": 0.6938,
+          "units": 375.1
+        },
+        "baseline_policy": {
+          "n": 1360,
+          "hit": 0.6787,
+          "units": 402.1
+        }
+      }
+    },
+    "frontier": [
+      {
+        "n": 6795,
+        "hit": 0.6517,
+        "units": 1658.5,
+        "p_min": 0.5
+      },
+      {
+        "n": 6795,
+        "hit": 0.6517,
+        "units": 1658.5,
+        "p_min": 0.54
+      },
+      {
+        "n": 6795,
+        "hit": 0.6517,
+        "units": 1658.5,
+        "p_min": 0.58
+      },
+      {
+        "n": 6763,
+        "hit": 0.6524,
+        "units": 1659.9,
+        "p_min": 0.62
+      },
+      {
+        "n": 6382,
+        "hit": 0.659,
+        "units": 1647.6,
+        "p_min": 0.66
+      },
+      {
+        "n": 5176,
+        "hit": 0.6677,
+        "units": 1421.8,
+        "p_min": 0.7
+      }
+    ],
+    "baseline": {},
+    "grid": {
+      "p_min": [
+        0.5,
+        0.54,
+        0.58,
+        0.62,
+        0.66
+      ],
+      "top_k": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "per_player": [
+        1,
+        2
+      ],
+      "markets": [
+        "all",
+        "no_td",
+        "core4"
+      ],
+      "low_conf": [
+        true,
+        false
+      ]
+    },
+    "objective": "pooled prior-season units@-110, volume floor 150/season"
+  },
+  "situations": {
+    "n_tagged": 69825,
+    "baseline_hit_rate": 0.4621,
+    "bars": {
+      "min_n": 100,
+      "alpha_bh": 0.05,
+      "max_effect": 0.1
+    },
+    "tags": {
+      "birthday_away": {
+        "tag": "birthday_away",
+        "n": 1151,
+        "hits": 526,
+        "hit_rate": 0.457,
+        "baseline": 0.4621,
+        "p_value": 0.7450825280112872,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "birthday_home": {
+        "tag": "birthday_home",
+        "n": 1124,
+        "hits": 513,
+        "hit_rate": 0.4564,
+        "baseline": 0.4621,
+        "p_value": 0.7196498784387171,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "division_game": {
+        "tag": "division_game",
+        "n": 26624,
+        "hits": 12433,
+        "hit_rate": 0.467,
+        "baseline": 0.4621,
+        "p_value": 0.11003236566386185,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "long_travel_2tz": {
+        "tag": "long_travel_2tz",
+        "n": 9296,
+        "hits": 4247,
+        "hit_rate": 0.4569,
+        "baseline": 0.4621,
+        "p_value": 0.3130117742874405,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "primetime": {
+        "tag": "primetime",
+        "n": 16008,
+        "hits": 7391,
+        "hit_rate": 0.4617,
+        "baseline": 0.4621,
+        "p_value": 0.9242226815904881,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "revenge_away": {
+        "tag": "revenge_away",
+        "n": 548,
+        "hits": 259,
+        "hit_rate": 0.4726,
+        "baseline": 0.4621,
+        "p_value": 0.6375432496243774,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "revenge_cut": {
+        "tag": "revenge_cut",
+        "n": 131,
+        "hits": 55,
+        "hit_rate": 0.4198,
+        "baseline": 0.4621,
+        "p_value": 0.33693384431414086,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "revenge_fa": {
+        "tag": "revenge_fa",
+        "n": 671,
+        "hits": 300,
+        "hit_rate": 0.4471,
+        "baseline": 0.4621,
+        "p_value": 0.4390631824239625,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "revenge_home": {
+        "tag": "revenge_home",
+        "n": 563,
+        "hits": 259,
+        "hit_rate": 0.46,
+        "baseline": 0.4621,
+        "p_value": 0.9326769571508737,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "revenge_trade": {
+        "tag": "revenge_trade",
+        "n": 309,
+        "hits": 163,
+        "hit_rate": 0.5275,
+        "baseline": 0.4621,
+        "p_value": 0.022415731204871232,
+        "q_value": 0.3587,
+        "verdict": "not_significant"
+      },
+      "revenge_vs_mid": {
+        "tag": "revenge_vs_mid",
+        "n": 385,
+        "hits": 176,
+        "hit_rate": 0.4571,
+        "baseline": 0.4621,
+        "p_value": 0.8781698899185704,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "revenge_vs_soft": {
+        "tag": "revenge_vs_soft",
+        "n": 365,
+        "hits": 167,
+        "hit_rate": 0.4575,
+        "baseline": 0.4621,
+        "p_value": 0.8749891300564746,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "revenge_vs_tough": {
+        "tag": "revenge_vs_tough",
+        "n": 361,
+        "hits": 175,
+        "hit_rate": 0.4848,
+        "baseline": 0.4621,
+        "p_value": 0.39861269082174944,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "short_week": {
+        "tag": "short_week",
+        "n": 4721,
+        "hits": 2147,
+        "hit_rate": 0.4548,
+        "baseline": 0.4621,
+        "p_value": 0.31392487735807995,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      },
+      "west_east_early": {
+        "tag": "west_east_early",
+        "n": 2502,
+        "hits": 1167,
+        "hit_rate": 0.4664,
+        "baseline": 0.4621,
+        "p_value": 0.6737342656308688,
+        "q_value": 0.9327,
+        "verdict": "not_significant"
+      },
+      "wind15_game": {
+        "tag": "wind15_game",
+        "n": 5066,
+        "hits": 2386,
+        "hit_rate": 0.471,
+        "baseline": 0.4621,
+        "p_value": 0.20478207550351757,
+        "q_value": 0.8781,
+        "verdict": "not_significant"
+      }
+    }
+  },
+  "picks_record": null,
+  "mc_brain": null
+}
