@@ -1,0 +1,140 @@
+{
+ "iterations": [
+  {
+   "iteration": "it0_points_elo_baseline",
+   "n": 1123,
+   "margin_MAE": 10.214,
+   "margin_corr": 0.3695,
+   "SU_acc": 0.639,
+   "note": "current build_ratings ratings + HFA 1.5",
+   "ATS_acc_all": 0.4858,
+   "kernel_selective": {
+    "n_bets": 754,
+    "ATS_acc": 0.4867,
+    "units_at_-110": -53.4
+   }
+  },
+  {
+   "iteration": "it1_epa_pass_rush_ratings",
+   "n": 1123,
+   "margin_MAE": 10.879,
+   "margin_corr": 0.1208,
+   "SU_acc": 0.5666,
+   "note": "opp-adjusted EWM EPA/play, pass/rush split, OLS->margin",
+   "ATS_acc_all": 0.5342,
+   "kernel_selective": {
+    "n_bets": 875,
+    "ATS_acc": 0.5291,
+    "units_at_-110": 8.9
+   }
+  },
+  {
+   "iteration": "it2_plus_QB_backup",
+   "n": 1123,
+   "margin_MAE": 10.772,
+   "margin_corr": 0.1523,
+   "SU_acc": 0.5845,
+   "note": "+ backup-starter detection from schedules",
+   "ATS_acc_all": 0.5279,
+   "kernel_selective": {
+    "n_bets": 897,
+    "ATS_acc": 0.5251,
+    "units_at_-110": 2.2
+   }
+  },
+  {
+   "iteration": "it3_plus_rest_hfa_travel",
+   "n": 1123,
+   "margin_MAE": 10.799,
+   "margin_corr": 0.1561,
+   "SU_acc": 0.588,
+   "note": "+ rest diff, short week, timezone travel, fit HFA",
+   "ATS_acc_all": 0.5297,
+   "kernel_selective": {
+    "n_bets": 896,
+    "ATS_acc": 0.5324,
+    "units_at_-110": 14.6
+   }
+  },
+  {
+   "iteration": "it5_market_blend",
+   "n": 1123,
+   "margin_MAE": 9.814,
+   "margin_corr": 0.4277,
+   "SU_acc": 0.6577,
+   "note": "alpha*model + (1-alpha)*closing spread, alpha fit walk-forward",
+   "ATS_acc_all": 0.5205,
+   "kernel_selective": {
+    "n_bets": 104,
+    "ATS_acc": 0.5288,
+    "units_at_-110": 1.0
+   }
+  },
+  {
+   "iteration": "it6_combined_ridge",
+   "margin_MAE": 10.213,
+   "margin_corr": 0.375,
+   "SU_acc": 0.6515,
+   "ATS_acc_all": 0.4977,
+   "coefs_mean(z)": {
+    "elo_edge": 5.421,
+    "dp": 0.637,
+    "dr": 0.374,
+    "backup": 1.319,
+    "rest_diff": -0.601,
+    "short": -0.055,
+    "tz": -1.003,
+    "hfa1": 0.596
+   },
+   "kernel_selective": {
+    "n_bets": 775,
+    "ATS_acc": 0.4903,
+    "units_at_-110": -49.5
+   },
+   "disagreement_bands": {
+    "0-1pts": {
+     "n": 255,
+     "ATS_acc": 0.5294
+    },
+    "1-2pts": {
+     "n": 233,
+     "ATS_acc": 0.4635
+    },
+    "2-3pts": {
+     "n": 207,
+     "ATS_acc": 0.4348
+    },
+    "3-5pts": {
+     "n": 235,
+     "ATS_acc": 0.5191
+    },
+    "5-99pts": {
+     "n": 165,
+     "ATS_acc": 0.5455
+    }
+   }
+  }
+ ],
+ "disagreement_bands_it3": {
+  "0-1pts": {
+   "n": 132,
+   "ATS_acc": 0.4697
+  },
+  "1-2pts": {
+   "n": 135,
+   "ATS_acc": 0.5481
+  },
+  "2-3pts": {
+   "n": 136,
+   "ATS_acc": 0.5588
+  },
+  "3-5pts": {
+   "n": 245,
+   "ATS_acc": 0.5429
+  },
+  "5-99pts": {
+   "n": 447,
+   "ATS_acc": 0.5257
+  }
+ }
+}
