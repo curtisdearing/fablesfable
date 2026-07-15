@@ -10,3 +10,5 @@ data/*.db-journal
 # secrets (webhooks, API keys) live here — NEVER tracked
 config.local.json
 data/*.joblib
+data/analysis_cache/
+book/*.parquet

@@ -1,0 +1,353 @@
+[
+ {
+  "pattern": "WR 100+ yds last wk -> rec yards OVER",
+  "n": 733,
+  "raw": 0.292,
+  "baseline": 0.4427,
+  "lift_pp": -13.92,
+  "P_gt0": 0.0,
+  "note": "spotlight regression"
+ },
+ {
+  "pattern": "target spike (+5 vs trend) last wk -> receptions OVER",
+  "n": 120,
+  "raw": 0.2833,
+  "baseline": 0.4628,
+  "lift_pp": -11.96,
+  "P_gt0": 0.001,
+  "note": "mean reversion"
+ },
+ {
+  "pattern": "TE1 out -> RB1 TD",
+  "n": 93,
+  "raw": 0.4516,
+  "baseline": 0.2772,
+  "lift_pp": 10.63,
+  "P_gt0": 0.998,
+  "note": ""
+ },
+ {
+  "pattern": "WR1 out -> TE1 TD",
+  "n": 111,
+  "raw": 0.3243,
+  "baseline": 0.1851,
+  "lift_pp": 9.03,
+  "P_gt0": 0.998,
+  "note": ""
+ },
+ {
+  "pattern": "RB2 out -> RB1 TD",
+  "n": 51,
+  "raw": 0.4706,
+  "baseline": 0.2782,
+  "lift_pp": 8.82,
+  "P_gt0": 0.977,
+  "note": ""
+ },
+ {
+  "pattern": "WR1 out -> RB1 TD",
+  "n": 96,
+  "raw": 0.3958,
+  "baseline": 0.278,
+  "lift_pp": 7.27,
+  "P_gt0": 0.975,
+  "note": ""
+ },
+ {
+  "pattern": "RB1 out -> RB2 TD",
+  "n": 65,
+  "raw": 0.4154,
+  "baseline": 0.2784,
+  "lift_pp": 7.11,
+  "P_gt0": 0.957,
+  "note": ""
+ },
+ {
+  "pattern": "RB2 out -> RB1 carries OVER",
+  "n": 51,
+  "raw": 0.6078,
+  "baseline": 0.4534,
+  "lift_pp": 7.11,
+  "P_gt0": 0.933,
+  "note": "no committee"
+ },
+ {
+  "pattern": "TE1 out -> RB2 TD",
+  "n": 69,
+  "raw": 0.1739,
+  "baseline": 0.281,
+  "lift_pp": -5.74,
+  "P_gt0": 0.065,
+  "note": "user example"
+ },
+ {
+  "pattern": "RB 22+ carries last wk -> rush yards OVER",
+  "n": 323,
+  "raw": 0.3777,
+  "baseline": 0.4345,
+  "lift_pp": -4.79,
+  "P_gt0": 0.03,
+  "note": "workload hangover"
+ },
+ {
+  "pattern": "OT game last wk -> RB rush yards OVER",
+  "n": 330,
+  "raw": 0.3818,
+  "baseline": 0.4343,
+  "lift_pp": -4.45,
+  "P_gt0": 0.038,
+  "note": "fatigue"
+ },
+ {
+  "pattern": "TE1 out -> WR3 targets OVER",
+  "n": 59,
+  "raw": 0.3559,
+  "baseline": 0.4499,
+  "lift_pp": -4.66,
+  "P_gt0": 0.149,
+  "note": "slot fill-in"
+ },
+ {
+  "pattern": "TE1 out -> RB1 carries OVER",
+  "n": 93,
+  "raw": 0.3978,
+  "baseline": 0.4556,
+  "lift_pp": -3.48,
+  "P_gt0": 0.19,
+  "note": ""
+ },
+ {
+  "pattern": "OT game last wk -> WR rec yards OVER",
+  "n": 502,
+  "raw": 0.4004,
+  "baseline": 0.4324,
+  "lift_pp": -2.84,
+  "P_gt0": 0.086,
+  "note": ""
+ },
+ {
+  "pattern": "west-coast team, 1pm ET road kick -> RB rush yards OVER",
+  "n": 271,
+  "raw": 0.3985,
+  "baseline": 0.433,
+  "lift_pp": -2.83,
+  "P_gt0": 0.146,
+  "note": ""
+ },
+ {
+  "pattern": "WR1 out -> QB rush yards OVER",
+  "n": 130,
+  "raw": 0.4769,
+  "baseline": 0.4335,
+  "lift_pp": 2.98,
+  "P_gt0": 0.796,
+  "note": "scramble more"
+ },
+ {
+  "pattern": "RB1 out -> TE1 TD",
+  "n": 100,
+  "raw": 0.23,
+  "baseline": 0.1876,
+  "lift_pp": 2.64,
+  "P_gt0": 0.791,
+  "note": "goal-line shift"
+ },
+ {
+  "pattern": "vs top-quartile blitz defense -> QB pass yards OVER",
+  "n": 1775,
+  "raw": 0.4918,
+  "baseline": 0.4745,
+  "lift_pp": 1.67,
+  "P_gt0": 0.925,
+  "note": ""
+ },
+ {
+  "pattern": "opp DBs 2+ out -> QB pass yards OVER",
+  "n": 236,
+  "raw": 0.5085,
+  "baseline": 0.4839,
+  "lift_pp": 1.96,
+  "P_gt0": 0.75,
+  "note": ""
+ },
+ {
+  "pattern": "week after neutral site -> rec yards OVER",
+  "n": 250,
+  "raw": 0.46,
+  "baseline": 0.436,
+  "lift_pp": 1.94,
+  "P_gt0": 0.753,
+  "note": "travel hangover"
+ },
+ {
+  "pattern": "west-coast team, 1pm ET road kick -> WR rec yards OVER",
+  "n": 409,
+  "raw": 0.4108,
+  "baseline": 0.4316,
+  "lift_pp": -1.82,
+  "P_gt0": 0.21,
+  "note": "body clock"
+ },
+ {
+  "pattern": "age 30+ WR in cold -> rec yards OVER",
+  "n": 47,
+  "raw": 0.383,
+  "baseline": 0.4309,
+  "lift_pp": -2.11,
+  "P_gt0": 0.322,
+  "note": "old legs"
+ },
+ {
+  "pattern": "own OL 2+ out -> QB rush yards OVER",
+  "n": 128,
+  "raw": 0.4609,
+  "baseline": 0.4344,
+  "lift_pp": 1.81,
+  "P_gt0": 0.688,
+  "note": "flushed"
+ },
+ {
+  "pattern": "team lost by 21+ last wk -> WR rec yards OVER",
+  "n": 778,
+  "raw": 0.4165,
+  "baseline": 0.432,
+  "lift_pp": -1.44,
+  "P_gt0": 0.198,
+  "note": "bounceback?"
+ },
+ {
+  "pattern": "own OL 2+ out -> RB rush yards OVER",
+  "n": 270,
+  "raw": 0.4148,
+  "baseline": 0.4322,
+  "lift_pp": -1.42,
+  "P_gt0": 0.298,
+  "note": ""
+ },
+ {
+  "pattern": "TE1 out -> RB receptions OVER",
+  "n": 256,
+  "raw": 0.4258,
+  "baseline": 0.4403,
+  "lift_pp": -1.17,
+  "P_gt0": 0.334,
+  "note": "checkdown shift"
+ },
+ {
+  "pattern": "opp front-7 2+ out -> RB rush yards OVER",
+  "n": 709,
+  "raw": 0.4217,
+  "baseline": 0.4327,
+  "lift_pp": -1.01,
+  "P_gt0": 0.283,
+  "note": ""
+ },
+ {
+  "pattern": "road game on turf -> rec yards OVER (WR)",
+  "n": 2071,
+  "raw": 0.4365,
+  "baseline": 0.429,
+  "lift_pp": 0.73,
+  "P_gt0": 0.752,
+  "note": ""
+ },
+ {
+  "pattern": "age<23.5 & week>=14 -> rec yards OVER (WR)",
+  "n": 589,
+  "raw": 0.4228,
+  "baseline": 0.4312,
+  "lift_pp": -0.74,
+  "P_gt0": 0.347,
+  "note": "rookie wall"
+ },
+ {
+  "pattern": "neutral site (international) -> skill rec yards OVER",
+  "n": 240,
+  "raw": 0.4458,
+  "baseline": 0.4363,
+  "lift_pp": 0.77,
+  "P_gt0": 0.602,
+  "note": ""
+ },
+ {
+  "pattern": "slow ref crew -> receptions OVER (WR/TE)",
+  "n": 3980,
+  "raw": 0.4641,
+  "baseline": 0.4601,
+  "lift_pp": 0.39,
+  "P_gt0": 0.691,
+  "note": ""
+ },
+ {
+  "pattern": "fast ref crew -> QB pass attempts OVER",
+  "n": 629,
+  "raw": 0.4944,
+  "baseline": 0.4993,
+  "lift_pp": -0.44,
+  "P_gt0": 0.408,
+  "note": ""
+ },
+ {
+  "pattern": "own OL 2+ out -> QB pass yards OVER",
+  "n": 128,
+  "raw": 0.4922,
+  "baseline": 0.4858,
+  "lift_pp": 0.45,
+  "P_gt0": 0.547,
+  "note": ""
+ },
+ {
+  "pattern": "fast ref crew -> receptions OVER (WR/TE)",
+  "n": 3269,
+  "raw": 0.4598,
+  "baseline": 0.4617,
+  "lift_pp": -0.19,
+  "P_gt0": 0.411,
+  "note": "pace=volume"
+ },
+ {
+  "pattern": "vs top-quartile blitz defense -> RB receptions OVER",
+  "n": 4064,
+  "raw": 0.4402,
+  "baseline": 0.4386,
+  "lift_pp": 0.16,
+  "P_gt0": 0.58,
+  "note": "checkdowns"
+ },
+ {
+  "pattern": "opp DBs 2+ out -> WR rec yards OVER",
+  "n": 841,
+  "raw": 0.4293,
+  "baseline": 0.4308,
+  "lift_pp": -0.14,
+  "P_gt0": 0.466,
+  "note": ""
+ },
+ {
+  "pattern": "team won by 21+ last wk -> WR rec yards OVER",
+  "n": 836,
+  "raw": 0.4294,
+  "baseline": 0.4308,
+  "lift_pp": -0.12,
+  "P_gt0": 0.47,
+  "note": "letdown?"
+ },
+ {
+  "pattern": "WR1 out -> RB1 receptions OVER",
+  "n": 96,
+  "raw": 0.4375,
+  "baseline": 0.4397,
+  "lift_pp": -0.11,
+  "P_gt0": 0.487,
+  "note": "checkdowns"
+ },
+ {
+  "pattern": "west-coast team, 1pm ET road kick -> QB pass yards OVER",
+  "n": 119,
+  "raw": 0.4874,
+  "baseline": 0.486,
+  "lift_pp": 0.07,
+  "P_gt0": 0.505,
+  "note": ""
+ }
+]

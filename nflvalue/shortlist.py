@@ -144,10 +144,12 @@ def build_context_panel(game_shortlist: Dict,
         from .chemistry import panel_items as chem_panel_items
         from .ftn_features import panel_items as ftn_panel_items
         from .context_features import panel_items
+        from .condition_book import panel_items as book_panel_items
         items.extend(panel_items(lean))
         items.extend(adv_panel_items(lean))
         items.extend(chem_panel_items(lean))
         items.extend(ftn_panel_items(lean))
+        items.extend(book_panel_items(lean))
 
         if availability and pid in availability:
             a = availability[pid]

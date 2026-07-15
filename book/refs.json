@@ -1,0 +1,113 @@
+{
+ "base": 0.4838909541511772,
+ "refs": [
+  {
+   "referee": "Shawn Hochuli",
+   "n": 94,
+   "over": 0.40425531914893614,
+   "shrunk": 0.44086940420743775
+  },
+  {
+   "referee": "Ron Torbert",
+   "n": 80,
+   "over": 0.4375,
+   "shrunk": 0.46069547707558856
+  },
+  {
+   "referee": "Bill Vinovich",
+   "n": 96,
+   "over": 0.4583333333333333,
+   "shrunk": 0.46995043370508055
+  },
+  {
+   "referee": "Scott Novak",
+   "n": 96,
+   "over": 0.4583333333333333,
+   "shrunk": 0.46995043370508055
+  },
+  {
+   "referee": "Adrian Hill",
+   "n": 95,
+   "over": 0.4631578947368421,
+   "shrunk": 0.47263586475482383
+  },
+  {
+   "referee": "Land Clark",
+   "n": 95,
+   "over": 0.4631578947368421,
+   "shrunk": 0.47263586475482383
+  },
+  {
+   "referee": "Shawn Smith",
+   "n": 92,
+   "over": 0.4673913043478261,
+   "shrunk": 0.475065560070315
+  },
+  {
+   "referee": "Alan Eck",
+   "n": 49,
+   "over": 0.46938775510204084,
+   "shrunk": 0.4783819870704975
+  },
+  {
+   "referee": "Brad Allen",
+   "n": 94,
+   "over": 0.4787234042553192,
+   "shrunk": 0.481099289264909
+  },
+  {
+   "referee": "John Hussey",
+   "n": 96,
+   "over": 0.4791666666666667,
+   "shrunk": 0.4813140700687169
+  },
+  {
+   "referee": "Carl Cheffers",
+   "n": 93,
+   "over": 0.4946236559139785,
+   "shrunk": 0.4896605568329143
+  },
+  {
+   "referee": "Craig Wrolstad",
+   "n": 98,
+   "over": 0.5102040816326531,
+   "shrunk": 0.49837795692187736
+  },
+  {
+   "referee": "Alex Kemp",
+   "n": 97,
+   "over": 0.5154639175257731,
+   "shrunk": 0.5011936515937524
+  },
+  {
+   "referee": "Clay Martin",
+   "n": 92,
+   "over": 0.5217391304347826,
+   "shrunk": 0.5041353275121754
+  },
+  {
+   "referee": "Jerome Boger",
+   "n": 48,
+   "over": 0.5416666666666666,
+   "shrunk": 0.5055568463444857
+  },
+  {
+   "referee": "Clete Blakeman",
+   "n": 95,
+   "over": 0.5263157894736842,
+   "shrunk": 0.5069215790405381
+  },
+  {
+   "referee": "Brad Rogers",
+   "n": 92,
+   "over": 0.532608695652174,
+   "shrunk": 0.5099492810005475
+  },
+  {
+   "referee": "Tra Blake",
+   "n": 48,
+   "over": 0.5625,
+   "shrunk": 0.5133693463444857
+  }
+ ]
+}

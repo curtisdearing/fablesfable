@@ -1,0 +1,569 @@
+{
+ "prior": "coef ~ N(0, 0.2^2) on standardized features (skeptical); Laplace posterior",
+ "n": 66408,
+ "base_rate_y_over": 0.3654,
+ "credible_factors": [
+  {
+   "feature": "roll_pass_attempts",
+   "post_mean": 0.4691,
+   "post_sd": 0.0568,
+   "ci_lo": 0.3756,
+   "ci_hi": 0.5626
+  },
+  {
+   "feature": "roll_carry_share",
+   "post_mean": 0.3416,
+   "post_sd": 0.0561,
+   "ci_lo": 0.2492,
+   "ci_hi": 0.4339
+  },
+  {
+   "feature": "proj_volume",
+   "post_mean": -0.3386,
+   "post_sd": 0.0549,
+   "ci_lo": -0.429,
+   "ci_hi": -0.2482
+  },
+  {
+   "feature": "p_over",
+   "post_mean": 0.2747,
+   "post_sd": 0.039,
+   "ci_lo": 0.2106,
+   "ci_hi": 0.3388
+  },
+  {
+   "feature": "roll_target_share",
+   "post_mean": 0.2655,
+   "post_sd": 0.0421,
+   "ci_lo": 0.1962,
+   "ci_hi": 0.3348
+  },
+  {
+   "feature": "sd",
+   "post_mean": 0.2555,
+   "post_sd": 0.0344,
+   "ci_lo": 0.199,
+   "ci_hi": 0.3121
+  },
+  {
+   "feature": "z",
+   "post_mean": 0.1854,
+   "post_sd": 0.0427,
+   "ci_lo": 0.1151,
+   "ci_hi": 0.2557
+  },
+  {
+   "feature": "roll_targets",
+   "post_mean": -0.1421,
+   "post_sd": 0.0442,
+   "ci_lo": -0.2148,
+   "ci_hi": -0.0694
+  },
+  {
+   "feature": "sd_over_line",
+   "post_mean": 0.1136,
+   "post_sd": 0.0183,
+   "ci_lo": 0.0835,
+   "ci_hi": 0.1437
+  },
+  {
+   "feature": "opp_factor",
+   "post_mean": -0.0836,
+   "post_sd": 0.011,
+   "ci_lo": -0.1016,
+   "ci_hi": -0.0655
+  },
+  {
+   "feature": "team_margin",
+   "post_mean": 0.083,
+   "post_sd": 0.0123,
+   "ci_lo": 0.0628,
+   "ci_hi": 0.1031
+  },
+  {
+   "feature": "is_contract_year",
+   "post_mean": -0.0756,
+   "post_sd": 0.0093,
+   "ci_lo": -0.0909,
+   "ci_hi": -0.0604
+  },
+  {
+   "feature": "total_line",
+   "post_mean": 0.0542,
+   "post_sd": 0.0116,
+   "ci_lo": 0.0351,
+   "ci_hi": 0.0734
+  },
+  {
+   "feature": "mean_minus_line",
+   "post_mean": -0.0516,
+   "post_sd": 0.0253,
+   "ci_lo": -0.0932,
+   "ci_hi": -0.01
+  },
+  {
+   "feature": "team_edp",
+   "post_mean": -0.0466,
+   "post_sd": 0.0113,
+   "ci_lo": -0.0651,
+   "ci_hi": -0.028
+  },
+  {
+   "feature": "team_neutral_proe",
+   "post_mean": 0.0383,
+   "post_sd": 0.0111,
+   "ci_lo": 0.02,
+   "ci_hi": 0.0565
+  },
+  {
+   "feature": "wind",
+   "post_mean": -0.0376,
+   "post_sd": 0.0092,
+   "ci_lo": -0.0527,
+   "ci_hi": -0.0224
+  },
+  {
+   "feature": "key_teammate_absent",
+   "post_mean": 0.0375,
+   "post_sd": 0.0082,
+   "ci_lo": 0.0241,
+   "ci_hi": 0.0509
+  },
+  {
+   "feature": "age_years",
+   "post_mean": -0.0284,
+   "post_sd": 0.0096,
+   "ci_lo": -0.0442,
+   "ci_hi": -0.0127
+  },
+  {
+   "feature": "week",
+   "post_mean": 0.024,
+   "post_sd": 0.0097,
+   "ci_lo": 0.008,
+   "ci_hi": 0.0399
+  },
+  {
+   "feature": "game_script",
+   "post_mean": -0.0223,
+   "post_sd": 0.0102,
+   "ci_lo": -0.0391,
+   "ci_hi": -0.0055
+  },
+  {
+   "feature": "roll_ypa",
+   "post_mean": 0.0214,
+   "post_sd": 0.0101,
+   "ci_lo": 0.0047,
+   "ci_hi": 0.038
+  },
+  {
+   "feature": "def_out_total",
+   "post_mean": 0.021,
+   "post_sd": 0.0118,
+   "ci_lo": 0.0017,
+   "ci_hi": 0.0403
+  },
+  {
+   "feature": "opp_box_avg",
+   "post_mean": 0.0205,
+   "post_sd": 0.0091,
+   "ci_lo": 0.0055,
+   "ci_hi": 0.0354
+  },
+  {
+   "feature": "opp_blitz_rate",
+   "post_mean": 0.0189,
+   "post_sd": 0.0091,
+   "ci_lo": 0.004,
+   "ci_hi": 0.0339
+  },
+  {
+   "feature": "home",
+   "post_mean": 0.0189,
+   "post_sd": 0.0087,
+   "ci_lo": 0.0046,
+   "ci_hi": 0.0333
+  },
+  {
+   "feature": "shotgun_tilt_tgt",
+   "post_mean": 0.0189,
+   "post_sd": 0.0088,
+   "ci_lo": 0.0044,
+   "ci_hi": 0.0333
+  },
+  {
+   "feature": "opp_pressure_rate",
+   "post_mean": -0.0189,
+   "post_sd": 0.0089,
+   "ci_lo": -0.0335,
+   "ci_hi": -0.0042
+  },
+  {
+   "feature": "team_shotgun_rate",
+   "post_mean": -0.0164,
+   "post_sd": 0.0098,
+   "ci_lo": -0.0325,
+   "ci_hi": -0.0003
+  },
+  {
+   "feature": "qb_chem_delta",
+   "post_mean": 0.0152,
+   "post_sd": 0.0087,
+   "ci_lo": 0.0008,
+   "ci_hi": 0.0296
+  },
+  {
+   "feature": "shotgun_tilt_carry",
+   "post_mean": -0.0151,
+   "post_sd": 0.0086,
+   "ci_lo": -0.0292,
+   "ci_hi": -0.001
+  }
+ ],
+ "not_credible": [
+  "mean",
+  "line",
+  "roll_carries",
+  "rz_carry_share",
+  "roll_adot",
+  "roll_air_yards",
+  "team_epa_play",
+  "roll_ypt",
+  "proj_efficiency",
+  "team_pace",
+  "roll_games",
+  "ngs_separation",
+  "roll_catch_rate",
+  "teammate_out_boost",
+  "qb_continuity",
+  "def_out_db",
+  "roll_ypc",
+  "opp_epa_factor",
+  "team_cpoe",
+  "revenge_game",
+  "team_no_huddle_rate",
+  "oline_outs",
+  "own_pa_rate",
+  "own_motion_rate",
+  "ngs_yac_aoe",
+  "is_birthday_week",
+  "temp",
+  "rz_tgt_share",
+  "ngs_ay_share"
+ ],
+ "per_market_deviations": {
+  "anytime_td": [
+   {
+    "feature": "roll_air_yards",
+    "market_coef": 0.1752,
+    "pooled_coef": 0.0358,
+    "z_dev": 2.6
+   },
+   {
+    "feature": "roll_carries",
+    "market_coef": 0.1255,
+    "pooled_coef": -0.0887,
+    "z_dev": 2.41
+   },
+   {
+    "feature": "qb_continuity",
+    "market_coef": 0.0403,
+    "pooled_coef": -0.0111,
+    "z_dev": 2.31
+   },
+   {
+    "feature": "team_margin",
+    "market_coef": 0.138,
+    "pooled_coef": 0.083,
+    "z_dev": 2.19
+   },
+   {
+    "feature": "p_over",
+    "market_coef": 0.1178,
+    "pooled_coef": 0.2747,
+    "z_dev": -2.1
+   },
+   {
+    "feature": "total_line",
+    "market_coef": 0.1062,
+    "pooled_coef": 0.0542,
+    "z_dev": 2.08
+   }
+  ],
+  "pass_attempts": [
+   {
+    "feature": "qb_continuity",
+    "market_coef": -0.1799,
+    "pooled_coef": -0.0111,
+    "z_dev": -3.96
+   },
+   {
+    "feature": "proj_volume",
+    "market_coef": -0.5393,
+    "pooled_coef": -0.3386,
+    "z_dev": -2.17
+   },
+   {
+    "feature": "week",
+    "market_coef": -0.0536,
+    "pooled_coef": 0.024,
+    "z_dev": -2.02
+   },
+   {
+    "feature": "roll_ypt",
+    "market_coef": 0.0586,
+    "pooled_coef": -0.0206,
+    "z_dev": 1.79
+   },
+   {
+    "feature": "roll_ypa",
+    "market_coef": 0.1743,
+    "pooled_coef": 0.0214,
+    "z_dev": 1.68
+   },
+   {
+    "feature": "age_years",
+    "market_coef": 0.0186,
+    "pooled_coef": -0.0284,
+    "z_dev": 1.68
+   }
+  ],
+  "passing_yards": [
+   {
+    "feature": "opp_factor",
+    "market_coef": 0.0799,
+    "pooled_coef": -0.0836,
+    "z_dev": 2.89
+   },
+   {
+    "feature": "team_cpoe",
+    "market_coef": -0.1095,
+    "pooled_coef": -0.0072,
+    "z_dev": -2.42
+   },
+   {
+    "feature": "team_edp",
+    "market_coef": -0.142,
+    "pooled_coef": -0.0466,
+    "z_dev": -2.24
+   },
+   {
+    "feature": "qb_continuity",
+    "market_coef": -0.1044,
+    "pooled_coef": -0.0111,
+    "z_dev": -2.18
+   },
+   {
+    "feature": "sd_over_line",
+    "market_coef": -0.0704,
+    "pooled_coef": 0.1136,
+    "z_dev": -2.17
+   },
+   {
+    "feature": "team_shotgun_rate",
+    "market_coef": -0.102,
+    "pooled_coef": -0.0164,
+    "z_dev": -2.07
+   }
+  ],
+  "receiving_yards": [
+   {
+    "feature": "sd_over_line",
+    "market_coef": 0.0322,
+    "pooled_coef": 0.1136,
+    "z_dev": -2.96
+   },
+   {
+    "feature": "roll_ypt",
+    "market_coef": -0.1375,
+    "pooled_coef": -0.0206,
+    "z_dev": -2.01
+   },
+   {
+    "feature": "opp_factor",
+    "market_coef": -0.0434,
+    "pooled_coef": -0.0836,
+    "z_dev": 1.96
+   },
+   {
+    "feature": "age_years",
+    "market_coef": -0.0677,
+    "pooled_coef": -0.0284,
+    "z_dev": -1.69
+   },
+   {
+    "feature": "opp_pressure_rate",
+    "market_coef": -0.0507,
+    "pooled_coef": -0.0189,
+    "z_dev": -1.55
+   },
+   {
+    "feature": "team_epa_play",
+    "market_coef": 0.0262,
+    "pooled_coef": -0.0217,
+    "z_dev": 1.52
+   }
+  ],
+  "receptions": [
+   {
+    "feature": "roll_catch_rate",
+    "market_coef": -0.18,
+    "pooled_coef": -0.0118,
+    "z_dev": -4.01
+   },
+   {
+    "feature": "roll_ypt",
+    "market_coef": 0.0962,
+    "pooled_coef": -0.0206,
+    "z_dev": 3.4
+   },
+   {
+    "feature": "team_pace",
+    "market_coef": -0.054,
+    "pooled_coef": -0.0139,
+    "z_dev": -1.84
+   },
+   {
+    "feature": "key_teammate_absent",
+    "market_coef": -0.0404,
+    "pooled_coef": 0.0375,
+    "z_dev": -1.82
+   },
+   {
+    "feature": "roll_air_yards",
+    "market_coef": -0.0735,
+    "pooled_coef": 0.0358,
+    "z_dev": -1.78
+   },
+   {
+    "feature": "teammate_out_boost",
+    "market_coef": -0.0439,
+    "pooled_coef": 0.0116,
+    "z_dev": -1.35
+   }
+  ],
+  "rush_attempts": [
+   {
+    "feature": "roll_ypc",
+    "market_coef": 0.3131,
+    "pooled_coef": -0.0086,
+    "z_dev": 4.26
+   },
+   {
+    "feature": "team_no_huddle_rate",
+    "market_coef": 0.081,
+    "pooled_coef": 0.0056,
+    "z_dev": 2.36
+   },
+   {
+    "feature": "wind",
+    "market_coef": 0.0313,
+    "pooled_coef": -0.0376,
+    "z_dev": 2.23
+   },
+   {
+    "feature": "opp_epa_factor",
+    "market_coef": 0.0682,
+    "pooled_coef": -0.008,
+    "z_dev": 1.99
+   },
+   {
+    "feature": "total_line",
+    "market_coef": -0.0179,
+    "pooled_coef": 0.0542,
+    "z_dev": -1.94
+   },
+   {
+    "feature": "key_teammate_absent",
+    "market_coef": 0.0675,
+    "pooled_coef": 0.0375,
+    "z_dev": 1.77
+   }
+  ],
+  "rushing_yards": [
+   {
+    "feature": "opp_factor",
+    "market_coef": 0.0032,
+    "pooled_coef": -0.0836,
+    "z_dev": 2.62
+   },
+   {
+    "feature": "team_no_huddle_rate",
+    "market_coef": 0.0668,
+    "pooled_coef": 0.0056,
+    "z_dev": 1.9
+   },
+   {
+    "feature": "roll_ypt",
+    "market_coef": 0.0495,
+    "pooled_coef": -0.0206,
+    "z_dev": 1.78
+   },
+   {
+    "feature": "sd_over_line",
+    "market_coef": 0.0197,
+    "pooled_coef": 0.1136,
+    "z_dev": -1.71
+   },
+   {
+    "feature": "wind",
+    "market_coef": 0.0148,
+    "pooled_coef": -0.0376,
+    "z_dev": 1.68
+   },
+   {
+    "feature": "total_line",
+    "market_coef": -0.0069,
+    "pooled_coef": 0.0542,
+    "z_dev": -1.63
+   }
+  ]
+ },
+ "weight_together_blocks": {
+  "block_28": [
+   "roll_targets",
+   "roll_target_share",
+   "roll_carries",
+   "roll_carry_share",
+   "roll_adot",
+   "roll_air_yards",
+   "roll_ypt",
+   "roll_catch_rate",
+   "rz_tgt_share",
+   "rz_carry_share"
+  ],
+  "block_27": [
+   "mean",
+   "sd",
+   "line",
+   "proj_volume",
+   "proj_efficiency",
+   "roll_pass_attempts"
+  ],
+  "block_31": [
+   "p_over",
+   "z"
+  ],
+  "block_32": [
+   "mean_minus_line",
+   "opp_factor"
+  ],
+  "block_1": [
+   "week",
+   "temp"
+  ],
+  "block_3": [
+   "def_out_total",
+   "def_out_db"
+  ],
+  "block_16": [
+   "team_neutral_proe",
+   "team_edp"
+  ],
+  "block_9": [
+   "team_epa_play",
+   "team_cpoe"
+  ]
+ }
+}
