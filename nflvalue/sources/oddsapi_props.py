@@ -262,10 +262,8 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     ob = cfg.get("odds_budget") or {}
     budget = budget or CreditBudget(conn, int(ob.get("monthly_credits", 500)),
                                     int(ob.get("reserve", 50)))
-    markets = [MARKET_TO_ODDS[m] for m in
-               (cfg.get("prop_markets_internal")
-                or ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"])
-               if m in MARKET_TO_ODDS]
+    from ..config import prop_markets_external
+    markets = prop_markets_external(cfg)
     regions = str(cfg.get("regions", "us"))
     cost_per_event = float(len(markets) * len(regions.split(",")))
     cap = int(cfg.get("max_prop_games_per_run", 4))
@@ -321,10 +319,8 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     ob = cfg.get("odds_budget") or {}
     budget = CreditBudget(conn, int(ob.get("monthly_credits", 500)),
                           int(ob.get("reserve", 50)))
-    markets = [MARKET_TO_ODDS[m] for m in
-               (cfg.get("prop_markets_internal")
-                or ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"])
-               if m in MARKET_TO_ODDS]
+    from ..config import prop_markets_external
+    markets = prop_markets_external(cfg)
     regions = str(cfg.get("regions", "us"))
     cost = float(len(markets) * len(regions.split(",")))
     ts = ts or stamp_now()

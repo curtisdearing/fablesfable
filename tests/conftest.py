@@ -34,8 +34,15 @@ def pbp_tiny():
 
 
 @pytest.fixture(scope="session")
-def backtest_report_fast():
+def backtest_report_fast(tmp_path_factory):
     """One shared run of the backtest (single season, for speed) -- reused by
-    every smoke-test assertion instead of each test re-running the pipeline."""
+    every smoke-test assertion instead of each test re-running the pipeline.
+    All generated files live outside the repository checkout."""
     import prop_backtest
-    return prop_backtest.run(seasons=[2019])
+    directory = tmp_path_factory.mktemp("prop-backtest")
+    report = prop_backtest.run(
+        seasons=[2019], output_path=str(directory / "prop_backtest.json"),
+        db_path=str(directory / "prop_backtest.db"),
+    )
+    report["_test_output_path"] = str(directory / "prop_backtest.json")
+    return report

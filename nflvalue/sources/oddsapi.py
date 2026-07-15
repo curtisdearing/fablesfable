@@ -62,10 +62,11 @@ def fetch_game_odds(cfg: Dict) -> List[Dict]:
 def fetch_event_props(cfg: Dict, event_id: str) -> List[Dict]:
     """Player props for one event. Returns a list of normalized prop dicts."""
     try:
+        from ..config import prop_markets_external
         data = get_json(f"{BASE}/sports/{SPORT}/events/{event_id}/odds", {
             "apiKey": cfg["odds_api_key"],
             "regions": cfg.get("regions", "us"),
-            "markets": ",".join(cfg.get("prop_markets", [])),
+            "markets": ",".join(prop_markets_external(cfg)),
             "oddsFormat": "decimal",
         })
     except Exception as exc:  # noqa: BLE001

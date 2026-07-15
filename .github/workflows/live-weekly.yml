@@ -1,0 +1,179 @@
+name: Live weekly model loop
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Job to run
+        required: true
+        default: wed
+        type: choice
+        options: [wed, t90, tuesday]
+  schedule:
+    - cron: "17 10 * 9-12,1 3"
+      timezone: "America/New_York"
+    - cron: "47 11,15,19 * 9-12,1 0,1,4"
+      timezone: "America/New_York"
+    - cron: "23 10 * 9-12,1 2"
+      timezone: "America/New_York"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# The release pointer and model database are a single production state.  No
+# two scheduled/manual invocations may restore the same state and race to save.
+concurrency:
+  group: nfl-live-production
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      STATE_TAG: model-state
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt pytest
+
+      # This cache is only a rebuildable input optimization.  Mutable model
+      # state is restored from a checksummed release asset below.
+      - name: Cache immutable historical inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            historical/historical_pbp.parquet
+            historical_lines.parquet
+          key: historical-v2-2019-2023-${{ hashFiles('requirements.txt', 'scripts/bootstrap_history.py', 'nflvalue/features.py', 'nflvalue/advanced_features.py') }}
+
+      # Current-season feeds are also rebuildable.  A rolling cache avoids a
+      # full refetch every run, but eviction is harmless because ingest can
+      # recreate every file in this list.
+      - name: Restore rebuildable seasonal feeds
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            historical/pbp_*.parquet
+            historical/lines_extra.parquet
+            historical/rosters_weekly.parquet
+            historical/injuries.parquet
+            historical/players_meta.parquet
+          key: seasonal-feeds-${{ github.run_id }}
+          restore-keys: seasonal-feeds-
+
+      - name: Validate or rebuild frozen history
+        run: python scripts/bootstrap_history.py
+
+      - name: Restore checksummed production state
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/state-download"
+          if gh release view "$STATE_TAG" --json body --jq .body > "$RUNNER_TEMP/state-latest.json" 2>/dev/null; then
+            asset="$(jq -er .asset "$RUNNER_TEMP/state-latest.json")"
+            sha="$(jq -er .sha256 "$RUNNER_TEMP/state-latest.json")"
+            if [[ ! "$asset" =~ ^state-[0-9]+-[0-9]+\.tar\.gz$ ]] || [[ ! "$sha" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Invalid model-state release pointer" >&2
+              exit 1
+            fi
+            gh release download "$STATE_TAG" --pattern "$asset" --dir "$RUNNER_TEMP/state-download"
+            python scripts/state_store.py restore --archive "$RUNNER_TEMP/state-download/$asset" --sha "$sha"
+          else
+            echo "No prior production state; this is a cold start"
+          fi
+
+      - name: Select scheduled job
+        id: select
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "job=${{ github.event.inputs.job }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "23 10 * 9-12,1 2" ]]; then
+            echo "job=tuesday" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "17 10 * 9-12,1 3" ]]; then
+            echo "job=wed" >> "$GITHUB_OUTPUT"
+          else
+            echo "job=t90" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run weekly job
+        run: python scripts/auto_weekly.py --job "${{ steps.select.outputs.job }}"
+
+      # No `always()`: a failed/partial run must never become the next state.
+      # The versioned archive is uploaded first and the release body is changed
+      # last, so a failed upload leaves the previous pointer restorable.
+      - name: Publish successful production state
+        shell: bash
+        run: |
+          asset="state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          archive="$RUNNER_TEMP/$asset"
+          python scripts/state_store.py pack --archive "$archive"
+          if ! gh release view "$STATE_TAG" >/dev/null 2>&1; then
+            gh release create "$STATE_TAG" --prerelease --title "Model state (automation)" --notes "{}"
+          fi
+          gh release upload "$STATE_TAG" "$archive"
+          python scripts/state_store.py pointer --archive "$archive" --asset "$asset" --output "$RUNNER_TEMP/state-latest.json"
+          gh release edit "$STATE_TAG" --notes-file "$RUNNER_TEMP/state-latest.json"
+
+      - name: Save rebuildable seasonal feeds
+        if: steps.select.outputs.job == 'tuesday'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            historical/pbp_*.parquet
+            historical/lines_extra.parquet
+            historical/rosters_weekly.parquet
+            historical/injuries.parquet
+            historical/players_meta.parquet
+          key: seasonal-feeds-${{ github.run_id }}
+
+      - name: Keep the eight newest state archives
+        shell: bash
+        run: |
+          gh release view "$STATE_TAG" --json assets --jq '.assets | sort_by(.createdAt) | reverse | map(select(.name | test("^state-[0-9]+-[0-9]+\\.tar\\.gz$"))) | .[8:] | .[].name' |
+          while read -r old_asset; do
+            [[ -z "$old_asset" ]] || gh release delete-asset "$STATE_TAG" "$old_asset" --yes
+          done
+
+      - name: Upload run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-run-${{ steps.select.outputs.job }}-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 30
+          path: |
+            reports/
+            dashboard.html
+            data/*.json
+
+      - name: Prepare dashboard for GitHub Pages
+        run: |
+          mkdir -p _site
+          cp dashboard.html _site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy-dashboard:
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy dashboard to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

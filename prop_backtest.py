@@ -178,7 +178,8 @@ def _calibration(df: pd.DataFrame) -> List[Dict]:
     return sorted(out, key=lambda x: x["bucket"])
 
 
-def run(seasons: Optional[List[int]] = None) -> Dict:
+def run(seasons: Optional[List[int]] = None, output_path: Optional[str] = None,
+        db_path: Optional[str] = None) -> Dict:
     print("=" * 78)
     print("PROP BACKTEST -- measures PROJECTION ACCURACY, not price-beating.")
     print("(No free historical prop-LINE data exists; forward CLV/price tests")
@@ -254,10 +255,10 @@ def run(seasons: Optional[List[int]] = None) -> Dict:
                 "calibration_actual_over_rate": c["actual_over_rate"],
             })
 
-    out_path = os.path.join(config.DATA_DIR, "prop_backtest.json")
+    out_path = output_path or os.path.join(config.DATA_DIR, "prop_backtest.json")
     config.save_json(out_path, report)
 
-    conn = dbmod.connect()
+    conn = dbmod.connect(db_path)
     written = dbmod.upsert(conn, "prop_backtest", db_rows, ["run_at", "market", "sample_bucket", "calibration_bucket"])
     conn.close()
 
@@ -276,7 +277,7 @@ def run(seasons: Optional[List[int]] = None) -> Dict:
                 print(f"      {label:22} n={b['n']:6}  MAE={b['mae']:>7}  RMSE={b['rmse']:>7}  corr={b['corr']}")
         for role, b in res.get("by_role", {}).items():
             print(f"      by-position {role:11} n={b['n']:6}  MAE={b['mae']:>7}  RMSE={b['rmse']:>7}  corr={b['corr']}")
-    print(f"\n  Saved: data/prop_backtest.json  ({written} rows upserted into data/nfl.db:prop_backtest)")
+    print(f"\n  Saved: {out_path}  ({written} rows upserted into the prop_backtest table)")
     print("  Reminder: these numbers describe projection accuracy only -- leans, not locks.")
     return report
 

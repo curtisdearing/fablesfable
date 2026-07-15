@@ -27,8 +27,10 @@ def env(tmp_path, monkeypatch):
     db_path = str(tmp_path / "pipe.db")
     monkeypatch.setattr(dbmod, "connect", lambda p=None: real_connect(db_path))
     from nflvalue import report as rptmod
+    from nflvalue import document as docmod
     monkeypatch.setattr(rptmod, "REPORTS_DIR", str(tmp_path / "reports"))
     monkeypatch.setattr(rptmod, "WEEKLY_PROPS_JSON", str(tmp_path / "weekly_props.json"))
+    monkeypatch.setattr(docmod, "DROPS_DIR", str(tmp_path / "drops"))
     monkeypatch.setattr(cfgmod, "LATEST_PATH", str(tmp_path / "latest.json"))
     monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(tmp_path / "dashboard.html"))
     return {"tmp": tmp_path, "db_path": db_path}

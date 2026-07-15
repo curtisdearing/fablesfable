@@ -36,6 +36,14 @@ Live setup: put `ODDS_API_KEY` and `DISCORD_WEBHOOK_URL` in the environment or
 gitignored `config.local.json`. Scheduling, budgets, weekly cadence:
 **[docs/phases_3-5.md](docs/phases_3-5.md)**.
 
+GitHub Actions defines the offseason-safe Wednesday, T-90, and Tuesday loop in
+`.github/workflows/live-weekly.yml`. A checksummed GitHub prerelease asset is
+the durable model state; failed runs cannot overwrite it. Add repository
+secrets `ODDS_API_KEY` and `DISCORD_WEBHOOK_URL` for live prices and
+notifications. Successful runs deploy the generated dashboard to
+[GitHub Pages](https://curtisdearing.github.io/fablesfable/). The schedule and
+deployment become active after this workflow is present on the default branch.
+
 ## What\'s in the box
 
 | Area | Files |
@@ -63,6 +71,9 @@ The original game-line dashboard this grew from still works:
   every default, every measured constant, every caught bug (including two
   data leaks the guardrails caught — documented, not buried).
 - **[docs/phases_3-5.md](docs/phases_3-5.md)** — operations runbook.
+- **[reports/all_data_factor_audit.md](reports/all_data_factor_audit.md)** —
+  retraction of the non-reproducible factor counts and the replacement
+  pregame-only, nested season-forward protocol.
 - **[PREMORTEM.md](PREMORTEM.md) / [PROP_SHORTLISTER_SPEC.md](PROP_SHORTLISTER_SPEC.md)** —
   the design contracts the code is held to.
 

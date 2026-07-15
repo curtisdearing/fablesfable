@@ -9,10 +9,6 @@ import json
 import math
 import os
 
-import os
-
-from nflvalue import config
-
 EXPECTED_MARKETS = {
     "receiving_yards", "receptions", "rushing_yards", "passing_yards",
     "pass_attempts", "rush_attempts", "anytime_td",
@@ -27,7 +23,7 @@ def test_backtest_runs_end_to_end_and_writes_report(backtest_report_fast):
         "the report must keep the honest 'accuracy, not price-beating' framing"
     )
 
-    out_path = os.path.join(config.DATA_DIR, "prop_backtest.json")
+    out_path = report["_test_output_path"]
     assert os.path.exists(out_path)
     on_disk = json.load(open(out_path))
     assert set(on_disk["markets"]) == EXPECTED_MARKETS

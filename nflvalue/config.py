@@ -20,9 +20,11 @@ DEFAULT_CONFIG: Dict = {
     "odds_api_key": "",                 # paste your free key from the-odds-api.com
     "regions": "us",
     "game_markets": ["h2h", "spreads", "totals"],
-    "prop_markets": [
-        "player_pass_yds", "player_rush_yds",
-        "player_reception_yds", "player_anytime_td",
+    # Canonical player-prop vocabulary is internal. API clients translate it
+    # at their boundary so the weekly and legacy paths cannot silently drift.
+    "prop_markets_internal": [
+        "receiving_yards", "receptions", "rushing_yards",
+        "passing_yards", "anytime_td",
     ],
     "fetch_props": True,
     "max_prop_games_per_run": 4,        # props cost more API credits; cap them
@@ -41,12 +43,43 @@ DEFAULT_CONFIG: Dict = {
 }
 
 
+DEFAULT_PROP_MARKETS_INTERNAL = tuple(DEFAULT_CONFIG["prop_markets_internal"])
+
+
+def prop_markets_internal(cfg: Dict) -> list:
+    """Return one validated canonical market list.
+
+    ``prop_markets`` is accepted only as a backward-compatible external-key
+    input. New configuration should use ``prop_markets_internal``.
+    """
+    from .sources.oddsapi_props import ODDS_TO_MARKET
+
+    raw = cfg.get("prop_markets_internal")
+    if raw is None and cfg.get("prop_markets"):
+        raw = [ODDS_TO_MARKET[k] for k in cfg["prop_markets"] if k in ODDS_TO_MARKET]
+    raw = raw or DEFAULT_PROP_MARKETS_INTERNAL
+    valid = set(ODDS_TO_MARKET.values())
+    return list(dict.fromkeys(str(m) for m in raw if str(m) in valid))
+
+
+def prop_markets_external(cfg: Dict) -> list:
+    """Translate canonical market names to The Odds API keys."""
+    from .sources.oddsapi_props import MARKET_TO_ODDS
+
+    return [MARKET_TO_ODDS[m] for m in prop_markets_internal(cfg)]
+
+
 def load_config() -> Dict:
     cfg = dict(DEFAULT_CONFIG)
     if os.path.exists(CONFIG_PATH):
         try:
             with open(CONFIG_PATH) as f:
-                cfg.update(json.load(f))
+                file_cfg = json.load(f)
+            # A legacy file should override the default market list instead of
+            # being silently ignored because the canonical default is present.
+            if "prop_markets" in file_cfg and "prop_markets_internal" not in file_cfg:
+                cfg.pop("prop_markets_internal", None)
+            cfg.update(file_cfg)
         except Exception as exc:  # noqa: BLE001
             print(f"[config] could not parse config.json ({exc}); using defaults")
     # env var overrides the file, handy for scheduled runs

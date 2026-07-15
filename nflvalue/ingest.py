@@ -42,7 +42,8 @@ BASE_SEASONS = {2019, 2020, 2021, 2022, 2023}
 SCHED_COLS = ["game_id", "season", "game_type", "week", "gameday", "weekday", "gametime",
               "away_team", "away_score", "home_team", "home_score", "result", "total",
               "spread_line", "total_line", "away_moneyline", "home_moneyline",
-              "roof", "surface"]
+              "roof", "surface", "stadium", "temp", "wind", "div_game", "referee",
+              "overtime", "location", "away_rest", "home_rest"]
 
 
 def current_season(today: Optional[dt.date] = None) -> int:

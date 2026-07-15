@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "status": "research_only_summary",
+  "generated_on": "2026-07-14",
+  "seasons": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
+  "frame_rows": 116554,
+  "target": "actual above a strictly-prior trailing mean, except anytime touchdown; not a sportsbook line or ROI test",
+  "retraction": "All numerical claims in the prior hand-entered audit are withdrawn. This run uses only official pregame absences; current-game zero usage is forbidden.",
+  "reproduction": {
+    "build": "python -m analysis.build_factor_frame --output data/factor_frame.parquet",
+    "audit": "python -m analysis.all_data_factor_audit --input data/factor_frame.parquet --patterns analysis/factor_patterns.json --output /tmp/all_data_factor_audit.json",
+    "frame_sha256": "86de849a47e1becee64a07b3e2c30ffd1aee3a635888eef2dc27db811498eb51",
+    "patterns_sha256": "d1e7f40441b7178243d0aff9983372d5e358c56edba338aacb8bd7a8d119a6aa",
+    "full_output_sha256": "04f25c654d4c71e88f5b04c1b06a57e3c8057b9c2eb3514255acd12b5a1c79e6",
+    "code_sha256": {
+      "analysis/build_factor_frame.py": "a1c04c8eb72fe1d6ce7892349fe0fcc70375214664086046286b76aa3b392738",
+      "analysis/all_data_factor_audit.py": "b570c70166bf81a7a8b46120b1a27a3e7a6f8e4612609f17ffe31b2e87c46f81"
+    },
+    "source_sha256": {
+      "historical/historical_pbp.parquet": "b5e4ed9316ea1c9701167f660e526aa1cd932d7a3e9fe2f1509c63b14ea559a4",
+      "historical_lines.parquet": "fa82f7b7548c057c61b90e56cfee2c3dde3ee80320a7beb5cb271e7410d81bbb",
+      "historical/rosters_weekly.parquet": "d44cfc35acd69da112a4cfd2af178e90d7f45bd9bcbe1930cb8801b95be7fbca",
+      "historical/injuries.parquet": "2dfd56ef1d8b14f6adf304cc47af1c93b9daff80debf59e603ce50e75e4e9e89",
+      "historical/players_meta.parquet": "941c29d0070f6a00af5ef49445c08b35e64c74036bcebbbdc2467792d3b363bf"
+    }
+  },
+  "method": {
+    "family_size": 38,
+    "posterior": "independent Jeffreys beta-binomial rates with 20000 Monte Carlo draws",
+    "dependence": "5000-draw pairs bootstrap over 220-223 team-season clusters",
+    "multiple_comparisons": "Benjamini-Hochberg over all 38 predeclared patterns"
+  },
+  "findings": [
+    {"name":"RB1 officially out -> RB2 rushing yards","cohort":"pregame","exposed_hits":109,"exposed_n":155,"exposed_rate":0.7032,"control_hits":875,"control_n":2271,"control_rate":0.3853,"difference_pp":31.79,"credible_interval_95_pp":[24.09,38.89],"cluster_interval_95_pp":[23.50,39.80],"bh_q":6.6214e-13},
+    {"name":"RB1 officially out -> RB2 anytime TD","cohort":"pregame","exposed_hits":63,"exposed_n":164,"exposed_rate":0.3841,"control_hits":583,"control_n":2427,"control_rate":0.2402,"difference_pp":14.39,"credible_interval_95_pp":[7.00,22.17],"cluster_interval_95_pp":[6.92,21.59],"bh_q":0.001006},
+    {"name":"Two-plus opponent DBs officially out -> QB passing yards","cohort":"pregame","exposed_hits":161,"exposed_n":283,"exposed_rate":0.5689,"control_hits":1214,"control_n":2562,"control_rate":0.4738,"difference_pp":9.51,"credible_interval_95_pp":[3.41,15.44],"cluster_interval_95_pp":[2.61,16.27],"bh_q":0.01972},
+    {"name":"Post-bye -> WR receiving yards","cohort":"pregame","exposed_hits":921,"exposed_n":2382,"exposed_rate":0.3866,"control_hits":4628,"control_n":11008,"control_rate":0.4204,"difference_pp":-3.38,"credible_interval_95_pp":[-5.52,-1.19],"cluster_interval_95_pp":[-5.50,-1.30],"bh_q":0.01972},
+    {"name":"Observed wind 15-plus proxy -> QB passing yards","cohort":"historical_observed_proxy_not_pregame","exposed_hits":73,"exposed_n":216,"exposed_rate":0.3380,"control_hits":1302,"control_n":2629,"control_rate":0.4952,"difference_pp":-15.73,"credible_interval_95_pp":[-22.09,-9.04],"cluster_interval_95_pp":[-22.75,-8.52],"bh_q":0.000189}
+  ],
+  "notable_nulls": [
+    {"name":"TE1 officially out -> RB2 anytime TD","exposed_n":132,"difference_pp":-5.52,"credible_interval_95_pp":[-11.82,1.99],"bh_q":0.4326},
+    {"name":"TE1 officially out -> RB1 anytime TD","exposed_n":166,"difference_pp":0.63,"credible_interval_95_pp":[-7.13,8.42],"bh_q":0.9753},
+    {"name":"Birthday window -> WR receiving yards","exposed_n":449,"difference_pp":-2.09,"credible_interval_95_pp":[-6.60,2.58],"bh_q":0.6033},
+    {"name":"Revenge game -> WR receiving yards","exposed_n":211,"difference_pp":-4.55,"credible_interval_95_pp":[-10.87,2.09],"bh_q":0.4326}
+  ],
+  "live_scoring_impact": "none; findings require nested outer-season and prospective real-line/CLV validation"
+}

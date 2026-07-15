@@ -3,7 +3,7 @@
 
   "regions": "us",
   "game_markets": ["h2h", "spreads", "totals"],
-  "prop_markets": ["player_pass_yds", "player_rush_yds", "player_reception_yds", "player_anytime_td"],
+  "prop_markets_internal": ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"],
   "fetch_props": true,
   "max_prop_games_per_run": 4,
 

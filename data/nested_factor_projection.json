@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "retrospective_nested_diagnostic",
+  "generated_on": "2026-07-14",
+  "target": "actual above strictly-prior trailing mean; not a sportsbook line",
+  "protocol": "For each 2022-2025 outer season, combinations of up to three factors were selected on earlier seasons only. Minimum training exposed/control n was 100.",
+  "full_output_sha256": "4080d06e5dd26f9695bf41bee73b841d72f98eb76317028720446774e940cfcc",
+  "code_sha256": {
+    "analysis/nested_factor_selection.py": "040e593e0fbb2f3ca3e0cfa2792222c6ab3899d0fde1d7e5cd5e6b39276dbc91",
+    "analysis/run_nested_projection.py": "097cbd89ca96afb64175e5b6352fcab1123be09e57482b35fd1d7cb64d17d01e"
+  },
+  "segments": [
+    {"name":"QB1 passing yards","outer_n":197,"correct":93,"accuracy":0.4721,"segment_reference_accuracy":0.5064,"selective_lift_pp":-3.43,"posterior_95":[0.4028,0.5424],"selected_by_season":{"2022":null,"2023":["primetime","turf"],"2024":["primetime","turf"],"2025":["primetime"]}},
+    {"name":"RB1 rushing yards","outer_n":152,"correct":84,"accuracy":0.5526,"segment_reference_accuracy":0.5671,"selective_lift_pp":-1.45,"posterior_95":[0.4738,0.6320],"selected_by_season":{"2022":["rushing_100_last_game"],"2023":null,"2024":["primetime","high_total"],"2025":["primetime","high_total"]}},
+    {"name":"WR1 receiving yards","outer_n":281,"correct":164,"accuracy":0.5836,"segment_reference_accuracy":0.5865,"selective_lift_pp":-0.28,"posterior_95":[0.5254,0.6409],"selected_by_season":{"2022":["big_favorite"],"2023":["big_favorite"],"2024":["big_favorite"],"2025":["post_bye"]}},
+    {"name":"TE1 receiving yards","outer_n":18,"correct":12,"accuracy":0.6667,"segment_reference_accuracy":0.5724,"selective_lift_pp":9.43,"posterior_95":[0.4375,0.8471],"excluded_from_best_reason":"outer n below 100"},
+    {"name":"RB1 receptions","outer_n":49,"correct":31,"accuracy":0.6327,"segment_reference_accuracy":0.5827,"selective_lift_pp":5.00,"posterior_95":[0.4917,0.7563],"excluded_from_best_reason":"outer n below 100"}
+  ],
+  "highest_eligible_accuracy": {"segment":"WR1 receiving yards","accuracy":0.5836,"outer_n":281,"selective_lift_pp":-0.28},
+  "conclusion": "No eligible factor-combination procedure beat its segment reference accuracy, no combination scored 100%, and no factor changes live scoring.",
+  "prospective_requirement": "Freeze a protocol before 2026 Week 1, then grade real sportsbook lines and CLV."
+}

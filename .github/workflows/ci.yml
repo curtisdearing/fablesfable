@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt pytest
+      - name: Run data-independent behavioral tests
+        run: >-
+          pytest -q
+          tests/test_all_data_audit.py
+          tests/test_bootstrap_history.py
+          tests/test_market_config.py
+          tests/test_state_store.py
+          tests/test_availability.py
+          tests/test_clv_killcheck.py
+          tests/test_freshness.py
+          tests/test_learning.py
+          tests/test_notify_secrets_app.py
+          tests/test_oddsapi_props.py
+          tests/test_rag.py
+          tests/test_refresh_preserves_history.py
+          tests/test_sleeper.py
+          tests/test_synthesis.py

@@ -72,18 +72,23 @@ def load_players_meta(refresh: bool = False) -> pd.DataFrame:
 
 
 def load_injury_history(seasons: List[int], refresh: bool = False) -> pd.DataFrame:
-    cached = pd.DataFrame()
-    if os.path.exists(INJURIES) and not refresh:
-        cached = pd.read_parquet(INJURIES)
+    # Refresh means replace the requested seasons, never erase other seasons.
+    # The prior implementation initialized an empty cache on refresh and could
+    # silently destroy years of injury history during a one-season live pull.
+    cached = pd.read_parquet(INJURIES) if os.path.exists(INJURIES) else pd.DataFrame()
     have = set(cached["season"].unique()) if len(cached) else set()
-    missing = [s for s in seasons if s not in have]
+    missing = list(seasons) if refresh else [s for s in seasons if s not in have]
     if missing:
         import nflreadpy as nfl
         try:
             pulled = nfl.load_injuries(seasons=missing).to_pandas()
             keep = pulled[["season", "week", "team", "gsis_id", "position",
                            "report_status", "full_name"]].copy()
-            cached = pd.concat([cached, keep], ignore_index=True) if len(cached) else keep
+            if len(cached):
+                cached = cached[~cached["season"].isin(missing)]
+                cached = pd.concat([cached, keep], ignore_index=True)
+            else:
+                cached = keep
             cached = cached.drop_duplicates(subset=["season", "week", "team", "gsis_id"])
             cached.to_parquet(INJURIES, index=False)
         except Exception as exc:  # noqa: BLE001 -- fail loud in log, serve cache

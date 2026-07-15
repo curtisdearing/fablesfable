@@ -26,6 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 HIST = os.path.join(ROOT, "historical")
 CACHE_PATH = os.path.join(HIST, "rosters_weekly.parquet")
 FIXTURE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "rosters_weekly_sample.parquet")
+FIXTURE_CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "rosters_weekly_sample.csv")
 
 # Positions we actually use downstream; everything else (OL/DL/LB/DB/K/P/LS/...)
 # is dropped early since those players never show up with pass/rush/rec stats.
@@ -55,12 +56,12 @@ def fetch_rosters_weekly(seasons: List[int], cache_path: str = CACHE_PATH,
     that needs real positions should know when it doesn't have them, not
     quietly get an empty table.
     """
-    cached = pd.DataFrame(columns=COLUMNS)
-    if os.path.exists(cache_path) and not force_refresh:
-        cached = pd.read_parquet(cache_path)
+    # A forced refresh replaces only requested seasons.  Always load the cache
+    # first so refreshing 2026 cannot erase 2019-2025 roster history.
+    cached = pd.read_parquet(cache_path) if os.path.exists(cache_path) else pd.DataFrame(columns=COLUMNS)
 
     have_seasons = set(cached["season"].unique()) if len(cached) else set()
-    missing = [s for s in seasons if s not in have_seasons]
+    missing = list(seasons) if force_refresh else [s for s in seasons if s not in have_seasons]
 
     if missing:
         try:
@@ -85,7 +86,11 @@ def fetch_rosters_weekly(seasons: List[int], cache_path: str = CACHE_PATH,
             raise RuntimeError(f"Could not fetch roster data for seasons {missing} and no cache exists.") from exc
 
         pulled = _normalize(pulled[["season", "week", "team", "position", "gsis_id", "full_name"]])
-        combined = pd.concat([cached, pulled], ignore_index=True) if len(cached) else pulled
+        if len(cached):
+            cached = cached[~cached["season"].isin(missing)]
+            combined = pd.concat([cached, pulled], ignore_index=True)
+        else:
+            combined = pulled
         combined = combined.drop_duplicates(subset=["season", "week", "player_id"], keep="last")
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         combined.to_parquet(cache_path, index=False)
@@ -96,7 +101,11 @@ def fetch_rosters_weekly(seasons: List[int], cache_path: str = CACHE_PATH,
 
 def load_fixture() -> pd.DataFrame:
     """A small, REAL (recorded, not synthetic) sample for offline tests."""
-    return pd.read_parquet(FIXTURE_PATH)
+    if os.path.exists(FIXTURE_PATH):
+        return pd.read_parquet(FIXTURE_PATH)
+    if os.path.exists(FIXTURE_CSV_PATH):
+        return pd.read_csv(FIXTURE_CSV_PATH, dtype={"player_id": str})
+    raise FileNotFoundError("recorded roster fixture is missing (parquet and CSV)")
 
 
 def build_fixture(seasons: Optional[List[int]] = None, n_per_position: int = 6) -> pd.DataFrame:
@@ -114,6 +123,7 @@ def build_fixture(seasons: Optional[List[int]] = None, n_per_position: int = 6) 
     sample = pd.concat(picks, ignore_index=True)
     os.makedirs(os.path.dirname(FIXTURE_PATH), exist_ok=True)
     sample.to_parquet(FIXTURE_PATH, index=False)
+    sample.to_csv(FIXTURE_CSV_PATH, index=False)
     return sample
 
 

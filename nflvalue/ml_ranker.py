@@ -59,6 +59,9 @@ NUMERIC_FEATURES = [
     "team_margin", "total_line", "home", "week",
     # deterministic personal/defensive context (context_features.py) -- the
     # classifier decides their weight from outcomes; NaN = data unavailable
+    # Birthday remains in the existing artifact schema for backward
+    # compatibility, but the all-data audit found no positive effect. It is
+    # not an enabled context multiplier and must not be described as an edge.
     "is_birthday_week", "revenge_game", "def_out_total", "def_out_db",
     "opp_epa_factor",
 ]
