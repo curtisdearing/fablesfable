@@ -4,6 +4,7 @@ reruns must be idempotent."""
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -63,6 +64,10 @@ def test_wed_run_live_publishes_and_persists(env):
     # dashboard written with the leans payload embedded
     html = (env["tmp"] / "dashboard.html").read_text()
     assert "Weekly Leans" in html and "weekly_leans" in html
+    assert "Factor Audit" in html and "No 100% system" in html
+    latest = json.loads((env["tmp"] / "latest.json").read_text())
+    assert latest["mode"] == "live"
+    assert latest["generated_at"] == res["as_of"]
     conn.close()
 
 

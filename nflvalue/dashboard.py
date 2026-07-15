@@ -33,9 +33,12 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:6px
 h1{font-size:20px;margin:0;letter-spacing:.3px}
 h1 .v{color:var(--accent)}
 .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.6px}
-.badge.demo{background:#3a2d12;color:var(--yellow);border:1px solid #6b521f}
-.badge.live{background:#10331f;color:var(--green);border:1px solid #1f6b40}
+.badge.demo,.badge.offseason{background:#3a2d12;color:var(--yellow);border:1px solid #6b521f}
+.badge.live,.badge.active{background:#10331f;color:var(--green);border:1px solid #1f6b40}
+.badge.degraded{background:#3a1419;color:var(--red);border:1px solid #742c36}
 .meta{margin-left:auto;color:var(--muted);font-size:12px;text-align:right}
+.pipeline{margin:12px 0 4px;padding:10px 13px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:#cdd7ea;font-size:12px}
+.pipeline.offseason{border-color:#6b521f}.pipeline.degraded{border-color:#742c36}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0 8px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
 .card .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
@@ -84,6 +87,8 @@ tr:hover td{background:#172033}
     </div>
   </header>
 
+  <div class="pipeline" id="pipeline" hidden></div>
+
   <div class="cards" id="cards"></div>
 
   <div class="tabs">
@@ -94,6 +99,7 @@ tr:hover td{background:#172033}
     <div class="tab" data-t="mc">Monte Carlo</div>
     <div class="tab" data-t="games">All Games</div>
     <div class="tab" data-t="perf">Model &amp; Learning</div>
+    <div class="tab" data-t="audit">Factor Audit</div>
     <div class="tab" data-t="backtest">Backtest</div>
   </div>
 
@@ -104,6 +110,7 @@ tr:hover td{background:#172033}
   <div class="panel" id="mc"></div>
   <div class="panel" id="games"></div>
   <div class="panel" id="perf"></div>
+  <div class="panel" id="audit"></div>
   <div class="panel" id="backtest"></div>
 
   <div class="disclaimer" id="disc"></div>
@@ -375,6 +382,44 @@ function renderBacktest(){
     </div>`;
 }
 
+function renderAudit(){
+  const el=document.getElementById("audit");
+  const a=DATA.factor_audit, n=DATA.nested_factor_projection;
+  if(!a){el.innerHTML='<div class="box empty">No all-data factor audit has been published.</div>';return;}
+  const pp=x=>(x>=0?"+":"")+Number(x).toFixed(2)+"pp";
+  const ci=x=>x&&x.length===2?`[${pp(x[0])}, ${pp(x[1])}]`:"—";
+  const q=x=>x==null?"—":Number(x).toPrecision(3);
+  const findings=(a.findings||[]).map(f=>`<tr>
+    <td><b>${esc(f.name)}</b><div class="sub">${esc(f.cohort)}</div></td>
+    <td>${f.exposed_hits}/${f.exposed_n} (${fmtP(f.exposed_rate)})</td>
+    <td>${f.control_hits}/${f.control_n} (${fmtP(f.control_rate)})</td>
+    <td class="${f.difference_pp>=0?'ev pos':'ev neg'}">${pp(f.difference_pp)}</td>
+    <td>${ci(f.credible_interval_95_pp)}</td><td>${ci(f.cluster_interval_95_pp)}</td><td>${q(f.bh_q)}</td>
+  </tr>`).join("");
+  const nulls=(a.notable_nulls||[]).map(f=>`<tr><td>${esc(f.name)}</td><td>${f.exposed_n}</td>
+    <td>${pp(f.difference_pp)}</td><td>${ci(f.credible_interval_95_pp)}</td><td>${q(f.bh_q)}</td></tr>`).join("");
+  const segments=((n&&n.segments)||[]).map(s=>`<tr><td>${esc(s.name)}</td><td>${s.correct!=null?s.correct+'/':''}${s.outer_n}</td>
+    <td>${fmtP(s.accuracy)}</td><td>${fmtP(s.segment_reference_accuracy)}</td><td>${pp(s.selective_lift_pp)}</td>
+    <td>[${fmtP(s.posterior_95[0])}, ${fmtP(s.posterior_95[1])}]${s.excluded_from_best_reason?`<div class="sub">${esc(s.excluded_from_best_reason)}</div>`:""}</td></tr>`).join("");
+  const best=n&&n.highest_eligible_accuracy;
+  el.innerHTML=`
+    <div class="box" style="margin-bottom:14px;border-color:#3a4d2a;background:#11180f">
+      <h3 style="color:var(--green)">Honest all-data result</h3>
+      <div><b>${a.frame_rows.toLocaleString()} player-market rows</b> · seasons ${(a.seasons||[]).join('–')} · ${a.method.family_size} predeclared tests.</div>
+      <div class="note">${esc(a.target)}. ${esc(a.live_scoring_impact)}</div>
+      ${best?`<div class="note"><b>No 100% system:</b> highest eligible nested accuracy was ${fmtP(best.accuracy)} on n=${best.outer_n}, but selective lift was ${pp(best.selective_lift_pp)} versus its segment reference.</div>`:""}
+    </div>
+    <div class="box"><h3>Signals surviving all-test correction</h3>
+      <table><thead><tr><th>Factor</th><th>Exposed</th><th>Control</th><th>Difference</th><th>Bayes 95%</th><th>Cluster 95%</th><th>BH q</th></tr></thead><tbody>${findings}</tbody></table>
+      <div class="note">Jeffreys beta-binomial Monte Carlo (${a.method.posterior}); dependence check: ${a.method.dependence}. Association is not automatic permission to score it live.</div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="box"><h3>Notable nulls</h3><table><thead><tr><th>Factor</th><th>n</th><th>Difference</th><th>Bayes 95%</th><th>BH q</th></tr></thead><tbody>${nulls}</tbody></table></div>
+      <div class="box"><h3>Nested outer-season combinations</h3>${segments?`<table><thead><tr><th>Segment</th><th>Hits/n</th><th>Accuracy</th><th>Reference</th><th>Lift</th><th>95%</th></tr></thead><tbody>${segments}</tbody></table>`:'<div class="empty">No nested projection result.</div>'}
+        <div class="note">${esc((n&&n.conclusion)||'')}</div></div>
+    </div>`;
+}
+
 function renderCards(){
   const s=DATA.summary||{};
   document.getElementById("cards").innerHTML=`
@@ -385,10 +430,23 @@ function renderCards(){
     <div class="card"><div class="k">Bankroll</div><div class="val">${(DATA.metrics&&DATA.metrics.bankroll||100).toFixed(1)}u</div></div>`;
 }
 
+function renderPipeline(){
+  const p=DATA.pipeline||{};
+  const status=(p.status||DATA.mode||"demo").toLowerCase();
+  document.getElementById("mode").textContent=status;
+  document.getElementById("mode").className="badge "+status;
+  const checked=p.last_checked_at?`Pipeline checked ${p.last_checked_at}`:"";
+  const snapshot=DATA.generated_at?`data snapshot ${DATA.generated_at}`:"";
+  document.getElementById("updated").textContent=[checked,snapshot].filter(Boolean).join(" · ");
+  if(!DATA.pipeline) return;
+  const ints=p.integrations||{};
+  const labels=Object.keys(ints).map(k=>`<span class="pill ${ints[k]==='configured'?'p':'n'}">${esc(k.replace(/_/g,' '))}: ${esc(ints[k])}</span>`).join("");
+  const box=document.getElementById("pipeline");box.hidden=false;box.className="pipeline "+status;
+  box.innerHTML=`<b>${esc(status.toUpperCase())}</b> · ${esc(p.detail||"")} ${labels}`;
+}
+
 // header + tabs + auto refresh
-document.getElementById("mode").textContent=DATA.mode||"demo";
-document.getElementById("mode").className="badge "+((DATA.mode||"demo").toLowerCase()==="live"?"live":"demo");
-document.getElementById("updated").textContent="Updated "+(DATA.generated_at||"");
+renderPipeline();
 document.getElementById("disc").innerHTML=DATA.disclaimer||"";
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -396,7 +454,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
@@ -409,7 +467,12 @@ setInterval(()=>{secs--;cd.textContent=Math.max(secs,0);if(secs<=0)location.relo
 
 def write_dashboard(data: Dict, path: str = None) -> str:
     path = path or config.DASHBOARD_PATH
-    html = TEMPLATE.replace("__DATA_JSON__", json.dumps(data, default=str))
+    payload = dict(data)
+    payload.setdefault("factor_audit", config.load_json(
+        config.ALL_DATA_FACTOR_AUDIT_PATH, None))
+    payload.setdefault("nested_factor_projection", config.load_json(
+        config.NESTED_FACTOR_PROJECTION_PATH, None))
+    html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
     with open(path, "w") as f:
         f.write(html)
     return path

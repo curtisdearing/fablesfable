@@ -29,6 +29,51 @@ ET = ZoneInfo("America/New_York")
 T90_WINDOW_HOURS = 2.75      # refresh games kicking off within this window
 
 
+def utc_stamp() -> str:
+    return (dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+            .isoformat().replace("+00:00", "Z"))
+
+
+def write_pipeline_heartbeat(status: str, detail: str, job: str) -> dict:
+    """Make deployment freshness and missing integrations visible.
+
+    ``generated_at`` remains the model-data timestamp.  A deployment/no-op
+    must not make stale projections look newly generated.
+    """
+    from nflvalue import config as cfgmod
+    from nflvalue.dashboard import write_dashboard
+    from nflvalue.notify import resolve_webhook
+
+    cfg = cfgmod.load_config()
+    odds = "configured" if cfg.get("odds_api_key") else "missing"
+    if not cfg.get("discord_enabled"):
+        discord = "disabled"
+    else:
+        discord = "configured" if resolve_webhook() else "missing"
+    effective_status = "degraded" if status == "active" and odds != "configured" else status
+    if effective_status == "degraded":
+        detail += " Live sportsbook pricing is unavailable until ODDS_API_KEY is configured."
+    data = cfgmod.load_json(cfgmod.LATEST_PATH, {}) or {}
+    data["pipeline"] = {
+        "status": effective_status,
+        "job": job,
+        "last_checked_at": utc_stamp(),
+        "detail": detail,
+        "integrations": {"odds_api": odds, "discord": discord},
+    }
+    cfgmod.save_json(cfgmod.LATEST_PATH, data)
+    write_dashboard(data)
+    return data["pipeline"]
+
+
+def schedule_status(slate, now: dt.datetime) -> str:
+    cw = current_week(slate, now)
+    if cw is None:
+        return "offseason"
+    first = slate[(slate.season == cw[0]) & (slate.week == cw[1])]["kickoff"].min()
+    return "offseason" if first - now > dt.timedelta(days=8) else "active"
+
+
 def ensure_dependencies() -> None:
     """Scheduled-task sessions can start with a fresh sandbox: self-heal by
     installing requirements when core imports are missing (evaluation catch —
@@ -90,6 +135,8 @@ def job_wed() -> int:
     if cw is None or (slate[(slate.season == cw[0]) & (slate.week == cw[1])]["kickoff"].min()
                       - now_et()) > dt.timedelta(days=8):
         print("[auto] no upcoming REG week within 8 days — offseason no-op")
+        write_pipeline_heartbeat(
+            "offseason", "Automation is healthy; no REG week starts within eight days.", "wed")
         return 0
     season, week = cw
     cfg = cfgmod.load_config()
@@ -101,6 +148,8 @@ def job_wed() -> int:
     print(f"[auto] wed run {season} wk{week}: {len(res['games'])} games, "
           f"publish={res['publish']}, odds={'live' if live_odds else 'no key -> no_market'}, "
           f"discord={res['discord']}")
+    write_pipeline_heartbeat(
+        "active", f"Wednesday model refresh completed for {season} week {week}.", "wed")
     return 0
 
 
@@ -113,6 +162,8 @@ def job_t90() -> int:
                  & (slate["kickoff"] <= now + dt.timedelta(hours=T90_WINDOW_HOURS))]
     if soon.empty:
         print("[auto] no kickoffs within the T-90 window — no-op")
+        write_pipeline_heartbeat(
+            schedule_status(slate, now), "T-90 check completed; no kickoff is currently due.", "t90")
         return 0
     conn = dbmod.connect()
     done = set(dbmod.query_df(conn, "SELECT DISTINCT game_id FROM leans WHERE clock='t90'")
@@ -141,6 +192,7 @@ def job_t90() -> int:
     from nflvalue.notify import resolve_webhook
     post_live = bool(cfg.get("discord_enabled") and resolve_webhook())
     inputs = None
+    failures = []
     for g in soon.itertuples(index=False):
         if g.game_id in done:
             continue
@@ -153,6 +205,12 @@ def job_t90() -> int:
             print(f"[auto] t90 {g.game_id}: {len(res['voided'])} voided")
         except Exception as exc:  # noqa: BLE001 -- one bad game must not skip the rest
             print(f"[auto] t90 {g.game_id} FAILED: {exc}")
+            failures.append(g.game_id)
+    if failures:
+        print(f"[auto] T-90 failed for {len(failures)} game(s): {', '.join(failures)}")
+        return 1
+    write_pipeline_heartbeat(
+        "active", f"T-90 refresh completed for {len(soon)} due game(s).", "t90")
     return 0
 
 
@@ -164,6 +222,9 @@ def job_tuesday() -> int:
     lw = last_completed_week(slate, now_et())
     if lw is None:
         print("[auto] no completed week — no-op")
+        write_pipeline_heartbeat(
+            schedule_status(slate, now_et()), "Tuesday grade check completed; no week is ready.",
+            "tuesday")
         return 0
     season, week = lw
     graded = pw.run_grade(season, week)
@@ -173,20 +234,43 @@ def job_tuesday() -> int:
     print(f"[auto] clv resolved {clv['resolved']}; kill-check {clv['killcheck']['verdict']}")
     # retrain the ML ranker on everything graded (frame append + refit)
     root = str(Path(__file__).resolve().parents[1])
+    retrain_failed = False
     for cmd in ([sys.executable, "ml_test.py", "--stage", "frame",
                  "--seasons", str(season), "--append"],
                 [sys.executable, "ml_test.py", "--stage", "fit"]):
         r = subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=1800)
         print(f"[auto] {' '.join(cmd[1:])}: rc={r.returncode} {r.stdout.strip().splitlines()[-1] if r.stdout.strip() else ''}")
+        retrain_failed = retrain_failed or r.returncode != 0
+    if retrain_failed:
+        print("[auto] weekly ML retraining failed; refusing to publish partial production state")
+        return 1
+    write_pipeline_heartbeat(
+        "active", f"Tuesday grading, CLV, and retraining completed for {season} week {week}.",
+        "tuesday")
+    return 0
+
+
+def job_deploy() -> int:
+    """Refresh public metadata without spending odds credits or notifying."""
+    try:
+        slate = load_slate()
+        status = schedule_status(slate, now_et())
+        detail = "Deployment completed without running the betting model."
+    except Exception as exc:  # noqa: BLE001 - surface a readable status page
+        status = "degraded"
+        detail = f"Deployment completed, but schedule status could not be read: {exc}"
+    write_pipeline_heartbeat(status, detail, "deploy")
+    print(f"[auto] deploy-only dashboard refresh: {status}")
     return 0
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--job", choices=["wed", "t90", "tuesday"], required=True)
+    ap.add_argument("--job", choices=["deploy", "wed", "t90", "tuesday"], required=True)
     args = ap.parse_args()
     ensure_dependencies()
-    raise SystemExit({"wed": job_wed, "t90": job_t90, "tuesday": job_tuesday}[args.job]())
+    raise SystemExit({"deploy": job_deploy, "wed": job_wed, "t90": job_t90,
+                      "tuesday": job_tuesday}[args.job]())
 
 
 if __name__ == "__main__":

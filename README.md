@@ -43,6 +43,11 @@ secrets `ODDS_API_KEY` and `DISCORD_WEBHOOK_URL` for live prices and
 notifications. Successful runs deploy the generated dashboard to
 [GitHub Pages](https://curtisdearing.github.io/fablesfable/). The schedule and
 deployment become active after this workflow is present on the default branch.
+Pushes to `main` run a deploy-only heartbeat: they update the public dashboard
+without pulling paid odds or sending Discord messages. Only the scheduled/manual
+`wed`, `t90`, and `tuesday` jobs execute the model loop. The dashboard reports
+its pipeline check time separately from the model-data timestamp and visibly
+marks missing integrations instead of presenting synthetic lines as live odds.
 
 ## What\'s in the box
 

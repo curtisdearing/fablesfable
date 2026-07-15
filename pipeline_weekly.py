@@ -335,11 +335,12 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
 # --------------------------------------------------------------------------- #
 def update_dashboard(report_payload: Dict, conn) -> str:
     data = cfgmod.load_json(cfgmod.LATEST_PATH, {}) or {}
+    data["mode"] = "live"
+    data["generated_at"] = report_payload.get("as_of") or stamp_now()
     data["weekly_leans"] = {k: v for k, v in report_payload.items() if k != "markdown"}
     data["leans_clv"] = clvmod.rolling_clv(conn)
     data["leans_killcheck"] = kcmod.report(conn)
     data.setdefault("refresh_seconds", 90)
-    data.setdefault("generated", stamp_now())
     cfgmod.save_json(cfgmod.LATEST_PATH, data)
     return write_dashboard(data)
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -104,3 +105,49 @@ def test_last_completed_week():
     assert aw.last_completed_week(s, tue_after_wk1) == (2025, 1)
     before_season = dt.datetime(2025, 9, 1, 9, 0, tzinfo=ET)
     assert aw.last_completed_week(s, before_season) is None
+
+
+def test_dashboard_heartbeat_is_honest_about_freshness_and_integrations(
+        tmp_path, monkeypatch):
+    aw, _ = _wrapper_slate()
+    from nflvalue import config as cfgmod
+    from nflvalue import notify
+
+    latest = tmp_path / "latest.json"
+    dashboard = tmp_path / "dashboard.html"
+    latest.write_text(json.dumps({"mode": "demo", "generated_at": "old-model-time"}))
+    monkeypatch.setattr(cfgmod, "LATEST_PATH", str(latest))
+    monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(dashboard))
+    monkeypatch.setattr(cfgmod, "load_config", lambda: {
+        "odds_api_key": "", "discord_enabled": True,
+    })
+    monkeypatch.setattr(notify, "resolve_webhook", lambda: None)
+
+    heartbeat = aw.write_pipeline_heartbeat(
+        "offseason", "No REG week is due.", "deploy")
+    saved = json.loads(latest.read_text())
+
+    assert heartbeat["status"] == "offseason"
+    assert heartbeat["integrations"] == {"odds_api": "missing", "discord": "missing"}
+    assert saved["generated_at"] == "old-model-time"
+    html = dashboard.read_text()
+    assert "Pipeline checked" in html and "data snapshot" in html
+    assert "Factor Audit" in html
+
+
+def test_active_heartbeat_degrades_without_real_odds(tmp_path, monkeypatch):
+    aw, _ = _wrapper_slate()
+    from nflvalue import config as cfgmod
+    from nflvalue import notify
+
+    monkeypatch.setattr(cfgmod, "LATEST_PATH", str(tmp_path / "latest.json"))
+    monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(tmp_path / "dashboard.html"))
+    monkeypatch.setattr(cfgmod, "load_config", lambda: {
+        "odds_api_key": "", "discord_enabled": False,
+    })
+    monkeypatch.setattr(notify, "resolve_webhook", lambda: None)
+
+    heartbeat = aw.write_pipeline_heartbeat("active", "Refresh completed.", "wed")
+    assert heartbeat["status"] == "degraded"
+    assert "ODDS_API_KEY" in heartbeat["detail"]
+    assert heartbeat["integrations"]["discord"] == "disabled"

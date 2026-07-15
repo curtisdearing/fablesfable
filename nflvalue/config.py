@@ -13,6 +13,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 WEIGHTS_PATH = os.path.join(DATA_DIR, "weights.json")
 HISTORY_PATH = os.path.join(DATA_DIR, "history.json")
 LATEST_PATH = os.path.join(DATA_DIR, "latest.json")
+ALL_DATA_FACTOR_AUDIT_PATH = os.path.join(DATA_DIR, "all_data_factor_audit.json")
+NESTED_FACTOR_PROJECTION_PATH = os.path.join(DATA_DIR, "nested_factor_projection.json")
 DASHBOARD_PATH = os.path.join(ROOT, "dashboard.html")
 CONFIG_PATH = os.path.join(ROOT, "config.json")
 

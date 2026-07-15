@@ -10,7 +10,7 @@ on:
         required: true
         default: wed
         type: choice
-        options: [wed, t90, tuesday]
+        options: [deploy, wed, t90, tuesday]
   schedule:
     - cron: "17 10 * 9-12,1 3"
       timezone: "America/New_York"
@@ -40,8 +40,8 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       STATE_TAG: model-state
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -50,7 +50,7 @@ jobs:
       # This cache is only a rebuildable input optimization.  Mutable model
       # state is restored from a checksummed release asset below.
       - name: Cache immutable historical inputs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             historical/historical_pbp.parquet
@@ -61,7 +61,7 @@ jobs:
       # full refetch every run, but eviction is harmless because ingest can
       # recreate every file in this list.
       - name: Restore rebuildable seasonal feeds
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             historical/pbp_*.parquet
@@ -97,7 +97,7 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "job=wed" >> "$GITHUB_OUTPUT"
+            echo "job=deploy" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "job=${{ github.event.inputs.job }}" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.event.schedule }}" == "23 10 * 9-12,1 2" ]]; then
@@ -129,7 +129,7 @@ jobs:
 
       - name: Save rebuildable seasonal feeds
         if: steps.select.outputs.job == 'tuesday'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: |
             historical/pbp_*.parquet
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload run evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: model-run-${{ steps.select.outputs.job }}-${{ github.run_id }}
           if-no-files-found: ignore
@@ -164,7 +164,7 @@ jobs:
           mkdir -p _site
           cp dashboard.html _site/index.html
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
