@@ -1,6 +1,8 @@
 name: Live weekly model loop
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       job:
@@ -94,7 +96,9 @@ jobs:
         id: select
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "job=wed" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "job=${{ github.event.inputs.job }}" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.event.schedule }}" == "23 10 * 9-12,1 2" ]]; then
             echo "job=tuesday" >> "$GITHUB_OUTPUT"
