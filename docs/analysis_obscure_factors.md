@@ -1,5 +1,15 @@
 # Cross-position cascades, obscure factors, and the player condition book
 
+> **CORRECTION (2026-07-15):** The cross-position TD cascade numbers in this
+> document are RETRACTED (mismatched controls: exposed depth-1 players vs
+> all-role control). The reproducible matched-control audit
+> (analysis/all_data_factor_audit.py on tailstail) supersedes them: surviving
+> effects are RB1-out -> RB2 rushing yards +31.8pp, RB1-out -> RB2 TD +14.4pp,
+> 2+ opp DBs out -> QB passing +9.5pp, post-bye WR -3.4pp. Per-player-baseline
+> patterns and the condition book are unaffected by this confound but require
+> the same matched-control treatment before any scoring promotion.
+
+
 **Date:** 2026-07-14 · Round 3. Single factors only (no combinations yet, per instruction). Same EB shrinkage (k=60 battery, k=25 book), same synthetic-line grading (over = actual > player's trailing mean, base over-rate ≈ 43–50%). 41 new patterns tested → expect ~2 false positives at P>0.95; trust P≈1.0 + n>90 most.
 
 ## 1. Cross-position absence cascades ("seemingly unrelated" combos)
