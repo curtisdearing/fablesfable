@@ -85,6 +85,9 @@ The original game-line dashboard this grew from still works:
   every default, every measured constant, every caught bug (including two
   data leaks the guardrails caught — documented, not buried).
 - **[docs/phases_3-5.md](docs/phases_3-5.md)** — operations runbook.
+- **[docs/ACCURACY_PROTOCOL.md](docs/ACCURACY_PROTOCOL.md)** — preregistered
+  evaluation, calibration, matched-control, CLV, sanity-diff, freeze, and
+  bye-week rules.
 - **[reports/all_data_factor_audit.md](reports/all_data_factor_audit.md)** —
   retraction of the non-reproducible factor counts and the replacement
   pregame-only, nested season-forward protocol.
@@ -101,3 +104,6 @@ synthetic reference lines and say so; the only real edge test is forward
 closing-line value, and a pre-committed kill-check (150 leans) says NO-GO in
 plain language if the market wins. Selection counts ("5 of N") are never
 hidden. The Odds API budget hard-stops at 450/500 monthly credits.
+
+Every one-lever review also writes a top-10 churn alarm with
+`analysis/sanity_diff.py`; it is a review aid, never an accuracy statistic.

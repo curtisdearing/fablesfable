@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "protocol_id": "nfl-accuracy-2026-v1",
+  "status": "preseason_preregistered",
+  "truth_windows": {
+    "development": "2020-2024 expanding walk-forward",
+    "locked_regression_benchmark": "2025; inspect only at an accept/reject checkpoint",
+    "prospective_final_judge": "2026 regular season; no relabeling or hindsight exclusions"
+  },
+  "synthetic_lines": {
+    "purpose": "historical ranking trend and regression testing only",
+    "construction": "floor(strictly-prior player trailing mean) + 0.5; anytime TD is fixed at 0.5",
+    "required_columns": ["line_source", "season", "week", "player_id", "market"],
+    "forbidden_claims": ["profit", "ROI", "market edge", "closing-line value"],
+    "real_market_judge": "forward same-side consensus closing-line value"
+  },
+  "matched_control": {
+    "minimum_exposed_n": 100,
+    "minimum_control_n": 100,
+    "match_keys": ["position_or_market", "depth_role", "season_phase"],
+    "game_script_strata": ["favored", "neutral", "underdog"],
+    "cluster_unit": "team-season",
+    "multiple_testing": "Benjamini-Hochberg q < 0.05",
+    "season_forward_replication_required": true,
+    "fallback": "research_only when a required key or stratum is unavailable"
+  },
+  "narrative_factors": {
+    "examples": ["birthday", "revenge", "homecoming", "primetime", "stadium"],
+    "minimum_exposed_n": 100,
+    "minimum_control_n": 100,
+    "maximum_live_effect": 0.03,
+    "policy": "shadow only until matched-control, multiplicity, and season-forward gates all pass"
+  },
+  "acceptance": {
+    "one_lever_per_track_per_checkpoint": true,
+    "parallel_tracks": ["tailstail_fantasy", "fablesfable_props"],
+    "shared_core_changes": "serialize both tracks and rerun both suites",
+    "paired_resampling_unit": "season-week",
+    "minimum_probability_of_improvement": 0.90,
+    "stop_after_consecutive_rejections": 3,
+    "sanity_top_n": 10,
+    "sanity_min_overlap": 0.50,
+    "expected_delta_required_before_run": true,
+    "ensemble_challenger_after_single_lever_plateau": true
+  },
+  "calibration": {
+    "bins": 10,
+    "metrics": ["brier", "ece", "overconfidence_ece"],
+    "overconfidence_definition": "sum bin_weight * max(mean_prediction - observed_rate, 0)"
+  },
+  "forward_clv": {
+    "minimum_resolved": 150,
+    "minimum_mean_probability_clv": 0.0,
+    "minimum_beat_close_rate": 0.52,
+    "comparison": "entry versus same-side cross-book consensus close",
+    "unresolved_policy": "exclude and report exact unresolved n"
+  },
+  "operations": {
+    "freeze_date": "2026-09-05",
+    "week_1_target": "2026-09-10",
+    "bye_week_checkpoint": "after Week 8: data/schema audit, calibration review, no lever promotion without the same gates",
+    "public_baselines": "external until source, timestamp, scoring, coverage, and redistribution rights are pinned",
+    "compute_budget": "record rows, simulations, runtime, seed, and package versions for every distribution audit",
+    "known_risks": ["NFL rule changes", "roster and free-agency churn", "data-vendor schema drift", "human lever-selection bias", "simulation compute growth"]
+  }
+}

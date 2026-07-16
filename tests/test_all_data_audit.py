@@ -43,6 +43,19 @@ def test_audit_reports_exact_exposed_and_control_denominators():
     assert (result["exposed_hits"], result["exposed_n"]) == (60, 80)
     assert (result["control_hits"], result["control_n"]) == (40, 120)
     assert result["cluster_bootstrap"]["clusters"] == 20
+    assert result["control_design"]["exact_n"] == 120
+    assert result["control_design"]["matched_control_verified"] is False
+
+
+def test_factor_cannot_promote_without_sample_match_and_forward_gates():
+    spec = {"name": "TE1 officially out", "exposure": "official_te1_out",
+            "outcome": "over", "eligible": "eligible", "cohort": "pregame"}
+    result = run_audit(_frame(), [spec], draws=2_000)[0]
+    assert result["promotion_gates"]["minimum_exposed_n"] is False
+    assert result["promotion_gates"]["matched_control_verified"] is False
+    assert result["promotion_gates"]["season_forward_replication"] is False
+    assert result["promotion_status"] == "research_only"
+    assert result["live_scoring_eligible"] is False
 
 
 def test_postgame_usage_absence_is_rejected_from_pregame_audit():

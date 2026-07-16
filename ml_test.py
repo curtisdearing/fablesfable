@@ -156,6 +156,7 @@ def _baseline(frame: pd.DataFrame, season: int) -> Dict:
 
 def eval_season(frame: pd.DataFrame, season: int, models: List[str]) -> Dict:
     from sklearn.metrics import log_loss, roc_auc_score
+    from nflvalue.calibration import binary_calibration
 
     train = frame[frame["season"] < season]
     test = frame[frame["season"] == season]
@@ -169,6 +170,7 @@ def eval_season(frame: pd.DataFrame, season: int, models: List[str]) -> Dict:
         out["models"][name] = {
             "log_loss": round(float(log_loss(y, p)), 5),
             "auc": round(float(roc_auc_score(y, p)), 4),
+            "calibration": binary_calibration(y, p, bins=10),
             "leans": _summarize(leans),
         }
     return out
@@ -313,19 +315,21 @@ def main() -> None:
              "top-5 selection protocol; graded at synthetic trailing-mean lines (NOT real",
              f"prices; breakeven proxy {BREAKEVEN:.2%} at -110). Log-loss is the gradient-",
              "descent objective the GBDT minimizes. 1-800-GAMBLER.", "",
-             "| Season | tuned composite | GBDT hit (units) | RF hit (units) | GBDT log-loss | GBDT AUC |",
-             "|---|---|---|---|---|---|"]
+             "| Season | tuned composite | GBDT hit (units) | RF hit (units) | GBDT log-loss | GBDT ECE / overconf | GBDT AUC |",
+             "|---|---|---|---|---|---|---|"]
     for s in sorted(results["seasons"], key=int):
         r = results["seasons"][s]
         b = r["baseline_tuned_composite"]
         g = r["models"].get("gbdt", {})
         rf = r["models"].get("rf", {})
         gl, rl = g.get("leans", {}), rf.get("leans", {})
+        gc = g.get("calibration", {})
         lines.append(
             f"| {s} | {b['hit_rate']:.1%} ({b['units_at_-110']:+.1f}u) "
             f"| **{gl.get('hit_rate', 0):.1%}** ({gl.get('units_at_-110', 0):+.1f}u) "
             f"| {rl.get('hit_rate', 0):.1%} ({rl.get('units_at_-110', 0):+.1f}u) "
-            f"| {g.get('log_loss')} | {g.get('auc')} |")
+            f"| {g.get('log_loss')} | {gc.get('ece')} / {gc.get('overconfidence_ece')} "
+            f"| {g.get('auc')} |")
     for s, w in results.get("weekly", {}).items():
         l = w["leans"]
         lines += ["", f"Weekly-retrain GBDT, {s}: **{l['hit_rate']:.1%}** "
