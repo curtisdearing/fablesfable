@@ -64,8 +64,11 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
         with open(pkl + "_sd.pkl", "rb") as fh:
             sd_map, synth_map = pickle.load(fh)
         min_usage = (cfgmod.load_config().get("candidates") or {}).get("min_usage")
+        from nflvalue.depth_features import DepthPack
+        all_seasons = sorted(inputs.pw["season"].unique().tolist())
+        depthp = DepthPack(rostersmod.fetch_rosters_weekly(all_seasons), inputs.pw)
         return _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
-                           sd_map, synth_map, min_usage)
+                           sd_map, synth_map, min_usage, depthp=depthp)
 
     sd_map = lb.precompute_sds(inputs, list(MARKETS))
     synth_map = {m: synthetic_lines(inputs, m) for m in MARKETS}
@@ -84,12 +87,14 @@ def build_frame(inputs: WeekInputs, seasons: List[int], append: bool) -> pd.Data
         import pickle
         with open(os.environ["ML_PACKS_DUMP"], "wb") as fh:
             pickle.dump((pack, adv, chem, ftn, sd_map, synth_map), fh)
+    from nflvalue.depth_features import DepthPack
+    depthp = DepthPack(rostersmod.fetch_rosters_weekly(all_seasons), inputs.pw)
     return _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
-                       sd_map, synth_map, min_usage)
+                       sd_map, synth_map, min_usage, depthp=depthp)
 
 
 def _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
-                sd_map, synth_map, min_usage) -> pd.DataFrame:
+                sd_map, synth_map, min_usage, depthp=None) -> pd.DataFrame:
     import lean_backtest as lb
     chunks = []
     for season in seasons:
@@ -108,6 +113,8 @@ def _frame_loop(inputs, seasons, append, pack, adv, chem, ftn,
             actuals = lb._actuals_for_week(inputs.pw, season, wk)
             cands = chem.attach(cands)
             cands = ftn.attach(cands)
+            if depthp is not None:
+                cands = depthp.attach(cands)
             feats = mlr.build_features(cands, inputs.pw, pack=pack, adv=adv)
             feats["y_over"] = mlr.label_over(feats, actuals)
             # baseline-composite fields (tune_weights conventions)

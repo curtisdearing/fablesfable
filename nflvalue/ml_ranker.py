@@ -70,8 +70,10 @@ NUMERIC_FEATURES = [
 # NGS, red-zone roles, O-line health, QB continuity, contract year, weather
 from .advanced_features import FEATURES as _ADV_FEATURES  # noqa: E402
 from .chemistry import FEATURES as _CHEM_FEATURES  # noqa: E402
+from .depth_features import FEATURES as _DEPTH_FEATURES  # noqa: E402
 from .ftn_features import FEATURES as _FTN_FEATURES  # noqa: E402
-NUMERIC_FEATURES = NUMERIC_FEATURES + _ADV_FEATURES + _CHEM_FEATURES + _FTN_FEATURES
+NUMERIC_FEATURES = (NUMERIC_FEATURES + _ADV_FEATURES + _CHEM_FEATURES
+                    + _FTN_FEATURES + _DEPTH_FEATURES)
 
 
 def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
@@ -94,6 +96,9 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
     if not all(c in f.columns for c in _FTN_FEATURES):
         from .ftn_features import attach_neutral as ftn_neutral
         f = ftn_neutral(f)
+    if not all(c in f.columns for c in _DEPTH_FEATURES):
+        from .depth_features import attach_neutral as depth_neutral
+        f = depth_neutral(f)   # depth stamped upstream when its pack exists
     comps = f["components"].apply(lambda c: c or {})
     f["opp_factor"] = comps.apply(lambda c: c.get("opp_factor", 1.0)).astype(float)
     f["game_script"] = comps.apply(lambda c: c.get("game_script", 1.0)).astype(float)

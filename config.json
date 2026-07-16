@@ -112,8 +112,9 @@
       "pos_QB",
       "pos_RB",
       "pos_WR",
-      "pos_TE"
+      "pos_TE",
+      "player_depth_rank"
     ],
-    "features_provenance": "lean 6-group set (model_belief+proj_parts+player_status+market_pos+weather+qb_oline): walk-forward 2022-25 66.9% top-5 / 71.3% top-1 vs 65.2%/69.2% full set (docs/analysis_factor_combo.md); set to null to restore full feature space"
+    "features_provenance": "lean 6-group set (model_belief+proj_parts+player_status+market_pos+weather+qb_oline): walk-forward 2022-25 66.9% top-5 / 71.3% top-1 vs 65.2%/69.2% full set (docs/analysis_factor_combo.md); set to null to restore full feature space. + player_depth_rank (prior-8-game usage rank among that week's roster, nflvalue/depth_features.py): walk-forward 2021-24 pooled vs lean baseline top-5 65.15->66.37 (+1.22pp), top-1 68.35->69.64 (+1.29pp), log_loss 0.62811->0.62548 (-0.00263), unanimous at seeds 7/1234; 2025 single-shot holdout top-1 72.06->73.90, top-5 67.94->67.79, log_loss 0.62429->0.62683. Raw absence flags (rb1/wr1/te1 officially out, opp_db_outs_2plus, post_bye) FAILED their gate (top-5 -0.40pp, log_loss +0.00211) and are intentionally absent."
   }
 }
