@@ -34,7 +34,7 @@ def american_to_decimal(a):
     return 1 + a / 100 if a > 0 else 1 + 100 / abs(a)
 
 
-def run(sims=6000, threshold=0.03):
+def run(sims=6000, threshold=0.03, dump_predictions=False):
     priors = config.load_json(os.path.join(config.DATA_DIR, "league_priors.json"), None)
     games = config.load_json(os.path.join(config.DATA_DIR, "backtest_games.json"), None)
     if not priors or not games:
@@ -44,6 +44,7 @@ def run(sims=6000, threshold=0.03):
     print(f"Backtesting {len(games)} games ({sims} sims each, EV threshold {threshold:.0%})...")
 
     markets = {m: {"bets": 0, "wins": 0, "push": 0, "profit": 0.0} for m in ("spread", "total", "ml")}
+    predictions = []   # per-game sim outputs for analysis/cover_calibration.py (M-G2 gate)
     cal_bins = [[0, 0, 0] for _ in range(10)]  # [sum_pred, sum_actual, count] per decile
     cover_hit = [0, 0]                          # [correct, total] over all ready games
     brier_n, brier_s = 0, 0.0
@@ -81,6 +82,10 @@ def run(sims=6000, threshold=0.03):
         cc["xmxm"] += xm * xm; cc["xkxk"] += xk * xk; cc["yy"] += y * y
         cc["xmy"] += xm * y; cc["xky"] += xk * y
 
+        if dump_predictions:
+            predictions.append({"season": g["season"], "week": g["week"],
+                                "margin_mean": r["margin_mean"], "p_home_cover": r["p_home_cover"],
+                                "margin": margin, "spread_line": sp})
         # ---- spread pick ----
         side, p = ("home", r["p_home_cover"]) if r["p_home_cover"] >= r["p_away_cover"] else ("away", r["p_away_cover"])
         if p * DEC_110 - 1 >= threshold:
@@ -108,6 +113,11 @@ def run(sims=6000, threshold=0.03):
                 won = (margin > 0) if side == "home" else (margin < 0)
                 _book(markets["ml"], s["ml"], won, False, dec)
                 bank += _pl(won, False, dec); equity.append(round(bank, 2))
+
+    if dump_predictions and predictions:
+        with open(os.path.join(config.DATA_DIR, "backtest_predictions.json"), "w") as fh:
+            json.dump(predictions, fh)
+        print(f"dumped {len(predictions)} per-game predictions for cover_calibration")
 
     # ---- assemble report ----
     def summ(m):
@@ -196,5 +206,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sims", type=int, default=6000)
     ap.add_argument("--threshold", type=float, default=0.03)
+    ap.add_argument("--dump-predictions", action="store_true")
     args = ap.parse_args()
-    run(sims=args.sims, threshold=args.threshold)
+    run(sims=args.sims, threshold=args.threshold, dump_predictions=args.dump_predictions)

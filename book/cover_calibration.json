@@ -1,0 +1,10 @@
+{
+ "generated_note": "walk-forward by season; Brier on home-cover outcomes; lower is better",
+ "rating_predictor_layers": {
+  "gaussian_fit": 0.25865,
+  "empirical_integer": 0.26027
+ },
+ "verdict": "fitted gaussian on walk-forward residuals is the cover layer; empirical integer kernel rejected (gate -0.002, measured +0.0016)",
+ "accept_gate_brier": -0.002,
+ "sim_tail_vs_gaussian": "pending: run backtest.py --dump-predictions then rerun this script (M-G2 gate)"
+}
