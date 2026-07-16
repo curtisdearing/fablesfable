@@ -1,0 +1,134 @@
+{
+ "schema_version": 1,
+ "generated": "2026-07-16 03:26 UTC",
+ "git_head": "5f96590",
+ "holdout_policy": "tune on 2020-2024 walk-forward; 2025 evaluated once per lever at accept time",
+ "accept_gates": {
+  "ranker_log_loss": -0.002,
+  "ranker_top5_hit_rate_pp": 0.5,
+  "sim_brier": -0.002,
+  "fantasy_mae_points": -0.05
+ },
+ "inputs": {
+  "historical/historical_pbp.parquet": "b5e4ed9316ea1c9701167f660e526aa1cd932d7a3e9fe2f1509c63b14ea559a4",
+  "historical_lines.parquet": "fa82f7b7548c057c61b90e56cfee2c3dde3ee80320a7beb5cb271e7410d81bbb",
+  "historical/rosters_weekly.parquet": "d44cfc35acd69da112a4cfd2af178e90d7f45bd9bcbe1930cb8801b95be7fbca",
+  "historical/injuries.parquet": "4cdff613be3edb11f1a69d9d90b8b09a79287bb8eb4756f5de144bf625de71a0",
+  "historical/players_meta.parquet": "941c29d0070f6a00af5ef49445c08b35e64c74036bcebbbdc2467792d3b363bf",
+  "historical/ngs_receiving.parquet": "59352b491a4dee7acdd8ae6bc838d87bde3a11ba9f31e3a503b5ff4e66fbd492",
+  "historical/contracts.parquet": "abca0729c9fc3ee781f24c322f0d6ef07c5b94c2362f3348317fd2a306fec8a1",
+  "data/ml_frame.parquet": "23f01bd1320da21427f81e83ea4806cd38695050e2c90d906073b786fa4fffa4",
+  "config.json": "6d14be7db2109fb49443c5d4983c9934e95f28267f5528e093b5c3db72cba2c4",
+  "data/weights.json": "d9e1f8a32572bf15e096a5a85604b01ba8aa3ba9d143758193ea1582364f3c2e"
+ },
+ "metrics": {
+  "prop_ranker_by_season": {
+   "2021": {
+    "gbdt_log_loss": 0.63928,
+    "gbdt_auc": 0.6253,
+    "gbdt_top5_hit": 0.6485,
+    "gbdt_top1_hit": 0.6765,
+    "composite_baseline_hit": 0.5882
+   },
+   "2022": {
+    "gbdt_log_loss": 0.63458,
+    "gbdt_auc": 0.6221,
+    "gbdt_top5_hit": 0.6347,
+    "gbdt_top1_hit": 0.69,
+    "composite_baseline_hit": 0.5941
+   },
+   "2023": {
+    "gbdt_log_loss": 0.62563,
+    "gbdt_auc": 0.6353,
+    "gbdt_top5_hit": 0.65,
+    "gbdt_top1_hit": 0.6691,
+    "composite_baseline_hit": 0.5949
+   },
+   "2024": {
+    "gbdt_log_loss": 0.63632,
+    "gbdt_auc": 0.6332,
+    "gbdt_top5_hit": 0.6574,
+    "gbdt_top1_hit": 0.7132,
+    "composite_baseline_hit": 0.5926
+   },
+   "2025": {
+    "gbdt_log_loss": 0.62429,
+    "gbdt_auc": 0.6371,
+    "gbdt_top5_hit": 0.6794,
+    "gbdt_top1_hit": 0.7206,
+    "composite_baseline_hit": 0.5706
+   }
+  },
+  "prop_replay_2025": {
+   "overall_hit": 0.5647,
+   "top1_hit": 0.5882,
+   "framing": "synthetic trailing-mean lines; breakeven proxy 0.5238 -- trend only, not money"
+  },
+  "game_sim_backtest": {
+   "n_games": 1342,
+   "brier": 0.2262,
+   "ats_pick_accuracy": 0.5042,
+   "corr_model": 0.373,
+   "corr_market": 0.431
+  },
+  "line_engine_iterations": {
+   "it0_points_elo_baseline": {
+    "ATS_all": 0.4858,
+    "kernel_selective": {
+     "n_bets": 754,
+     "ATS_acc": 0.4867,
+     "units_at_-110": -53.4
+    }
+   },
+   "it1_epa_pass_rush_ratings": {
+    "ATS_all": 0.5342,
+    "kernel_selective": {
+     "n_bets": 875,
+     "ATS_acc": 0.5291,
+     "units_at_-110": 8.9
+    }
+   },
+   "it2_plus_QB_backup": {
+    "ATS_all": 0.5279,
+    "kernel_selective": {
+     "n_bets": 897,
+     "ATS_acc": 0.5251,
+     "units_at_-110": 2.2
+    }
+   },
+   "it3_plus_rest_hfa_travel": {
+    "ATS_all": 0.5297,
+    "kernel_selective": {
+     "n_bets": 896,
+     "ATS_acc": 0.5324,
+     "units_at_-110": 14.6
+    }
+   },
+   "it5_market_blend": {
+    "ATS_all": 0.5205,
+    "kernel_selective": {
+     "n_bets": 104,
+     "ATS_acc": 0.5288,
+     "units_at_-110": 1.0
+    }
+   },
+   "it6_combined_ridge": {
+    "ATS_all": 0.4977,
+    "kernel_selective": {
+     "n_bets": 775,
+     "ATS_acc": 0.4903,
+     "units_at_-110": -49.5
+    }
+   }
+  },
+  "composite_ship_config": {
+   "conf_share": 0.8,
+   "z_cap": 1.5,
+   "low_conf_mult": 0.6,
+   "markets": "core4",
+   "n": 9115,
+   "hit_rate": 0.5884
+  },
+  "ranker_feature_set": "lean"
+ }
+}
