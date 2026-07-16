@@ -83,7 +83,7 @@
     "enabled": true,
     "model": "gbdt",
     "path": "data/ml_ranker.joblib",
-    "provenance": "walk-forward OOS 2021-2025 at synthetic lines: GBDT 63.2-67.1%, RF 63.8-69.0%, tuned composite 57.1-59.5% (reports/ml_improvement_test.md). Shipped artifact = GBDT (fits on 2 cores); upgrade to RF offline: python3 ml_test.py --stage fit --models rf. Weekly retrain: --stage frame --append, then --stage fit. GBDT hyperparams tuned (agent4 sweep, walk-forward 2021-24, 23 configs): lr=0.03, max_leaf_nodes=15, min_samples_leaf=20, l2=3.0 -- pooled ll 0.62572 vs default 0.62811, top-5 66.09% vs 65.15%, top-1 69.92% vs 68.35%; 2025 holdout once: 69.71%/75.74% vs 67.94%/72.06%, ll 0.62327 vs 0.62429; ll better than default in all 4 eval seasons; now the MLRanker gbdt defaults.",
+    "provenance": "7-agent sprint 2026-07-16: tuned GBDT (lr.03/leaves15/msl20/l2 3.0, agent4) + player_depth_rank (agent3) on lean set. Pooled WF 2021-24: top5 66.92%/top1 70.10%/ll 0.62279 vs 65.15/68.35/0.62811 sprint baseline. 2025 holdout (single touch): 69.93/76.47/0.62159 vs 67.94/72.06/0.62429. RF(800,50) validated equal-accuracy alternative (agent2; 81MB artifact - not shipped). Calibration layers rejected (agents 1+5 disagree; holdout inversions). Synthetic-line framing applies.",
     "features": [
       "p_over",
       "z",
