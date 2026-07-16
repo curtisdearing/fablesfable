@@ -4,8 +4,10 @@ The previous hand-entered audit is retracted. Its larger denominators mixed
 official pregame absences with current-game zero usage, and its beta simulation
 treated the control rate as known. This run rebuilds 116,554 player-market
 rows from PBP, weekly rosters, schedules, official injuries, and player
-metadata. Source, frame, specification, and full-output SHA-256 hashes are in
-`data/all_data_factor_audit.json`.
+metadata. The frame's reproducibility fingerprint is a canonical CSV SHA-256,
+not a Parquet-file hash: matching cells hash identically across Parquet writer
+versions. Source-file and output hashes remain integrity checks. The contract
+is recorded in `data/all_data_factor_audit.json`.
 
 ## What survived the corrected test
 
@@ -34,6 +36,25 @@ The examples that motivated the search did not survive: TE1 out → RB2 TD was
 26/132 versus 620/2,459 (−5.5 pp, q=0.43); TE1 out → RB1 TD was essentially
 zero (+0.6 pp, q=0.98); birthday-window WR receiving was −2.1 pp (n=449,
 q=0.60); and revenge-game WR receiving was −4.5 pp (n=211, q=0.43).
+
+## Long-term incumbent-vacancy cohort
+
+The official Out/Doubtful factors are intentionally a short-notice cohort:
+they rank only players on the current roster. That misses the distinct case of
+an established producer on IR/reserve or absent over multiple roster snapshots.
+The frame builder now emits a separate research-only cohort for each QB/RB/WR/
+TE role. It identifies the leading prior producer from the prior eight games
+without requiring that player to be on the current roster, requires at least
+three prior games and a recent team history, excludes players active for a new
+team, then records reserve status or a two-week unavailability streak.
+
+This cohort is deliberately not merged into the 38-factor published family or
+the fantasy point model yet. Its protocol is: freeze the definitions before the
+season; split reserve/IR, multi-week inactive, and transaction cases; test the
+early replacement window separately from the established replacement window;
+then require season-forward replication and calibration improvement before it
+can affect a player projection. That avoids treating a cut, trade, or changing
+depth chart as a generic injury boost.
 
 ## Combination projection and Monte Carlo result
 

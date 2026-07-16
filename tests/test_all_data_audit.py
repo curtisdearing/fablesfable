@@ -5,8 +5,14 @@ import pandas as pd
 import pytest
 
 from analysis.all_data_factor_audit import beta_difference, evaluate_pattern, run_audit
-from analysis.build_factor_frame import official_absence_flags, prior_depth, team_schedule
+from analysis.build_factor_frame import (
+    long_term_incumbent_vacancies,
+    official_absence_flags,
+    prior_depth,
+    team_schedule,
+)
 from analysis.nested_factor_selection import nested_season_forward
+from nflvalue.reproducibility import canonical_csv_sha256
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,7 +79,8 @@ def test_published_audit_is_reproducible_and_retracts_old_counts():
     assert audit["status"] == "research_only_summary"
     assert audit["frame_rows"] == 116554
     assert audit["method"]["family_size"] == 38
-    assert len(audit["reproduction"]["frame_sha256"]) == 64
+    assert len(audit["reproduction"]["frame_canonical_csv_sha256"]) == 64
+    assert audit["reproduction"]["canonical_csv_version"] == 1
     assert "withdrawn" in audit["retraction"]
     assert audit["live_scoring_impact"].startswith("none")
 
@@ -110,6 +117,45 @@ def test_depth_rank_uses_prior_games_not_current_game_usage():
                               "position": "RB", "report_status": "Out"}])
     flags = official_absence_flags(depth, injuries)
     assert flags.iloc[0]["official_rb1_out"] == 1
+
+
+def test_canonical_csv_hash_ignores_parquet_layout_and_row_column_order():
+    first = pd.DataFrame([
+        {"season": 2024, "week": 2, "game_id": "g2", "team": "A", "player_id": "p2", "market": "x", "value": 1.0},
+        {"season": 2024, "week": 1, "game_id": "g1", "team": "A", "player_id": "p1", "market": "x", "value": 2.0},
+    ])
+    second = first.loc[[1, 0], list(reversed(first.columns))]
+    keys = ["season", "week", "game_id", "team", "player_id", "market"]
+    assert canonical_csv_sha256(first, row_keys=keys) == canonical_csv_sha256(second, row_keys=keys)
+    changed = first.copy()
+    changed.loc[0, "value"] = 1.1
+    assert canonical_csv_sha256(first, row_keys=keys) != canonical_csv_sha256(changed, row_keys=keys)
+
+
+def test_long_term_incumbent_cohort_tracks_reserve_player_outside_current_depth():
+    pw = pd.DataFrame([
+        {"season": 2024, "week": week, "team": "A", "player_id": "rb-old", "role": "RB",
+         "carries": 12, "targets": 0, "pass_attempts": 0}
+        for week in (1, 2, 3)
+    ] + [
+        {"season": 2024, "week": week, "team": "A", "player_id": "rb-new", "role": "RB",
+         "carries": 3, "targets": 0, "pass_attempts": 0}
+        for week in (1, 2, 3, 4, 5)
+    ])
+    roster = pd.DataFrame([
+        {"season": 2024, "week": week, "team": "A", "player_id": player,
+         "position": "RB", "status": status}
+        for week in (1, 2, 3, 4, 5)
+        for player, status in (("rb-old", "ACT" if week < 4 else "RES"), ("rb-new", "ACT"))
+    ])
+    # The helper uses nflverse's ``gsis_id`` convention in production.
+    roster = roster.rename(columns={"player_id": "gsis_id"})
+    long_term = long_term_incumbent_vacancies(roster, pw)
+    week_four = long_term[long_term.week.eq(4)].iloc[0]
+    week_five = long_term[long_term.week.eq(5)].iloc[0]
+    assert week_four["long_term_rb1_unavailable"] == 1
+    assert week_four["long_term_rb1_reserve_status"] == 1
+    assert week_five["long_term_rb1_absence_weeks"] == 2
 
 
 def test_schedule_context_is_computed_strictly_from_scheduled_games():

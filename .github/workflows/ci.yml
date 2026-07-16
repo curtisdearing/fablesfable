@@ -28,6 +28,7 @@ jobs:
           tests/test_bootstrap_history.py
           tests/test_market_config.py
           tests/test_state_store.py
+          tests/test_projection_contract_consumer.py
           tests/test_availability.py
           tests/test_clv_killcheck.py
           tests/test_freshness.py

@@ -21,6 +21,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import fisher_exact
 
+from nflvalue.reproducibility import CANONICAL_CSV_VERSION, canonical_csv_sha256
+
 
 RNG_SEED = 20260714
 DEFAULT_DRAWS = 20_000
@@ -210,10 +212,14 @@ def main() -> None:
     results = run_audit(frame, specs, draws=args.draws)
     root = Path(__file__).resolve().parents[1]
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "research_only",
         "input": str(args.input),
-        "input_sha256": file_sha256(args.input),
+        "input_file_sha256": file_sha256(args.input),
+        "input_canonical_csv_sha256": canonical_csv_sha256(
+            frame, row_keys=["season", "week", "game_id", "team", "player_id", "market"]
+        ),
+        "canonical_csv_version": CANONICAL_CSV_VERSION,
         "patterns": str(args.patterns),
         "patterns_sha256": file_sha256(args.patterns),
         "git_revision": git_revision(root),

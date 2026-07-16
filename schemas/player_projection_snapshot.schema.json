@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tailstail.dev/schemas/player_projection_snapshot.schema.json",
+  "title": "Scoring-independent NFL player projection snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "componentSummary": {
+      "type": "object",
+      "required": ["mean", "sd", "p10", "p25", "p50", "p75", "p90"],
+      "properties": {
+        "mean": {"type": "number"},
+        "sd": {"type": "number", "minimum": 0},
+        "p10": {"type": "number"},
+        "p25": {"type": "number"},
+        "p50": {"type": "number"},
+        "p75": {"type": "number"},
+        "p90": {"type": "number"}
+      },
+      "additionalProperties": false
+    },
+    "components": {
+      "type": "object",
+      "required": [
+        "completions", "attempts", "passing_yards", "passing_tds",
+        "passing_interceptions", "carries", "rushing_yards", "rushing_tds",
+        "targets", "receptions", "receiving_yards", "receiving_tds",
+        "fumbles_lost"
+      ],
+      "properties": {
+        "completions": {"$ref": "#/$defs/componentSummary"},
+        "attempts": {"$ref": "#/$defs/componentSummary"},
+        "passing_yards": {"$ref": "#/$defs/componentSummary"},
+        "passing_tds": {"$ref": "#/$defs/componentSummary"},
+        "passing_interceptions": {"$ref": "#/$defs/componentSummary"},
+        "carries": {"$ref": "#/$defs/componentSummary"},
+        "rushing_yards": {"$ref": "#/$defs/componentSummary"},
+        "rushing_tds": {"$ref": "#/$defs/componentSummary"},
+        "targets": {"$ref": "#/$defs/componentSummary"},
+        "receptions": {"$ref": "#/$defs/componentSummary"},
+        "receiving_yards": {"$ref": "#/$defs/componentSummary"},
+        "receiving_tds": {"$ref": "#/$defs/componentSummary"},
+        "fumbles_lost": {"$ref": "#/$defs/componentSummary"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version", "contract", "season", "week", "generated_at",
+    "information_as_of", "model_version", "players_canonical_csv_sha256",
+    "canonical_csv_version", "simulation", "sample_artifact",
+    "source_manifest", "players"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract": {"const": "scoring-independent correlated NFL player event distributions"},
+    "season": {"type": "integer", "minimum": 1999},
+    "week": {"type": "integer", "minimum": 1, "maximum": 22},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "information_as_of": {"type": "string", "format": "date-time"},
+    "model_version": {"type": "string", "minLength": 1},
+    "players_canonical_csv_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "canonical_csv_version": {"const": 1},
+    "simulation": {
+      "type": "object",
+      "required": ["simulations", "random_seed", "players", "games", "calibration"],
+      "properties": {
+        "simulations": {"type": "integer", "minimum": 1},
+        "random_seed": {"type": "integer"},
+        "players": {"type": "integer", "minimum": 1},
+        "games": {"type": "integer", "minimum": 1},
+        "calibration": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "sample_artifact": {
+      "type": "object",
+      "required": [
+        "path", "rows", "simulations", "players", "canonical_csv_version",
+        "canonical_csv_sha256", "parquet_sha256_integrity_only"
+      ],
+      "properties": {
+        "path": {"type": "string"},
+        "rows": {"type": "integer", "minimum": 1},
+        "simulations": {"type": "integer", "minimum": 1},
+        "players": {"type": "integer", "minimum": 1},
+        "canonical_csv_version": {"const": 1},
+        "canonical_csv_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "parquet_sha256_integrity_only": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "source_manifest": {"type": "object"},
+    "component_validation": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["approved", "research_only", "unvalidated"]},
+        "reason": {"type": "string"},
+        "evaluated_through": {"type": "string"},
+        "audit_replay_canonical_csv_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "markets": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": ["approved", "research_only", "unvalidated"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "players": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "player_id", "player_name", "position", "team", "opponent_team",
+          "game_id", "correlation_group", "availability_probability",
+          "official_inactive", "components"
+        ],
+        "properties": {
+          "player_id": {"type": "string", "minLength": 1},
+          "player_name": {"type": "string"},
+          "position": {"enum": ["QB", "RB", "WR", "TE"]},
+          "team": {"type": "string"},
+          "opponent_team": {"type": "string"},
+          "game_id": {"type": "string"},
+          "correlation_group": {"type": "string"},
+          "availability_probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "official_inactive": {"type": "boolean"},
+          "components": {"$ref": "#/$defs/components"}
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
