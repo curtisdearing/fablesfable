@@ -123,8 +123,34 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
     return f
 
 
-def feature_columns() -> List[str]:
+def _configured_subset() -> Optional[List[str]]:
+    """Optional config-driven feature subset (config.json ml_ranker.features).
+
+    Evidence: walk-forward 2022-25, the lean 6-group set beats the full
+    feature space by ~1.7pp top-5 / ~2pp top-1 (docs/analysis_factor_combo.md);
+    extra correlated raws feed overfit. None/absent = full set (legacy)."""
+    try:
+        from . import config as _cfgmod
+        sub = (_cfgmod.load_config().get("ml_ranker") or {}).get("features")
+        return list(sub) if sub else None
+    except Exception:
+        return None
+
+
+def _full_feature_columns() -> List[str]:
     return NUMERIC_FEATURES + [f"mkt_{m}" for m in MARKETS7] + [f"pos_{p}" for p in POSITIONS]
+
+
+def feature_columns() -> List[str]:
+    full = _full_feature_columns()
+    sub = _configured_subset()
+    if not sub:
+        return full
+    unknown = [c for c in sub if c not in full]
+    if unknown:
+        raise ValueError(f"ml_ranker.features has unknown columns: {unknown[:5]}")
+    keep = set(sub)
+    return [c for c in full if c in keep]
 
 
 def label_over(frame: pd.DataFrame, actuals: Dict[tuple, float]) -> pd.Series:
@@ -151,6 +177,7 @@ class MLRanker:
         self.seed = seed
         self.kw = kw
         self.clf = None
+        self.features: Optional[List[str]] = None
         self.train_max: Optional[Tuple[int, int]] = None
 
     def _new_clf(self):
@@ -173,6 +200,7 @@ class MLRanker:
 
     def fit(self, frame: pd.DataFrame, y: pd.Series) -> "MLRanker":
         cols = feature_columns()
+        self.features = list(cols)      # artifact carries its own feature list
         mask = y.notna()
         X = frame.loc[mask, cols]
         if self.model_name == "rf":
@@ -197,7 +225,7 @@ class MLRanker:
     def predict_p_over(self, frame: pd.DataFrame, enforce: bool = True) -> np.ndarray:
         if enforce:
             self.assert_walk_forward(frame)
-        X = frame[feature_columns()]
+        X = frame[self.features or feature_columns()]
         if self.model_name == "rf":
             X = X.fillna(-999.0)
         return self.clf.predict_proba(X)[:, 1]
@@ -207,7 +235,8 @@ class MLRanker:
         import joblib
         os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump({"model_name": self.model_name, "seed": self.seed,
-                     "kw": self.kw, "clf": self.clf, "train_max": self.train_max}, path)
+                     "kw": self.kw, "clf": self.clf, "train_max": self.train_max,
+                     "features": self.features}, path)
         return path
 
     @classmethod
@@ -216,6 +245,10 @@ class MLRanker:
         blob = joblib.load(path)
         obj = cls(blob["model_name"], blob["seed"], **blob.get("kw", {}))
         obj.clf, obj.train_max = blob["clf"], tuple(blob["train_max"])
+        # Legacy artifacts predate the features field: they were trained on the
+        # FULL set, so pin them to it -- never let a lean live config starve a
+        # full-width classifier of its columns.
+        obj.features = blob.get("features") or _full_feature_columns()
         return obj
 
 

@@ -1,47 +1,119 @@
 {
   "odds_api_key": "",
-
   "regions": "us",
-  "game_markets": ["h2h", "spreads", "totals"],
-  "prop_markets_internal": ["receiving_yards", "receptions", "rushing_yards", "passing_yards", "anytime_td"],
+  "game_markets": [
+    "h2h",
+    "spreads",
+    "totals"
+  ],
+  "prop_markets_internal": [
+    "receiving_yards",
+    "receptions",
+    "rushing_yards",
+    "passing_yards",
+    "anytime_td"
+  ],
   "fetch_props": true,
   "max_prop_games_per_run": 4,
-
-  "books": ["draftkings", "betmgm", "hardrockbet"],
-  "sharp_books": ["pinnacle"],
+  "books": [
+    "draftkings",
+    "betmgm",
+    "hardrockbet"
+  ],
+  "sharp_books": [
+    "pinnacle"
+  ],
   "sharp_weight": 2.0,
-
   "ev_threshold": 0.03,
   "edge_shrinkage": 0.5,
-  "min_odds": 1.40,
-  "max_odds": 6.00,
-
+  "min_odds": 1.4,
+  "max_odds": 6.0,
   "kelly_multiplier": 0.15,
   "max_stake_pct": 0.03,
   "bankroll_units": 100.0,
-
   "learning_rate": 0.06,
   "l2": 0.01,
-
   "refresh_seconds": 90,
-
   "composite": {
-    "weights": {"edge": 0.5, "confidence": 0.4, "matchup": 0.1},
-    "params": {"z_cap": 1.5, "edge_cap": 0.10, "calibration_passed": true,
-               "low_confidence_mult": 0.8},
+    "weights": {
+      "edge": 0.5,
+      "confidence": 0.4,
+      "matchup": 0.1
+    },
+    "params": {
+      "z_cap": 1.5,
+      "edge_cap": 0.1,
+      "calibration_passed": true,
+      "low_confidence_mult": 0.8
+    },
     "tuning_provenance": "walk-forward grid 2019-2025 (tune_weights.py, reports/weight_tuning.md); conf_share=0.8, z_cap=1.5 chosen by majority of out-of-sample season selections"
   },
-  "shortlist": {"top_n": 5, "max_per_player": 2},
-  "candidates": {"min_usage": {"targets": 2.5, "carries": 5.0, "pass_attempts": 12.0}},
-
-  "odds_budget": {"monthly_credits": 500, "reserve": 50},
+  "shortlist": {
+    "top_n": 5,
+    "max_per_player": 2
+  },
+  "candidates": {
+    "min_usage": {
+      "targets": 2.5,
+      "carries": 5.0,
+      "pass_attempts": 12.0
+    }
+  },
+  "odds_budget": {
+    "monthly_credits": 500,
+    "reserve": 50
+  },
   "discord_enabled": true,
-  "rag": {"vectorstore_enabled": false, "row_cap": 200},
-
-  "learning": {"enabled": true, "lr": 0.35, "bias_clip": 0.08,
-               "reliability_k": 50, "reliability_clip": 0.15, "window_weeks": 12},
-  "context_learning": {"enabled_tags": []},
-
-  "ml_ranker": {"enabled": true, "model": "gbdt", "path": "data/ml_ranker.joblib",
-                "provenance": "walk-forward OOS 2021-2025 at synthetic lines: GBDT 63.2-67.1%, RF 63.8-69.0%, tuned composite 57.1-59.5% (reports/ml_improvement_test.md). Shipped artifact = GBDT (fits on 2 cores); upgrade to RF offline: python3 ml_test.py --stage fit --models rf. Weekly retrain: --stage frame --append, then --stage fit."}
+  "rag": {
+    "vectorstore_enabled": false,
+    "row_cap": 200
+  },
+  "learning": {
+    "enabled": true,
+    "lr": 0.35,
+    "bias_clip": 0.08,
+    "reliability_k": 50,
+    "reliability_clip": 0.15,
+    "window_weeks": 12
+  },
+  "context_learning": {
+    "enabled_tags": []
+  },
+  "ml_ranker": {
+    "enabled": true,
+    "model": "gbdt",
+    "path": "data/ml_ranker.joblib",
+    "provenance": "walk-forward OOS 2021-2025 at synthetic lines: GBDT 63.2-67.1%, RF 63.8-69.0%, tuned composite 57.1-59.5% (reports/ml_improvement_test.md). Shipped artifact = GBDT (fits on 2 cores); upgrade to RF offline: python3 ml_test.py --stage fit --models rf. Weekly retrain: --stage frame --append, then --stage fit.",
+    "features": [
+      "p_over",
+      "z",
+      "mean",
+      "sd",
+      "line",
+      "mean_minus_line",
+      "sd_over_line",
+      "opp_factor",
+      "game_script",
+      "proj_volume",
+      "proj_efficiency",
+      "is_contract_year",
+      "age_years",
+      "temp",
+      "wind",
+      "qb_continuity",
+      "oline_outs",
+      "mkt_receiving_yards",
+      "mkt_receptions",
+      "mkt_rushing_yards",
+      "mkt_passing_yards",
+      "mkt_pass_attempts",
+      "mkt_rush_attempts",
+      "mkt_anytime_td",
+      "pos_QB",
+      "pos_RB",
+      "pos_WR",
+      "pos_TE"
+    ],
+    "features_provenance": "lean 6-group set (model_belief+proj_parts+player_status+market_pos+weather+qb_oline): walk-forward 2022-25 66.9% top-5 / 71.3% top-1 vs 65.2%/69.2% full set (docs/analysis_factor_combo.md); set to null to restore full feature space"
+  }
 }

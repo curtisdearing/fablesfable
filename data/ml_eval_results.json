@@ -139,13 +139,13 @@
       },
       "models": {
         "gbdt": {
-          "log_loss": 0.62761,
-          "auc": 0.6322,
+          "log_loss": 0.62429,
+          "auc": 0.6371,
           "leans": {
             "n": 1360,
-            "hit_rate": 0.675,
-            "units_at_-110": 392.55,
-            "top1_hit_rate": 0.7132
+            "hit_rate": 0.6794,
+            "units_at_-110": 404.0,
+            "top1_hit_rate": 0.7206
           }
         },
         "rf": {

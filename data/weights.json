@@ -1,14 +1,14 @@
 {
-  "g_injury_diff": -0.03043,
-  "g_revenge": 0.00818,
-  "g_rest_diff": -0.09385,
-  "g_matchup": 0.33288,
-  "g_home_field": 0.20049,
-  "t_weather": 0.21029,
-  "t_injuries": 0.00719,
-  "t_pace": 0.30728,
-  "p_usage_trend": 0.35146,
-  "p_opp_defense": 0.42782,
-  "p_weather_pass": -0.01304,
-  "p_weather_rush": 0.11371
+  "g_injury_diff": 0.12,
+  "g_revenge": 0.03,
+  "g_rest_diff": 0.06,
+  "g_matchup": 0.15,
+  "g_home_field": 0.05,
+  "t_weather": 0.18,
+  "t_injuries": 0.05,
+  "t_pace": 0.08,
+  "p_usage_trend": 0.12,
+  "p_opp_defense": 0.12,
+  "p_weather_pass": 0.15,
+  "p_weather_rush": 0.08
 }
