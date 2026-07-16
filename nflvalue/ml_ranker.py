@@ -193,13 +193,22 @@ class MLRanker:
                 min_samples_leaf=int(self.kw.get("min_samples_leaf", 25)),
                 max_features="sqrt", n_jobs=-1, random_state=self.seed)
         from sklearn.ensemble import HistGradientBoostingClassifier
+        # Defaults tuned by walk-forward sweep 2021-2024 (train < S) on the
+        # lean feature set, 23 configs, prune-after-2021+22 protocol: slower
+        # shallower trees (lr .03, 15 leaves, msl 20, l2 3.0) beat the old
+        # lr .06/31/40/1.0 in ALL 4 seasons -- pooled ll 0.62572 vs 0.62811
+        # (-0.0024), top-5 66.09% vs 65.15% (+0.94pp), top-1 69.92% vs 68.35%.
+        # 2025 holdout (once): ll 0.62327 vs 0.62429, top-5 69.71% vs 67.94%,
+        # top-1 75.74% vs 72.06%. Matches RF(800,50) accuracy at ~1/100th the
+        # artifact size. NOTE: at lr .03 the 55k-row fit runs to the max_iter
+        # cap (400); cap kept for parity with the evaluated protocol.
         return HistGradientBoostingClassifier(
             loss="log_loss",
-            learning_rate=float(self.kw.get("learning_rate", 0.06)),
+            learning_rate=float(self.kw.get("learning_rate", 0.03)),
             max_iter=int(self.kw.get("max_iter", 400)),
-            max_leaf_nodes=int(self.kw.get("max_leaf_nodes", 31)),
-            min_samples_leaf=int(self.kw.get("min_samples_leaf", 40)),
-            l2_regularization=float(self.kw.get("l2", 1.0)),
+            max_leaf_nodes=int(self.kw.get("max_leaf_nodes", 15)),
+            min_samples_leaf=int(self.kw.get("min_samples_leaf", 20)),
+            l2_regularization=float(self.kw.get("l2", 3.0)),
             early_stopping=True, validation_fraction=0.12,
             random_state=self.seed)
 
