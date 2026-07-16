@@ -26,6 +26,9 @@ from nflvalue.reproducibility import CANONICAL_CSV_VERSION, canonical_csv_sha256
 
 RNG_SEED = 20260714
 DEFAULT_DRAWS = 20_000
+PROMOTION_MIN_EXPOSED = 100
+PROMOTION_MIN_CONTROL = 100
+PROMOTION_Q_MAX = 0.05
 FORBIDDEN_PREGAME_COLUMNS = {"usage_absence", "zero_current_usage", "actual_absence"}
 
 
@@ -171,6 +174,12 @@ def evaluate_pattern(
         "control_hits": control_hits,
         "control_rate": control_hits / control_n,
         "raw_difference": exposed_hits / exposed_n - control_hits / control_n,
+        "control_design": {
+            "definition": "unexposed rows in the identical eligible and filtered cohort",
+            "exact_n": control_n,
+            "matched_control_verified": False,
+            "reason": "this audit estimates filtered cohort contrasts; explicit role/game-script matching is a separate required promotion gate",
+        },
         "fisher_two_sided_p": float(fisher_exact(table, alternative="two-sided").pvalue),
     }
     result.update(beta_difference(exposed_hits, exposed_n, control_hits, control_n,
@@ -197,6 +206,26 @@ def run_audit(frame: pd.DataFrame, specifications: Iterable[dict], **kwargs) -> 
     results = [evaluate_pattern(frame, spec, seed=RNG_SEED + i, **kwargs)
                for i, spec in enumerate(specifications)]
     benjamini_hochberg(results)
+    for result in results:
+        interval = result["cluster_bootstrap"]
+        low, high = interval.get("interval_95_low"), interval.get("interval_95_high")
+        cluster_excludes_zero = (
+            low is not None and high is not None and (low > 0 or high < 0)
+        )
+        gates = {
+            "minimum_exposed_n": result["exposed_n"] >= PROMOTION_MIN_EXPOSED,
+            "minimum_control_n": result["control_n"] >= PROMOTION_MIN_CONTROL,
+            "bh_q_below_0_05": result["bh_q"] < PROMOTION_Q_MAX,
+            "cluster_interval_excludes_zero": cluster_excludes_zero,
+            "matched_control_verified": result["control_design"]["matched_control_verified"],
+            "season_forward_replication": False,
+        }
+        result["promotion_gates"] = gates
+        result["promotion_status"] = (
+            "eligible_for_bounded_shadow_challenger" if all(gates.values())
+            else "research_only"
+        )
+        result["live_scoring_eligible"] = False
     return results
 
 

@@ -15,8 +15,8 @@ the audited CLIs (ml_test.py, backtest.py, lean_backtest.py, tune_weights.py).
 Rerun those first when a lever changes the model, then this collector.
 
 Accept gates (pre-registered, accuracy_loop_plan.md): a lever is accepted
-only if it moves a primary metric by at least the gate on the 2025 holdout,
-evaluated once at accept time.
+only if it moves a primary metric by at least the gate at a declared 2025
+locked-regression checkpoint. Prospective 2026 predictions are the final judge.
 """
 from __future__ import annotations
 
@@ -35,14 +35,23 @@ INPUTS = [
     "historical/rosters_weekly.parquet", "historical/injuries.parquet",
     "historical/players_meta.parquet", "historical/ngs_receiving.parquet",
     "historical/contracts.parquet", "data/ml_frame.parquet",
-    "config.json", "data/weights.json",
+    "config.json", "data/weights.json", "analysis/accuracy_protocol.json",
 ]
 
 ACCEPT_GATES = {
     "ranker_log_loss": -0.002,
+    "ranker_ece": -0.005,
+    "ranker_overconfidence_ece": -0.005,
     "ranker_top5_hit_rate_pp": +0.5,
     "sim_brier": -0.002,
     "fantasy_mae_points": -0.05,   # tailstail-side gate, mirrored for reference
+}
+
+RELEASE_THRESHOLDS = {
+    "forward_mean_clv_min": 0.0,
+    "forward_beat_close_rate_min": 0.52,
+    "forward_clv_min_resolved": 150,
+    "sanity_top10_overlap_min": 0.50,
 }
 
 
@@ -79,12 +88,17 @@ def collect() -> dict:
     lr = jload("data/lean_replay_2025.json", {}) or {}
     wt = jload("data/weight_tuning.json", {}) or {}
     le = jload("book/line_engine_iterations.json", {}) or {}
+    latest = jload("data/latest.json", {}) or {}
 
     seasons = {}
     for s, v in (ml.get("seasons") or {}).items():
         g = (v.get("models") or {}).get("gbdt") or {}
         seasons[s] = {
             "gbdt_log_loss": g.get("log_loss"), "gbdt_auc": g.get("auc"),
+            "gbdt_ece": (g.get("calibration") or {}).get("ece"),
+            "gbdt_overconfidence_ece": (
+                g.get("calibration") or {}
+            ).get("overconfidence_ece"),
             "gbdt_top5_hit": (g.get("leans") or {}).get("hit_rate"),
             "gbdt_top1_hit": (g.get("leans") or {}).get("top1_hit_rate"),
             "composite_baseline_hit": (v.get("baseline_tuned_composite") or {}).get("hit_rate"),
@@ -109,6 +123,11 @@ def collect() -> dict:
         },
         "composite_ship_config": wt.get("ship_for_2026"),
         "ranker_feature_set": (jload("config.json", {}) or {}).get("ml_ranker", {}).get("features") and "lean" or "full",
+        "forward_clv": {
+            **(latest.get("leans_clv") or {}),
+            "killcheck": (latest.get("leans_killcheck") or {}).get("verdict"),
+            "framing": "real entry versus same-side consensus close; unresolved rows make no claim",
+        },
     }
     return metrics
 
@@ -139,11 +158,13 @@ def main() -> int:
         return 0
 
     registry = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "git_head": git_head(),
-        "holdout_policy": "tune on 2020-2024 walk-forward; 2025 evaluated once per lever at accept time",
+        "holdout_policy": "tune on 2020-2024 walk-forward; 2025 is a locked regression checkpoint; 2026 prospective predictions are final",
         "accept_gates": ACCEPT_GATES,
+        "release_thresholds": RELEASE_THRESHOLDS,
+        "protocol": jload("analysis/accuracy_protocol.json", {}),
         "inputs": inputs,
         "metrics": collect(),
     }
@@ -155,11 +176,15 @@ def main() -> int:
     print(f"accuracy registry @ {registry['git_head']} -> {args.output}")
     for s, v in sorted((m.get("prop_ranker_by_season") or {}).items()):
         print(f"  {s}: ranker top5 {v['gbdt_top5_hit']} top1 {v['gbdt_top1_hit']} "
-              f"log_loss {v['gbdt_log_loss']} | composite {v['composite_baseline_hit']}")
+              f"log_loss {v['gbdt_log_loss']} ECE {v['gbdt_ece']} "
+              f"overconf {v['gbdt_overconfidence_ece']} | composite {v['composite_baseline_hit']}")
     gb = m.get("game_sim_backtest") or {}
     print(f"  game sim: brier {gb.get('brier')} ATS {gb.get('ats_pick_accuracy')} "
           f"(market corr {gb.get('corr_market')})")
     print(f"  feature set: {m.get('ranker_feature_set')}")
+    fc = m.get("forward_clv") or {}
+    print(f"  forward CLV: n {fc.get('n')} mean {fc.get('lifetime_mean')} "
+          f"beat-close {fc.get('beat_close_rate')} kill {fc.get('killcheck')}")
     return 0
 
 

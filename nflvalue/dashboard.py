@@ -173,6 +173,8 @@ function renderLeans(){
   const clvBox = `<div class="box"><b>Forward CLV</b> — resolved leans: ${clv.n||0}
       ${clv.lifetime_mean!=null?` · lifetime avg ${fmtPct(clv.lifetime_mean)} prob`:""}
       ${clv.rolling_mean!=null?` · rolling(${clv.window}) ${fmtPct(clv.rolling_mean)}`:""}
+      ${clv.beat_close_rate!=null?` · beat close ${fmtP(clv.beat_close_rate)}`:""}
+      ${clv.avg_point_move!=null?` · avg point move ${Number(clv.avg_point_move).toFixed(2)}`:""}
       ${kc.verdict?` · kill-check: <b>${esc(kc.verdict)}</b>`:""}
       <div class="sub">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live (Phase 3).")}</div></div>`;
   const sideLabel = l => l.market==="anytime_td" ? "YES" : (l.side||"").toUpperCase();

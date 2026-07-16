@@ -118,7 +118,8 @@ def rolling_clv(conn, window: int = 50) -> Dict:
     df = dbmod.query_df(conn, "SELECT * FROM clv ORDER BY close_ts")
     if df.empty:
         return {"n": 0, "rolling_mean": None, "lifetime_mean": None,
-                "positive_rate": None, "window": window}
+                "positive_rate": None, "beat_close_rate": None,
+                "avg_point_move": None, "window": window}
     tail = df.tail(window)
     return {
         "n": int(len(df)),
@@ -126,5 +127,8 @@ def rolling_clv(conn, window: int = 50) -> Dict:
         "rolling_mean": round(float(tail["clv_prob"].mean()), 5),
         "lifetime_mean": round(float(df["clv_prob"].mean()), 5),
         "positive_rate": round(float((df["clv_prob"] > 0).mean()), 4),
+        # User-facing alias: this is the explicit share of entries that beat
+        # the same-side consensus close requested by the accuracy protocol.
+        "beat_close_rate": round(float((df["clv_prob"] > 0).mean()), 4),
         "avg_point_move": round(float(df["point_moved"].mean()), 3),
     }

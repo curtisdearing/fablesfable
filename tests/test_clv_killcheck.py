@@ -79,6 +79,8 @@ def test_clv_entry_vs_close_math(conn):
 
     stats = clvmod.rolling_clv(conn)
     assert stats["n"] == 1 and stats["positive_rate"] == 1.0
+    assert stats["beat_close_rate"] == 1.0
+    assert "avg_point_move" in stats
 
 
 def test_clv_needs_two_distinct_snapshots(conn):
