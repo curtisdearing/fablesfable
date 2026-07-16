@@ -23,6 +23,15 @@ cross-book consensus**, captured at the best available price. Top 5 per game,
 max 2 per player, with the honest denominator ("5 of N screened") always
 shown. Full detail: **[docs/HOW_A_PICK_IS_MADE.md](docs/HOW_A_PICK_IS_MADE.md)**.
 
+The football-event distribution can also arrive through the versioned,
+scoring-independent projection snapshot shared with
+[tailstail](https://github.com/curtisdearing/tailstail). Fablesfable verifies
+its canonical content and Parquet integrity hashes, maps component draws to
+prop markets, and only then joins sportsbook lines/prices. Hash verification
+proves identity, not accuracy: `probability_over` refuses any market not
+explicitly marked `approved` in the snapshot's validation metadata. Fantasy
+scoring, lineups, waivers, and trades never enter this repository.
+
 ## Quickstart
 
 ```bash

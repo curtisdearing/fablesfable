@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "status": "research_only_summary",
   "generated_on": "2026-07-14",
   "seasons": [2019, 2020, 2021, 2022, 2023, 2024, 2025],
@@ -9,7 +9,10 @@
   "reproduction": {
     "build": "python -m analysis.build_factor_frame --output data/factor_frame.parquet",
     "audit": "python -m analysis.all_data_factor_audit --input data/factor_frame.parquet --patterns analysis/factor_patterns.json --output /tmp/all_data_factor_audit.json",
-    "frame_sha256": "86de849a47e1becee64a07b3e2c30ffd1aee3a635888eef2dc27db811498eb51",
+    "canonical_csv_version": 1,
+    "canonical_csv_contract": "UTF-8 type-tagged CSV; lexicographic columns; rows sorted by season, week, game_id, team, player_id, market",
+    "frame_canonical_csv_sha256": "d9d6a30b867ccc191468df7b16052ffb337b277f078b05be0e61594fd7a29c78",
+    "frame_parquet_sha256_integrity_only": "86de849a47e1becee64a07b3e2c30ffd1aee3a635888eef2dc27db811498eb51",
     "patterns_sha256": "d1e7f40441b7178243d0aff9983372d5e358c56edba338aacb8bd7a8d119a6aa",
     "full_output_sha256": "04f25c654d4c71e88f5b04c1b06a57e3c8057b9c2eb3514255acd12b5a1c79e6",
     "code_sha256": {

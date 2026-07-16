@@ -7,6 +7,7 @@ import argparse
 import bisect
 import hashlib
 import json
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,7 @@ import pandas as pd
 
 from nflvalue import context_features, ingest
 from nflvalue.features import build_player_week
+from nflvalue.reproducibility import CANONICAL_CSV_VERSION, canonical_csv_sha256
 from nflvalue.sources import rosters as roster_source
 
 
@@ -24,6 +26,8 @@ DB_POSITIONS = {"CB", "DB", "S", "FS", "SS"}
 FRONT_POSITIONS = {"DE", "DT", "NT", "DL", "LB", "ILB", "OLB", "MLB", "EDGE"}
 OL_POSITIONS = {"C", "G", "OG", "OT", "T", "OL", "LT", "LG", "RT", "RG"}
 DEPTH_METRIC = {"QB": "pass_attempts", "RB": "carries", "WR": "targets", "TE": "targets"}
+ACTIVE_STATUSES = {"ACT", "ACTIVE"}
+RESERVE_STATUSES = {"RES", "IR", "PUP", "NFI", "SUS"}
 MARKETS = {
     "QB": (("passing_yards", "pass_yards"), ("rushing_yards", "rush_yards")),
     "RB": (("rushing_yards", "rush_yards"), ("receiving_yards", "rec_yards"),
@@ -119,6 +123,93 @@ def official_absence_flags(depth: pd.DataFrame, injuries: pd.DataFrame) -> pd.Da
     for key, values in flags.items():
         rows.append({"season": key[0], "week": key[1], "team": key[2], **values})
     return pd.DataFrame(rows)
+
+
+def long_term_incumbent_vacancies(
+    rosters: pd.DataFrame,
+    pw: pd.DataFrame,
+    *,
+    min_prior_games: int = 3,
+    min_absence_weeks: int = 2,
+    candidate_horizon_weeks: int = 16,
+) -> pd.DataFrame:
+    """Find established players unavailable beyond a short-notice injury window.
+
+    The existing depth rank deliberately considers only the current roster and
+    is right for an official Out/Doubtful beneficiary study.  This companion
+    cohort starts from *all* prior producers for the team/role, then asks
+    whether the leading incumbent is unavailable in the current roster
+    snapshot.  A player active for another team is treated as a transaction,
+    never an injury vacancy.
+
+    It is a research cohort, not a live model input: reserve/IR status is
+    reliable enough to identify the gap, but historical roster snapshots do
+    not by themselves timestamp a clean depth-chart replacement decision.
+    """
+
+    roster = rosters.rename(columns={"position": "role", "gsis_id": "player_id"}).copy()
+    roster = roster[roster["role"].isin(DEPTH_METRIC)].copy()
+    roster["player_id"] = roster["player_id"].fillna("").astype(str)
+    roster = roster[roster["player_id"].ne("")].copy()
+    status = roster["status"] if "status" in roster else pd.Series("", index=roster.index)
+    roster["status"] = status.fillna("").astype(str).str.upper()
+    roster = roster.sort_values(["season", "week", "team", "player_id", "status"]).drop_duplicates(
+        ["season", "week", "team", "player_id"], keep="last"
+    )
+    histories = _history_index(pw)
+    candidates: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for team, player_id, role in histories:
+        candidates[(team, role)].add(player_id)
+    active_elsewhere = {
+        (int(row.season), int(row.week), row.player_id)
+        for row in roster[roster["status"].isin(ACTIVE_STATUSES)].itertuples(index=False)
+    }
+    status_lookup = {
+        (int(row.season), int(row.week), row.team, row.player_id): row.status
+        for row in roster.itertuples(index=False)
+    }
+    rows = []
+    for (season, team, role), weeks in roster.groupby(["season", "team", "role"], sort=True):
+        team_weeks = sorted(int(value) for value in weeks["week"].unique())
+        streaks: dict[str, int] = defaultdict(int)
+        for index, week in enumerate(team_weeks):
+            cutoff_key = int(season) * 100 + week
+            earliest_key = int(season) * 100 + team_weeks[max(0, index - candidate_horizon_weeks)]
+            ranked = []
+            for player_id in candidates[(team, role)]:
+                history_keys, values = histories[(team, player_id, role)]
+                cutoff = bisect.bisect_left(history_keys, cutoff_key)
+                if cutoff < min_prior_games or history_keys[cutoff - 1] < earliest_key:
+                    continue
+                prior = values[max(0, cutoff - 8):cutoff]
+                if len(prior) >= min_prior_games:
+                    ranked.append((float(np.mean(prior)), player_id))
+            if not ranked:
+                continue
+            _, incumbent = sorted(ranked, key=lambda item: (-item[0], item[1]))[0]
+            status = status_lookup.get((int(season), week, team, incumbent), "")
+            active_here = status in ACTIVE_STATUSES
+            active_other_team = (
+                (int(season), week, incumbent) in active_elsewhere and not active_here
+            )
+            unavailable = not active_here and not active_other_team
+            streaks[incumbent] = streaks[incumbent] + 1 if unavailable else 0
+            long_term = unavailable and (
+                status in RESERVE_STATUSES or streaks[incumbent] >= min_absence_weeks
+            )
+            if long_term:
+                prefix = f"long_term_{role.lower()}1"
+                rows.append({
+                    "season": int(season), "week": week, "team": team,
+                    f"{prefix}_unavailable": 1,
+                    f"{prefix}_absence_weeks": streaks[incumbent],
+                    f"{prefix}_reserve_status": int(status in RESERVE_STATUSES),
+                })
+    if not rows:
+        return pd.DataFrame(columns=["season", "week", "team"])
+    result = pd.DataFrame(rows)
+    values = [column for column in result if column not in {"season", "week", "team"}]
+    return result.groupby(["season", "week", "team"], as_index=False)[values].max()
 
 
 def injury_counts(injuries: pd.DataFrame) -> pd.DataFrame:
@@ -234,6 +325,9 @@ def build_frame(pbp: pd.DataFrame, schedules: pd.DataFrame, rosters: pd.DataFram
     absences = official_absence_flags(depth, injuries)
     if not absences.empty:
         frame = frame.merge(absences, on=["season", "week", "team"], how="left")
+    long_term = long_term_incumbent_vacancies(rosters, pw)
+    if not long_term.empty:
+        frame = frame.merge(long_term, on=["season", "week", "team"], how="left")
     counts = injury_counts(injuries)
     frame = frame.merge(counts.rename(columns={"db_outs": "own_db_outs",
                                                 "front_outs": "own_front_outs"}),
@@ -255,6 +349,11 @@ def build_frame(pbp: pd.DataFrame, schedules: pd.DataFrame, rosters: pd.DataFram
     for role in ("qb", "rb", "wr", "te"):
         for rank in (1, 2, 3):
             column = f"official_{role}{rank}_out"
+            if column not in frame:
+                frame[column] = 0
+            frame[column] = frame[column].fillna(0).astype(int)
+        for suffix in ("unavailable", "absence_weeks", "reserve_status"):
+            column = f"long_term_{role}1_{suffix}"
             if column not in frame:
                 frame[column] = 0
             frame[column] = frame[column].fillna(0).astype(int)
@@ -284,8 +383,12 @@ def main() -> None:
     sources = [ROOT / "historical" / "historical_pbp.parquet", ROOT / "historical_lines.parquet",
                ROOT / "historical" / "rosters_weekly.parquet", ROOT / "historical" / "injuries.parquet",
                ROOT / "historical" / "players_meta.parquet"]
-    metadata = {"schema_version": 1, "rows": len(frame), "seasons": seasons,
+    metadata = {"schema_version": 2, "rows": len(frame), "seasons": seasons,
                 "source_sha256": _hash_paths(sources),
+                "frame_canonical_csv_sha256": canonical_csv_sha256(
+                    frame, row_keys=["season", "week", "game_id", "team", "player_id", "market"]
+                ),
+                "canonical_csv_version": CANONICAL_CSV_VERSION,
                 "weather_warning": "temp/wind are historical observed proxies, not archived forecast snapshots"}
     args.output.with_suffix(".metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps({"output": str(args.output), **metadata}, indent=2))
