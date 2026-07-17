@@ -659,6 +659,14 @@ def run_grade(season: int, week: int, inputs: Optional[candmod.WeekInputs] = Non
     return res
 
 
+def _emit_top_bets() -> None:
+    try:
+        from nflvalue import top_bets as _tb
+        _tb.main()
+    except Exception as exc:  # never break the pipeline on the display layer
+        print(f"top_bets generation skipped: {exc}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--season", type=int, required=True)
@@ -713,6 +721,7 @@ def main() -> None:
                    discord_dry_run=not args.discord_live)
     print(f"Week {args.season}/{args.week} ({args.mode}): {len(res['games'])} games → "
           f"{res['md_path']} · publish={res['publish']} · dashboard={res['dashboard']}")
+    _emit_top_bets()
 
 
 if __name__ == "__main__":
