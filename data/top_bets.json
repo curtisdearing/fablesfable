@@ -1,0 +1,8335 @@
+{
+ "meta": {
+  "best_rule": "rank<=5 and band accuracy>=67%",
+  "value_rule": "rank<=10 and band accuracy>50% and edge>0",
+  "fail_closed": "games show fewer bets when bands do not qualify; thresholds never relax",
+  "calibration": "settled graded picks in data/weekly.json; multi-season walk-forward recalibration pending",
+  "bands": {
+   "edge 0.0-0.5": {
+    "accuracy": 0.5692307692307692,
+    "n": 65
+   },
+   "edge 0.5-1.5": {
+    "accuracy": 0.6115107913669064,
+    "n": 139
+   },
+   "edge 1.5-2.5": {
+    "accuracy": 0.512,
+    "n": 125
+   },
+   "edge 2.5-4.0": {
+    "accuracy": 0.40625,
+    "n": 128
+   },
+   "edge>=4.0": {
+    "accuracy": 0.4631578947368421,
+    "n": 95
+   },
+   "p 0.5-0.55": {
+    "accuracy": 0.5975609756097561,
+    "n": 82
+   },
+   "p 0.55-0.62": {
+    "accuracy": 0.5131578947368421,
+    "n": 76
+   },
+   "p 0.62-0.7": {
+    "accuracy": 0.7066666666666667,
+    "n": 75
+   },
+   "p>=0.7": {
+    "accuracy": 0.6923076923076923,
+    "n": 52
+   }
+  }
+ },
+ "weeks": [
+  {
+   "week": 1,
+   "label": "Week 1",
+   "games": [
+    {
+     "home": "KC",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13319999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 53.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC -4.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0008000000000000229
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1855
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 9.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12050000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 46.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15680000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -4.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.033499999999999974
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 4.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09350000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15999999999999992
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 41.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "WAS",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11619999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1472
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.036799999999999944
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02849999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.0988
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 44.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE 3.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07850000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA 4.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1382
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16349999999999998
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 2,
+   "label": "Week 2",
+   "games": [
+    {
+     "home": "PHI",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.21499999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 49.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.045499999999999985
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1522
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV 7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05300000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL 3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09399999999999997
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "IND",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0040000000000000036
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 1.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 40.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04079999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 50.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1633
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.038999999999999924
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ARI",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03849999999999998
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18579999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA 7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2348
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -8.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 38.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "WAS",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.042300000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 38.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.01880000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 46.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.017199999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 39.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07569999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PIT 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 3,
+   "label": "Week 3",
+   "games": [
+    {
+     "home": "SF",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.29200000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SF -10.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.19830000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09399999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.055300000000000016
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ATL 3.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.059699999999999975
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.22550000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -7.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1432
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 47.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0048000000000000265
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LAC 1.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.032299999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 35.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16199999999999992
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.049699999999999966
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CAR 5.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.29180000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 11.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.31399999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC -13.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PIT",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.011199999999999988
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16680000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 6.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09850000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 4,
+   "label": "Week 4",
+   "games": [
+    {
+     "home": "GB",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0041999999999999815
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10850000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF -2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 53.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.009700000000000042
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 46.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DEN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03069999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CHI 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04400000000000004
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PIT",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07620000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07519999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA -1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07950000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 4.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24550000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI -9.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12719999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09230000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 49.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17869999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -6.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.271
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.21150000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ 9.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.0837
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SEA -2.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 5,
+   "label": "Week 5",
+   "games": [
+    {
+     "home": "WAS",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "WAS",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18030000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "WAS -6.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.27449999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 48.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.007499999999999951
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 42.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18130000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CAR 9.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TEN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05580000000000007
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "IND 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24080000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYG 12.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.005800000000000027
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16949999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -4.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04600000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13470000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 50.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NYJ",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10450000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 42.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15880000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 52.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC -3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.013000000000000012
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL 3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05630000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 6,
+   "label": "Week 6",
+   "games": [
+    {
+     "home": "KC",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.32730000000000004
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10030000000000006
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07569999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ATL -1.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12569999999999992
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIN -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.010199999999999987
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SEA 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24449999999999994
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE 9.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08650000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -2.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13549999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -4.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2107
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07550000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10850000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18179999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ 6.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10129999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 3.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.35650000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF -15.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12670000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 49.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 7,
+   "label": "Week 7",
+   "games": [
+    {
+     "home": "NO",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03949999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.028200000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08750000000000002
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13050000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 40.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2955
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "WAS",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.013500000000000068
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07199999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB -3.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10850000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17700000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 9.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.14300000000000002
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15600000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC -5.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 48.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03600000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24680000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SF -7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 8,
+   "label": "Week 8",
+   "games": [
+    {
+     "home": "BUF",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24750000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF -10.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "HOU",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07200000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CAR 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1905
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -6.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0050000000000000044
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "GB 1.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08550000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -2.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18069999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA -7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NYJ",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11780000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 35.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09200000000000008
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -2.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TEN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.033299999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 35.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24280000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI -7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03080000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE 4.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2603
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 9.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2895
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.21130000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 44.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.14749999999999996
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1965
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DET -7.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 46.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 9,
+   "label": "Week 9",
+   "games": [
+    {
+     "home": "PIT",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PIT",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02100000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 37.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04169999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 51.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC -1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.1038
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12549999999999994
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 44.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SEA 6.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17369999999999997
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.011499999999999955
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA 3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.011700000000000044
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.023499999999999965
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 40.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "WAS 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1855
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CHI 9.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CAR",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.01319999999999999
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.020199999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 38.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV -1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.012699999999999934
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08250000000000002
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.020000000000000018
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 10,
+   "label": "Week 10",
+   "games": [
+    {
+     "home": "CHI",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CHI",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.026000000000000023
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CAR 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "IND",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0044999999999999485
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE 1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15249999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 38.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -6.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1735
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -5.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09099999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX 3.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.039000000000000035
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 41.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.01200000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 38.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0363
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 39.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 2.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07119999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 2.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0232
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 48.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.33999999999999997
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09899999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "WAS 6.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0034999999999999476
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV 1.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 35.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2538
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 47.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 11,
+   "label": "Week 11",
+   "games": [
+    {
+     "home": "BAL",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11680000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -4.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.33420000000000005
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.14549999999999996
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.22619999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 48.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DET -8.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.06820000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "GB 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "HOU",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16249999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU -5.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13849999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 40.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 6.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17269999999999996
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "WAS",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1422
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYG 7.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2863
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 13.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.20430000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 39.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF -8.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04580000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10999999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0040000000000000036
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 46.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 12,
+   "label": "Week 12",
+   "games": [
+    {
+     "home": "DET",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10919999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.34719999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -13.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 48.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.252
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SF -7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17700000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 40.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07569999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 42.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ATL 2.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11780000000000002
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07369999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05830000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02970000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 36.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TEN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08350000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 36.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN -3.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.06919999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12719999999999998
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1905
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03269999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 49.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12619999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 49.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.21099999999999997
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 13,
+   "label": "Week 13",
+   "games": [
+    {
+     "home": "DAL",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.3185
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DEN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.00770000000000004
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15680000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LAC -4.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 38.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02750000000000008
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 47.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04730000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ 2.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PIT",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.21950000000000003
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "IND",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.01319999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 1.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.25449999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 50.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA -8.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1755
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 37.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05349999999999999
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 39.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.0675
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12569999999999992
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "GB 5.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04530000000000001
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 14,
+   "label": "Week 14",
+   "games": [
+    {
+     "home": "PIT",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PIT",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.0998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 30.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE 6.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.010199999999999987
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 1.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.22150000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.13670000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DET -3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.122
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03069999999999995
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16049999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -5.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 39.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "HOU",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11080000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 33.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ 3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09350000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 40.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.3337
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SF -14.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.022199999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF 2.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08130000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LAC -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1472
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.28080000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 14.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17199999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 37.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYG 6.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 15,
+   "label": "Week 15",
+   "games": [
+    {
+     "home": "LV",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LAC",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07820000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 36.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.08450000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "IND",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.010499999999999954
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PIT 1.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0021999999999999797
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 49.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12919999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ATL -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "CLE",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09919999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07850000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TB 4.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 41.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "MIA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.23950000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA -7.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2348
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1713
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -6.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 39.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TEN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02100000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.38050000000000006
+      }
+     ]
+    },
+    {
+     "home": "LA",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.24250000000000005
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10899999999999999
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.139
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -4.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.1008
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SEA 5.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 16,
+   "label": "Week 16",
+   "games": [
+    {
+     "home": "LA",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.005800000000000027
+      }
+     ]
+    },
+    {
+     "home": "PIT",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CIN",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.16379999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN -3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 39.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.2883
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LAC 13.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "ATL",
+     "away": "IND",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "IND",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.019000000000000017
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17830000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "GB -3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 39.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04499999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.020499999999999963
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIN 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "NYJ",
+     "away": "WAS",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NYJ",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10319999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYJ -3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 36.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.07650000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "TEN 3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0044999999999999485
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CHI",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11519999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CHI -4.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03949999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL 1.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DEN",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11880000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 37.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE 7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.12380000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 40.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.1
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "NYG",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.26349999999999996
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "BAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09350000000000003
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL 6.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 47.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 17,
+   "label": "Week 17",
+   "games": [
+    {
+     "home": "CLE",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18069999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CLE -6.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17300000000000004
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -5.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.1
+      }
+     ]
+    },
+    {
+     "home": "BAL",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09519999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.0
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -3.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "NE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.31899999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE 15.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 40.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "CHI",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "ATL",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.0037000000000000366
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ATL 3.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 39.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "HOU",
+     "away": "TEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "HOU",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.023800000000000043
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "LV",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.11349999999999993
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "JAX",
+     "away": "CAR",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.18799999999999994
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "LA",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17999999999999994
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NYG 6.0",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 43.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "PHI",
+     "away": "ARI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.253
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "ARI 12.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "NO",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04269999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 42.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.6
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.36949999999999994
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SF -14.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "SEA",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.06130000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PIT 4.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.7
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 40.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "DEN",
+     "away": "LAC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DEN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.043300000000000005
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LAC 3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "CIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.10599999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "CIN 7.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.4
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 46.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.9
+      }
+     ]
+    },
+    {
+     "home": "MIN",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "MIN",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.046499999999999986
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIN -1.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 42.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 18,
+   "label": "Week 18",
+   "games": [
+    {
+     "home": "BAL",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.3518
+      }
+     ]
+    },
+    {
+     "home": "IND",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "HOU",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.010199999999999987
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "IND 1.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 47.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "CAR",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.237
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 36.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "CIN",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.02300000000000002
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "MIN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1562
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 47.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.1
+      }
+     ]
+    },
+    {
+     "home": "NE",
+     "away": "NYJ",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "NE",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09619999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NE -2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      }
+     ]
+    },
+    {
+     "home": "NO",
+     "away": "ATL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "NO",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.14749999999999996
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "NO -3.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "TEN",
+     "away": "JAX",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "JAX",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1502
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "JAX -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 41.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.0
+      }
+     ]
+    },
+    {
+     "home": "ARI",
+     "away": "SEA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SEA",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09399999999999997
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 48.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "spread",
+       "selection": "SEA -2.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    },
+    {
+     "home": "GB",
+     "away": "CHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "GB",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.06230000000000002
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "GB -2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 45.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      }
+     ]
+    },
+    {
+     "home": "LAC",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17830000000000001
+      }
+     ]
+    },
+    {
+     "home": "LV",
+     "away": "DEN",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "LV",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09919999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LV -3.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "NYG",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "PHI",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.17799999999999994
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PHI -4.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.26149999999999995
+      }
+     ]
+    },
+    {
+     "home": "WAS",
+     "away": "DAL",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.3488
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -13.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.9
+      }
+     ]
+    },
+    {
+     "home": "MIA",
+     "away": "BUF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.048799999999999955
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "MIA 2.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 19,
+   "label": "Wild Card",
+   "games": [
+    {
+     "home": "HOU",
+     "away": "CLE",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "CLE",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.03980000000000006
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "HOU 2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 45.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.7
+      }
+     ]
+    },
+    {
+     "home": "KC",
+     "away": "MIA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "KC",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.00649999999999995
+      }
+     ]
+    },
+    {
+     "home": "DAL",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "DAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.22199999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DAL -7.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "LA",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.06969999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "LA 3.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 52.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.2
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "PIT",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.19599999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "PIT 10.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 39.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.3
+      }
+     ]
+    },
+    {
+     "home": "TB",
+     "away": "PHI",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "TB",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.025800000000000045
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 20,
+   "label": "Divisional",
+   "games": [
+    {
+     "home": "BAL",
+     "away": "HOU",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p>=0.7",
+       "band_accuracy": 0.6923076923076923,
+       "band_n": 52,
+       "edge": 0.277
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BAL -10.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.6
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "over 44.0",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 1.3
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "GB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.1562
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 50.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.2
+      }
+     ]
+    },
+    {
+     "home": "DET",
+     "away": "TB",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "DET",
+       "band": "p 0.5-0.55",
+       "band_accuracy": 0.5975609756097561,
+       "band_n": 82,
+       "edge": 0.04149999999999998
+      }
+     ]
+    },
+    {
+     "home": "BUF",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "BUF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.09999999999999998
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "BUF -2.5",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 1.8
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 21,
+   "label": "Conf Champ",
+   "games": [
+    {
+     "home": "BAL",
+     "away": "KC",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "BAL",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.19499999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 44.0",
+       "band": "edge 1.5-2.5",
+       "band_accuracy": 0.512,
+       "band_n": 125,
+       "edge": 2.3
+      }
+     ]
+    },
+    {
+     "home": "SF",
+     "away": "DET",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "best",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.62-0.7",
+       "band_accuracy": 0.7066666666666667,
+       "band_n": 75,
+       "edge": 0.15669999999999995
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "DET 7.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.5
+      },
+      {
+       "rank": 3,
+       "tier": "value",
+       "market": "total",
+       "selection": "under 52.5",
+       "band": "edge 0.0-0.5",
+       "band_accuracy": 0.5692307692307692,
+       "band_n": 65,
+       "edge": 0.4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "week": 22,
+   "label": "Super Bowl",
+   "games": [
+    {
+     "home": "KC",
+     "away": "SF",
+     "settled": true,
+     "bets": [
+      {
+       "rank": 1,
+       "tier": "value",
+       "market": "moneyline",
+       "selection": "SF",
+       "band": "p 0.55-0.62",
+       "band_accuracy": 0.5131578947368421,
+       "band_n": 76,
+       "edge": 0.05230000000000001
+      },
+      {
+       "rank": 2,
+       "tier": "value",
+       "market": "spread",
+       "selection": "KC 1.5",
+       "band": "edge 0.5-1.5",
+       "band_accuracy": 0.6115107913669064,
+       "band_n": 139,
+       "edge": 0.8
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

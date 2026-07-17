@@ -74,6 +74,7 @@ tr:hover td{background:#172033}
 
   <div class="tabs">
     <div class="tab active" data-t="weekly">Weekly Projections</div>
+    <div class="tab" data-t="topbets">Top Bets</div>
     <div class="tab" data-t="bets">Value Bets</div>
     <div class="tab" data-t="props">Player Props</div>
     <div class="tab" data-t="leans">Weekly Leans</div>
@@ -84,6 +85,7 @@ tr:hover td{background:#172033}
   </div>
 
   <div class="panel active" id="weekly"></div>
+  <div class="panel" id="topbets"></div>
   <div class="panel" id="bets"></div>
   <div class="panel" id="props"></div>
   <div class="panel" id="leans"></div>
@@ -119,6 +121,33 @@ function betRow(b){
     <td>${b.stake_units.toFixed(2)}u</td>
     <td>${whyPills(b.why)}</td>
   </tr>`;
+}
+
+
+async function renderTopBets(){
+  const el=document.getElementById("topbets");
+  let t=null; try{t=await (await fetch("data/top_bets.json?x="+Date.now())).json();}catch(e){}
+  if(!t||!t.weeks){el.innerHTML='<div class="box empty">No tiered rankings yet — run <code>python3 -m nflvalue.top_bets</code> after the weekly pipeline.</div>';return;}
+  const wks=t.weeks.filter(w=>w.games&&w.games.length);
+  if(!wks.length){el.innerHTML='<div class="box empty">No games qualified for any accuracy tier this week. Fail-closed by design: tiers are never padded.</div>';return;}
+  const opts=wks.map((w,i)=>`<option value="${i}" ${i===wks.length-1?"selected":""}>${esc(w.label||("Week "+w.week))}</option>`).join("");
+  const badge=b=>`<span class="badge" title="measured band accuracy (graded picks)">${b.band_accuracy!=null?(b.band_accuracy*100).toFixed(1)+"% band":"unproven"} · n=${b.band_n}</span>`;
+  const row=b=>`<tr><td>#${b.rank}</td><td>${b.tier==="best"?"⭐ Best":"Value"}</td><td>${esc(b.market)}</td><td>${esc(String(b.selection))}</td><td>${(+b.edge).toFixed(2)}</td><td>${badge(b)}</td></tr>`;
+  const draw=i=>{
+    const w=wks[i];
+    document.getElementById("tbgames").innerHTML=w.games.map(g=>{
+      const best=g.bets.filter(b=>b.tier==="best"),val=g.bets.filter(b=>b.tier==="value");
+      return `<div class="box"><b>${esc(g.away)} @ ${esc(g.home)}</b>
+        <table><thead><tr><th>Rank</th><th>Tier</th><th>Market</th><th>Selection</th><th>Edge</th><th>Historical accuracy</th></tr></thead>
+        <tbody>${best.map(row).join("")}${val.map(row).join("")}</tbody></table></div>`;
+    }).join("");
+  };
+  el.innerHTML=`<div class="box"><b>Accuracy-tiered rankings</b> — ${esc(t.meta.best_rule)}; ${esc(t.meta.value_rule)}.
+    <div class="sub">${esc(t.meta.fail_closed)}. Calibration: ${esc(t.meta.calibration)}.</div>
+    <select id="tbsel" style="margin-top:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-weight:600">${opts}</select></div>
+    <div id="tbgames"></div>`;
+  document.getElementById("tbsel").onchange=e=>draw(+e.target.value);
+  draw(wks.length-1);
 }
 
 function renderBets(){
@@ -382,7 +411,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
+renderWeekly();renderCards();renderTopBets();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
