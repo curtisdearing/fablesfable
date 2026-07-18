@@ -165,7 +165,7 @@ def build_top_bets(weekly: Dict) -> Dict:
             "best_rule": f"rank<=5 and band accuracy 95% LB >={BEST_ACC:.0%}",
             "value_rule": f"rank<=10 and band accuracy 95% LB >{VALUE_ACC:.0%} and edge>0",
             "fail_closed": "games show fewer bets when bands do not qualify; thresholds never relax",
-            "calibration": "settled graded picks in data/weekly.json; per-band Wilson 95% LB gates admission (thin/lucky bands excluded). Populating multi-season graded replays into weekly.json remains data-gated.",
+            "calibration": "settled graded picks in data/weekly.json; per-band Wilson 95% LB gates admission (thin/lucky bands excluded). Bands pool seven walk-forward seasons (2019-2025, n=1960); the 2021-24 train / 2025 verify held-out check passes (BEST tier 75.8% realized on 2025). See analysis/lever3_holdout_recal.py and reports/top_bets_tiering.md.",
             "bands": bands,
         },
         "weeks": weeks,
