@@ -58,3 +58,28 @@ def test_deterministic():
     a = json.dumps(top_bets.build_top_bets(_weekly()))
     b = json.dumps(top_bets.build_top_bets(_weekly()))
     assert a == b
+
+
+def test_wilson_lower_bound_math():
+    # 14/20 = 70% point estimate but 95% Wilson LB is well under 67%.
+    lb = top_bets.wilson_lower_bound(14, 20)
+    assert 0.45 < lb < 0.50
+    # 90/90 = 100% stays high.
+    assert top_bets.wilson_lower_bound(90, 90) > 0.95
+    assert top_bets.wilson_lower_bound(0, 0) is None
+
+
+def test_thin_lucky_band_excluded_from_best_tier():
+    """A 70%-point band with n=20 (LB<67%) must NOT reach the best tier -- the
+    multi-season-recal lever's 'never relax, gate on CI' guarantee."""
+    # 20 ML games at p=0.72: 14 correct, 6 wrong -> point 70%, Wilson LB ~48%.
+    games = []
+    for i in range(20):
+        games.append(_game(p_home=0.72, su=(i < 14),
+                            ats="W" if i < 14 else "L", tot="W" if i < 14 else "L",
+                            edge_ats=3.0, edge_tot=1.0))
+    weekly = {"weeks": [{"week": 1, "label": "W1", "games": games}]}
+    out = top_bets.build_top_bets(weekly)
+    ml_best = [b for wk in out["weeks"] for g in wk["games"] for b in g["bets"]
+               if b["market"] == "moneyline" and b["tier"] == "best"]
+    assert not ml_best  # point est 70% would have qualified; LB gate excludes it

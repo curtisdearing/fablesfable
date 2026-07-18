@@ -640,11 +640,18 @@ def resolve_clv(season: int, week: int,
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
     slate = candmod.games_for_week(season, week, inputs.schedules)
-    resolved = clvmod.log_close_for_week(conn, season, week, kickoffs_for(slate))
+    kickoffs = kickoffs_for(slate)
+    resolved = clvmod.log_close_for_week(conn, season, week, kickoffs)
+    # P0: also persist the durable opens/closes record for EVERY snapshotted
+    # market (not just published leans) so a real-line reliability/CLV backtest
+    # can be built retroactively once enough weeks accrue.
+    opens_closes = clvmod.log_open_close_for_week(conn, season, week, kickoffs)
     stats = clvmod.rolling_clv(conn)
     verdict = kcmod.report(conn)
     conn.close()
-    return {"resolved": int(len(resolved)), "clv": stats, "killcheck": verdict}
+    return {"resolved": int(len(resolved)),
+            "opens_closes_logged": int(len(opens_closes)),
+            "clv": stats, "killcheck": verdict}
 
 
 def run_grade(season: int, week: int, inputs: Optional[candmod.WeekInputs] = None) -> Dict:

@@ -300,3 +300,70 @@ reversible; config keys are noted where one exists.
 - Ops: pack construction pickled/cached for chunked frame rebuilds; FTN
   cross-join OOM caught+fixed (game-only merge guard removed); AsOfLookup
   made picklable.
+
+## 2026-07-17 — Dev/hardening session (opening lines, Wilson-LB bands, O/U negative result)
+
+- **P0 durable opening/closing line record.** `clv.py` previously logged
+  entry→close only for *published* leans, so no opens/closes existed for the
+  markets we never bet — and the accuracy notes call a real-line record the
+  blocker for every honest edge claim. Added `clv.opening_prob()` (consensus
+  fair prob from the EARLIEST snapshot, mirror of `snapshot_prob`'s latest) and
+  `clv.log_open_close_for_week()`, which persists open+close point/prob/n_books
+  for EVERY snapshotted `(game,market,player,side)` into the new
+  `line_open_close` table. Single-snapshot rows store open==close so coverage
+  stays visible; nothing is ever fabricated. Wired into
+  `pipeline_weekly.resolve_clv` (the t90/close job). This is the prerequisite
+  data capture for a retroactive real-line reliability/CLV backtest.
+
+- **O/U 64/44 "means→median" fix — REJECTED (negative result).** The vault note
+  proposed switching the synthetic reference line from the trailing mean to the
+  trailing median to cure the under bias. Measured on 2019-2023 player-weeks:
+  switching mean→median barely moves the over-rate (receiving_yards 0.360→0.415;
+  receptions 0.374→0.355; rushing_yards 0.221→0.232; passing_yards 0.062→0.063).
+  It does NOT fix the bias and, per the long-standing comment in
+  `prop_backtest._synthetic_line`, a median benchmark reintroduces the opposite
+  bias (P(actual>median) runs >50% for right-skewed stats). Conclusion, in line
+  with the load-bearing caveat "do not tune accuracy against synthetic lines":
+  the synthetic-line over/under split is an artifact, not a calibration target.
+  The real fix is real lines (P0 above) + calibration diagnostics, not the
+  synthetic line's central-tendency choice. No code change to synthetic lines.
+
+- **Lever #3 (Top-Bets band recal), methodology half.** Tier admission gated on
+  the raw point estimate let a thin/lucky band (14/20 = 70%, but 95% Wilson
+  LB ≈ 48%) clear the 67% Best bar. Added `wilson_lower_bound()`; every band now
+  carries `accuracy_lb`; `rank_game` admits on the LB (Best: LB≥67%, Value:
+  LB>50%). Because wider n tightens the LB toward the point estimate, accruing
+  seasons can only ADMIT more bets, never relax the bar — the lever's "proper
+  CIs / never relax" guarantee, enforced per band. Populating multi-season
+  graded replays into `data/weekly.json` remains data-gated (needs the ML
+  artifact + a historical run).
+
+- **Env note.** The vault-embedded checkout (`20-projects/nfl-sim/fablesfable`)
+  was found stale at `2e9cb14`, ~10 merged commits behind GitHub `main`
+  (`9d7c99e`, PRs #4/#5/#6). Two fixes drafted against the snapshot
+  (`load_fixture` CSV fallback; a `reliability.py` ECE module) were discovered
+  to ALREADY exist upstream (`rosters.load_fixture` fallback; `nflvalue/calibration.py`)
+  and were dropped. This session's commits are rebased on the true `9d7c99e`.
+
+### 2026-07-17 — Red-team / pressure-test of the same session
+
+- **Leak fixed in `log_open_close_for_week`.** Adversarial probe: with a game's
+  kickoff missing from the dict, the function recorded a POST-game snapshot as
+  the "close" (a 6.00/1.05 post-kick price → close_prob 0.149). `log_close_for_week`
+  guards this (`if not kickoff: continue`); the new function did not. Fixed:
+  CLOSE is only recorded when bounded by a real kickoff; with no kickoff (or no
+  pre-kickoff snapshot) we store the legitimate open and leave close NULL rather
+  than fabricate. Rows where EVERY snapshot is post-kickoff are dropped. +2
+  regression tests (`test_open_close_never_records_postkick_close_without_kickoff`,
+  `test_open_close_drops_row_when_all_snapshots_post_kickoff`).
+- **Wilson LB verified** exact against an independent closed-form re-derivation
+  (14/20→0.48102, 90/90→0.95906, 52/75→0.58169) and shown monotone (LB ≤ point
+  estimate on 10k random draws, 0 violations) — the gate can only tighten.
+- **Consequence to flag:** the currently-shipped Best band (p≥0.62 ML, 52/75 =
+  69% point) has Wilson LB 0.582 < 0.67, so under LB gating it NO LONGER clears
+  the Best tier. This is the lever behaving as intended (fail-closed on thin n),
+  but it means the in-season Best tab can show fewer/no bets until multi-season
+  replays widen n. Thresholds tighten, never relax — by design.
+- **Re-verified 262 tests green** on a clean tree (data restored to upstream;
+  the one earlier `test_all_data_audit` failure was a stale-JSON overlay from the
+  vault snapshot, not a code regression).
