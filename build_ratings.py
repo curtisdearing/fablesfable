@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Build team power ratings + league priors from historical NFL data.
 
-Inputs  (in ./historical/, downloaded via nfl_data_py):
-    historical_pbp.parquet     play-by-play (EPA, drives)
-    historical_lines.parquet   schedules with closing lines, scores, rest
+Inputs:
+    historical_lines.parquet         schedules 2019-2023 (repo root, frozen base)
+    historical/lines_extra.parquet   schedules 2024->now (ingested seasons)
+    historical/historical_pbp.parquet  play-by-play 2019-2023 (EPA, drive ids)
+    historical/pbp_{2024,2025}.parquet per-season play-by-play (EPA, drive ids)
+  Drive-outcome rates are preserved from data/league_priors.json (the reduced
+  pbp parquets no longer carry fixed_drive_result); everything else is remeasured
+  across all available seasons.
 
 Outputs (in ./data/):
     league_priors.json     drive-outcome rates, drives/game, HFA, score sds
@@ -58,21 +63,22 @@ ABBR = {
 }
 
 
-def league_priors(pbp: pd.DataFrame, sched: pd.DataFrame) -> dict:
-    drives = (pbp.dropna(subset=["fixed_drive_result", "posteam"])
-              .groupby(["game_id", "posteam", "fixed_drive"])
-              .agg(res=("fixed_drive_result", "first")).reset_index())
-    vc = drives["res"].value_counts(normalize=True)
-    dpg = drives.groupby(["game_id", "posteam"]).size()
+# Long-run drive-outcome rates (2019-2023 pbp). The reduced pbp parquets no
+# longer carry ``fixed_drive_result``, so these can't be recomputed from disk;
+# callers pass the previously measured values (data/league_priors.json) and we
+# fall back to these constants only if none are available.
+DEFAULT_DRIVE_OUTCOMES = {"td": 0.221, "fg": 0.145, "def_td": 0.023, "safety": 0.0026}
+
+
+def league_priors(pbp: pd.DataFrame, sched: pd.DataFrame,
+                  drive_outcomes: dict = None) -> dict:
+    # Drives per team-game from the drive id alone (outcome column is gone).
+    plays = pbp.dropna(subset=["posteam", "fixed_drive"])
+    dpg = plays.groupby(["game_id", "posteam"])["fixed_drive"].nunique()
     s = sched.dropna(subset=["result", "total", "home_score", "away_score"])
     league_ppg = (s["home_score"].sum() + s["away_score"].sum()) / (2 * len(s))
     return {
-        "drive_outcomes": {
-            "td": float(vc.get("Touchdown", 0.221)),
-            "fg": float(vc.get("Field goal", 0.145)),
-            "def_td": float(vc.get("Opp touchdown", 0.023)),
-            "safety": float(vc.get("Safety", 0.0026)),
-        },
+        "drive_outcomes": drive_outcomes or DEFAULT_DRIVE_OUTCOMES,
         "drives_mean": float(dpg.mean()),
         "drives_sd": float(dpg.std()),
         "league_ppg": float(league_ppg),
@@ -85,17 +91,34 @@ def league_priors(pbp: pd.DataFrame, sched: pd.DataFrame) -> dict:
     }
 
 
+SCHED_COLS = ["season", "week", "gameday", "gametime", "home_team", "away_team",
+              "home_score", "away_score", "spread_line", "total_line",
+              "home_moneyline", "away_moneyline", "result", "total"]
+PBP_COLS = ["game_id", "season", "posteam", "defteam", "fixed_drive", "epa"]
+# schedules: frozen 2019-2023 base (repo root) + every season ingested since
+# (historical/lines_extra.parquet, 2024->now); pbp: base + one file per season.
+SCHED_FILES = [os.path.join(ROOT, "historical_lines.parquet"),
+               os.path.join(HIST, "lines_extra.parquet")]
+PBP_FILES = [os.path.join(HIST, "historical_pbp.parquet"),
+             os.path.join(HIST, "pbp_2024.parquet"),
+             os.path.join(HIST, "pbp_2025.parquet")]
+
+
 def build():
     print("Loading data...")
-    sched = pd.read_parquet(os.path.join(HIST, "historical_lines.parquet"))
+    sched = pd.concat([pd.read_parquet(p, columns=SCHED_COLS)
+                       for p in SCHED_FILES if os.path.exists(p)], ignore_index=True)
     sched = sched.dropna(subset=["home_score", "away_score", "spread_line", "total_line"])
     sched = sched.sort_values(["season", "week", "gameday", "gametime"]).reset_index(drop=True)
-    pbp = pd.read_parquet(
-        os.path.join(HIST, "historical_pbp.parquet"),
-        columns=["game_id", "season", "posteam", "defteam", "fixed_drive",
-                 "fixed_drive_result", "epa", "total_home_score", "total_away_score"])
+    pbp = pd.concat([pd.read_parquet(p, columns=PBP_COLS)
+                     for p in PBP_FILES if os.path.exists(p)], ignore_index=True)
 
-    priors = league_priors(pbp, sched)
+    # Preserve the previously measured drive-outcome rates (see league_priors).
+    prev_lp = os.path.join(DATA, "league_priors.json")
+    prev_outcomes = None
+    if os.path.exists(prev_lp):
+        prev_outcomes = json.load(open(prev_lp)).get("drive_outcomes")
+    priors = league_priors(pbp, sched, drive_outcomes=prev_outcomes)
     league_ppg = priors["league_ppg"]
     hfa = priors["hfa_points"]
     print(f"  league PPG {league_ppg:.2f}  HFA {hfa:.2f}  games {priors['n_games']}")
