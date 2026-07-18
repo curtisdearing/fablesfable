@@ -367,3 +367,120 @@ reversible; config keys are noted where one exists.
 - **Re-verified 262 tests green** on a clean tree (data restored to upstream;
   the one earlier `test_all_data_audit` failure was a stale-JSON overlay from the
   vault snapshot, not a code regression).
+
+## 2026-07-18 — Phase 7 hardening (reliability, speed, traceability)
+
+Scope was explicitly *not* predictive: no new features, no new markets, no
+model-family changes. The gate for the whole phase was a **no-delta
+attestation** — `ml_test --stage frame` rebuilt across 2019-2025 before and
+after the full change set, compared column-by-column NaN-aware: **73,925 rows
+x 39 columns byte-identical**. The `2023 wk10` pipeline report is likewise
+byte-identical modulo the `as_of` provenance stamp. Suite 262 -> 367.
+
+### 7.1 Performance — profiled, then deliberately NOT optimized
+
+| Target | Wall | Peak RSS |
+|---|---:|---:|
+| `pipeline_weekly` 2023 wk10, ML off | 5.15 s | — |
+| `pipeline_weekly` 2023 wk10, ML on | 8.18 / 8.22 / 8.18 s | 1.12 GB |
+| `ml_test --stage frame` (7 seasons, 73,925 rows) | 20.0 s | 1.11 GB |
+| `ml_test --stage fit` (GBDT) | 2.7 s | 0.37 GB |
+| test suite | 19.7 s (262) / 24 s (367) | — |
+
+cProfile puts the cost in pandas' Python-UDF fallback: `_transform_general`
+4.31 s over 61 calls, `_rolling_shifted` 24,096 calls, ~97k `Series.__init__`.
+That vectorizes — and the decision was **not to**. The prize is ~3 s on a job
+that runs once a week, and the code in question is the `shift(1)`-then-roll
+primitive that every anti-leakage guarantee in this repo rests on. Spending
+the highest-risk surface in the codebase to buy an unmeasurable speedup is a
+bad trade. The table above is published as the *evidence for* leaving it
+alone. The real headroom risk is peak RSS (1.12 GB, and an OOM was already
+caught in this path on 2026-07-02), not latency.
+
+### 7.2 Failure-mode hardening — three real defects
+
+All five external deps (Odds API, nflreadpy, Open-Meteo, Discord, GH release
+asset) are now forced to fail in `tests/test_failure_modes.py` across timeout /
+malformed / partial / auth / budget-exhaustion. Found and fixed:
+
+- **Phantom line from a malformed payload.** An outcome with no `price` and no
+  `point` produced a persisted `lines` row with `price=None` and `point`
+  defaulted to **0.5** — i.e. a "receiving yards over 0.5" quote that never
+  existed, sitting in the DB indistinguishable from a real one. 0.5 is the
+  anytime-TD convention *only*. Such outcomes are now dropped.
+- **One flaky HTTP call killed the weekly run.** `pull_week_props` let fetch
+  exceptions propagate and the pipeline did not wrap the call, so a single
+  timed-out event aborted the run *after* the candidate pool was built. Now
+  degrades per game into `skipped_error` and the game falls through to the
+  documented `no_market`. `BudgetExceeded` is deliberately still a hard stop —
+  overspending a metered free tier is not a degradation.
+- **Discord failure discarded a completed week.** `post_weekly` let `urlopen`
+  raise, losing the caller's return payload after the report, dashboard and DB
+  writes had already succeeded. Now returns `status="error"`, with the webhook
+  URL redacted out of the error string (urllib puts the full URL in the
+  exception text, and error strings get logged and pasted into reports).
+
+### 7.3 Schema + artifact integrity
+
+`PRAGMA user_version` with forward-only, additive-only migrations. This matters
+because the live DB is a durable release asset: `CREATE TABLE IF NOT EXISTS` is
+a no-op against an existing table, so a newly added column would never have
+appeared on the deployed database. A pre-versioning DB (user_version=0) is
+*adopted and stamped*, not rebuilt — tested against a populated legacy DB
+asserting every prior row survives byte-for-byte, and that a new column reads
+NULL rather than a fabricated default. A DB from a *newer* release is refused
+outright rather than silently downgraded.
+
+Model artifacts get a SHA-256 sidecar at `save()` and are verified at
+`load()`, refusing to score on mismatch (tampered and truncated cases both
+tested). A *missing* sidecar is tolerated — pre-7.3 artifacts have none, and
+absence is not evidence of corruption; only disagreement is fatal.
+
+### 7.4 Numerical edge cases — the serious one
+
+**`p_over` turned missing data into certainty.** `max(0.0, min(1.0, nan))`
+evaluates to **1.0** in CPython, because every comparison against NaN is False.
+So a NaN mean/sd/line — this codebase's own documented encoding for "no prior
+history" (see `AsOfLookup`) — came out of `p_over` as `p_over=1.0000` with
+`eligible_for_shortlist=True`. That is maximum edge and maximum confidence
+simultaneously: the row does not error, **it ranks first on the board**.
+Reachable through `expected_volume` whenever no usage basis exists.
+
+Corpus audit: **0 of 73,925 historical candidate rows were affected** — the bug
+was latent, which is precisely why the frame stayed byte-identical after the
+fix, and precisely why it needed a corpus-wide assertion rather than a unit
+test alone. Now: `p_over=None`, `mean=None`, `eligible_for_shortlist=False`.
+
+Also fixed: `_SF.get(dist, _norm_sf)` silently substituted a normal for any
+unrecognised distribution name (a typo'd market spec would have scored against
+the wrong family); `devig_multiplicative` returned a flat `1/n` prior on
+all-unusable prices (a fabricated probability with no market behind it);
+`consensus_two_way` accumulated in dict-insertion order, yielding **2 distinct
+`p_a` values across 24 orderings of 4 books** (1 ULP apart) in violation of the
+determinism rule; and `n_books` counted every key handed in rather than the
+books that actually contributed a usable two-sided price, over-stating
+published market support.
+
+### 7.5 Test-suite quality
+
+Coverage 57% -> 58% overall, but the movement that matters is on the modules in
+scope: `oddsmath` 56->90, `weather` 38->69, `notify` 82->90, `ml_ranker`
+76->80, `db` 80->83, `oddsapi_props` 80->81. (`projection.py` reads 90->86
+because the fail-closed guards added 26 statements to the denominator.)
+
+The leakage guards were **mutation-tested**: the 2026-07-02 leak was
+re-injected (`AsOfLookup` `bisect_left`->`bisect_right`, strictly-before ->
+inclusive), `shift(1)` was removed from `_rolling_shifted`, and
+`assert_walk_forward` was weakened `<=`->`<`. Each mutation provably changes
+observable behaviour, so all three alarms are wired to something real.
+
+Suite hygiene: `test_ingest.py::test_refresh_degrades_loudly_not_silently`
+*failed* rather than skipped when the optional `nflreadpy` was absent, which
+made the headline "262 green" silently conditional on an optional install.
+Now `pytest.importorskip`.
+
+### Not done, deliberately
+
+No performance optimization (see 7.1). No change to any projection value, any
+market, any model family. The synthetic-line over/under split was not touched
+and was not tuned against — the recorded means->median negative result stands.

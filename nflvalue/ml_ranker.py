@@ -251,11 +251,31 @@ class MLRanker:
         joblib.dump({"model_name": self.model_name, "seed": self.seed,
                      "kw": self.kw, "clf": self.clf, "train_max": self.train_max,
                      "features": self.features}, path)
+        # Phase 7.3: record the digest of the artifact as written, in a
+        # sidecar rather than inside the blob (a hash stored inside the thing
+        # it hashes cannot detect tampering with the thing).
+        digest = artifact_sha256(path)
+        with open(path + ".sha256", "w", encoding="utf-8") as fh:
+            fh.write(digest + "\n")
         return path
 
     @classmethod
-    def load(cls, path: str = MODEL_PATH_DEFAULT) -> "MLRanker":
+    def load(cls, path: str = MODEL_PATH_DEFAULT,
+             verify: bool = True) -> "MLRanker":
+        """Load a fitted ranker, refusing to score on a hash mismatch.
+
+        The artifact decides money-adjacent rankings and is transported as a
+        release asset, so a silent corruption or a partially-written file must
+        not be scored against. Verification FAILS CLOSED: a mismatch raises,
+        and the pipeline's existing "no model -> fall back to composite" path
+        handles the absence honestly rather than ranking on a damaged model.
+
+        ``verify=False`` exists only for the tests that deliberately construct
+        a mismatch.
+        """
         import joblib
+        if verify:
+            verify_artifact(path)
         blob = joblib.load(path)
         obj = cls(blob["model_name"], blob["seed"], **blob.get("kw", {}))
         obj.clf, obj.train_max = blob["clf"], tuple(blob["train_max"])
@@ -264,6 +284,41 @@ class MLRanker:
         # full-width classifier of its columns.
         obj.features = blob.get("features") or _full_feature_columns()
         return obj
+
+
+class ArtifactIntegrityError(RuntimeError):
+    """The model artifact does not match its recorded digest."""
+
+
+def artifact_sha256(path: str) -> str:
+    """SHA-256 of a file, streamed so a large artifact never lands in RAM."""
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verify_artifact(path: str) -> None:
+    """Raise ``ArtifactIntegrityError`` unless ``path`` matches its sidecar.
+
+    A MISSING sidecar is tolerated (artifacts fitted before Phase 7.3 have
+    none, and the file is gitignored/regenerable), but a sidecar that DISAGREES
+    is fatal: that is the corruption case, and scoring through it would produce
+    plausible-looking numbers from an unknown model.
+    """
+    sidecar = path + ".sha256"
+    if not os.path.exists(sidecar):
+        return
+    with open(sidecar, encoding="utf-8") as fh:
+        expected = fh.read().strip()
+    actual = artifact_sha256(path)
+    if actual != expected:
+        raise ArtifactIntegrityError(
+            f"model artifact {path} failed integrity check: recorded "
+            f"{expected[:16]}..., found {actual[:16]}.... Refusing to score. "
+            f"Refit with `python3 ml_test.py --stage fit`.")
 
 
 # --------------------------------------------------------------------------- #

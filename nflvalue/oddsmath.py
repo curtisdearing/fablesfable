@@ -61,8 +61,12 @@ def devig_multiplicative(decimals: Sequence[float]) -> List[float]:
     qs = [implied_prob(d) for d in decimals]
     total = sum(qs)
     if total <= 0:
-        n = len(decimals)
-        return [1.0 / n] * n
+        # FAIL CLOSED (Phase 7.4). This used to return a flat ``1/n`` prior,
+        # which is a fabricated probability with no market behind it: a
+        # malformed payload carrying 0.0 prices became a confident 50/50 and
+        # was stored as if it were a real de-vigged price. Missing data has to
+        # stay missing; callers test for finiteness and skip.
+        return [float("nan")] * len(decimals)
     return [q / total for q in qs]
 
 
@@ -97,14 +101,24 @@ def consensus_two_way(
     weight_total = 0.0
     best_a = best_b = 0.0
     best_a_book = best_b_book = None
+    n_priced = 0
 
-    for book, (da, db) in book_prices.items():
+    # DETERMINISM (Phase 7.4). Float addition is not associative, so
+    # accumulating in dict-insertion order made ``p_a`` depend on the order
+    # the books happened to be fetched in -- 24 orderings of 4 books produced
+    # two different last-ULP values. Sorting the keys makes the sum a pure
+    # function of the prices. See test_consensus_is_invariant_to_book_insertion_order.
+    for book in sorted(book_prices):
+        da, db = book_prices[book]
         if da <= 1.0 or db <= 1.0:
             continue
         pa, _pb = devig_multiplicative([da, db])
+        if not math.isfinite(pa):
+            continue
         w = sharp_weight if book.lower() in sharp_books else 1.0
         weighted_pa += w * pa
         weight_total += w
+        n_priced += 1
         if da > best_a:
             best_a, best_a_book = da, book
         if db > best_b:
@@ -122,7 +136,11 @@ def consensus_two_way(
         "best_b": best_b,
         "best_a_book": best_a_book,
         "best_b_book": best_b_book,
-        "n_books": len(book_prices),
+        # TRACEABILITY (Phase 7.4): count the books that actually contributed a
+        # usable two-sided price, not every key handed in. n_books is published
+        # on the lean as evidence of market support, so an unpriced or
+        # malformed book must not inflate it.
+        "n_books": n_priced,
     }
 
 
