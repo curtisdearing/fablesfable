@@ -162,3 +162,29 @@ def test_opening_and_open_close_logging(conn):
                                    kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"})
     again = dbmod.query_df(conn, "SELECT * FROM line_open_close")
     assert len(again) == len(persisted)                  # upsert, no duplication
+
+
+def test_open_close_never_records_postkick_close_without_kickoff(conn):
+    """Red-team: no kickoff bound must NOT let a post-game snapshot become the
+    close. Record the (legit) open, leave close NULL -- never fabricate."""
+    dbmod.upsert(conn, "lines", [
+        _line("2023-11-12T17:00:00Z", "over", 1.80),
+        _line("2023-11-12T17:00:00Z", "under", 2.00),
+        _line("2023-11-12T23:00:00Z", "over", 6.0),   # post-game junk
+        _line("2023-11-12T23:00:00Z", "under", 1.05),
+    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    out = clvmod.log_open_close_for_week(conn, 2023, 10, kickoffs={})  # no kickoff
+    row = out[out["side"] == "over"].iloc[0]
+    assert row["open_ts"] == "2023-11-12T17:00:00Z"
+    assert row["close_ts"] is None and row["prob_moved"] is None
+
+
+def test_open_close_drops_row_when_all_snapshots_post_kickoff(conn):
+    """If every snapshot is after kickoff there is no legitimate open OR close."""
+    dbmod.upsert(conn, "lines", [
+        _line("2023-11-12T23:00:00Z", "over", 6.0),
+        _line("2023-11-12T23:00:00Z", "under", 1.05),
+    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+    out = clvmod.log_open_close_for_week(conn, 2023, 10,
+                                         kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"})
+    assert len(out) == 0

@@ -190,24 +190,38 @@ def log_open_close_for_week(conn, season: int, week: int,
     for k in keys.itertuples(index=False):
         kickoff = kickoffs.get(k.game_id)
         op = opening_prob(conn, k.game_id, k.market, k.player_id, k.side)
-        cl = snapshot_prob(conn, k.game_id, k.market, k.player_id, k.side,
-                           at_or_before_ts=kickoff)
+        # CLOSE is only legitimate when bounded by a real kickoff -- otherwise the
+        # latest snapshot could be a POST-game price and poison the record. With
+        # no kickoff (or no pre-kickoff snapshot) we record the open and leave
+        # close NULL rather than fabricate a contaminated close.
+        cl = None
+        if kickoff:
+            cl = snapshot_prob(conn, k.game_id, k.market, k.player_id, k.side,
+                               at_or_before_ts=kickoff)
+        # Guard the degenerate case where the earliest snapshot is itself after
+        # kickoff (all snapshots post-kick): there is no legitimate open/close.
+        if op is not None and kickoff and op["ts"] > kickoff:
+            op = None
         if op is None and cl is None:
             continue
-        if cl is None:
-            cl = op
-        if op is None:
-            op = cl
+        base = op or cl  # for open fields when only a (bounded) close exists
+        moved_point = moved_prob = None
+        if op is not None and cl is not None:
+            moved_point = round(cl["point"] - op["point"], 2)
+            moved_prob = round(cl["prob"] - op["prob"], 5)
         rows.append({
             "season": season, "week": week, "game_id": k.game_id,
             "player_id": k.player_id, "market": k.market, "side": k.side,
-            "open_ts": op["ts"], "open_point": round(op["point"], 2),
-            "open_prob": round(op["prob"], 5), "open_n_books": op["n_books"],
-            "close_ts": cl["ts"], "close_point": round(cl["point"], 2),
-            "close_prob": round(cl["prob"], 5), "close_n_books": cl["n_books"],
-            "prob_kind": op.get("prob_kind", "devig"),
-            "point_moved": round(cl["point"] - op["point"], 2),
-            "prob_moved": round(cl["prob"] - op["prob"], 5),
+            "open_ts": base["ts"] if op is not None else None,
+            "open_point": round(op["point"], 2) if op is not None else None,
+            "open_prob": round(op["prob"], 5) if op is not None else None,
+            "open_n_books": op["n_books"] if op is not None else None,
+            "close_ts": cl["ts"] if cl is not None else None,
+            "close_point": round(cl["point"], 2) if cl is not None else None,
+            "close_prob": round(cl["prob"], 5) if cl is not None else None,
+            "close_n_books": cl["n_books"] if cl is not None else None,
+            "prob_kind": (op or cl).get("prob_kind", "devig"),
+            "point_moved": moved_point, "prob_moved": moved_prob,
         })
     if rows:
         dbmod.upsert(conn, "line_open_close", rows,

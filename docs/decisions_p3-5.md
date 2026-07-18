@@ -344,3 +344,26 @@ reversible; config keys are noted where one exists.
   (`load_fixture` CSV fallback; a `reliability.py` ECE module) were discovered
   to ALREADY exist upstream (`rosters.load_fixture` fallback; `nflvalue/calibration.py`)
   and were dropped. This session's commits are rebased on the true `9d7c99e`.
+
+### 2026-07-17 — Red-team / pressure-test of the same session
+
+- **Leak fixed in `log_open_close_for_week`.** Adversarial probe: with a game's
+  kickoff missing from the dict, the function recorded a POST-game snapshot as
+  the "close" (a 6.00/1.05 post-kick price → close_prob 0.149). `log_close_for_week`
+  guards this (`if not kickoff: continue`); the new function did not. Fixed:
+  CLOSE is only recorded when bounded by a real kickoff; with no kickoff (or no
+  pre-kickoff snapshot) we store the legitimate open and leave close NULL rather
+  than fabricate. Rows where EVERY snapshot is post-kickoff are dropped. +2
+  regression tests (`test_open_close_never_records_postkick_close_without_kickoff`,
+  `test_open_close_drops_row_when_all_snapshots_post_kickoff`).
+- **Wilson LB verified** exact against an independent closed-form re-derivation
+  (14/20→0.48102, 90/90→0.95906, 52/75→0.58169) and shown monotone (LB ≤ point
+  estimate on 10k random draws, 0 violations) — the gate can only tighten.
+- **Consequence to flag:** the currently-shipped Best band (p≥0.62 ML, 52/75 =
+  69% point) has Wilson LB 0.582 < 0.67, so under LB gating it NO LONGER clears
+  the Best tier. This is the lever behaving as intended (fail-closed on thin n),
+  but it means the in-season Best tab can show fewer/no bets until multi-season
+  replays widen n. Thresholds tighten, never relax — by design.
+- **Re-verified 262 tests green** on a clean tree (data restored to upstream;
+  the one earlier `test_all_data_audit` failure was a stale-JSON overlay from the
+  vault snapshot, not a code regression).
