@@ -125,6 +125,19 @@ SCHEMA = {
             PRIMARY KEY (season, week, game_id, player_id, market, side)
         );
     """,
+    # -- P0 accuracy: durable opening+closing prop-line record (per market row).
+    # Independent of `leans` so the opens/closes exist even for props we never
+    # published -- the prerequisite for a real-line reliability/CLV backtest. -- #
+    "line_open_close": """
+        CREATE TABLE IF NOT EXISTS line_open_close (
+            season INTEGER, week INTEGER, game_id TEXT, player_id TEXT,
+            market TEXT, side TEXT,
+            open_ts TEXT, open_point REAL, open_prob REAL, open_n_books INTEGER,
+            close_ts TEXT, close_point REAL, close_prob REAL, close_n_books INTEGER,
+            prob_kind TEXT, point_moved REAL, prob_moved REAL,
+            PRIMARY KEY (season, week, game_id, player_id, market, side)
+        );
+    """,
     # -- Phase 3: The Odds API credit ledger (hard budget stop) ---------------- #
     "api_credits": """
         CREATE TABLE IF NOT EXISTS api_credits (

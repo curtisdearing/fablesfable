@@ -132,3 +132,84 @@ def rolling_clv(conn, window: int = 50) -> Dict:
         "beat_close_rate": round(float((df["clv_prob"] > 0).mean()), 4),
         "avg_point_move": round(float(df["point_moved"].mean()), 3),
     }
+
+
+# --------------------------------------------------------------------------- #
+# Opening line (earliest snapshot) -- P0 durable opens/closes record
+# --------------------------------------------------------------------------- #
+def opening_prob(conn, game_id: str, market: str, player_id: str, side: str,
+                 at_or_after_ts: Optional[str] = None) -> Optional[Dict]:
+    """Consensus fair probability of ``side`` from the EARLIEST snapshot at or
+    after ``at_or_after_ts`` (or the earliest overall). Mirror image of
+    ``snapshot_prob`` (latest); together they bracket the open->close move.
+    None if no lines."""
+    params: List = [game_id, market, player_id]
+    ts_clause = ""
+    if at_or_after_ts:
+        ts_clause = "AND ts >= ?"
+        params.append(at_or_after_ts)
+    df = dbmod.query_df(conn, f"""
+        SELECT * FROM lines
+        WHERE game_id=? AND market=? AND player_id=? {ts_clause}
+        """, params)
+    if df.empty:
+        return None
+    ts = df["ts"].min()
+    snap = df[df["ts"] == ts]
+    probs, points, prob_kind = [], [], "devig"
+    for book, grp in snap.groupby("book"):
+        over = grp[grp["side"] == "over"]
+        under = grp[grp["side"] == "under"]
+        if not over.empty and not under.empty:
+            po, pu = oddsmath.devig_multiplicative(
+                [float(over.iloc[0]["price"]), float(under.iloc[0]["price"])])
+            probs.append(po if side == "over" else pu)
+            points.append(float(over.iloc[0]["point"]))
+        elif market == "anytime_td" and not over.empty and side == "over":
+            prob_kind = "raw_implied"
+            probs.append(oddsmath.implied_prob(float(over.iloc[0]["price"])))
+            points.append(float(over.iloc[0]["point"]))
+    if not probs:
+        return None
+    return {"ts": ts, "prob": sum(probs) / len(probs),
+            "point": sum(points) / len(points), "n_books": len(probs),
+            "prob_kind": prob_kind}
+
+
+def log_open_close_for_week(conn, season: int, week: int,
+                            kickoffs: Dict[str, str]) -> pd.DataFrame:
+    """Persist the opening (earliest snapshot) and closing (latest pre-kickoff)
+    consensus line for EVERY (game, market, player, side) that has snapshots in
+    ``lines`` -- not just published leans. This is the durable opens/closes
+    record P0 calls for: it lets a real-line reliability/CLV backtest be built
+    retroactively once enough weeks accrue. Single-snapshot rows store
+    open==close (point_moved 0) rather than being dropped, so coverage stays
+    visible. Never fabricates a line."""
+    keys = dbmod.query_df(conn, "SELECT DISTINCT game_id, market, player_id, side FROM lines")
+    rows: List[Dict] = []
+    for k in keys.itertuples(index=False):
+        kickoff = kickoffs.get(k.game_id)
+        op = opening_prob(conn, k.game_id, k.market, k.player_id, k.side)
+        cl = snapshot_prob(conn, k.game_id, k.market, k.player_id, k.side,
+                           at_or_before_ts=kickoff)
+        if op is None and cl is None:
+            continue
+        if cl is None:
+            cl = op
+        if op is None:
+            op = cl
+        rows.append({
+            "season": season, "week": week, "game_id": k.game_id,
+            "player_id": k.player_id, "market": k.market, "side": k.side,
+            "open_ts": op["ts"], "open_point": round(op["point"], 2),
+            "open_prob": round(op["prob"], 5), "open_n_books": op["n_books"],
+            "close_ts": cl["ts"], "close_point": round(cl["point"], 2),
+            "close_prob": round(cl["prob"], 5), "close_n_books": cl["n_books"],
+            "prob_kind": op.get("prob_kind", "devig"),
+            "point_moved": round(cl["point"] - op["point"], 2),
+            "prob_moved": round(cl["prob"] - op["prob"], 5),
+        })
+    if rows:
+        dbmod.upsert(conn, "line_open_close", rows,
+                     ["season", "week", "game_id", "player_id", "market", "side"])
+    return pd.DataFrame(rows)

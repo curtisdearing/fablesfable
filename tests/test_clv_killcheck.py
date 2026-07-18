@@ -129,3 +129,36 @@ def test_killcheck_no_go_pre_committed(conn):
     assert r["verdict"] == "NO_GO"
     assert "KILL CRITERION MET" in r["detail"]
     assert "stop staking" in r["detail"]
+
+
+def test_opening_and_open_close_logging(conn):
+    """P0 durable opens/closes: earliest snapshot = open, latest pre-kickoff =
+    close, post-kick junk ignored, upsert idempotent."""
+    dbmod.upsert(conn, "lines", [
+        _line("2023-11-08T10:00:00Z", "over", 1.90),
+        _line("2023-11-08T10:00:00Z", "under", 1.90),   # open: p_over ~ .50
+        _line("2023-11-11T10:00:00Z", "over", 1.80),
+        _line("2023-11-11T10:00:00Z", "under", 2.00),
+        _line("2023-11-12T17:00:00Z", "over", 1.70),
+        _line("2023-11-12T17:00:00Z", "under", 2.15),   # close: p_over higher
+        _line("2023-11-12T19:00:00Z", "over", 5.0),      # post-kick junk
+        _line("2023-11-12T19:00:00Z", "under", 1.10),
+    ], ["ts", "game_id", "book", "market", "player_name", "side"])
+
+    op = clvmod.opening_prob(conn, "2023_10_CLE_BAL", "receiving_yards", "00-A1", "over")
+    assert op["ts"] == "2023-11-08T10:00:00Z"
+    assert op["prob"] == pytest.approx(0.5, abs=1e-9)
+
+    out = clvmod.log_open_close_for_week(conn, 2023, 10,
+                                         kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"})
+    over = out[out["side"] == "over"].iloc[0]
+    assert over["open_ts"] == "2023-11-08T10:00:00Z"
+    assert over["close_ts"] == "2023-11-12T17:00:00Z"   # not the post-kick junk
+    assert over["prob_moved"] > 0                        # market moved toward the over
+
+    persisted = dbmod.query_df(conn, "SELECT * FROM line_open_close")
+    assert len(persisted) == len(out)
+    clvmod.log_open_close_for_week(conn, 2023, 10,
+                                   kickoffs={"2023_10_CLE_BAL": "2023-11-12T18:00:00Z"})
+    again = dbmod.query_df(conn, "SELECT * FROM line_open_close")
+    assert len(again) == len(persisted)                  # upsert, no duplication
