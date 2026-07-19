@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.request
 from typing import Dict, List, Optional
 
@@ -131,12 +132,40 @@ def post_weekly(report_payload: Dict, cfg: Optional[Dict] = None,
     if dry_run:
         return {"status": "dry_run", "n_messages": len(messages), "messages": messages}
 
+    # DEGRADE, DON'T ABORT (Phase 7.2). Notification is the LAST step: the
+    # report, the dashboard and the DB writes are already done. A dead webhook
+    # used to raise straight out of here and take the caller's whole return
+    # payload with it -- losing a completed week's work over a failed HTTP
+    # POST. The failure is reported instead, and it is reported as a FAILURE
+    # (status != "posted"), never as a silent success.
+    #
+    # The error string is deliberately sanitised: the webhook URL is a secret
+    # and urllib puts the full URL in the exception text.
     posted = 0
+    errors: List[str] = []
     for body in messages:
         req = urllib.request.Request(
             webhook, data=json.dumps(body).encode("utf-8"),
             headers={"Content-Type": "application/json", "User-Agent": "nfl-value/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 - user-configured webhook
-            resp.read()
-        posted += 1
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 - user-configured webhook
+                resp.read()
+            posted += 1
+        except Exception as exc:  # noqa: BLE001 -- reported, never raised
+            errors.append(_redact(f"{type(exc).__name__}: {exc}", webhook))
+    if errors:
+        return {"status": "error", "n_messages": posted,
+                "n_failed": len(errors), "errors": errors}
     return {"status": "posted", "n_messages": posted}
+
+
+def _redact(text: str, webhook: Optional[str]) -> str:
+    """Strip the webhook (and any Discord webhook token) out of a message.
+
+    Error strings get logged and pasted into reports, so the secret must not
+    ride along in one.
+    """
+    out = text
+    if webhook:
+        out = out.replace(webhook, "<webhook redacted>")
+    return re.sub(r"https://\S*discord\S*", "<webhook redacted>", out)

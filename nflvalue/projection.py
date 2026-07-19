@@ -164,6 +164,8 @@ def _gamma_sf(x, mean, sd):
 
 
 def _negbinom_sf(x, mean, sd):
+    if math.isinf(x):  # math.floor(inf) raises OverflowError
+        return 0.0 if x > 0 else 1.0
     mean = max(mean, 1e-6)
     var = max(sd ** 2, mean * 1.01)  # negbinom requires var > mean
     p = mean / var
@@ -177,6 +179,8 @@ def _negbinom_sf(x, mean, sd):
 
 def _poisson_sf(x, mean, sd=None):
     del sd  # poisson mean fixes the variance; sd is accepted only for a uniform call signature
+    if math.isinf(x):  # math.floor(inf) raises OverflowError
+        return 0.0 if x > 0 else 1.0
     mean = max(mean, 1e-9)
     if _stats is not None:
         return float(_stats.poisson.sf(math.floor(x), mean))
@@ -190,8 +194,51 @@ _SF = {"normal": _norm_sf, "gamma": _gamma_sf, "negbinom": _negbinom_sf, "poisso
 
 
 def p_over(mean: float, sd: float, line: float, dist: str) -> float:
-    fn = _SF.get(dist, _norm_sf)
-    return max(0.0, min(1.0, fn(line, mean, sd)))
+    """P(actual > line) for a projected distribution.
+
+    FAIL CLOSED (Phase 7.4). Two defects lived in the old one-liner:
+
+    1. ``_SF.get(dist, _norm_sf)`` silently substituted a normal for any
+       unrecognised distribution name -- a default where a real value was
+       absent. A typo in a market spec would score, quietly, against the
+       wrong family. Unknown names now raise.
+    2. ``max(0.0, min(1.0, nan))`` returns **1.0** in CPython, because every
+       comparison against NaN is False. So a NaN mean/sd/line -- the
+       codebase's own encoding for "no prior history" (see AsOfLookup) --
+       came out of here as a 100%-certain OVER, which then carried maximum
+       edge and maximum confidence into the composite and ranked first on
+       the board. Missing data must stay missing: NaN in, NaN out.
+    """
+    if dist not in _SF:
+        raise ValueError(f"unknown distribution {dist!r}; choices: {sorted(_SF)}")
+    if _isnan(mean) or _isnan(sd) or _isnan(line):
+        return float("nan")
+    if not _isfinite(mean) or not _isfinite(sd):
+        return float("nan")
+    # An infinite LINE is not missing data, it is a well-defined limit:
+    # nothing clears +inf, everything clears -inf.
+    if not _isfinite(line):
+        return 0.0 if line > 0 else 1.0
+    p = _SF[dist](line, mean, sd)
+    if not _isfinite(p):
+        return float("nan")
+    return max(0.0, min(1.0, p))
+
+
+def _isfinite(x) -> bool:
+    """Finite-number test that tolerates None and non-numerics."""
+    try:
+        return math.isfinite(float(x))
+    except (TypeError, ValueError):
+        return False
+
+
+def _isnan(x) -> bool:
+    """True only for an actual NaN -- the 'no prior history' marker."""
+    try:
+        return math.isnan(float(x))
+    except (TypeError, ValueError):
+        return False
 
 
 # --------------------------------------------------------------------------- #
@@ -267,20 +314,28 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
         components = {"volume": round(float(volume), 3), "efficiency": round(float(efficiency), 4),
                       "opp_factor": round(float(opp_factor), 4), "game_script": round(float(gs_component or 1.0), 4)}
 
-    mean_ = float(max(mean_, 0.0))
-    sd_ = float(max(sd_, 1e-3))
+    # FAIL CLOSED (Phase 7.4). ``max(nan, 0.0)`` returns nan, so a NaN mean --
+    # produced whenever a rolling usage column has no prior history, which is
+    # a designed state here, not a corruption -- used to survive this clamp,
+    # reach p_over, and emerge as p_over=1.0000 with
+    # eligible_for_shortlist=True. That is the worst shape a bug can take in
+    # this system: it does not raise, it ranks first. A projection we cannot
+    # compute is reported as missing and barred from the shortlist.
+    projectable = _isfinite(mean_) and _isfinite(sd_)
+    mean_ = float(max(mean_, 0.0)) if projectable else float("nan")
+    sd_ = float(max(sd_, 1e-3)) if projectable else float("nan")
 
     roll_games = player_row.get("roll_games")
     roll_games = 0.0 if roll_games is None or (isinstance(roll_games, float) and math.isnan(roll_games)) else float(roll_games)
-    eligible = roll_games >= min_games
+    eligible = roll_games >= min_games and projectable
 
     out = {
         "player_id": player_row.get("player_id"),
         "name": player_row.get("player_name"),
         "pos": player_row.get("role"),
         "market": market,
-        "mean": round(mean_, 3),
-        "sd": round(sd_, 3),
+        "mean": round(mean_, 3) if projectable else None,
+        "sd": round(sd_, 3) if projectable else None,
         "dist": dist,
         "line": line,
         "p_over": None,
@@ -290,8 +345,9 @@ def project(player_row: Dict, market: str, team_row: Optional[Dict] = None,
         "eligible_for_shortlist": eligible,
         "roll_games": roll_games,
     }
-    if line is not None:
+    if line is not None and projectable:
         po = p_over(mean_, sd_, float(line), dist)
-        out["p_over"] = round(po, 4)
-        out["p_under"] = round(1.0 - po, 4)
+        if _isfinite(po):
+            out["p_over"] = round(po, 4)
+            out["p_under"] = round(1.0 - po, 4)
     return out

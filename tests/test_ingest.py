@@ -33,7 +33,11 @@ def test_loaders_compose_extra_seasons():
 def test_refresh_degrades_loudly_not_silently(monkeypatch):
     """A dead nflverse pull must report errors + stale, never raise or
     silently serve nothing."""
-    import nflreadpy as nfl
+    # nflreadpy is an OPTIONAL dependency (requirements.txt only needs it to
+    # rebuild caches for new seasons). Without this guard the suite reports a
+    # FAILURE rather than a skip when it is absent, which makes "262 green"
+    # quietly conditional on an optional install. Phase 7.5.
+    nfl = pytest.importorskip("nflreadpy")
 
     def boom(**kw):
         raise RuntimeError("nflverse unreachable (test)")

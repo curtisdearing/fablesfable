@@ -120,12 +120,25 @@ def parse_event_props(payload: Dict, ts: str) -> List[Dict]:
                 side = {"over": "over", "yes": "over", "under": "under", "no": "under"}.get(side_raw)
                 if not player_name or side is None:
                     continue
+                # FAIL CLOSED (Phase 7.2). A malformed/truncated payload used
+                # to mint a phantom line here: an outcome carrying no price and
+                # no point produced a row with price=None and point defaulted
+                # to 0.5, i.e. a "receiving yards over 0.5" quote that never
+                # existed. That row was then written to the `lines` table and
+                # was indistinguishable from a real quote. A line we did not
+                # receive is not a line.
+                if o.get("price") is None:
+                    continue
+                if o.get("point") is None and market != "anytime_td":
+                    # 0.5 is the fixed anytime-TD convention ONLY; for every
+                    # other market a missing point is missing data.
+                    continue
                 rows.append({
                     "ts": ts, "game_id": None,  # filled by caller (odds event id != nflverse game_id)
                     "book": book, "market": market,
                     "player_id": None, "player_name": player_name, "side": side,
                     "point": float(o["point"]) if o.get("point") is not None else 0.5,
-                    "price": float(o["price"]) if o.get("price") is not None else None,
+                    "price": float(o["price"]),
                 })
     return rows
 
@@ -271,6 +284,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
 
     ordered = rotation_order(conn, list(event_map))
     pulled, skipped_budget, skipped_cap = [], [], []
+    skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
     spent = 0.0
 
@@ -289,7 +303,22 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             params["bookmakers"] = ",".join(cfg["books"])
         else:
             params["regions"] = regions
-        payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_map[game_id]}/odds", params)
+        # DEGRADE, DON'T ABORT (Phase 7.2). A single flaky HTTP call used to
+        # propagate out of here and kill the entire weekly run -- after the
+        # candidate pool had already been built. One dead event must cost that
+        # event only; the game falls through to `no_market`, which is the
+        # documented behaviour for a game whose lines we could not pull.
+        # BudgetExceeded is deliberately NOT caught: overspending a metered
+        # free tier is a hard stop, not a degradation.
+        try:
+            payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_map[game_id]}/odds", params)
+        except BudgetExceeded:
+            raise
+        except Exception as exc:  # noqa: BLE001 -- surfaced in skipped_error
+            skipped_error.append({"game_id": game_id,
+                                  "error": f"{type(exc).__name__}: {exc}"})
+            print(f"[oddsapi] pull failed for {game_id}: {type(exc).__name__}: {exc}")
+            continue
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
         budget.spend(cost_per_event, headers=headers)
         spent += cost_per_event
@@ -304,6 +333,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
         written = dbmod.upsert(conn, "lines", all_rows,
                                ["ts", "game_id", "book", "market", "player_name", "side"])
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
+            "skipped_error": skipped_error,
             "rows_written": written, "credits_spent": spent,
             "budget_remaining": budget.remaining, "ts": ts}
 

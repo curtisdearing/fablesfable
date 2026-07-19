@@ -191,6 +191,84 @@ SCHEMA = {
 }
 
 
+# --------------------------------------------------------------------------- #
+# Schema versioning (Phase 7.3)
+# --------------------------------------------------------------------------- #
+# The live DB is a DURABLE RELEASE ASSET: the weekly automation downloads it
+# from a GitHub release, appends to it, and uploads it again. That makes
+# ``CREATE TABLE IF NOT EXISTS`` alone unsafe -- it is a no-op against an
+# existing table, so a new column added to SCHEMA would silently never appear
+# on the deployed database, and every historical row would be orphaned from
+# the code that expects it.
+#
+# RULES for adding a migration:
+#   * FORWARD ONLY. Never renumber, never edit a shipped migration.
+#   * ADDITIVE ONLY. ALTER TABLE ... ADD COLUMN, or CREATE TABLE. No DROP, no
+#     column rename, no type change -- existing rows must survive untouched
+#     with their existing values readable.
+#   * Every statement must be idempotent or guarded, because a migration may
+#     be re-attempted after a partial failure.
+#   * Bump SCHEMA_VERSION to match the highest key.
+SCHEMA_VERSION = 1
+
+#: {version: (description, [sql statements])}. Version 1 is the baseline that
+#: SCHEMA itself creates, so it carries no statements: it exists to stamp
+#: already-deployed databases that predate versioning.
+MIGRATIONS: "dict[int, tuple]" = {
+    1: ("baseline: tables as created by SCHEMA", []),
+}
+
+
+def _column_names(conn: sqlite3.Connection, table: str) -> List[str]:
+    return [r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+
+
+def add_column_if_missing(conn: sqlite3.Connection, table: str, column: str,
+                          decl: str) -> bool:
+    """Idempotent ``ALTER TABLE ADD COLUMN`` helper for migrations.
+
+    Returns True if the column was added. Existing rows get NULL in the new
+    column -- which is the honest value for 'this row predates the field',
+    and is why migrations must be additive: a default would be a fabricated
+    measurement attached to historical data.
+    """
+    if column in _column_names(conn, table):
+        return False
+    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+    return True
+
+
+def user_version(conn: sqlite3.Connection) -> int:
+    return int(conn.execute("PRAGMA user_version").fetchone()[0])
+
+
+def migrate(conn: sqlite3.Connection) -> int:
+    """Bring a DB up to SCHEMA_VERSION, running each pending migration once.
+
+    A database from before Phase 7.3 reports user_version=0. It is stamped to
+    the baseline rather than rebuilt: its tables already exist and its rows are
+    production history.
+    """
+    current = user_version(conn)
+    if current > SCHEMA_VERSION:
+        raise RuntimeError(
+            f"database schema v{current} is NEWER than this code understands "
+            f"(v{SCHEMA_VERSION}). Refusing to touch it -- downgrading would "
+            f"silently drop columns written by a later release.")
+    for version in sorted(MIGRATIONS):
+        if version <= current:
+            continue
+        _desc, statements = MIGRATIONS[version]
+        for stmt in statements:
+            if callable(stmt):
+                stmt(conn)
+            else:
+                conn.execute(stmt)
+        conn.execute(f"PRAGMA user_version={version}")
+        conn.commit()
+    return user_version(conn)
+
+
 def connect(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
     """Open (and initialize) the warehouse DB, creating tables if needed."""
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -210,6 +288,7 @@ def connect(db_path: str = DEFAULT_DB_PATH) -> sqlite3.Connection:
     for ddl in SCHEMA.values():
         conn.execute(ddl)
     conn.commit()
+    migrate(conn)
     return conn
 
 
