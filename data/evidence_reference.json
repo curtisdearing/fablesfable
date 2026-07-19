@@ -1,0 +1,205 @@
+{
+ "n": 62980,
+ "note": "league reference levels by market and position; prior seasons only when through_season is set",
+ "references": {
+  "anytime_td|RB|proj_efficiency": {
+   "ci": [
+    0.0558,
+    0.0621
+   ],
+   "mean": 0.0591,
+   "median": 0.0494,
+   "n": 7042
+  },
+  "anytime_td|RB|proj_volume": {
+   "ci": [
+    11.5303,
+    11.954
+   ],
+   "mean": 11.7119,
+   "median": 11.0,
+   "n": 7042
+  },
+  "anytime_td|TE|proj_efficiency": {
+   "ci": [
+    0.1316,
+    0.1948
+   ],
+   "mean": 0.1668,
+   "median": 0.1608,
+   "n": 3594
+  },
+  "anytime_td|TE|proj_volume": {
+   "ci": [
+    4.6911,
+    4.8173
+   ],
+   "mean": 4.7482,
+   "median": 4.375,
+   "n": 3594
+  },
+  "anytime_td|WR|proj_efficiency": {
+   "ci": [
+    0.0865,
+    0.0927
+   ],
+   "mean": 0.0894,
+   "median": 0.0778,
+   "n": 9730
+  },
+  "anytime_td|WR|proj_volume": {
+   "ci": [
+    5.8067,
+    6.0057
+   ],
+   "mean": 5.8945,
+   "median": 5.625,
+   "n": 9730
+  },
+  "pass_attempts|QB|proj_efficiency": {
+   "ci": [
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "median": 1.0,
+   "n": 3228
+  },
+  "pass_attempts|QB|proj_volume": {
+   "ci": [
+    31.837,
+    33.9957
+   ],
+   "mean": 32.8434,
+   "median": 33.89,
+   "n": 3228
+  },
+  "passing_yards|QB|proj_efficiency": {
+   "ci": [
+    6.5884,
+    6.7534
+   ],
+   "mean": 6.6653,
+   "median": 6.6742,
+   "n": 3228
+  },
+  "passing_yards|QB|proj_volume": {
+   "ci": [
+    31.837,
+    33.9957
+   ],
+   "mean": 32.8434,
+   "median": 33.89,
+   "n": 3228
+  },
+  "receiving_yards|TE|proj_efficiency": {
+   "ci": [
+    7.1794,
+    7.3693
+   ],
+   "mean": 7.2712,
+   "median": 7.1685,
+   "n": 3558
+  },
+  "receiving_yards|TE|proj_volume": {
+   "ci": [
+    4.6241,
+    4.7651
+   ],
+   "mean": 4.6827,
+   "median": 4.258,
+   "n": 3558
+  },
+  "receiving_yards|WR|proj_efficiency": {
+   "ci": [
+    7.9517,
+    8.129
+   ],
+   "mean": 8.0371,
+   "median": 7.9348,
+   "n": 9442
+  },
+  "receiving_yards|WR|proj_volume": {
+   "ci": [
+    5.6529,
+    5.8801
+   ],
+   "mean": 5.7579,
+   "median": 5.455,
+   "n": 9442
+  },
+  "receptions|TE|proj_efficiency": {
+   "ci": [
+    0.6805,
+    0.6972
+   ],
+   "mean": 0.6892,
+   "median": 0.6907,
+   "n": 3558
+  },
+  "receptions|TE|proj_volume": {
+   "ci": [
+    4.6241,
+    4.7651
+   ],
+   "mean": 4.6827,
+   "median": 4.258,
+   "n": 3558
+  },
+  "receptions|WR|proj_efficiency": {
+   "ci": [
+    0.6226,
+    0.6299
+   ],
+   "mean": 0.6261,
+   "median": 0.6287,
+   "n": 9442
+  },
+  "receptions|WR|proj_volume": {
+   "ci": [
+    5.6529,
+    5.8801
+   ],
+   "mean": 5.7579,
+   "median": 5.455,
+   "n": 9442
+  },
+  "rush_attempts|RB|proj_efficiency": {
+   "ci": [
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "median": 1.0,
+   "n": 5079
+  },
+  "rush_attempts|RB|proj_volume": {
+   "ci": [
+    11.1875,
+    11.8443
+   ],
+   "mean": 11.5004,
+   "median": 11.256,
+   "n": 5079
+  },
+  "rushing_yards|RB|proj_efficiency": {
+   "ci": [
+    4.1328,
+    4.1704
+   ],
+   "mean": 4.1468,
+   "median": 4.1054,
+   "n": 5079
+  },
+  "rushing_yards|RB|proj_volume": {
+   "ci": [
+    11.1875,
+    11.8443
+   ],
+   "mean": 11.5004,
+   "median": 11.256,
+   "n": 5079
+  }
+ },
+ "through_season": 2025
+}
