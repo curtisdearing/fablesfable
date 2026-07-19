@@ -21,6 +21,28 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt pytest
+      # The whole suite now runs in CI, not an allowlist.
+      #
+      # It used to be an allowlist because most tests needed a ~19 MB gitignored
+      # play-by-play cache and errored without it. The consequence was that
+      # test_leakage.py -- the file its own docstring calls "the #1 kill bug
+      # test" -- never ran here at all, and neither did test_reproducibility or
+      # test_positions. A committed 1.2 MB real slice
+      # (tests/fixtures/pbp_2019_2020.parquet) now backs those tests, so they
+      # run on every push.
+      #
+      # STRICT_FIXTURES makes a MISSING fixture a hard failure rather than a
+      # skip. Without it a future change that deleted or renamed the fixture
+      # would turn the leakage guards into silent skips and CI would stay
+      # green -- which is the failure mode this whole change exists to close.
+      - name: Run the full suite (fixtures required, skips not tolerated)
+        env:
+          FABLESFABLE_STRICT_FIXTURES: "1"
+        run: pytest -q tests/
+
+      # Kept as an explicit second pass: these are the files that must pass with
+      # NO data of any kind, so a regression that makes one of them depend on a
+      # cache is caught here rather than masked by the fixture.
       - name: Run data-independent behavioral tests
         run: >-
           pytest -q
@@ -43,3 +65,10 @@ jobs:
           tests/test_sleeper.py
           tests/test_synthesis.py
           tests/test_sanity_diff.py
+          tests/test_numeric_edge_cases.py
+          tests/test_failure_modes.py
+          tests/test_schema_and_artifact_integrity.py
+          tests/test_guard_mutations.py
+          tests/test_golden_output.py
+          tests/test_explainability.py
+          tests/test_explain_cards.py

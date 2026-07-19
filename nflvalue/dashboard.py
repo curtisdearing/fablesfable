@@ -65,6 +65,40 @@ tr:hover td{background:#172033}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+/* ---- Phase 8.4 explainability cards -------------------------------------
+   Magnitude is carried by BAR LENGTH plus a NUMERIC LABEL; direction by a
+   GLYPH plus a WORD. Colour is redundant everywhere, so the card survives a
+   greyscale screenshot and a colourblind reader. Evidence chips use BORDER
+   STYLE (not fill colour) to separate strong from thin, for the same reason. */
+.xcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+.xhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 15px;cursor:pointer}
+.xhead:hover{background:var(--panel2)}
+.xname{font-weight:700;font-size:15px}
+.xmkt{color:var(--muted)}
+.xproj{font-variant-numeric:tabular-nums;font-weight:700;margin-left:auto}
+.xbody{display:none;padding:4px 15px 16px;border-top:1px solid var(--line)}
+.xcard.open .xbody{display:block}
+.xsec{margin:14px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.drv{display:grid;grid-template-columns:210px 1fr 92px;gap:10px;align-items:center;padding:5px 0}
+.drvlab{font-size:13px}
+.drvbarwrap{background:var(--panel2);border:1px solid var(--line);border-radius:5px;height:16px;position:relative}
+.drvbar{height:100%;border-radius:4px;background:var(--muted)}
+.drvbar.up{background:repeating-linear-gradient(45deg,#8fb8ff,#8fb8ff 5px,#6f9ae6 5px,#6f9ae6 10px)}
+.drvbar.down{background:repeating-linear-gradient(-45deg,#ffb38f,#ffb38f 5px,#e68f6f 5px,#e68f6f 10px)}
+.drvnum{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;color:#cdd7ea}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-right:6px}
+.chip.strong{border:2px solid #cdd7ea;color:#e8edf6}
+.chip.moderate{border:2px dashed #cdd7ea;color:#e8edf6}
+.chip.thin{border:2px dotted #ffce54;color:#ffce54;background:rgba(255,206,84,.09)}
+.chip.unproven{border:2px dotted #ff9d7a;color:#ff9d7a;background:rgba(255,157,122,.09)}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--line);color:var(--muted)}
+.badge.synthetic{border:1px dashed #ffce54;color:#ffce54}
+.badge.real{border:1px solid #2fd07a;color:#2fd07a}
+.warnbox{border:1px solid #ffce54;background:rgba(255,206,84,.07);border-radius:10px;padding:12px 14px;margin:10px 0;color:#f6e6bd}
+.counter{border-left:3px solid var(--muted);padding-left:10px;margin:4px 0;color:#dbe4f3}
+.pline{margin:5px 0;color:#dbe4f3;line-height:1.55}
+.xmeta{color:var(--muted);font-size:11px}
+.sparkwrap{margin-top:6px}
 .box h3{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 .wbar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px}
 .wbar .name{width:120px;color:#cdd7ea}
@@ -96,6 +130,8 @@ tr:hover td{background:#172033}
     <div class="tab" data-t="bets">Value Bets</div>
     <div class="tab" data-t="props">Player Props</div>
     <div class="tab" data-t="leans">Weekly Leans</div>
+    <div class="tab" data-t="why">Why This Pick</div>
+    <div class="tab" data-t="record">Honest Record</div>
     <div class="tab" data-t="mc">Monte Carlo</div>
     <div class="tab" data-t="games">All Games</div>
     <div class="tab" data-t="perf">Model &amp; Learning</div>
@@ -107,6 +143,8 @@ tr:hover td{background:#172033}
   <div class="panel" id="bets"></div>
   <div class="panel" id="props"></div>
   <div class="panel" id="leans"></div>
+  <div class="panel" id="why"></div>
+  <div class="panel" id="record"></div>
   <div class="panel" id="mc"></div>
   <div class="panel" id="games"></div>
   <div class="panel" id="perf"></div>
@@ -432,6 +470,177 @@ function renderCards(){
     <div class="card"><div class="k">Bankroll</div><div class="val">${(DATA.metrics&&DATA.metrics.bankroll||100).toFixed(1)}u</div></div>`;
 }
 
+
+/* ===================== Phase 8.4-8.6: explainability ======================
+   Everything below RENDERS values the deterministic layer already computed.
+   It formats no numbers of its own: every figure arrives as a *_label string
+   built by explain_render.fmt, which is what makes "the prose and the card
+   show the same number" checkable rather than hopeful. */
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function evChip(ev){
+  // Grade chips differ by BORDER STYLE (solid/dashed/dotted) as well as hue,
+  // so "thin" stays visible in greyscale. n and CI always ride along -- a
+  // strength word without a sample size is exactly what this phase forbids.
+  const g=ev.grade||"unproven";
+  return '<span class="chip '+esc(g)+'">'+esc(g)+'</span>'
+       + '<span class="xmeta">'+esc(ev.n_label)+' · '+esc(ev.ci_label)+'</span>';
+}
+
+function driverRow(d){
+  const b=d.bar||{};
+  const cls = b.glyph==="▲" ? "up" : (b.glyph==="▼" ? "down" : "");
+  const val = d.multiplier_label ? ("×"+esc(d.multiplier_label)) : "";
+  const ref = d.reference_label ? (" vs avg "+esc(d.reference_label)) : "";
+  return '<div class="drv">'
+    +   '<div class="drvlab">'+esc(d.label)+'<div class="xmeta">'+val+ref+'</div></div>'
+    +   '<div class="drvbarwrap" title="'+esc(b.basis||"")+'">'
+    +     '<div class="drvbar '+cls+'" style="width:'+(b.pct||0)+'%"></div></div>'
+    +   '<div class="drvnum">'+esc(b.glyph||"")+" "+esc(b.word||"")
+    +     '<br><span class="xmeta">'+esc(d.value_label)+" "+esc(d.unit)+'</span></div>'
+    + '</div>'
+    + '<div style="margin:0 0 8px 0">'+evChip(d.evidence||{})+'</div>';
+}
+
+function sparkline(trend){
+  // 8.5: the AS-OF BOUNDARY is drawn explicitly. Every plotted point is a week
+  // strictly before the predicted one; the dashed rule is where the model's
+  // information stops. That is the whole purpose of this chart.
+  if(!trend || !trend.points || trend.points.length<2) return "";
+  const pts=trend.points, w=420, h=54, pad=4;
+  function path(field){
+    const vals=pts.map(p=>p[field]).filter(v=>v!=null);
+    if(vals.length<2) return "";
+    const lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+    const rng=(hi-lo)||1;
+    return pts.map((p,i)=>{
+      if(p[field]==null) return null;
+      const x=pad+(i/(pts.length-1))*(w-2*pad-70);
+      const y=h-pad-((p[field]-lo)/rng)*(h-2*pad);
+      return (i===0?"M":"L")+x.toFixed(1)+","+y.toFixed(1);
+    }).filter(Boolean).join(" ");
+  }
+  const bx=w-70;
+  const b=trend.as_of_boundary||{};
+  return '<div class="sparkwrap"><svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'">'
+    + '<path d="'+path("volume")+'" fill="none" stroke="#8fb8ff" stroke-width="1.6"/>'
+    + '<path d="'+path("efficiency")+'" fill="none" stroke="#cdd7ea" stroke-width="1.6" stroke-dasharray="3,2"/>'
+    + '<line x1="'+bx+'" y1="2" x2="'+bx+'" y2="'+(h-2)+'" stroke="#ffce54" stroke-width="1.4" stroke-dasharray="4,3"/>'
+    + '<text x="'+(bx+5)+'" y="14" fill="#ffce54" font-size="10">as-of</text>'
+    + '<text x="'+(bx+5)+'" y="26" fill="#ffce54" font-size="10">wk '+esc(b.week)+'</text>'
+    + '</svg>'
+    + '<div class="xmeta">solid = volume, dashed = efficiency, over the '
+    + pts.length+' most recent PRIOR weeks. Nothing right of the marker was '
+    + 'available to the model.</div></div>';
+}
+
+function proseBlock(title, sentences){
+  if(!sentences || !sentences.length) return "";
+  return '<div class="xsec">'+esc(title)+'</div>'
+    + sentences.map(s=>'<div class="pline">'+esc(s.text)+'</div>').join("");
+}
+
+function explainCard(c, i){
+  const badge = c.is_synthetic_line
+    ? '<span class="badge synthetic">SYNTHETIC reference †</span>'
+    : '<span class="badge real">real book line</span>';
+  // A synthetic-line card has no edge field AT ALL -- not "edge: n/a", which
+  // would still invite the reader to go looking for a number.
+  const edge = c.edge_label ? '<span class="badge">edge '+esc(c.edge_label)+'</span>' : "";
+  const counter = c.counter_case_count===0
+    ? '<div class="warnbox">Nothing in the projection argues against this side. '
+      + 'That usually means few factors were measured — not that the pick is safe.</div>'
+    : "";
+  return '<div class="xcard" id="xc'+i+'">'
+    + '<div class="xhead" onclick="document.getElementById(\'xc'+i+'\').classList.toggle(\'open\')">'
+    +   '<span class="xname">'+esc(c.name)+'</span>'
+    +   '<span class="xmkt">'+esc(c.pos)+" "+esc(c.team)+" · "+esc(c.market)
+    +     " · lean "+esc(c.side)+" "+esc(c.line_label)+'</span>'
+    +   badge+edge
+    +   '<span class="chip '+esc(c.weakest_grade)+'">weakest evidence: '+esc(c.weakest_grade)+'</span>'
+    +   '<span class="xproj">proj '+esc(c.projection_label)+'</span>'
+    + '</div>'
+    + '<div class="xbody">'
+    +   '<div class="xmeta">Surfaced as '+esc(c.screened_label)+' candidates screened in this game. '
+    +     'The more screened, the more the top of the list contains luck.</div>'
+    +   counter
+    +   '<div class="xsec">What produced this number</div>'
+    +   (c.drivers||[]).map(driverRow).join("")
+    +   proseBlock("The case, in words", (c.prose||{}).drivers)
+    +   proseBlock("Against this side", (c.prose||{}).counter_case)
+    +   proseBlock("Evidence behind each driver", (c.prose||{}).evidence)
+    +   proseBlock("What would change our mind", (c.prose||{}).what_would_change)
+    +   ((c.not_applied||[]).length
+        ? '<div class="xsec">Adjustments that did NOT fire</div><div class="xmeta">'
+          + c.not_applied.map(n=>esc(n.stage)+": "+esc(n.reason)).join("<br>")+'</div>'
+        : "")
+    +   (c.trend ? '<div class="xsec">Prior-week trend</div>'+sparkline(c.trend) : "")
+    +   '<div class="xsec">Reconciliation</div><div class="xmeta">'
+    +     'Ledger replays to the shipped projection (drift '
+    +     esc((c.reconciliation||{}).drift)+' within rounding bound '
+    +     esc((c.reconciliation||{}).rounding_bound)+'). Granularity: '
+    +     esc(c.granularity)+'.</div>'
+    + '</div></div>';
+}
+
+function renderWhy(){
+  const el=document.getElementById("why"); if(!el) return;
+  const x=DATA.explain;
+  if(!x || !(x.cards||[]).length){
+    el.innerHTML='<div class="box">No explainability payload for this week.</div>';
+    return;
+  }
+  const bad=(x.unexplainable||[]).length
+    ? '<div class="warnbox"><b>'+x.unexplainable.length+' pick(s) could not be explained</b> '
+      + 'and are listed here rather than hidden — a pick whose ledger will not '
+      + 'reconcile is one to distrust, not to quietly drop.<br>'
+      + x.unexplainable.map(u=>esc(u.player)+" "+esc(u.market)+": "+esc(u.error)).join("<br>")
+      + '</div>'
+    : "";
+  el.innerHTML='<div class="box"><b>Why this pick</b><div class="xmeta">'
+    + 'Every number below traces to the contribution ledger and reconciles to the '
+    + 'shipped projection. Cards are collapsed — click one to expand. '
+    + 'Leans, not locks.</div></div>'
+    + bad
+    + x.cards.map(explainCard).join("");
+}
+
+function recordRow(label, value, caveat){
+  return '<tr><td>'+esc(label)+'</td><td class="price">'+esc(value)+'</td>'
+    + '<td class="xmeta">'+esc(caveat||"")+'</td></tr>';
+}
+
+function renderRecord(){
+  const el=document.getElementById("record"); if(!el) return;
+  const r=(DATA.explain||{}).record;
+  if(!r){ el.innerHTML='<div class="box">No record payload.</div>'; return; }
+  const syn=r.synthetic_line_accuracy||{};
+  const seasons=(syn.seasons||[]).map(s=>
+      '<tr><td>'+esc(s.season)+'</td><td class="price">'+esc(s.label)+'</td>'
+    + '<td class="xmeta">95% CI '+esc((s.ci||[])[0])+"–"+esc((s.ci||[])[1])+'</td></tr>'
+  ).join("");
+  el.innerHTML =
+      '<div class="warnbox"><b>'+esc(r.headline)+'</b></div>'
+    + '<div class="box"><b>Synthetic-line accuracy</b>'
+    +   '<div class="xmeta">'+esc(syn.what_it_is)+'<br><b>'+esc(syn.what_it_is_not)+'</b></div>'
+    +   (seasons ? '<table><thead><tr><th>Season</th><th>Hit rate</th><th>Interval</th></tr></thead><tbody>'
+        +seasons+'</tbody></table>' : '<div class="xmeta">not available</div>')
+    + '</div>'
+    + '<div class="box"><b>The scoreboards that would actually matter</b>'
+    +   '<table><thead><tr><th>Measure</th><th>Value</th><th>Note</th></tr></thead><tbody>'
+    +   recordRow("Real bookmaker-line record", (r.real_line_record||{}).label,
+                  (r.real_line_record||{}).caveat)
+    +   recordRow("Resolved closing-line value", (r.clv||{}).label, (r.clv||{}).caveat)
+    +   recordRow("Calibration (ECE)", (r.calibration||{}).label||"not computed",
+                  "Calibration is honesty of probabilities, not profitability.")
+    +   '</tbody></table></div>'
+    + '<div class="box"><b>Kill-check: '+esc((r.kill_check||{}).verdict)+'</b>'
+    +   '<div class="pline">'+esc((r.kill_check||{}).plain_english)+'</div>'
+    +   ((r.kill_check||{}).detail ? '<div class="xmeta">'+esc(r.kill_check.detail)+'</div>' : "")
+    + '</div>';
+}
+
 function renderPipeline(){
   const p=DATA.pipeline||{};
   const status=(p.status||DATA.mode||"demo").toLowerCase();
@@ -456,7 +665,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;

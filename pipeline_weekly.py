@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
@@ -349,6 +350,30 @@ def update_dashboard(report_payload: Dict, conn) -> str:
     data["weekly_leans"] = {k: v for k, v in report_payload.items() if k != "markdown"}
     data["leans_clv"] = clvmod.rolling_clv(conn)
     data["leans_killcheck"] = kcmod.report(conn)
+    # Phase 8.4-8.6: the explainability payload (cards, trends, honest record).
+    # Degrades LOUDLY -- if the ledger cannot be built the dashboard shows an
+    # error block rather than a page that silently omits the "why", because a
+    # missing explanation on a money-adjacent pick is itself the story.
+    try:
+        from nflvalue import explain_cards as xcards
+        frame = None
+        frame_path = os.path.join(cfgmod.DATA_DIR, "ml_frame.parquet")
+        if os.path.exists(frame_path):
+            frame = pd.read_parquet(
+                frame_path,
+                columns=["season", "week", "player_id", "market",
+                         "proj_volume", "proj_efficiency", "opp_factor"])
+        payload = xcards.build_payload(
+            data["weekly_leans"], frame=frame, conn=conn,
+            eval_results=cfgmod.load_json(
+                os.path.join(cfgmod.DATA_DIR, "ml_eval_results.json"), None))
+        xcards.write_payload(payload)
+        data["explain"] = payload
+    except Exception as exc:  # noqa: BLE001 -- visible, never silent
+        print(f"[pipeline] explainability payload failed: "
+              f"{type(exc).__name__}: {exc}")
+        data["explain"] = {"cards": [], "unexplainable": [],
+                           "error": f"{type(exc).__name__}: {exc}"}
     data.setdefault("refresh_seconds", 90)
     cfgmod.save_json(cfgmod.LATEST_PATH, data)
     return write_dashboard(data)
