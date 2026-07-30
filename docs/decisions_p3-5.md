@@ -580,3 +580,17 @@ the chemistry study's "already priced by recency baselines" pattern. Builders
 stay (full-frame research feature); the lean config set excludes them, with
 provenance updated. 7 tests (`tests/test_pass_location.py`) lock the as-of
 safety either way.
+
+### Real-line backtest harness pre-built (runs itself every close capture)
+
+`analysis/real_line_backtest.py` is the standing report the whole accuracy
+roadmap waits on: coverage + movement structure of the accruing
+`line_open_close` record, reliability of PUBLISHED probabilities against real
+graded outcomes (synthetic-line leans explicitly excluded from the join), and
+the CLV/kill verdict restated against the protocol floors (150 resolved, 100
+per reliability computation, 100 per movement market). Every section is
+fail-closed: thin data yields `insufficient_data` with exact n-of-needed, never
+an extrapolation. `pipeline_weekly.resolve_clv` refreshes
+`book/real_line_backtest.json` after every t90 close capture, so the honest
+scoreboard fills itself in as the season runs. 6 tests including the
+synthetic-exclusion join and the ECE-0 calibrated seed.

@@ -674,6 +674,17 @@ def resolve_clv(season: int, week: int,
     stats = clvmod.rolling_clv(conn)
     verdict = kcmod.report(conn)
     conn.close()
+    # Refresh the standing real-line report from whatever has accrued so far
+    # (fail-closed sections; safe on thin data — see analysis/real_line_backtest.py).
+    try:
+        from analysis import real_line_backtest as rlb
+        import json as _json
+        _report = rlb.build_report()
+        os.makedirs(os.path.dirname(rlb.BOOK_PATH), exist_ok=True)
+        with open(rlb.BOOK_PATH, "w") as _fh:
+            _json.dump(_report, _fh, indent=1, default=str)
+    except Exception as exc:  # a report refresh must never break close capture
+        print(f"real_line_backtest refresh skipped: {exc}")
     return {"resolved": int(len(resolved)),
             "opens_closes_logged": int(len(opens_closes)),
             "clv": stats, "killcheck": verdict}

@@ -1,0 +1,52 @@
+{
+ "note": "REAL lines only. Synthetic-line results live elsewhere and are labeled as such; nothing in this file is graded at a synthetic number.",
+ "coverage": {
+  "status": "insufficient_data",
+  "n_rows": 0,
+  "note": "line_open_close is empty \u2014 accrues on live weekly runs"
+ },
+ "movement": {
+  "status": "insufficient_data",
+  "n_rows": 0
+ },
+ "reliability": {
+  "status": "insufficient_data",
+  "n_resolved_real_line_leans": 0,
+  "needs": 100,
+  "note": "reliability on real lines waits for graded real-line leans"
+ },
+ "clv": {
+  "clv": {
+   "n": 0,
+   "rolling_mean": null,
+   "lifetime_mean": null,
+   "positive_rate": null,
+   "beat_close_rate": null,
+   "avg_point_move": null,
+   "window": 50
+  },
+  "killcheck": {
+   "n": 0,
+   "rolling_mean": null,
+   "lifetime_mean": null,
+   "positive_rate": null,
+   "beat_close_rate": null,
+   "avg_point_move": null,
+   "window": 50,
+   "leans_logged": 0,
+   "min_sample": 150,
+   "verdict": "INSUFFICIENT_SAMPLE",
+   "detail": "0 leans with resolved CLV (of 0 logged; 150 needed). Keep logging; no conclusion yet \u2014 and no staking conclusions either way."
+  },
+  "gate_state": {
+   "resolved": 0,
+   "needs": 150,
+   "status": "insufficient_data",
+   "note": "0/150 resolved leans \u2014 the only edge test that matters is still accruing"
+  }
+ },
+ "summary": {
+  "sections_ready": "0/4",
+  "headline": "REAL-LINE RECORD ACCRUING \u2014 no honest real-line verdict yet"
+ }
+}
