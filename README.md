@@ -66,7 +66,7 @@ marks missing integrations instead of presenting synthetic lines as live odds.
 | Candidates + adjustments | `nflvalue/candidates.py` (usage gates, synthetic lines, measured injury/backup-QB/absence adjustments) |
 | Ranking | `nflvalue/composite.py` (auditable score), `ml_ranker.py` (GBDT/RF stacked classifier, walk-forward guarded) |
 | Features | `advanced_features.py` (PROE/pace/NGS/RZ/weather/contract), `chemistry.py` (QB/teammate/formation tilts), `ftn_features.py` (blitz/box/PA/motion), `context_features.py` (birthdays/revenge/def-injuries) |
-| Market | `sources/oddsapi_props.py` (budgeted, cross-book consensus + line shopping), `clv.py`, `killcheck.py` |
+| Market | `sources/oddsapi_props.py` (budgeted, cross-book consensus + line shopping), `clv.py` (incl. the durable `line_open_close` open/close record), `killcheck.py`, `fair_value.py` (fail-closed market-blend price context; currently gate-FAILED, ships nothing) |
 | Delivery | `pipeline_weekly.py` (two-clock), `report.py`, `document.py` (HTML drop), `notify.py` (Discord), dashboard Weekly Leans tab |
 | Self-updating | `prop_learning.py` (grade→attribute→adjust), `context_study.py` (evidence-gated narrative tags), Tuesday ML retrain w/ real-line label migration |
 | Data plumbing | `ingest.py` (auto-refresh), `scripts/auto_weekly.py` (self-scheduling jobs) |
@@ -85,6 +85,12 @@ The original game-line dashboard this grew from still works:
   every default, every measured constant, every caught bug (including two
   data leaks the guardrails caught — documented, not buried).
 - **[docs/phases_3-5.md](docs/phases_3-5.md)** — operations runbook.
+- **`book/*.json` + the dashboard's Honest Record tab** — every measured
+  accept-gate verdict (shipped / rejected / retained / research_only) with its
+  numbers; `nflvalue/gate_registry.py` collects them. Rejections are kept.
+- **`analysis/real_line_backtest.py`** — the standing real-line
+  reliability/CLV report; fail-closed until live weeks accrue, refreshed
+  automatically on every close capture.
 - **[docs/ACCURACY_PROTOCOL.md](docs/ACCURACY_PROTOCOL.md)** — preregistered
   evaluation, calibration, matched-control, CLV, sanity-diff, freeze, and
   bye-week rules.
