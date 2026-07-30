@@ -159,7 +159,7 @@ const DATA = __DATA_JSON__;
 
 const fmtPct = x => (x>=0?"+":"") + (x*100).toFixed(1) + "%";
 const fmtP = x => (x*100).toFixed(1) + "%";
-const esc = s => (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function evClass(ev){return ev>0?"ev pos":"ev neg";}
 
@@ -477,7 +477,10 @@ function renderCards(){
    built by explain_render.fmt, which is what makes "the prose and the card
    show the same number" checkable rather than hopeful. */
 
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+/* esc is declared once at the top of this script block (quote-escaping
+   variant). A second `function esc` here was a duplicate declaration — a
+   SyntaxError that killed the WHOLE script block on any regenerated page
+   (caught 2026-07-30 by headless render; see tests/test_dashboard_js.py). */
 
 function evChip(ev){
   // Grade chips differ by BORDER STYLE (solid/dashed/dotted) as well as hue,

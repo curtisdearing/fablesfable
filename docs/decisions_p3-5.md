@@ -594,3 +594,19 @@ an extrapolation. `pipeline_weekly.resolve_clv` refreshes
 `book/real_line_backtest.json` after every t90 close capture, so the honest
 scoreboard fills itself in as the season runs. 6 tests including the
 synthetic-exclusion join and the ECE-0 calibrated seed.
+
+### Duplicate `esc` declaration: a SyntaxError armed to kill every future deploy
+
+Phase 8's explain-cards section added `function esc(...)` below the template's
+existing `const esc = ...` in the SAME script block. A duplicate
+const/function declaration is a SyntaxError that kills the WHOLE block — no
+tabs, no data, no auto-refresh. The committed `dashboard.html` predates the
+merge, so the live page kept working while every future regeneration (any
+pipeline run or deploy heartbeat) would have shipped a dead dashboard. No
+test noticed because none examined the script's declarations; caught
+2026-07-30 by actually rendering the regenerated page headless (the
+verification step that should have existed). Fixed by keeping ONE esc (the
+quote-escaping superset, declared at the top) and adding
+`tests/test_dashboard_js.py`: no top-level identifier may be declared twice,
+esc exactly once, quote-escaping asserted. Phase-8's own `"function esc(" in
+TEMPLATE` assertion — which pinned the bug in place — updated to pin the fix.

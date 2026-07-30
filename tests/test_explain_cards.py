@@ -331,7 +331,10 @@ def test_dashboard_template_renders_both_new_panels():
 
 def test_dashboard_escapes_card_text():
     """Player names and notes reach the DOM; they must be escaped."""
-    assert "function esc(" in dashboard.TEMPLATE
+    # esc is declared ONCE, at the top of the script block (a second
+    # `function esc` was a duplicate declaration that killed the whole
+    # script — see tests/test_dashboard_js.py, 2026-07-30).
+    assert "const esc" in dashboard.TEMPLATE
     assert "&amp;" in dashboard.TEMPLATE
 
 
