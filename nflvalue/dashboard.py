@@ -714,8 +714,19 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
+  // Survive the auto-refresh reload: remember the tab in the URL hash
+  // (replaceState so back-button history isn't polluted; hash fallback).
+  try{history.replaceState(null,"","#"+t.dataset.t);}catch(e){location.hash=t.dataset.t;}
 });
 renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderRealLine();renderGates();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
+
+// Restore the tab the reader was on before the last auto-refresh.
+(function(){
+  const want=(location.hash||"").slice(1);
+  if(!want) return;
+  const tb=document.querySelector('.tab[data-t="'+CSS.escape(want)+'"]');
+  if(tb) tb.click();
+})();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;

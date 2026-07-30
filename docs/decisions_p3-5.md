@@ -640,3 +640,18 @@ close capture): per-section accruing/ready pills with the exact n-of-needed
 the honest scoreboard has filled in, not just that it is empty. Fail-safe: a
 missing book means the box simply doesn't render. Headless-verified, zero
 page errors.
+
+### Contrarian review (2026-07-30): the auto-refresh made the Honest Record tab unreadable
+
+An adversarial pass at the session's own output (full review in the vault:
+`fablesfable-contrarian-review-2026-07.md`) found the compliance layer
+sabotaging its own audience: `location.reload()` every 90s reset the page to
+the first tab, so the longest read on the page — the Honest Record tab — could
+not actually be read on a live page. Fixed by persisting the active tab in the
+URL hash (`history.replaceState`, `CSS.escape` on restore since the hash is
+user-controllable) and restoring it on load; headless-verified across a real
+reload. The review's accuracy items (g_market_residual as the next game-line
+lever, scoped matched-control re-registration of the QB haircut, an incumbent
+feature relegation pass, continuous-outcome labels, rank-aware objectives,
+declaring 2025 spent) are pre-registration candidates for future checkpoints,
+recorded in the vault note — NOT run here.
