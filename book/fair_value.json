@@ -1,0 +1,139 @@
+{
+ "note": "fair = alpha*model + (1-alpha)*market; price context ONLY, never a side-picker (see docs/analysis_line_dissection.md it5/it6). Only gate-passed markets ship an alpha; consumers fail closed.",
+ "source": "backtest_predictions.json",
+ "bootstrap": {
+  "n": 4000,
+  "seed": 20260730,
+  "cluster": "season-week"
+ },
+ "markets": {
+  "spread": {
+   "per_season": [
+    {
+     "season": 2020,
+     "n": 269,
+     "alpha": 0.0,
+     "mae_model": 10.1099,
+     "mae_market": 9.79,
+     "mae_blend": 9.79
+    },
+    {
+     "season": 2021,
+     "n": 285,
+     "alpha": 0.1,
+     "mae_model": 11.0975,
+     "mae_market": 10.6667,
+     "mae_blend": 10.6596
+    },
+    {
+     "season": 2022,
+     "n": 284,
+     "alpha": 0.1,
+     "mae_model": 9.1483,
+     "mae_market": 8.7835,
+     "mae_blend": 8.783
+    },
+    {
+     "season": 2023,
+     "n": 285,
+     "alpha": 0.1,
+     "mae_model": 10.4934,
+     "mae_market": 9.9842,
+     "mae_blend": 10.0097
+    },
+    {
+     "season": 2024,
+     "n": 285,
+     "alpha": 0.0,
+     "mae_model": 10.1553,
+     "mae_market": 9.7035,
+     "mae_blend": 9.7035
+    },
+    {
+     "season": 2025,
+     "n": 285,
+     "alpha": 0.05,
+     "mae_model": 10.1842,
+     "mae_market": 9.6702,
+     "mae_blend": 9.6825
+    }
+   ],
+   "pooled": {
+    "n": 1693,
+    "mae_model": 10.1996,
+    "mae_market": 9.7667,
+    "mae_blend": 9.7718,
+    "p_blend_beats_market": 0.1797
+   },
+   "gate": {
+    "rule": "mae_blend <= mae_market AND mae_blend <= mae_model AND p_blend_beats_market >= 0.9 (paired season-week bootstrap)",
+    "passed": false
+   },
+   "shipped_alpha": null
+  },
+  "total": {
+   "per_season": [
+    {
+     "season": 2020,
+     "n": 269,
+     "alpha": 0.1,
+     "mae_model": 10.8257,
+     "mae_market": 10.303,
+     "mae_blend": 10.3239
+    },
+    {
+     "season": 2021,
+     "n": 285,
+     "alpha": 0.0,
+     "mae_model": 11.2954,
+     "mae_market": 10.807,
+     "mae_blend": 10.807
+    },
+    {
+     "season": 2022,
+     "n": 284,
+     "alpha": 0.0,
+     "mae_model": 10.8092,
+     "mae_market": 10.3979,
+     "mae_blend": 10.3979
+    },
+    {
+     "season": 2023,
+     "n": 285,
+     "alpha": 0.0,
+     "mae_model": 10.6926,
+     "mae_market": 10.1684,
+     "mae_blend": 10.1684
+    },
+    {
+     "season": 2024,
+     "n": 285,
+     "alpha": 0.0,
+     "mae_model": 10.1235,
+     "mae_market": 9.7684,
+     "mae_blend": 9.7684
+    },
+    {
+     "season": 2025,
+     "n": 285,
+     "alpha": 0.0,
+     "mae_model": 10.6193,
+     "mae_market": 10.4228,
+     "mae_blend": 10.4228
+    }
+   ],
+   "pooled": {
+    "n": 1693,
+    "mae_model": 10.7266,
+    "mae_market": 10.3113,
+    "mae_blend": 10.3146,
+    "p_blend_beats_market": 0.0825
+   },
+   "gate": {
+    "rule": "mae_blend <= mae_market AND mae_blend <= mae_model AND p_blend_beats_market >= 0.9 (paired season-week bootstrap)",
+    "passed": false
+   },
+   "shipped_alpha": null
+  }
+ }
+}

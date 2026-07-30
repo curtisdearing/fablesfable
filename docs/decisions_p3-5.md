@@ -484,3 +484,48 @@ Now `pytest.importorskip`.
 No performance optimization (see 7.1). No change to any projection value, any
 market, any model family. The synthetic-line over/under split was not touched
 and was not tuned against — the recorded means->median negative result stands.
+
+## 2026-07-30 — Game-line accuracy session (M-G2 verdict, fair-value blend negative result)
+
+### M-G2 graded on real dumped sim outputs: the sim tail STAYS
+
+`backtest.py --dump-predictions` now also dumps `total_mean`/`total_pts`/
+`total_line` (additive fields), and `analysis/cover_calibration.py` graded the
+pre-registered M-G2 gate on the 1,912-game 2019–2025 dump: the drive-sim's own
+cover tail scores Brier **0.25757** vs **0.25954** for the fitted gaussian on
+the sim mean. The gaussian needed to WIN by ≥ 0.002 to replace the sim tail in
+EV math; it *lost* by ~0.002. Verdict recorded in `book/cover_calibration.json`:
+the simulator's empirical tail is better-calibrated on cover outcomes than a
+normal approximation around its own mean — keep the sim tail, close M-G2.
+
+### Fair-value market blend (the "nfelo move"): measured and REJECTED
+
+`nflvalue/fair_value.py` implements the it5 blend properly shipped: walk-forward
+alpha per season (strictly-prior training), pre-registered ship gate
+(`mae_blend <= mae_market` AND `<= mae_model` AND P(blend beats market) ≥ 0.90
+under a paired season-week bootstrap, per `analysis/accuracy_protocol.json`).
+Measured on the shipped simulator's real dumped forecasts (not re-derived
+ratings):
+
+| market | pooled n | MAE model | MAE market | MAE blend | P(beat market) | gate |
+|---|---|---|---|---|---|---|
+| spread | 1,693 | 10.20 | **9.767** | 9.772 | 0.18 | FAIL |
+| total  | 1,693 | 10.73 | **10.311** | 10.315 | 0.08 | FAIL |
+
+MSE sensitivity (exploratory, finer grid): same verdict — spread blend RMSE
+12.666 vs market 12.663; the totals alpha fits to **0.0 in every season** (the
+sim total adds nothing on top of the close). The walk-forward spread alpha
+decays 0.14 → 0.05 across seasons: whatever the ratings knew, the market has
+priced. This *contradicts* the vault's standing P1 suggestion — the nfelo blend
+is not an improvement for THIS model's outputs, consistent with the it0 lesson
+("you don't beat the close by re-deriving it"). Nothing ships: `weekly.py`
+shows `fair_spread_home`/`fair_total` ONLY for gate-passed markets in
+`book/fair_value.json`, so today it shows nothing (fail-closed, like every
+other unmeasured number). The machinery stays: any future model improvement
+re-grades the gate with one command (`python3 -m nflvalue.fair_value`).
+
+Tests: `tests/test_fair_value.py` (9) — alpha recovery at both extremes,
+walk-forward future-poisoning invariance, first-season exclusion, gate
+consistency of the committed book, fail-closed `load_shipped`/`fair_line`,
+and a synthetic gate-PASS case proving the gate *can* pass when the model
+carries orthogonal signal.

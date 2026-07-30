@@ -85,7 +85,9 @@ def run(sims=6000, threshold=0.03, dump_predictions=False):
         if dump_predictions:
             predictions.append({"season": g["season"], "week": g["week"],
                                 "margin_mean": r["margin_mean"], "p_home_cover": r["p_home_cover"],
-                                "margin": margin, "spread_line": sp})
+                                "margin": margin, "spread_line": sp,
+                                "total_mean": r["total_mean"], "total_pts": total_pts,
+                                "total_line": tot})
         # ---- spread pick ----
         side, p = ("home", r["p_home_cover"]) if r["p_home_cover"] >= r["p_away_cover"] else ("away", r["p_away_cover"])
         if p * DEC_110 - 1 >= threshold:

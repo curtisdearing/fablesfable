@@ -21,7 +21,7 @@ import json
 import os
 from collections import defaultdict
 
-from nflvalue import config, montecarlo as mc
+from nflvalue import config, fair_value, montecarlo as mc
 
 ABBR_OFF = None  # filled from ratings if needed
 
@@ -67,6 +67,17 @@ def _project_game(g, priors, sims, ratings=None):
         "su_pick": g["home"] if su_side == "home" else g["away"],
         "settled": False,
     }
+
+    # Fair-value price context (nflvalue/fair_value.py). Fail-closed: fields
+    # appear ONLY for markets whose walk-forward blend gate PASSED in
+    # book/fair_value.json. Never feeds ats_pick/total_pick/EV — price context.
+    shipped = fair_value.load_shipped()
+    fair_margin = fair_value.fair_line(r["margin_mean"], sp, shipped.get("spread"))
+    if fair_margin is not None:
+        row["fair_spread_home"] = round(-fair_margin, 1)
+    fair_total = fair_value.fair_line(r["total_mean"], tot, shipped.get("total"))
+    if fair_total is not None:
+        row["fair_total"] = round(fair_total, 1)
 
     if g.get("home_score") is not None and g.get("away_score") is not None and g.get("_played", True):
         hs, as_ = g["home_score"], g["away_score"]
