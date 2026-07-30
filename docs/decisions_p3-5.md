@@ -630,3 +630,13 @@ untracked) removed from the branch and gitignored; a vacuous structural
 assertion in `test_fair_value.py` tightened to a deterministic FAIL check;
 `tests/test_backtest_determinism.py` locks seed stability, identity-keying,
 and order-independence.
+
+### Real-line accrual state on the Honest Record tab
+
+The record panel now renders a "Real-line record — accrual state" box from
+`book/real_line_backtest.json` (which `resolve_clv` refreshes after every
+close capture): per-section accruing/ready pills with the exact n-of-needed
+(coverage, movement, reliability n/100, CLV n/150). The reader sees HOW FAR
+the honest scoreboard has filled in, not just that it is empty. Fail-safe: a
+missing book means the box simply doesn't render. Headless-verified, zero
+page errors.

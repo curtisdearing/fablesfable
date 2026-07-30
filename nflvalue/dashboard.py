@@ -8,6 +8,7 @@ server, no external libraries, works offline by double-clicking the file.
 from __future__ import annotations
 
 import json
+import os
 from typing import Dict
 
 from . import config
@@ -644,6 +645,31 @@ function renderRecord(){
     + '</div>';
 }
 
+function rlRow(name, s){
+  if(!s) return "";
+  const ok = s.status === "ok";
+  const n = s.n_rows != null ? s.n_rows : (s.n != null ? s.n : (s.n_resolved_real_line_leans != null ? s.n_resolved_real_line_leans : (s.resolved != null ? s.resolved : 0)));
+  const needs = s.needs != null ? (" of "+s.needs+" needed") : "";
+  return '<tr><td>'+esc(name)+'</td>'
+    + '<td><span class="pill '+(ok?'p':'n')+'">'+esc(ok?"ready":"accruing")+'</span></td>'
+    + '<td class="price">n='+esc(n)+esc(needs)+'</td>'
+    + '<td class="xmeta">'+esc(s.note||"")+'</td></tr>';
+}
+
+function renderRealLine(){
+  const el=document.getElementById("record"); if(!el) return;
+  const r=DATA.real_line; if(!r) return;
+  el.innerHTML += '<div class="box"><b>Real-line record — accrual state</b>'
+    + '<div class="xmeta">'+esc((r.summary||{}).headline||"")
+    + ' Auto-refreshed after every close capture; real lines only, nothing synthetic.</div>'
+    + '<table><thead><tr><th>Section</th><th>State</th><th>Sample</th><th>Note</th></tr></thead><tbody>'
+    + rlRow("Open/close coverage", r.coverage)
+    + rlRow("Market movement", r.movement)
+    + rlRow("Reliability vs real outcomes", r.reliability)
+    + rlRow("CLV / kill-check", (r.clv||{}).gate_state)
+    + '</tbody></table></div>';
+}
+
 function gateBadge(v){
   const cls=v==="shipped"?"p":(v==="retained"?"p":"n");
   return '<span class="pill '+cls+'">'+esc(v)+'</span>';
@@ -689,7 +715,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderGates();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderRealLine();renderGates();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
@@ -713,6 +739,13 @@ def write_dashboard(data: Dict, path: str = None) -> str:
             payload["gate_registry"] = gate_registry.collect()
         except Exception:
             payload["gate_registry"] = []   # the dashboard must always render
+    if "real_line" not in payload:
+        try:
+            with open(os.path.join(config.ROOT, "book",
+                                   "real_line_backtest.json")) as _fh:
+                payload["real_line"] = json.load(_fh)
+        except Exception:
+            payload["real_line"] = None     # box simply doesn't render
     html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
     with open(path, "w") as f:
         f.write(html)

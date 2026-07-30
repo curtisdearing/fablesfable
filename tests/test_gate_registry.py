@@ -62,3 +62,4 @@ def test_dashboard_payload_carries_registry(tmp_path):
     assert start is None, "placeholder must be substituted"
     assert "gate_registry" in html
     assert "Measured gates" in html
+    assert "Real-line record" in html          # accrual box wired in
