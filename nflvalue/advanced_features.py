@@ -66,7 +66,8 @@ HIST = os.path.join(ROOT, "historical")
 
 EXT_ONLY = ["play_id", "down", "ydstogo", "yardline_100", "score_differential", "qtr", "wp",
             "xpass", "pass_oe", "cpoe", "shotgun", "no_huddle",
-            "game_seconds_remaining", "sack", "qb_hit", "pass", "rush", "fixed_drive"]
+            "game_seconds_remaining", "sack", "qb_hit", "pass", "rush", "fixed_drive",
+            "pass_location"]
 EXT_PBP_COLUMNS = PBP_COLUMNS + EXT_ONLY
 
 OL_POS = {"T", "G", "C", "OT", "OG", "OL", "LT", "RT", "LG", "RG"}
@@ -77,6 +78,7 @@ FEATURES = [
     "rz_tgt_share", "rz_carry_share",
     "qb_continuity", "oline_outs", "is_contract_year", "age_years",
     "temp", "wind",
+    "loc_middle_share", "loc_left_share", "loc_matchup_epa",
 ]
 
 
@@ -186,6 +188,63 @@ def build_player_redzone(pbp: pd.DataFrame) -> pd.DataFrame:
     df["rz_carry_share"] = g["_car_share"].transform(
         lambda s: s.rolling(16, min_periods=1).mean())
     return df[["season", "week", "player_id", "rz_tgt_share", "rz_carry_share"]]
+
+
+# --------------------------------------------------------------------------- #
+# Pass-location profile (DATA_SOURCES' flagged untapped free derivation):
+# where a receiver's targets land (left/middle/right) as an alignment/route
+# proxy, and how the opposing defense performs by location.
+# --------------------------------------------------------------------------- #
+def build_player_target_locations(pbp: pd.DataFrame) -> pd.DataFrame:
+    """Rolling share of a receiver's targets by pass_location.  NO shift:
+    rows exist only for weeks with located targets, so an exact-week join
+    would leak via missingness (see build_player_redzone note); consumers go
+    through AsOfLookup, which reads strictly-prior rows."""
+    cols = ["season", "week", "player_id", "loc_middle_share", "loc_left_share"]
+    if "pass_location" not in pbp.columns:
+        return pd.DataFrame(columns=cols)
+    t = pbp[(pbp["pass"] == 1) & pbp["receiver_player_id"].notna()
+            & pbp["pass_location"].notna()]
+    if t.empty:
+        return pd.DataFrame(columns=cols)
+    d = (t.groupby(["season", "week", "receiver_player_id", "pass_location"])
+         .size().unstack(fill_value=0).reset_index()
+         .rename(columns={"receiver_player_id": "player_id"}))
+    for c in ("left", "middle", "right"):
+        if c not in d.columns:
+            d[c] = 0
+    tot = d[["left", "middle", "right"]].sum(axis=1).replace(0, np.nan)
+    d["_mid"] = d["middle"] / tot
+    d["_left"] = d["left"] / tot
+    d = d.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
+    g = d.groupby("player_id")
+    d["loc_middle_share"] = g["_mid"].transform(
+        lambda s: s.rolling(16, min_periods=1).mean())
+    d["loc_left_share"] = g["_left"].transform(
+        lambda s: s.rolling(16, min_periods=1).mean())
+    return d[cols]
+
+
+def build_def_loc_epa(pbp: pd.DataFrame) -> Dict[Tuple, Tuple]:
+    """{(season, week, defteam): (epa_left, epa_mid, epa_right)} — EPA/target
+    the defense allows by pass location, shift(1)+EWM per team like every
+    team tendency (values at (s, w) contain only weeks strictly before w)."""
+    if "pass_location" not in pbp.columns:
+        return {}
+    t = pbp[(pbp["pass"] == 1) & pbp["pass_location"].notna() & pbp["epa"].notna()]
+    if t.empty:
+        return {}
+    d = (t.groupby(["season", "week", "defteam", "pass_location"])["epa"]
+         .mean().unstack().reset_index())
+    for loc in ("left", "middle", "right"):
+        if loc not in d.columns:
+            d[loc] = np.nan
+    d = d.sort_values(["defteam", "season", "week"]).reset_index(drop=True)
+    for loc in ("left", "middle", "right"):
+        d["def_epa_" + loc] = _roll(d.groupby("defteam")[loc])
+    return {(int(r.season), int(r.week), r.defteam):
+            (r.def_epa_left, r.def_epa_middle, r.def_epa_right)
+            for r in d.itertuples(index=False)}
 
 
 # --------------------------------------------------------------------------- #
@@ -309,6 +368,9 @@ class AdvancedPack:
                              ["rz_tgt_share", "rz_carry_share"])
         self.ngs = AsOfLookup(build_ngs_receiving(),
                               ["ngs_separation", "ngs_ay_share", "ngs_yac_aoe"])
+        self.loc = AsOfLookup(build_player_target_locations(pbp),
+                              ["loc_middle_share", "loc_left_share"])
+        self.def_loc = build_def_loc_epa(pbp)
         self.qbc = build_qb_continuity(pbp, schedules)
         self.contract = contract_year_lookup()
 
@@ -366,6 +428,18 @@ class AdvancedPack:
             wx = self.weather.get(r.game_id, (np.nan, np.nan))
             rows["temp"].append(wx[0])
             rows["wind"].append(wx[1])
+            mid, left = self.loc.get(r.player_id, *key)
+            rows["loc_middle_share"].append(mid)
+            rows["loc_left_share"].append(left)
+            dl = self.def_loc.get((*key, getattr(r, "defteam", None)),
+                                  (np.nan, np.nan, np.nan))
+            if (np.isnan(mid) or np.isnan(left)
+                    or any(v is None or np.isnan(v) for v in dl)):
+                rows["loc_matchup_epa"].append(np.nan)
+            else:
+                right = max(0.0, 1.0 - mid - left)
+                rows["loc_matchup_epa"].append(
+                    left * dl[0] + mid * dl[1] + right * dl[2])
         for f in FEATURES:
             cands[f] = rows[f]
         return cands

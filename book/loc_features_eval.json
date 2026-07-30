@@ -1,0 +1,60 @@
+{
+ "note": "pass_location features A/B on the prop ranker; lean set vs lean+3; synthetic-line framing applies to hit rates.",
+ "features_added": [
+  "loc_middle_share",
+  "loc_left_share",
+  "loc_matchup_epa"
+ ],
+ "eval_seasons": [
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "seeds": {
+  "7": {
+   "baseline": {
+    "log_loss": 0.62029,
+    "top5_hit": 0.6867,
+    "top1_hit": 0.7185,
+    "n_leans": 5435
+   },
+   "challenger": {
+    "log_loss": 0.62165,
+    "top5_hit": 0.6817,
+    "top1_hit": 0.7203,
+    "n_leans": 5435
+   },
+   "ll_delta_pooled": 0.001356,
+   "p_improve_ll": 0.0025,
+   "top5_delta_pp": -0.5
+  },
+  "1234": {
+   "baseline": {
+    "log_loss": 0.62072,
+    "top5_hit": 0.6902,
+    "top1_hit": 0.7268,
+    "n_leans": 5435
+   },
+   "challenger": {
+    "log_loss": 0.6215,
+    "top5_hit": 0.6843,
+    "top1_hit": 0.7222,
+    "n_leans": 5435
+   },
+   "ll_delta_pooled": 0.00078,
+   "p_improve_ll": 0.0635,
+   "top5_delta_pp": -0.59
+  }
+ },
+ "gate": {
+  "rule": "pooled ll delta < 0 with P >= 0.9 at BOTH seeds (paired season-week bootstrap) AND top-5 drop <= 0.1pp",
+  "passed": false
+ },
+ "bootstrap": {
+  "n": 4000,
+  "seed": 20260730,
+  "cluster": "season-week"
+ },
+ "holdout_2025": null
+}

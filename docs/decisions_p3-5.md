@@ -484,3 +484,159 @@ Now `pytest.importorskip`.
 No performance optimization (see 7.1). No change to any projection value, any
 market, any model family. The synthetic-line over/under split was not touched
 and was not tuned against — the recorded means->median negative result stands.
+
+## 2026-07-30 — Game-line accuracy session (M-G2 verdict, fair-value blend negative result)
+
+### M-G2 graded on real dumped sim outputs: the sim tail STAYS
+
+`backtest.py --dump-predictions` now also dumps `total_mean`/`total_pts`/
+`total_line` (additive fields), and `analysis/cover_calibration.py` graded the
+pre-registered M-G2 gate on the 1,912-game 2019–2025 dump: the drive-sim's own
+cover tail scores Brier **0.25757** vs **0.25954** for the fitted gaussian on
+the sim mean. The gaussian needed to WIN by ≥ 0.002 to replace the sim tail in
+EV math; it *lost* by ~0.002. Verdict recorded in `book/cover_calibration.json`:
+the simulator's empirical tail is better-calibrated on cover outcomes than a
+normal approximation around its own mean — keep the sim tail, close M-G2.
+
+### Fair-value market blend (the "nfelo move"): measured and REJECTED
+
+`nflvalue/fair_value.py` implements the it5 blend properly shipped: walk-forward
+alpha per season (strictly-prior training), pre-registered ship gate
+(`mae_blend <= mae_market` AND `<= mae_model` AND P(blend beats market) ≥ 0.90
+under a paired season-week bootstrap, per `analysis/accuracy_protocol.json`).
+Measured on the shipped simulator's real dumped forecasts (not re-derived
+ratings):
+
+| market | pooled n | MAE model | MAE market | MAE blend | P(beat market) | gate |
+|---|---|---|---|---|---|---|
+| spread | 1,693 | 10.20 | **9.767** | 9.772 | 0.18 | FAIL |
+| total  | 1,693 | 10.73 | **10.311** | 10.315 | 0.08 | FAIL |
+
+MSE sensitivity (exploratory, finer grid): same verdict — spread blend RMSE
+12.666 vs market 12.663; the totals alpha fits to **0.0 in every season** (the
+sim total adds nothing on top of the close). The walk-forward spread alpha
+decays 0.14 → 0.05 across seasons: whatever the ratings knew, the market has
+priced. This *contradicts* the vault's standing P1 suggestion — the nfelo blend
+is not an improvement for THIS model's outputs, consistent with the it0 lesson
+("you don't beat the close by re-deriving it"). Nothing ships: `weekly.py`
+shows `fair_spread_home`/`fair_total` ONLY for gate-passed markets in
+`book/fair_value.json`, so today it shows nothing (fail-closed, like every
+other unmeasured number). The machinery stays: any future model improvement
+re-grades the gate with one command (`python3 -m nflvalue.fair_value`).
+
+Tests: `tests/test_fair_value.py` (9) — alpha recovery at both extremes,
+walk-forward future-poisoning invariance, first-season exclusion, gate
+consistency of the committed book, fail-closed `load_shipped`/`fair_line`,
+and a synthetic gate-PASS case proving the gate *can* pass when the model
+carries orthogonal signal.
+
+### QB backup-start haircut (dissection item 3): real effect, gate-FAILED twice, stop rule tripped
+
+`analysis/qb_haircut.py` measured the dissection's "QB carve-out" against the
+sim's real dumped margins, walk-forward, two pre-registered detections run in
+sequence (v2 only after v1 failed):
+
+| variant | flagged | signed residual vs backup team | fitted h (stable seasons) | pooled MAE base→adj | P(improve) | gate |
+|---|---|---|---|---|---|---|
+| v1 modal-of-8 | 580 (30%) | +2.59 (n=464) | 2.0–2.5 | 10.1996→10.1986 | 0.52 | FAIL |
+| v2 abrupt-absence | 244 (13%) | +3.27 (n=205) | 2.75–3.25 | 10.1996→10.1918 | 0.60 | FAIL |
+
+The premise is *confirmed directionally* — backup-QB teams underperform the
+sim by ~3 points, every season, with the fitted haircut landing exactly where
+the dissection predicted (bottom of the 3–10 range) — but at ~40 flagged
+games/season against margin noise σ≈13, the pooled paired-bootstrap gate
+cannot reach 0.90. Per `accuracy_protocol.json`
+`stop_after_consecutive_rejections: 3` (fair-value blend, haircut v1, haircut
+v2), the game-line lever hunt STOPS at this checkpoint. No live haircut ships
+(`book/qb_haircut.json` says so; nothing consumes an unshipped haircut).
+Status: research_only; the honest path to shipping it is more seasons of
+flagged n, not a looser gate. 8 tests (`tests/test_qb_haircut.py`) lock the
+detection's walk-forward safety and the book's fail-closed consistency.
+
+### Measured-gates registry on the dashboard (Honest Record tab)
+
+`nflvalue/gate_registry.py` collects every accept-gate verdict — machine-read
+from `book/cover_calibration.json`, `book/fair_value.json`,
+`book/qb_haircut.json`, plus static entries for pre-book verdicts (means→
+median, calibration layers, raw absence flags, Wilson-LB tiers) — and the
+Honest Record tab now renders "Measured gates — what shipped, what didn't."
+Rationale: negative results are load-bearing; a reviewer should see the
+rejection count without reading the decision log. Fail-safe: a corrupt or
+missing book never breaks the dashboard (registry degrades to static entries;
+render guards against an empty payload). 6 tests.
+
+### pass_location features (the DATA_SOURCES "untapped free derivation"): measured, REJECTED
+
+`nflvalue/advanced_features.py` now derives the flagged free signal properly:
+`loc_middle_share`/`loc_left_share` (rolling 16-week target-location profile,
+AsOfLookup strictly-prior, missingness-safe) and `loc_matchup_epa` (receiver
+location mix × opponent's shift+EWM EPA-allowed by location). Pre-registered
+A/B (`analysis/loc_features_eval.py`, lean set vs lean+3, WF 2021-2024, both
+seeds, paired season-week bootstrap): log-loss **worsens** at both seeds
+(+0.00136 P=0.003; +0.00078 P=0.06) and top-5 drops ~0.5pp. Gate FAIL; 2025
+holdout untouched by policy. Verdict: on top of NGS separation/air-yards and
+the existing matchup factors, target-location mix is noise — consistent with
+the chemistry study's "already priced by recency baselines" pattern. Builders
+stay (full-frame research feature); the lean config set excludes them, with
+provenance updated. 7 tests (`tests/test_pass_location.py`) lock the as-of
+safety either way.
+
+### Real-line backtest harness pre-built (runs itself every close capture)
+
+`analysis/real_line_backtest.py` is the standing report the whole accuracy
+roadmap waits on: coverage + movement structure of the accruing
+`line_open_close` record, reliability of PUBLISHED probabilities against real
+graded outcomes (synthetic-line leans explicitly excluded from the join), and
+the CLV/kill verdict restated against the protocol floors (150 resolved, 100
+per reliability computation, 100 per movement market). Every section is
+fail-closed: thin data yields `insufficient_data` with exact n-of-needed, never
+an extrapolation. `pipeline_weekly.resolve_clv` refreshes
+`book/real_line_backtest.json` after every t90 close capture, so the honest
+scoreboard fills itself in as the season runs. 6 tests including the
+synthetic-exclusion join and the ECE-0 calibrated seed.
+
+### Duplicate `esc` declaration: a SyntaxError armed to kill every future deploy
+
+Phase 8's explain-cards section added `function esc(...)` below the template's
+existing `const esc = ...` in the SAME script block. A duplicate
+const/function declaration is a SyntaxError that kills the WHOLE block — no
+tabs, no data, no auto-refresh. The committed `dashboard.html` predates the
+merge, so the live page kept working while every future regeneration (any
+pipeline run or deploy heartbeat) would have shipped a dead dashboard. No
+test noticed because none examined the script's declarations; caught
+2026-07-30 by actually rendering the regenerated page headless (the
+verification step that should have existed). Fixed by keeping ONE esc (the
+quote-escaping superset, declared at the top) and adding
+`tests/test_dashboard_js.py`: no top-level identifier may be declared twice,
+esc exactly once, quote-escaping asserted. Phase-8's own `"function esc(" in
+TEMPLATE` assertion — which pinned the bug in place — updated to pin the fix.
+
+### Review pass (same day): the backtest was unseeded — fixed, all verdicts re-graded and STABLE
+
+Self-review of the session's commits found the same determinism bug tailstail
+fixed on 2026-07-18: `backtest.py` ran `mc.simulate` with `seed=None` (OS
+entropy), so `data/backtest.json` and the M-G2/fair-value prediction dump
+changed on every run — and every verdict above was graded on one
+irreproducible draw. Fix: `DEFAULT_SEED=6102026` with `derive_seed(game)`
+keyed on the game's identity (order-independent). Proof: two consecutive full
+runs produce **byte-identical** `backtest_predictions.json`. Re-graded on the
+seeded dump, every verdict HOLDS with the same margins: M-G2 sim tail 0.25773
+vs gaussian 0.25972 (unseeded draw: 0.25757/0.25954 — two independent draws
+agree to 4 decimals on the gap, so sim noise is not the story); fair-value
+spread P(beat)=0.24 / total 0.08, both FAIL; QB haircut abrupt P=0.55, FAIL.
+The books now carry the seeded canonical numbers. Also from review:
+`data/explain_cards.json` (test-run residue that upstream deliberately leaves
+untracked) removed from the branch and gitignored; a vacuous structural
+assertion in `test_fair_value.py` tightened to a deterministic FAIL check;
+`tests/test_backtest_determinism.py` locks seed stability, identity-keying,
+and order-independence.
+
+### Real-line accrual state on the Honest Record tab
+
+The record panel now renders a "Real-line record — accrual state" box from
+`book/real_line_backtest.json` (which `resolve_clv` refreshes after every
+close capture): per-section accruing/ready pills with the exact n-of-needed
+(coverage, movement, reliability n/100, CLV n/150). The reader sees HOW FAR
+the honest scoreboard has filled in, not just that it is empty. Fail-safe: a
+missing book means the box simply doesn't render. Headless-verified, zero
+page errors.

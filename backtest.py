@@ -21,8 +21,22 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import zlib
 
 from nflvalue import config, montecarlo as mc
+
+# Determinism: the backtest previously ran the MC unseeded (OS entropy), so
+# data/backtest.json and the M-G2/fair-value prediction dump changed on every
+# run — the same class of bug tailstail fixed with DEFAULT_SEED. Per-game
+# seeds derive from the game's identity, so results are independent of
+# iteration order and reproducible byte-for-byte. No accuracy claim: the
+# numbers move once, by construction, and are then stable.
+DEFAULT_SEED = 6102026
+
+
+def derive_seed(g: dict, base: int = DEFAULT_SEED) -> int:
+    key = f"{g['season']}_{g['week']}_{g['home']}_{g['away']}"
+    return (base * 1000003 + zlib.crc32(key.encode())) % (2 ** 32)
 
 DEC_110 = 1.9091  # decimal odds for a -110 bet
 
@@ -57,7 +71,8 @@ def run(sims=6000, threshold=0.03, dump_predictions=False):
         home = {"off": g["off_home"], "def": g["def_home"]}
         away = {"off": g["off_away"], "def": g["def_away"]}
         sp, tot = g["spread_line"], g["total_line"]
-        r = mc.simulate(home, away, priors, spread_line=sp, total_line=tot, n=sims)
+        r = mc.simulate(home, away, priors, spread_line=sp, total_line=tot, n=sims,
+                        seed=derive_seed(g))
 
         margin = g["home_score"] - g["away_score"]
         total_pts = g["home_score"] + g["away_score"]
@@ -85,7 +100,9 @@ def run(sims=6000, threshold=0.03, dump_predictions=False):
         if dump_predictions:
             predictions.append({"season": g["season"], "week": g["week"],
                                 "margin_mean": r["margin_mean"], "p_home_cover": r["p_home_cover"],
-                                "margin": margin, "spread_line": sp})
+                                "margin": margin, "spread_line": sp,
+                                "total_mean": r["total_mean"], "total_pts": total_pts,
+                                "total_line": tot})
         # ---- spread pick ----
         side, p = ("home", r["p_home_cover"]) if r["p_home_cover"] >= r["p_away_cover"] else ("away", r["p_away_cover"])
         if p * DEC_110 - 1 >= threshold:

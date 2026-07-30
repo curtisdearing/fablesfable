@@ -12,3 +12,4 @@ config.local.json
 data/*.joblib
 data/analysis_cache/
 book/*.parquet
+data/explain_cards.json

@@ -28,7 +28,7 @@ equivalent from play-by-play or say plainly that we don't have it.
 | Data | Who sells it | Price (July 2026) | Our stance |
 |---|---|---|---|
 | Exact formations, personnel groupings, the 22 on field | NGS participation was free 2016–**2023**, then discontinued. FTN Data API (participation + charting since 2019) | CSV $599; API tier custom-priced; site sub $69.99/yr (no API) | Derived free proxies instead: shotgun/no-huddle rates, per-player shotgun-vs-under-center usage tilts, FTN PA/motion/blitz/box. If live CLV ever proves edge, the FTN API is the first justified purchase. |
-| Alignment/slot rates, per-route data, PFF grades | PFF+ | $79.99/yr or $9.99/mo (browsable, no API) | Not used. Closest free proxies: NGS separation + air-yards share; pbp `pass_location` is a further untapped free derivation. |
+| Alignment/slot rates, per-route data, PFF grades | PFF+ | $79.99/yr or $9.99/mo (browsable, no API) | Not used. Closest free proxies: NGS separation + air-yards share; pbp `pass_location` was derived and MEASURED 2026-07-30 (location shares + matchup EPA): rejected by its walk-forward gate at both seeds (book/loc_features_eval.json). |
 | Historical prop **lines/prices** | SportsDataIO, others | enterprise | Cannot be reconstructed free — this is why backtests grade at synthetic reference lines (labeled †) and why forward CLV is the only accepted edge proof. |
 | Real-time beat-reporter news | X/Twitter API | prohibitive | Accepted gap (premortem H4): ESPN editorial news feeds the context panel; the tool is honest that sharps see news first. |
 

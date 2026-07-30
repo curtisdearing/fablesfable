@@ -8,6 +8,7 @@ server, no external libraries, works offline by double-clicking the file.
 from __future__ import annotations
 
 import json
+import os
 from typing import Dict
 
 from . import config
@@ -159,7 +160,7 @@ const DATA = __DATA_JSON__;
 
 const fmtPct = x => (x>=0?"+":"") + (x*100).toFixed(1) + "%";
 const fmtP = x => (x*100).toFixed(1) + "%";
-const esc = s => (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function evClass(ev){return ev>0?"ev pos":"ev neg";}
 
@@ -477,7 +478,10 @@ function renderCards(){
    built by explain_render.fmt, which is what makes "the prose and the card
    show the same number" checkable rather than hopeful. */
 
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+/* esc is declared once at the top of this script block (quote-escaping
+   variant). A second `function esc` here was a duplicate declaration — a
+   SyntaxError that killed the WHOLE script block on any regenerated page
+   (caught 2026-07-30 by headless render; see tests/test_dashboard_js.py). */
 
 function evChip(ev){
   // Grade chips differ by BORDER STYLE (solid/dashed/dotted) as well as hue,
@@ -641,6 +645,52 @@ function renderRecord(){
     + '</div>';
 }
 
+function rlRow(name, s){
+  if(!s) return "";
+  const ok = s.status === "ok";
+  const n = s.n_rows != null ? s.n_rows : (s.n != null ? s.n : (s.n_resolved_real_line_leans != null ? s.n_resolved_real_line_leans : (s.resolved != null ? s.resolved : 0)));
+  const needs = s.needs != null ? (" of "+s.needs+" needed") : "";
+  return '<tr><td>'+esc(name)+'</td>'
+    + '<td><span class="pill '+(ok?'p':'n')+'">'+esc(ok?"ready":"accruing")+'</span></td>'
+    + '<td class="price">n='+esc(n)+esc(needs)+'</td>'
+    + '<td class="xmeta">'+esc(s.note||"")+'</td></tr>';
+}
+
+function renderRealLine(){
+  const el=document.getElementById("record"); if(!el) return;
+  const r=DATA.real_line; if(!r) return;
+  el.innerHTML += '<div class="box"><b>Real-line record — accrual state</b>'
+    + '<div class="xmeta">'+esc((r.summary||{}).headline||"")
+    + ' Auto-refreshed after every close capture; real lines only, nothing synthetic.</div>'
+    + '<table><thead><tr><th>Section</th><th>State</th><th>Sample</th><th>Note</th></tr></thead><tbody>'
+    + rlRow("Open/close coverage", r.coverage)
+    + rlRow("Market movement", r.movement)
+    + rlRow("Reliability vs real outcomes", r.reliability)
+    + rlRow("CLV / kill-check", (r.clv||{}).gate_state)
+    + '</tbody></table></div>';
+}
+
+function gateBadge(v){
+  const cls=v==="shipped"?"p":(v==="retained"?"p":"n");
+  return '<span class="pill '+cls+'">'+esc(v)+'</span>';
+}
+
+function renderGates(){
+  const el=document.getElementById("record"); if(!el) return;
+  const g=DATA.gate_registry;
+  if(!g||!g.length) return;
+  const rows=g.map(e=>
+      '<tr><td><b>'+esc(e.name)+'</b><div class="sub">'+esc(e.scope)+'</div></td>'
+    + '<td>'+gateBadge(e.verdict)+'</td>'
+    + '<td class="xmeta">'+esc(e.numbers)+'</td>'
+    + '<td class="xmeta">'+esc(e.source)+'<br>'+esc(e.date)+'</td></tr>').join("");
+  el.innerHTML += '<div class="box"><b>Measured gates — what shipped, what didn\'t</b>'
+    + '<div class="xmeta">Every lever runs a pre-registered accept gate; rejections are '
+    + 'kept on the books. A model that never rejected anything was never really tested.</div>'
+    + '<table><thead><tr><th>Lever</th><th>Verdict</th><th>Measured</th><th>Source</th></tr></thead>'
+    + '<tbody>'+rows+'</tbody></table></div>';
+}
+
 function renderPipeline(){
   const p=DATA.pipeline||{};
   const status=(p.status||DATA.mode||"demo").toLowerCase();
@@ -665,7 +715,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderRealLine();renderGates();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
@@ -683,6 +733,19 @@ def write_dashboard(data: Dict, path: str = None) -> str:
         config.ALL_DATA_FACTOR_AUDIT_PATH, None))
     payload.setdefault("nested_factor_projection", config.load_json(
         config.NESTED_FACTOR_PROJECTION_PATH, None))
+    if "gate_registry" not in payload:
+        try:
+            from . import gate_registry
+            payload["gate_registry"] = gate_registry.collect()
+        except Exception:
+            payload["gate_registry"] = []   # the dashboard must always render
+    if "real_line" not in payload:
+        try:
+            with open(os.path.join(config.ROOT, "book",
+                                   "real_line_backtest.json")) as _fh:
+                payload["real_line"] = json.load(_fh)
+        except Exception:
+            payload["real_line"] = None     # box simply doesn't render
     html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
     with open(path, "w") as f:
         f.write(html)

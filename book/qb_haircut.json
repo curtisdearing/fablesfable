@@ -1,0 +1,128 @@
+{
+ "note": "QB backup-start haircut on the sim margin; gate per accuracy_protocol acceptance; consumers fail closed. Sequencing: v1 modal8 ran first and FAILED its pooled gate; v2 abrupt was then pre-registered as a sharper detection (first games of an abrupt absence only) and run ONCE.",
+ "variants": {
+  "v1_modal8": {
+   "detection_mode": "modal8",
+   "n_games": 1912,
+   "n_flagged_any_side": 580,
+   "per_season": [
+    {
+     "season": 2020,
+     "h": 5.75,
+     "n": 269,
+     "n_flagged": 79
+    },
+    {
+     "season": 2021,
+     "h": 2.25,
+     "n": 285,
+     "n_flagged": 89
+    },
+    {
+     "season": 2022,
+     "h": 2.5,
+     "n": 284,
+     "n_flagged": 94
+    },
+    {
+     "season": 2023,
+     "h": 2.0,
+     "n": 285,
+     "n_flagged": 86
+    },
+    {
+     "season": 2024,
+     "h": 1.75,
+     "n": 285,
+     "n_flagged": 99
+    },
+    {
+     "season": 2025,
+     "h": 2.25,
+     "n": 285,
+     "n_flagged": 97
+    }
+   ],
+   "pooled": {
+    "n": 1693,
+    "mae_base": 10.2127,
+    "mae_adj": 10.2155,
+    "p_adj_beats_base": 0.481
+   },
+   "flagged_diagnostics": {
+    "n_one_sided_backup": 464,
+    "mean_signed_residual_vs_backup": 2.59,
+    "note": "positive = the backup-QB team did worse than the sim expected (the haircut's premise)"
+   },
+   "gate": {
+    "rule": "mae_adj <= mae_base AND p >= 0.9 (paired season-week bootstrap)",
+    "passed": false
+   },
+   "shipped_haircut_points": null
+  },
+  "v2_abrupt": {
+   "detection_mode": "abrupt",
+   "n_games": 1912,
+   "n_flagged_any_side": 244,
+   "per_season": [
+    {
+     "season": 2020,
+     "h": 8.75,
+     "n": 269,
+     "n_flagged": 33
+    },
+    {
+     "season": 2021,
+     "h": 4.25,
+     "n": 285,
+     "n_flagged": 41
+    },
+    {
+     "season": 2022,
+     "h": 3.5,
+     "n": 284,
+     "n_flagged": 40
+    },
+    {
+     "season": 2023,
+     "h": 3.5,
+     "n": 285,
+     "n_flagged": 35
+    },
+    {
+     "season": 2024,
+     "h": 2.75,
+     "n": 285,
+     "n_flagged": 39
+    },
+    {
+     "season": 2025,
+     "h": 3.25,
+     "n": 285,
+     "n_flagged": 38
+    }
+   ],
+   "pooled": {
+    "n": 1693,
+    "mae_base": 10.2127,
+    "mae_adj": 10.2087,
+    "p_adj_beats_base": 0.5507
+   },
+   "flagged_diagnostics": {
+    "n_one_sided_backup": 205,
+    "mean_signed_residual_vs_backup": 3.303,
+    "note": "positive = the backup-QB team did worse than the sim expected (the haircut's premise)"
+   },
+   "gate": {
+    "rule": "mae_adj <= mae_base AND p >= 0.9 (paired season-week bootstrap)",
+    "passed": false
+   },
+   "shipped_haircut_points": null
+  }
+ },
+ "bootstrap": {
+  "n": 4000,
+  "seed": 20260730,
+  "cluster": "season-week"
+ }
+}
