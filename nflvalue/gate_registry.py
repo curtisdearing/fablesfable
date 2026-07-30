@@ -82,6 +82,24 @@ def _fair_value() -> List[Dict]:
     return out
 
 
+def _loc_features() -> List[Dict]:
+    book = _load("loc_features_eval.json")
+    if not book:
+        return []
+    seeds = book.get("seeds") or {}
+    gate = book.get("gate") or {}
+    deltas = ", ".join(f"seed {k}: ll {v.get('ll_delta_pooled'):+} "
+                       f"(P {v.get('p_improve_ll')})" for k, v in seeds.items())
+    return [{
+        "name": "pass_location features (loc shares + matchup EPA)",
+        "scope": "prop ranker features",
+        "verdict": "shipped" if gate.get("passed") else "rejected",
+        "numbers": f"walk-forward 2021-2024 A/B vs lean set: {deltas}; gate 0.90",
+        "source": "book/loc_features_eval.json",
+        "date": "2026-07-30",
+    }]
+
+
 def _qb_haircut() -> List[Dict]:
     book = _load("qb_haircut.json")
     if not book:
@@ -149,6 +167,7 @@ def collect() -> List[Dict]:
     entries.extend(_cover_calibration())
     entries.extend(_fair_value())
     entries.extend(_qb_haircut())
+    entries.extend(_loc_features())
     entries.extend(STATIC_ENTRIES)
     entries.sort(key=lambda e: e.get("date", ""), reverse=True)
     return entries

@@ -564,3 +564,19 @@ Rationale: negative results are load-bearing; a reviewer should see the
 rejection count without reading the decision log. Fail-safe: a corrupt or
 missing book never breaks the dashboard (registry degrades to static entries;
 render guards against an empty payload). 6 tests.
+
+### pass_location features (the DATA_SOURCES "untapped free derivation"): measured, REJECTED
+
+`nflvalue/advanced_features.py` now derives the flagged free signal properly:
+`loc_middle_share`/`loc_left_share` (rolling 16-week target-location profile,
+AsOfLookup strictly-prior, missingness-safe) and `loc_matchup_epa` (receiver
+location mix × opponent's shift+EWM EPA-allowed by location). Pre-registered
+A/B (`analysis/loc_features_eval.py`, lean set vs lean+3, WF 2021-2024, both
+seeds, paired season-week bootstrap): log-loss **worsens** at both seeds
+(+0.00136 P=0.003; +0.00078 P=0.06) and top-5 drops ~0.5pp. Gate FAIL; 2025
+holdout untouched by policy. Verdict: on top of NGS separation/air-yards and
+the existing matchup factors, target-location mix is noise — consistent with
+the chemistry study's "already priced by recency baselines" pattern. Builders
+stay (full-frame research feature); the lean config set excludes them, with
+provenance updated. 7 tests (`tests/test_pass_location.py`) lock the as-of
+safety either way.
