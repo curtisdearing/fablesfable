@@ -529,3 +529,26 @@ walk-forward future-poisoning invariance, first-season exclusion, gate
 consistency of the committed book, fail-closed `load_shipped`/`fair_line`,
 and a synthetic gate-PASS case proving the gate *can* pass when the model
 carries orthogonal signal.
+
+### QB backup-start haircut (dissection item 3): real effect, gate-FAILED twice, stop rule tripped
+
+`analysis/qb_haircut.py` measured the dissection's "QB carve-out" against the
+sim's real dumped margins, walk-forward, two pre-registered detections run in
+sequence (v2 only after v1 failed):
+
+| variant | flagged | signed residual vs backup team | fitted h (stable seasons) | pooled MAE base→adj | P(improve) | gate |
+|---|---|---|---|---|---|---|
+| v1 modal-of-8 | 580 (30%) | +2.59 (n=464) | 2.0–2.5 | 10.1996→10.1986 | 0.52 | FAIL |
+| v2 abrupt-absence | 244 (13%) | +3.27 (n=205) | 2.75–3.25 | 10.1996→10.1918 | 0.60 | FAIL |
+
+The premise is *confirmed directionally* — backup-QB teams underperform the
+sim by ~3 points, every season, with the fitted haircut landing exactly where
+the dissection predicted (bottom of the 3–10 range) — but at ~40 flagged
+games/season against margin noise σ≈13, the pooled paired-bootstrap gate
+cannot reach 0.90. Per `accuracy_protocol.json`
+`stop_after_consecutive_rejections: 3` (fair-value blend, haircut v1, haircut
+v2), the game-line lever hunt STOPS at this checkpoint. No live haircut ships
+(`book/qb_haircut.json` says so; nothing consumes an unshipped haircut).
+Status: research_only; the honest path to shipping it is more seasons of
+flagged n, not a looser gate. 8 tests (`tests/test_qb_haircut.py`) lock the
+detection's walk-forward safety and the book's fail-closed consistency.
