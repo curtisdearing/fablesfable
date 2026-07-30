@@ -61,3 +61,15 @@ def test_esc_escapes_quotes(tmp_path):
     js = _script_block(out.read_text())
     decl = re.search(r"^const\s+esc\b.*$", js, flags=re.M)
     assert decl and "&quot;" in decl.group(0)
+
+
+def test_active_tab_survives_reload_via_hash(tmp_path):
+    """Contrarian-review fix: location.reload() every 90s reset the page to
+    the first tab, making the longest tab (Honest Record) unreadable on a
+    live page. The active tab is persisted in the URL hash and restored."""
+    out = tmp_path / "dash.html"
+    dashboard.write_dashboard({"mode": "demo"}, str(out))
+    js = _script_block(out.read_text())
+    assert "history.replaceState" in js
+    assert "location.hash" in js
+    assert "CSS.escape" in js                     # hash is user-controllable input
