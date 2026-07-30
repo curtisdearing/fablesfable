@@ -78,13 +78,14 @@ def test_walk_forward_alpha_uses_only_prior_seasons():
     assert a2020_a == a2020_b
 
 
-def test_gate_fails_when_market_wins(tmp_path):
+def test_gate_fails_when_market_wins():
+    """Market near-truth, model pure noise: alpha fits ~0, the blend collapses
+    onto the market, P(blend strictly beats market) cannot reach 0.90 -> the
+    gate MUST fail and nothing may ship."""
     preds = _mk_preds([2019, 2020, 2021, 2022], model_sd=8.0, market_sd=0.5)
     res = fair_value.walk_forward(preds, "spread")
-    # market near-truth, model noisy: blend cannot decisively beat the close
-    assert res["gate"]["passed"] in (False, True)  # structural: key exists
-    if not res["gate"]["passed"]:
-        assert res["shipped_alpha"] is None
+    assert res["gate"]["passed"] is False
+    assert res["shipped_alpha"] is None
 
 
 def test_gate_passes_when_model_adds_signal():

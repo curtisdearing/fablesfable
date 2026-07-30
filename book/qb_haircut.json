@@ -8,13 +8,13 @@
    "per_season": [
     {
      "season": 2020,
-     "h": 5.5,
+     "h": 5.75,
      "n": 269,
      "n_flagged": 79
     },
     {
      "season": 2021,
-     "h": 2.5,
+     "h": 2.25,
      "n": 285,
      "n_flagged": 89
     },
@@ -26,13 +26,13 @@
     },
     {
      "season": 2023,
-     "h": 2.25,
+     "h": 2.0,
      "n": 285,
      "n_flagged": 86
     },
     {
      "season": 2024,
-     "h": 2.0,
+     "h": 1.75,
      "n": 285,
      "n_flagged": 99
     },
@@ -45,13 +45,13 @@
    ],
    "pooled": {
     "n": 1693,
-    "mae_base": 10.1996,
-    "mae_adj": 10.1986,
-    "p_adj_beats_base": 0.5222
+    "mae_base": 10.2127,
+    "mae_adj": 10.2155,
+    "p_adj_beats_base": 0.481
    },
    "flagged_diagnostics": {
     "n_one_sided_backup": 464,
-    "mean_signed_residual_vs_backup": 2.587,
+    "mean_signed_residual_vs_backup": 2.59,
     "note": "positive = the backup-QB team did worse than the sim expected (the haircut's premise)"
    },
    "gate": {
@@ -67,7 +67,7 @@
    "per_season": [
     {
      "season": 2020,
-     "h": 8.25,
+     "h": 8.75,
      "n": 269,
      "n_flagged": 33
     },
@@ -79,13 +79,13 @@
     },
     {
      "season": 2022,
-     "h": 3.25,
+     "h": 3.5,
      "n": 284,
      "n_flagged": 40
     },
     {
      "season": 2023,
-     "h": 3.25,
+     "h": 3.5,
      "n": 285,
      "n_flagged": 35
     },
@@ -97,20 +97,20 @@
     },
     {
      "season": 2025,
-     "h": 3.0,
+     "h": 3.25,
      "n": 285,
      "n_flagged": 38
     }
    ],
    "pooled": {
     "n": 1693,
-    "mae_base": 10.1996,
-    "mae_adj": 10.1918,
-    "p_adj_beats_base": 0.5955
+    "mae_base": 10.2127,
+    "mae_adj": 10.2087,
+    "p_adj_beats_base": 0.5507
    },
    "flagged_diagnostics": {
     "n_one_sided_backup": 205,
-    "mean_signed_residual_vs_backup": 3.271,
+    "mean_signed_residual_vs_backup": 3.303,
     "note": "positive = the backup-QB team did worse than the sim expected (the haircut's premise)"
    },
    "gate": {

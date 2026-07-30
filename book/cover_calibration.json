@@ -7,7 +7,7 @@
  "verdict": "fitted gaussian on walk-forward residuals is the cover layer; empirical integer kernel rejected (gate -0.002, measured +0.0016)",
  "accept_gate_brier": -0.002,
  "sim_tail_vs_gaussian": {
-  "sim_tail": 0.25757,
-  "gaussian_on_sim_mean": 0.25954
+  "sim_tail": 0.25773,
+  "gaussian_on_sim_mean": 0.25972
  }
 }

@@ -610,3 +610,23 @@ quote-escaping superset, declared at the top) and adding
 `tests/test_dashboard_js.py`: no top-level identifier may be declared twice,
 esc exactly once, quote-escaping asserted. Phase-8's own `"function esc(" in
 TEMPLATE` assertion — which pinned the bug in place — updated to pin the fix.
+
+### Review pass (same day): the backtest was unseeded — fixed, all verdicts re-graded and STABLE
+
+Self-review of the session's commits found the same determinism bug tailstail
+fixed on 2026-07-18: `backtest.py` ran `mc.simulate` with `seed=None` (OS
+entropy), so `data/backtest.json` and the M-G2/fair-value prediction dump
+changed on every run — and every verdict above was graded on one
+irreproducible draw. Fix: `DEFAULT_SEED=6102026` with `derive_seed(game)`
+keyed on the game's identity (order-independent). Proof: two consecutive full
+runs produce **byte-identical** `backtest_predictions.json`. Re-graded on the
+seeded dump, every verdict HOLDS with the same margins: M-G2 sim tail 0.25773
+vs gaussian 0.25972 (unseeded draw: 0.25757/0.25954 — two independent draws
+agree to 4 decimals on the gap, so sim noise is not the story); fair-value
+spread P(beat)=0.24 / total 0.08, both FAIL; QB haircut abrupt P=0.55, FAIL.
+The books now carry the seeded canonical numbers. Also from review:
+`data/explain_cards.json` (test-run residue that upstream deliberately leaves
+untracked) removed from the branch and gitignored; a vacuous structural
+assertion in `test_fair_value.py` tightened to a deterministic FAIL check;
+`tests/test_backtest_determinism.py` locks seed stability, identity-keying,
+and order-independence.
