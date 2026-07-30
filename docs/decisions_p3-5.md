@@ -552,3 +552,15 @@ v2), the game-line lever hunt STOPS at this checkpoint. No live haircut ships
 Status: research_only; the honest path to shipping it is more seasons of
 flagged n, not a looser gate. 8 tests (`tests/test_qb_haircut.py`) lock the
 detection's walk-forward safety and the book's fail-closed consistency.
+
+### Measured-gates registry on the dashboard (Honest Record tab)
+
+`nflvalue/gate_registry.py` collects every accept-gate verdict — machine-read
+from `book/cover_calibration.json`, `book/fair_value.json`,
+`book/qb_haircut.json`, plus static entries for pre-book verdicts (means→
+median, calibration layers, raw absence flags, Wilson-LB tiers) — and the
+Honest Record tab now renders "Measured gates — what shipped, what didn't."
+Rationale: negative results are load-bearing; a reviewer should see the
+rejection count without reading the decision log. Fail-safe: a corrupt or
+missing book never breaks the dashboard (registry degrades to static entries;
+render guards against an empty payload). 6 tests.

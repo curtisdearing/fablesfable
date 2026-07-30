@@ -641,6 +641,27 @@ function renderRecord(){
     + '</div>';
 }
 
+function gateBadge(v){
+  const cls=v==="shipped"?"p":(v==="retained"?"p":"n");
+  return '<span class="pill '+cls+'">'+esc(v)+'</span>';
+}
+
+function renderGates(){
+  const el=document.getElementById("record"); if(!el) return;
+  const g=DATA.gate_registry;
+  if(!g||!g.length) return;
+  const rows=g.map(e=>
+      '<tr><td><b>'+esc(e.name)+'</b><div class="sub">'+esc(e.scope)+'</div></td>'
+    + '<td>'+gateBadge(e.verdict)+'</td>'
+    + '<td class="xmeta">'+esc(e.numbers)+'</td>'
+    + '<td class="xmeta">'+esc(e.source)+'<br>'+esc(e.date)+'</td></tr>').join("");
+  el.innerHTML += '<div class="box"><b>Measured gates — what shipped, what didn\'t</b>'
+    + '<div class="xmeta">Every lever runs a pre-registered accept gate; rejections are '
+    + 'kept on the books. A model that never rejected anything was never really tested.</div>'
+    + '<table><thead><tr><th>Lever</th><th>Verdict</th><th>Measured</th><th>Source</th></tr></thead>'
+    + '<tbody>'+rows+'</tbody></table></div>';
+}
+
 function renderPipeline(){
   const p=DATA.pipeline||{};
   const status=(p.status||DATA.mode||"demo").toLowerCase();
@@ -665,7 +686,7 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   t.classList.add("active");
   document.getElementById(t.dataset.t).classList.add("active");
 });
-renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
+renderWeekly();renderCards();renderBets();renderProps();renderLeans();renderWhy();renderRecord();renderGates();renderMonteCarlo();renderGames();renderPerf();renderAudit();renderBacktest();
 
 let secs=DATA.refresh_seconds||90;
 const cd=document.getElementById("count");cd.textContent=secs;
@@ -683,6 +704,12 @@ def write_dashboard(data: Dict, path: str = None) -> str:
         config.ALL_DATA_FACTOR_AUDIT_PATH, None))
     payload.setdefault("nested_factor_projection", config.load_json(
         config.NESTED_FACTOR_PROJECTION_PATH, None))
+    if "gate_registry" not in payload:
+        try:
+            from . import gate_registry
+            payload["gate_registry"] = gate_registry.collect()
+        except Exception:
+            payload["gate_registry"] = []   # the dashboard must always render
     html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
     with open(path, "w") as f:
         f.write(html)
