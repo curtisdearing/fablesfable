@@ -163,6 +163,11 @@ jobs:
         run: |
           mkdir -p _site
           cp dashboard.html _site/index.html
+          # Slim machine-readable feed for the Dearing Football hub
+          # (dearing-wedding.com). Verbatim numbers from the same artifacts
+          # the dashboard renders; missing inputs -> null sections, never a
+          # failed deploy.
+          python scripts/build_hub_feed.py --out _site/api/hub.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
