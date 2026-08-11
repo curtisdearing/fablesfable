@@ -1,0 +1,92 @@
+{
+ "b1": {
+  "gate": {
+   "direction_ok": true,
+   "guard_ok": true,
+   "p_ok": true,
+   "passed": true,
+   "rule": "pooled ll delta < 0 with P >= 0.9 at BOTH seeds (paired season-week bootstrap) AND top-5 drop <= 0.1pp"
+  },
+  "seeds": {
+   "1234": {
+    "baseline": {
+     "log_loss": 0.62093,
+     "n_leans": 5435,
+     "top5_hit": 0.6868
+    },
+    "challenger": {
+     "log_loss": 0.61809,
+     "n_leans": 5435,
+     "top5_hit": 0.7049
+    },
+    "ll_delta_pooled": -0.002842,
+    "p_improve_ll": 1.0,
+    "top5_delta_pp": 1.81
+   },
+   "7": {
+    "baseline": {
+     "log_loss": 0.62018,
+     "n_leans": 5435,
+     "top5_hit": 0.6859
+    },
+    "challenger": {
+     "log_loss": 0.61795,
+     "n_leans": 5435,
+     "top5_hit": 0.7017
+    },
+    "ll_delta_pooled": -0.002232,
+    "p_improve_ll": 0.999,
+    "top5_delta_pp": 1.58
+   }
+  }
+ },
+ "b2": {
+  "skipped": "B1 passed; one shipped lever per checkpoint"
+ },
+ "bootstrap": {
+  "cluster": "season-week",
+  "n": 4000,
+  "seed": 20260730
+ },
+ "declared_expected_delta_b1": -0.003,
+ "eval_seasons": [
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "features_added": [
+  "seq_h0",
+  "seq_h1",
+  "seq_h2",
+  "seq_h3",
+  "seq_h4",
+  "seq_h5",
+  "seq_h6",
+  "seq_h7"
+ ],
+ "holdout_2025": {
+  "baseline": {
+   "log_loss": 0.61984,
+   "n_leans": 1360,
+   "top5_hit": 0.7037
+  },
+  "challenger": {
+   "log_loss": 0.61726,
+   "n_leans": 1360,
+   "top5_hit": 0.7162
+  },
+  "ll_delta": -0.00258,
+  "policy": "single touch, reported verbatim, no re-tuning after this look",
+  "seed": 7,
+  "top5_delta_pp": 1.25
+ },
+ "note": "Challenger B: GRU trailing-16 game-log encoder + entity embeddings; B1 = 8 PCA'd hidden dims as extra GBDT features (lean vs lean+8); B2 (conditional, pre-registered LAST attempt) = direct p_over head. Synthetic-line framing applies to hit rates.",
+ "preregistration": "BUILD_PROMPTS_model_challengers_2026-07.md \u00a7B (frozen ded9fc6)",
+ "verdict": {
+  "b1_passed": true,
+  "b2_passed": null,
+  "stop_rule": "B1+B2 double rejection = props track's THIRD consecutive rejection (after pass_location 2026-07-30) -> stop_after_consecutive_rejections=3 trips; the props lever hunt pauses. Recorded, not searched past.",
+  "stop_rule_tripped": false
+ }
+}
