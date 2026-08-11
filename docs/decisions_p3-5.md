@@ -655,3 +655,83 @@ lever, scoped matched-control re-registration of the QB haircut, an incumbent
 feature relegation pass, continuous-outcome labels, rank-aware objectives,
 declaring 2025 spent) are pre-registration candidates for future checkpoints,
 recorded in the vault note — NOT run here.
+
+## 2026-08-11 — Model-challenger checkpoint (pre-registered 2026-07-30, run to verdict)
+
+Both challengers from `BUILD_PROMPTS_model_challengers_2026-07.md` (gates
+frozen at `ded9fc6`, PR #12) were run to verdict in one data-equipped
+session, one lever at a time, on a fresh clone of main `a848b79` with feeds
+rebuilt 2026-08-11 (nflverse pbp/schedules/rosters/injuries/NGS/FTN;
+full-width frame 73,925 rows, 2019–2025 — the registered n≈74k).
+
+### Challenger A — hierarchical Bayesian projection: REJECTED
+
+`book/bayes_projection_eval.json`. Declared before the run: SVI/ADVI
+(numpyro AutoNormal, Adam lr .01, 2000 steps), Normal-on-log1p likelihood
+for yards / Gamma-Poisson for counts, 512-draw predictives, the same
+sample-based CRPS estimator on both arms, anytime_td out of scope.
+Walk-forward 2021–2024, both seeds, vs the incumbent parametric families
+with production's own walk-forward residual SDs:
+
+* PRIMARY FAILED decisively: pooled CRPS 11.136 → 527.85 (seed 7, rel +46x)
+  and 11.131 → 1827.45 (seed 1234, rel +163x); P(improve) 0.0 at both seeds.
+  Per market: counts merely worse (receptions +0.9%/+2.9%; attempts
+  +12–165%); the log-scale Normal's heavy right tail is catastrophic on
+  yards markets (receiving_yards up to +360x) — occasional enormous draws
+  pay unbounded CRPS. The two seeds' pooled totals differing 3.5x is itself
+  the instability on record.
+* Guard (incidental, recorded): challenger p_over fed to the unchanged
+  ranker actually IMPROVED ll slightly (−0.00044/−0.0009) with top-5 flat
+  or +0.55pp — the posterior's ORDERING carries some signal even though its
+  tails are unusable. Recorded, not acted on: the gate is conjunctive.
+* Reproducibility held: two identical-seed runs byte-identical
+  (`ff8e977b…`). Per the frozen protocol, no alternative
+  priors/likelihoods were tried after seeing results; flag never added;
+  incumbent path untouched; 2025 untouched. `nflvalue/bayes_projection.py`
+  + tests remain as research machinery and registry evidence.
+
+### Challenger B — GRU sequence encoder, variant B1: SHIPPED
+
+`book/seq_features_eval.json`. Encoder per the registered spec (GRU h=48
+over trailing-16 game logs; player/team/opp-def embeddings 8/4/8; strictly
+w−1 sequences; self-supervised next-game-stat head — no lines, no labels;
+torch deterministic single-thread), walk-forward per eval season, PCA-8 fit
+train-only, +8 `seq_h*` features vs the shipped lean set:
+
+* PRIMARY PASSED at both seeds: pooled ll 0.62018 → 0.61795 (Δ −0.00223,
+  P 0.999, seed 7) and 0.62093 → 0.61809 (Δ −0.00284, P 1.0, seed 1234).
+  Honest footnote: the declared expected delta was −0.003; seed 1234
+  essentially met it, seed 7 came in at −0.00223 — the frozen §B4 gate
+  lines (direction + P≥0.90 + guard + repro) do not include the expected
+  delta, so this is a PASS with the shortfall recorded, not hidden.
+* Guard passed emphatically: top-5 hit +1.58pp / +1.81pp (68.6→70.2,
+  68.7→70.5) — the temporal representation helps exactly where the ranking
+  is consumed. Synthetic-line framing applies to every hit rate.
+* Reproducibility held: byte-identical books (`8adda22d…`).
+* Single 2025 holdout (spent per protocol, seed 7, verbatim):
+  ll 0.61984 → 0.61726 (−0.00258), top-5 70.37% → 71.62% (+1.25pp).
+* B2 (direct head) NOT run — B1 passed; one shipped lever per checkpoint.
+  The props rejection streak resets (pass_location, then A, then B1 pass);
+  the stop rule does NOT trip.
+
+Integration per §B2.4: `seq_h0..7` joined the config lean list with
+provenance; `nflvalue/seq_encoder.attach_seq_features` stamps them during
+`build_features` from a digest-checked artifact
+(`data/seq_encoder.joblib`, carried by the state store's `data/*.joblib`
+glob), NaN fail-safe on ANY failure (absent artifact, corrupt blob, missing
+history — tests prove the pipeline stays green). The production artifact is
+trained on seasons < 2026, so every live 2026 row is strictly out-of-sample;
+NOTE the historical-frame caveat: on 2019–2025 frame rows the shipped
+encoder is in-sample (its self-supervised task trained on those games).
+The gate numbers above come from the honest per-season walk-forward
+encoders, not the shipped artifact.
+
+### Checkpoint accounting
+
+Two levers, two checkpoints' worth of verdicts, run strictly in sequence
+(A to verdict, then B): A = rejection #2 of the props streak; B1 = PASS,
+streak broken. The Bayes rejection keeps its numbers in the measured-gates
+registry beside the shipped B1 (gate_registry collectors added for both
+books). Nothing here is a betting claim: kill-check unchanged, real-line
+program still blocked on the ODDS_API_KEY secret (see the season-readiness
+audit note in the vault).

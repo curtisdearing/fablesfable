@@ -83,7 +83,7 @@
     "enabled": true,
     "model": "gbdt",
     "path": "data/ml_ranker.joblib",
-    "provenance": "7-agent sprint 2026-07-16: tuned GBDT (lr.03/leaves15/msl20/l2 3.0, agent4) + player_depth_rank (agent3) on lean set. Pooled WF 2021-24: top5 66.92%/top1 70.10%/ll 0.62279 vs 65.15/68.35/0.62811 sprint baseline. 2025 holdout (single touch): 69.93/76.47/0.62159 vs 67.94/72.06/0.62429. RF(800,50) validated equal-accuracy alternative (agent2; 81MB artifact - not shipped). Calibration layers rejected (agents 1+5 disagree; holdout inversions). Synthetic-line framing applies.",
+    "provenance": "7-agent sprint 2026-07-16: tuned GBDT (lr.03/leaves15/msl20/l2 3.0, agent4) + player_depth_rank (agent3) on lean set. Pooled WF 2021-24: top5 66.92%/top1 70.10%/ll 0.62279 vs 65.15/68.35/0.62811 sprint baseline. 2025 holdout (single touch): 69.93/76.47/0.62159 vs 67.94/72.06/0.62429. RF(800,50) validated equal-accuracy alternative (agent2; 81MB artifact - not shipped). Calibration layers rejected (agents 1+5 disagree; holdout inversions). Synthetic-line framing applies. || 2026-08-11 Challenger B1 SHIPPED (pre-registered gate, book/seq_features_eval.json): +seq_h0..7 (GRU trailing-16 encoder + entity embeddings, PCA-8, walk-forward). WF 2021-24 both seeds: ll 0.62018->0.61795 (P .999) / 0.62093->0.61809 (P 1.0), top5 +1.58pp/+1.81pp. Challenger A (hierarchical Bayes projection) REJECTED same checkpoint (book/bayes_projection_eval.json). Synthetic-line framing applies.",
     "features": [
       "p_over",
       "z",
@@ -113,7 +113,15 @@
       "pos_RB",
       "pos_WR",
       "pos_TE",
-      "player_depth_rank"
+      "player_depth_rank",
+      "seq_h0",
+      "seq_h1",
+      "seq_h2",
+      "seq_h3",
+      "seq_h4",
+      "seq_h5",
+      "seq_h6",
+      "seq_h7"
     ],
     "features_provenance": "lean 6-group set (model_belief+proj_parts+player_status+market_pos+weather+qb_oline): walk-forward 2022-25 66.9% top-5 / 71.3% top-1 vs 65.2%/69.2% full set (docs/analysis_factor_combo.md); set to null to restore full feature space. + player_depth_rank (prior-8-game usage rank among that week's roster, nflvalue/depth_features.py): walk-forward 2021-24 pooled vs lean baseline top-5 65.15->66.37 (+1.22pp), top-1 68.35->69.64 (+1.29pp), log_loss 0.62811->0.62548 (-0.00263), unanimous at seeds 7/1234; 2025 single-shot holdout top-1 72.06->73.90, top-5 67.94->67.79, log_loss 0.62429->0.62683. Raw absence flags (rb1/wr1/te1 officially out, opp_db_outs_2plus, post_bye) FAILED their gate (top-5 -0.40pp, log_loss +0.00211) and are intentionally absent. pass_location derivations (loc_middle_share/loc_left_share/loc_matchup_epa, 2026-07-30) FAILED their gate at both seeds (WF 2021-24 ll +0.00136/P 0.003 and +0.00078/P 0.06; top-5 -0.5pp; book/loc_features_eval.json) and are intentionally absent; builders remain in advanced_features.py for the full frame."
   }
