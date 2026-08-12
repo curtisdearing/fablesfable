@@ -1,0 +1,163 @@
+{
+ "bootstrap": {
+  "cluster": "season-week",
+  "n": 4000,
+  "seed": 20260730
+ },
+ "eval_seasons": [
+  2021,
+  2022,
+  2023,
+  2024
+ ],
+ "gate": {
+  "expected_delta_met": false,
+  "guard_ok": true,
+  "passed": false,
+  "primary_ok": false,
+  "rule": "pooled CRPS delta < 0 with P >= 0.9 at BOTH seeds (paired season-week bootstrap) AND declared expected delta >= 1.5% relative AND downstream guard (top-5 drop <= 0.1pp, ll increase <= +0.0005)"
+ },
+ "holdout_2025": null,
+ "inference_declared": "SVI/ADVI (numpyro AutoNormal, Adam lr 0.01, 2000 steps), declared before the eval run, fixed across seasons",
+ "markets": [
+  "receiving_yards",
+  "rushing_yards",
+  "passing_yards",
+  "receptions",
+  "pass_attempts",
+  "rush_attempts"
+ ],
+ "note": "Challenger A (hierarchical Bayesian projection) vs incumbent parametric distributions; line-free CRPS on realized stats; anytime_td out of scope (fail-closed). Sample-based CRPS (512 draws) scores BOTH arms with the same estimator.",
+ "policy": "FAIL -> record everything, flag stays false, no alternative priors/likelihoods this checkpoint. 2025 untouched unless PASS.",
+ "preregistration": "BUILD_PROMPTS_model_challengers_2026-07.md \u00a7A (frozen ded9fc6)",
+ "seeds": {
+  "1234": {
+   "guard": {
+    "challenger_fed": {
+     "log_loss": 0.66759,
+     "n_leans": 5435,
+     "top5_hit": 0.683
+    },
+    "incumbent_fed": {
+     "log_loss": 0.66849,
+     "n_leans": 5435,
+     "top5_hit": 0.683
+    },
+    "ll_increase": -0.0009,
+    "n_frame_rows_swapped": 30402,
+    "top5_delta_pp": 0.0
+   },
+   "primary": {
+    "per_market": {
+     "pass_attempts": {
+      "crps_challenger": 18.88941,
+      "crps_incumbent": 7.11371,
+      "n": 2651,
+      "rel_delta": 1.65535
+     },
+     "passing_yards": {
+      "crps_challenger": 838.06943,
+      "crps_incumbent": 52.41321,
+      "n": 2651,
+      "rel_delta": 14.98966
+     },
+     "receiving_yards": {
+      "crps_challenger": 5632.78421,
+      "crps_incumbent": 15.57852,
+      "n": 13044,
+      "rel_delta": 360.57384
+     },
+     "receptions": {
+      "crps_challenger": 1.07376,
+      "crps_incumbent": 1.06456,
+      "n": 13044,
+      "rel_delta": 0.00864
+     },
+     "rush_attempts": {
+      "crps_challenger": 3.14687,
+      "crps_incumbent": 2.77168,
+      "n": 5863,
+      "rel_delta": 0.13537
+     },
+     "rushing_yards": {
+      "crps_challenger": 514.08487,
+      "crps_incumbent": 15.14455,
+      "n": 5863,
+      "rel_delta": 32.94522
+     }
+    },
+    "pooled": {
+     "crps_challenger": 1827.45085,
+     "crps_incumbent": 11.13139,
+     "n": 43116,
+     "p_improve": 0.0,
+     "rel_delta": 163.17095
+    }
+   }
+  },
+  "7": {
+   "guard": {
+    "challenger_fed": {
+     "log_loss": 0.66788,
+     "n_leans": 5435,
+     "top5_hit": 0.6898
+    },
+    "incumbent_fed": {
+     "log_loss": 0.66832,
+     "n_leans": 5435,
+     "top5_hit": 0.6843
+    },
+    "ll_increase": -0.00044,
+    "n_frame_rows_swapped": 30402,
+    "top5_delta_pp": 0.55
+   },
+   "primary": {
+    "per_market": {
+     "pass_attempts": {
+      "crps_challenger": 11.25502,
+      "crps_incumbent": 7.11832,
+      "n": 2651,
+      "rel_delta": 0.58114
+     },
+     "passing_yards": {
+      "crps_challenger": 4912.80235,
+      "crps_incumbent": 52.44286,
+      "n": 2651,
+      "rel_delta": 92.67915
+     },
+     "receiving_yards": {
+      "crps_challenger": 732.40721,
+      "crps_incumbent": 15.58126,
+      "n": 13044,
+      "rel_delta": 46.00566
+     },
+     "receptions": {
+      "crps_challenger": 1.09385,
+      "crps_incumbent": 1.06296,
+      "n": 13044,
+      "rel_delta": 0.02906
+     },
+     "rush_attempts": {
+      "crps_challenger": 3.10551,
+      "crps_incumbent": 2.77306,
+      "n": 5863,
+      "rel_delta": 0.11989
+     },
+     "rushing_yards": {
+      "crps_challenger": 20.34355,
+      "crps_incumbent": 15.15968,
+      "n": 5863,
+      "rel_delta": 0.34195
+     }
+    },
+    "pooled": {
+     "crps_challenger": 527.85383,
+     "crps_incumbent": 11.13609,
+     "n": 43116,
+     "p_improve": 0.0,
+     "rel_delta": 46.4003
+    }
+   }
+  }
+ }
+}

@@ -72,8 +72,13 @@ from .advanced_features import FEATURES as _ADV_FEATURES  # noqa: E402
 from .chemistry import FEATURES as _CHEM_FEATURES  # noqa: E402
 from .depth_features import FEATURES as _DEPTH_FEATURES  # noqa: E402
 from .ftn_features import FEATURES as _FTN_FEATURES  # noqa: E402
+# GRU sequence-encoder embeddings (seq_encoder.py) — Challenger B1, gate
+# PASSED 2026-08-11 (book/seq_features_eval.json): 8 PCA'd hidden dims of a
+# trailing-16 game-log encoder; NaN whenever the artifact or history is
+# absent (fail-safe, GBDT-native)
+from .seq_encoder import SEQ_FEATURES as _SEQ_FEATURES  # noqa: E402
 NUMERIC_FEATURES = (NUMERIC_FEATURES + _ADV_FEATURES + _CHEM_FEATURES
-                    + _FTN_FEATURES + _DEPTH_FEATURES)
+                    + _FTN_FEATURES + _DEPTH_FEATURES + _SEQ_FEATURES)
 
 
 def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
@@ -120,6 +125,11 @@ def build_features(cands: pd.DataFrame, pw: pd.DataFrame,
         subset=["season", "week", "player_id"])
     f = f.drop(columns=[c for c in roll_cols if c in f.columns], errors="ignore")
     f = f.merge(pw_slim, on=["season", "week", "player_id"], how="left")
+
+    # seq-encoder embeddings (B1, shipped 2026-08-11): fail-safe attach — a
+    # missing/corrupt artifact or any error stamps NaN, never crashes a run
+    from .seq_encoder import attach_seq_features
+    f = attach_seq_features(f, pw)
 
     for m in MARKETS7:
         f[f"mkt_{m}"] = (f["market"] == m).astype(int)
