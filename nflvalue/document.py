@@ -13,6 +13,7 @@ import os
 from typing import Dict, List, Optional
 
 from . import config as cfgmod
+from . import week_package as wpmod
 
 DROPS_DIR = os.path.join(cfgmod.ROOT, "drops")
 
@@ -31,6 +32,8 @@ td{padding:6px 8px;border-bottom:1px solid #e3e7ec}
 tr:nth-child(even) td{background:#f7f9fa}
 .side{font-weight:700} .score{font-weight:700;text-align:right}
 .ctx{color:#5a6472;font-size:12.5px;margin:2px 0 0} .dagger{color:#b8860b}
+td.why{color:#3c4552;font-size:12.5px;min-width:230px}
+.risk{display:block;margin-top:2px;color:#8a5a1a}
 .foot{margin-top:28px;padding-top:10px;border-top:1px solid #e3e7ec;
  color:#5a6472;font-size:12.5px}
 @media print{body{margin:8px auto} h2{page-break-after:avoid} table{page-break-inside:avoid}}
@@ -47,6 +50,28 @@ def _side(lean: Dict) -> str:
 
 def _rank_score(lean: Dict):
     return lean.get("ml_score") if lean.get("ml_score") is not None else lean.get("composite")
+
+
+def _why(lean: Dict, game: Optional[Dict] = None) -> str:
+    """The Why cell: concise model rationale, then the principal risk.
+
+    Both come from :mod:`nflvalue.week_package` -- the same strings the
+    markdown table, the canonical JSON and the ``leans`` row carry. The
+    canonical payload normally attaches them before rendering; recomputing
+    here is the belt-and-braces that makes a BLANK Why cell impossible, since
+    an unexplained pick on a money-adjacent page is the failure mode this
+    column exists to prevent.
+
+    Nothing here is generated prose and nothing claims profitability: the
+    rationale is arithmetic already on the lean, and the counter-case is the
+    ledger's own label for the driver arguing against the chosen side.
+    """
+    reason = (lean.get("reason") or "").strip() or wpmod.rationale(lean)
+    risk = (lean.get("risk") or "").strip() or wpmod.principal_risk(lean, game)
+    cell = _e(reason)
+    if risk:
+        cell += f"<span class='risk'>{_e(risk)}</span>"
+    return cell
 
 
 def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
@@ -85,7 +110,7 @@ def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
                 f"<td>{_e(l.get('line'))}{dag}</td>"
                 f"<td class='side'>{_side(l)}</td><td>{_e(l.get('mean'))}</td>"
                 f"<td>{edge}</td><td class='score'>{_e(_rank_score(l))}</td>"
-                f"<td class='sub'>{_e(l.get('reason', ''))[:160]}</td></tr>")
+                f"<td class='why'>{_why(l, g)}</td></tr>")
         parts.append("</table>")
         ctx = contexts.get(g.get("game_id")) or {}
         items = [f"<b>{_e(e.get('name'))}</b> — {_e(i)}"

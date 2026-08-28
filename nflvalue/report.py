@@ -30,6 +30,7 @@ from . import candidates as candmod
 from . import config as cfgmod
 from . import db as dbmod
 from . import shortlist as slmod
+from . import week_package as wpmod
 
 REPORTS_DIR = os.path.join(cfgmod.ROOT, "reports")
 WEEKLY_PROPS_JSON = os.path.join(cfgmod.DATA_DIR, "weekly_props.json")
@@ -54,22 +55,15 @@ def _fmt_line(lean: Dict) -> str:
 
 
 def _one_line_reason(lean: Dict) -> str:
-    score_comps = lean.get("components") or {}          # composite breakdown
-    proj_comps = lean.get("proj_components") or {}      # projection breakdown
-    bits: List[str] = []
-    z = score_comps.get("z")
-    if z is not None:
-        bits.append(f"proj {lean.get('mean')} vs line {lean.get('line')} (z={z:+.2f})")
-    if lean.get("edge") is not None:
-        bits.append(f"model p {score_comps.get('model_prob')} vs mkt {score_comps.get('market_prob')}")
-    opp_factor = proj_comps.get("opp_factor")
-    if opp_factor not in (None, 1.0):
-        direction = "soft" if (opp_factor > 1.0) == (lean.get("side") == "over") else "tough"
-        bits.append(f"opp-vs-pos {opp_factor} ({direction} matchup for this side)")
-    gs = score_comps.get("script_sub")
-    if gs is not None and abs(gs - 0.5) > 0.15:
-        bits.append("game-script fit" if gs > 0.5 else "game-script headwind")
-    return "; ".join(bits) if bits else "ranked by composite"
+    """The lean's deterministic "why".
+
+    ONE implementation, in :mod:`nflvalue.week_package`, shared by the
+    markdown table, the HTML drop, the canonical JSON and the ``leans`` row --
+    so no two surfaces can ever tell a reader a different story about the same
+    pick. This alias is kept because it is the name the report has always
+    used; it must never grow a second body.
+    """
+    return wpmod.rationale(lean)
 
 
 def _side_label(lean: Dict) -> str:
@@ -155,15 +149,34 @@ def render_markdown(season: int, week: int, games: List[Dict],
 # Persistence
 # --------------------------------------------------------------------------- #
 def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
-                  as_of: str, status: str = "active") -> int:
-    """Replace-the-run semantics: the forward log for a (season, week, clock)
-    is whatever the LATEST run published. The whole slice is deleted first so
-    a rerun after a ranking change can't leave orphan leans behind (found
-    live: a pre-fix run's degenerate TD-unders survived a rerun's upsert
-    because their (player, market) keys differed). Clocks run in order —
-    wed, then t90 — so a t90 void is never clobbered by design."""
-    conn.execute("DELETE FROM leans WHERE season=? AND week=? AND clock=?",
-                 (season, week, clock))
+                  as_of: str, status: str = "active", scope: str = "week") -> int:
+    """Replace-the-run semantics, at the scope the run actually covers.
+
+    ``scope="week"`` (Wednesday): the forward log for a (season, week, clock)
+    is whatever the LATEST full-slate run published, so the whole slice is
+    deleted first -- a rerun after a ranking change cannot leave orphan leans
+    behind (found live: a pre-fix run's degenerate TD-unders survived a
+    rerun's upsert because their (player, market) keys differed).
+
+    ``scope="games"`` (T-90): a T-90 run is a PATCH for one game, so only that
+    game's rows are replaced. Deleting the whole (season, week, 't90') slice
+    here would erase an earlier patch's already-published leans from the very
+    record CLV and the kill-check read -- the two-clock design has T-90 runs
+    accumulate across games, not overwrite one another.
+
+    Clocks run in order -- wed, then t90 -- so a t90 void is never clobbered
+    by design.
+    """
+    if scope not in ("week", "games"):
+        raise ValueError(f"scope must be 'week' or 'games', got {scope!r}")
+    if scope == "week":
+        conn.execute("DELETE FROM leans WHERE season=? AND week=? AND clock=?",
+                     (season, week, clock))
+    else:
+        for gid in sorted({g.get("game_id") for g in games if g.get("game_id")}):
+            conn.execute("""DELETE FROM leans
+                            WHERE season=? AND week=? AND clock=? AND game_id=?""",
+                         (season, week, clock, gid))
     conn.commit()
     rows = []
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

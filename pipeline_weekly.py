@@ -45,6 +45,7 @@ from nflvalue import killcheck as kcmod
 from nflvalue import report as rptmod
 from nflvalue import shortlist as slmod
 from nflvalue import synthesis as synmod
+from nflvalue import week_package as wpmod
 from nflvalue.dashboard import write_dashboard
 from nflvalue.freshness import Feed, gate, stamp_now
 from nflvalue.sources import availability as avmod
@@ -530,7 +531,13 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         context_study.record_tags(conn, season, week, result["games"], result["contexts"])
 
     # 5. write artifacts + forward log (idempotent)
+    #
+    # Wednesday INITIALIZES the canonical weekly package: the full slate, in
+    # deterministic order, clock-stamped per game. Every downstream surface
+    # (markdown, HTML drop, dashboard, Discord) reads this one object, and the
+    # T-90 patch path merges into it rather than replacing it.
     import os
+    result = wpmod.finalize(result, clock=clock)
     os.makedirs(rptmod.REPORTS_DIR, exist_ok=True)
     md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}.md")
     with open(md_path, "w") as f:
@@ -538,7 +545,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     result["md_path"] = md_path
     from nflvalue.document import write_drop
     result["drop_path"] = write_drop(result, result.get("contexts"))
-    cfgmod.save_json(rptmod.WEEKLY_PROPS_JSON, {k: v for k, v in result.items() if k != "markdown"})
+    wpmod.save(rptmod.WEEKLY_PROPS_JSON, result)
     rptmod.persist_leans(conn, season, week, clock, result["games"], result["as_of"])
 
     # 6. dashboard + (flag-gated) discord
@@ -573,6 +580,27 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     if cands.empty:
         conn.close()
         raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+
+    # Real prop lines, if a resnap already captured them for this game. Loaded
+    # and re-enumerated BEFORE any feature/ML stamping -- the same ordering the
+    # Wednesday path learned the hard way, so the re-enumerated frame keeps
+    # every layer instead of silently dropping it. No snapshot -> the frame
+    # stays synthetic and `no_market`, visibly labelled, never blended.
+    real_lines, real_line_note = None, None
+    try:
+        real_lines = wpmod.latest_real_prop_lines(conn, game_id, _players_frame(cands))
+    except Exception as exc:  # noqa: BLE001 -- degrade to synthetic, loudly
+        print(f"[pipeline] t90 real-line load failed ({exc}); staying no_market")
+        real_lines = None
+    if real_lines is not None and not real_lines.empty:
+        cands = candmod.enumerate_candidates(
+            season, week, inputs=inputs,
+            min_usage=(cfg.get("candidates") or {}).get("min_usage"),
+            prop_lines=real_lines, roster_mode=roster_mode)
+        cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
+        real_line_note = (f"{len(real_lines)} real sportsbook line(s) from the latest "
+                          f"resnap ({real_lines.attrs.get('ts')}) priced this re-rank; "
+                          f"every other market stays synthetic (†) and no_market.")
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -630,24 +658,53 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     contexts = {gm["game_id"]: slmod.build_context_panel(
         gm, availability=statuses, mode=mode) for gm in games}
 
-    md = rptmod.render_markdown(
-        season, week, games, contexts, as_of, "t90",
-        publish=g["publish"], publish_reasons=g["reasons"],
-        line_note=(f"T-90 refresh of {game_id}: {len(voided)} Wednesday lean(s) auto-voided "
-                   f"({', '.join(v['name'] for v in voided) or 'none'})."))
+    line_note = (f"T-90 refresh of {game_id}: {len(voided)} Wednesday lean(s) auto-voided "
+                 f"({', '.join(v['name'] for v in voided) or 'none'})."
+                 + (f" {real_line_note}" if real_line_note else ""))
+
+    # ---- the PATCH: exactly the game this run re-ranked --------------------- #
+    patch = wpmod.finalize({"season": season, "week": week, "clock": "t90", "as_of": as_of,
+                            "publish": g["publish"], "publish_reasons": g["reasons"],
+                            "mode": mode, "games": games, "contexts": contexts,
+                            "voided": voided, "line_note": line_note}, clock="t90")
+
     import os
     os.makedirs(rptmod.REPORTS_DIR, exist_ok=True)
+    # the patch's own record: what THIS T-90 run changed, kept per game so a
+    # later run can never overwrite an earlier game's audit trail
     md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}_t90_{game_id}.md")
     with open(md_path, "w") as f:
-        f.write(md)
-    rptmod.persist_leans(conn, season, week, "t90", games, as_of)
+        f.write(rptmod.render_markdown(season, week, patch["games"], contexts, as_of, "t90",
+                                       publish=g["publish"], publish_reasons=g["reasons"],
+                                       line_note=line_note))
+    # T-90 persistence is GAME-SCOPED: patching one game must not delete
+    # another game's already-published T-90 rows.
+    rptmod.persist_leans(conn, season, week, "t90", patch["games"], as_of,
+                         scope="games")
 
-    payload = {"season": season, "week": week, "clock": "t90", "as_of": as_of,
-               "publish": g["publish"], "publish_reasons": g["reasons"],
-               "mode": mode, "games": games, "contexts": contexts,
-               "voided": voided, "md_path": md_path}
+    # ---- fold the patch into the standing weekly package -------------------- #
+    # Every untouched Wednesday game, and every game an earlier T-90 already
+    # patched, survives. The merged package -- not the one-game patch -- is
+    # what the weekly markdown, the HTML drop, the dashboard and Discord read,
+    # so a one-game run can never stand in for the week.
+    base = wpmod.load_for_week(rptmod.WEEKLY_PROPS_JSON, season, week)
+    payload = wpmod.merge(base, patch)
+    payload["md_path"] = md_path
+    payload["patched_game_id"] = game_id
+
+    week_md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}_t90.md")
+    with open(week_md_path, "w") as f:
+        f.write(rptmod.render_markdown(
+            season, week, payload["games"], payload.get("contexts") or {},
+            payload.get("as_of") or as_of, "t90",
+            publish=payload.get("publish", True),
+            publish_reasons=payload.get("publish_reasons") or [],
+            line_note=line_note))
+    payload["week_md_path"] = week_md_path
+
     from nflvalue.document import write_drop
-    payload["drop_path"] = write_drop(payload, contexts)
+    payload["drop_path"] = write_drop(payload, payload.get("contexts"))
+    wpmod.save(rptmod.WEEKLY_PROPS_JSON, payload)
     dash = update_dashboard(payload, conn)
     notice = None
     if discord:
