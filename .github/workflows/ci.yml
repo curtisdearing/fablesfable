@@ -72,3 +72,4 @@ jobs:
           tests/test_golden_output.py
           tests/test_explainability.py
           tests/test_explain_cards.py
+          tests/test_pages_workflow_contract.py

@@ -2,6 +2,8 @@ __pycache__/
 .pytest_cache/
 *.pyc
 # large regenerable data + build artifacts
+# _site is assembled by scripts/prepare_pages.py on every run
+_site/
 *.parquet
 data/*.db
 data/*.db-journal
