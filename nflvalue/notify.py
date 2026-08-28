@@ -81,16 +81,64 @@ def _game_embed(game: Dict, context: Optional[Dict]) -> Dict:
     }
 
 
+def _patch_view(report_payload: Dict):
+    """(games_to_post, header) when this payload is a T-90 PATCH, else None.
+
+    The payload is deliberately the whole week -- that is what stopped a
+    one-game run from deleting the rest of the product. Discord is a feed
+    though, so repeating fifteen unchanged games every time one hits T-90
+    buries the only news there is. The post is therefore scoped to the game
+    this run refreshed, and says in words that the rest of the week still
+    stands, so nobody reads one embed as "the other games were dropped".
+
+    ``patched_game_id`` is THIS run's patch; ``patched_games`` accumulates
+    across the week (the dashboard wants that), so it is not what a single
+    post is about. If the pointer does not resolve to a game in the payload,
+    this returns None and the whole week is posted -- never nothing.
+    """
+    gid = report_payload.get("patched_game_id")
+    if not gid:
+        patched = report_payload.get("patched_games") or []
+        gid = patched[-1] if len(patched) == 1 else None
+    if not gid:
+        return None
+    games = report_payload.get("games") or []
+    target = next((g for g in games if g.get("game_id") == gid), None)
+    if target is None or not target.get("leans"):
+        return None
+
+    season, week = report_payload.get("season"), report_payload.get("week")
+    voided = report_payload.get("voided") or []
+    if voided:
+        names = ", ".join(str(v.get("name")) for v in voided[:6])
+        change = (f"{len(voided)} lean(s) auto-voided on inactives: {names}"
+                  + ("…" if len(voided) > 6 else ""))
+    else:
+        change = "no lean voided — re-ranked on the latest availability read"
+    others = max(len(games) - 1, 0)
+    header = (f"**T-90 refresh — {target.get('matchup')}** "
+              f"({season} week {week}, as of {report_payload.get('as_of')})\n"
+              f"{change}.\n"
+              f"The other {others} game(s) this week are unchanged and still stand. "
+              "Personal, unmonetized research post. Leans, not locks.")
+    return [target], header
+
+
 def build_messages(report_payload: Dict) -> List[Dict]:
     """Weekly report payload (report.generate output) -> list of webhook bodies."""
     season, week = report_payload.get("season"), report_payload.get("week")
     clock = report_payload.get("clock", "wed")
-    header = (f"**NFL Prop Leans — {season} week {week}** (clock: {clock}, "
-              f"as of {report_payload.get('as_of')})\n"
-              "Personal, unmonetized research post. Leans, not locks.")
+    patch = _patch_view(report_payload) if clock == "t90" else None
+    if patch:
+        post_games, header = patch
+    else:
+        post_games = report_payload.get("games", [])
+        header = (f"**NFL Prop Leans — {season} week {week}** (clock: {clock}, "
+                  f"as of {report_payload.get('as_of')})\n"
+                  "Personal, unmonetized research post. Leans, not locks.")
     embeds = []
     contexts = report_payload.get("contexts") or {}
-    for g in report_payload.get("games", []):
+    for g in post_games:
         if g.get("leans"):
             embeds.append(_game_embed(g, contexts.get(g["game_id"])))
     messages = []

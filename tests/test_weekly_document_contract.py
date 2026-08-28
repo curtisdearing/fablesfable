@@ -208,8 +208,15 @@ def test_render_drop_refuses_to_show_a_lean_with_no_reason():
 
 
 def test_markdown_html_dashboard_and_discord_all_read_one_payload(env, monkeypatch):
-    """Requirement 1 in one assertion set: after a T-90 patch, every surface
-    shows the same week -- not the one game the patch happened to re-rank."""
+    """After a T-90 patch every surface reads the SAME canonical payload --
+    not the one game the patch happened to re-rank.
+
+    Discord is the deliberate exception in PRESENTATION, not in source: it
+    reads the same whole-week payload and then scopes the post to the patched
+    game, because a feed that repeats fifteen unchanged games every T-90
+    buries the only news there is. It still says the rest of the week stands,
+    so a reader can never conclude the other games were dropped.
+    """
     from nflvalue import config as cfgmod
     from nflvalue import notify
     from tests.test_week_package import GAME_IDS, MATCHUPS
@@ -238,8 +245,15 @@ def test_markdown_html_dashboard_and_discord_all_read_one_payload(env, monkeypat
     for away, home in MATCHUPS:
         assert f"{away} @ {home}" in week_md
         assert f"{away} @ {home}" in html
-        assert f"{away} @ {home}" in discord_blob
     assert [g["game_id"] for g in latest["weekly_leans"]["games"]] == sorted(GAME_IDS)
+
+    # Discord: the patched game, and an explicit "the rest still stands"
+    patched_matchup = next(g["matchup"] for g in canonical["games"]
+                           if g["game_id"] == GAME_1)
+    assert patched_matchup in discord_blob
+    assert sum(1 for m in discord["messages"] for _ in m["embeds"]) == 1
+    assert "unchanged" in discord_blob.lower()
+    assert "1-800-GAMBLER" in discord_blob
     # the same rationale strings, not three stories about one pick
     lean = canonical["games"][0]["leans"][0]
     assert lean["reason"] and lean["reason"][:40] in html

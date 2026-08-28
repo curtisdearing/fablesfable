@@ -153,6 +153,100 @@ def job_wed() -> int:
     return 0
 
 
+def t90_line_snapshot(cfg, conn, soon, resnap=None, pull=None,
+                      event_map_fn=None) -> dict:
+    """Get the freshest REAL prop lines in front of the T-90 re-rank.
+
+    Two distinct spends, both hard-stopped by the shared monthly credit
+    budget, and both reported whether they happen or not:
+
+    * **Resnap** (always, when a key exists): games that already carry an
+      entry line get a second, pre-kickoff snapshot. Without it entry ==
+      close and CLV could never resolve -- the kill-check would starve
+      forever. It is also what lets ``run_t90`` price against a line that
+      moved since Wednesday.
+    * **First pull** (opt-in via ``odds_budget.t90_first_pull``): games with
+      NO line at all. Wednesday's rotation and per-run cap skip several games
+      every week and those publish ``no_market``; a first pull at T-90 is the
+      most informative credit this pipeline can spend, because it is the read
+      closest to kickoff. It is also a real change to the monthly credit
+      profile, so it stays OFF until an operator turns it on -- and it goes
+      through ``pull_week_props``, so the budget hard stop and the credit
+      ledger apply exactly as they do on Wednesday.
+
+    The two halves never touch the same game: a game either has a line
+    (resnap) or it does not (first pull).
+
+    Degrades, never aborts: the re-rank IS the product, so a dead odds call
+    costs real prices and nothing else. The reason lands in ``note`` so a
+    published ``no_market`` is never mistaken for "the model had nothing to
+    say".
+    """
+    from nflvalue import db as dbmod
+    out = {"resnapped": [], "first_pulled": [], "skipped_budget": [],
+           "without_lines": [], "first_pull_enabled": False, "note": ""}
+    notes = []
+    if not cfg.get("odds_api_key"):
+        out["note"] = ("no odds_api_key configured — T-90 runs on synthetic "
+                       "reference lines (no_market), which the report labels")
+        return out
+
+    ob = cfg.get("odds_budget") or {}
+    out["first_pull_enabled"] = bool(ob.get("t90_first_pull"))
+    game_ids = [g.game_id for g in soon.itertuples(index=False)]
+    have = set(dbmod.query_df(conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
+    with_lines = [g for g in game_ids if g in have]
+    without_lines = [g for g in game_ids if g not in have]
+    out["without_lines"] = without_lines
+
+    if event_map_fn is None:
+        import pipeline_weekly as pwmod
+        event_map_fn = pwmod.build_event_map
+    if resnap is None or pull is None:
+        from nflvalue.sources import oddsapi_props as oap
+        resnap = resnap or oap.resnap_lines
+        pull = pull or oap.pull_week_props
+
+    skipped = set()
+
+    def _spend(label, fn, targets):
+        if not targets:
+            return []
+        try:
+            emap = event_map_fn(cfg, soon[soon.game_id.isin(targets)])
+            if not emap:
+                notes.append(f"{label}: no odds-api event matched {len(targets)} game(s)")
+                return []
+            res = fn(cfg, emap, conn=conn)
+        except Exception as exc:  # noqa: BLE001 -- degrade to synthetic, loudly
+            notes.append(f"{label} failed ({exc})")
+            return []
+        skipped.update(res.get("skipped_budget") or [])
+        skipped.update(res.get("skipped_cap") or [])
+        for e in res.get("skipped_error") or []:
+            notes.append(f"{label} error on {e.get('game_id')}: {e.get('error')}")
+        notes.append(f"{label}: {len(res.get('pulled') or [])} game(s), "
+                     f"{res.get('rows_written', 0)} rows, "
+                     f"{float(res.get('budget_remaining') or 0):.0f} credits left")
+        return sorted(res.get("pulled") or [])
+
+    out["resnapped"] = _spend("closing resnap", resnap, with_lines)
+    if without_lines:
+        if out["first_pull_enabled"]:
+            out["first_pulled"] = _spend("T-90 first pull", pull, without_lines)
+        else:
+            notes.append(
+                f"{len(without_lines)} game(s) still have no real line and will "
+                f"publish no_market: {', '.join(without_lines)} "
+                f"(enable odds_budget.t90_first_pull to price them at T-90)")
+    out["skipped_budget"] = sorted(skipped)
+    if skipped:
+        notes.append(f"budget/cap stop skipped {len(skipped)} game(s): "
+                     f"{', '.join(sorted(skipped))}")
+    out["note"] = "; ".join(notes)
+    return out
+
+
 def job_t90() -> int:
     from nflvalue import config as cfgmod, db as dbmod
     import pipeline_weekly as pw
@@ -170,24 +264,12 @@ def job_t90() -> int:
                ["game_id"].tolist())
     cfg = cfgmod.load_config()
 
-    # CLOSING SNAPSHOT (evaluation catch): without a second pre-kick line
-    # pull, entry == close and CLV could never resolve — the kill-check
-    # would starve forever. Resnap exactly the games that have entry lines.
-    if cfg.get("odds_api_key"):
-        try:
-            from nflvalue.sources import oddsapi_props as oap
-            import pipeline_weekly as pwmod
-            have_lines = set(dbmod.query_df(
-                conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
-            targets = [g.game_id for g in soon.itertuples(index=False)
-                       if g.game_id in have_lines]
-            if targets:
-                emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
-                res = oap.resnap_lines(cfg, emap, conn=conn)
-                print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
-                      f"{res['rows_written']} rows, {res['budget_remaining']:.0f} credits left")
-        except Exception as exc:  # noqa: BLE001
-            print(f"[auto] closing resnap failed (CLV close may be stale): {exc}")
+    # LINE SNAPSHOT before the re-rank: the closing resnap that makes CLV
+    # resolvable, plus (opt-in) a first pull for games Wednesday never
+    # priced. run_t90 then re-ranks against whatever is freshest in `lines`.
+    snap = t90_line_snapshot(cfg, conn, soon)
+    if snap["note"]:
+        print(f"[auto] t90 lines — {snap['note']}")
     conn.close()
     from nflvalue.notify import resolve_webhook
     post_live = bool(cfg.get("discord_enabled") and resolve_webhook())

@@ -55,6 +55,11 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5p
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#172033}
 .pick{font-weight:700}
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;padding:1px 6px;border-radius:9px;border:1px solid currentColor;margin-left:6px;vertical-align:1px}
+.badge.t90{color:#8a5a1a}
+.badge.wed{color:#5a6472}
+td.why{font-size:12px;line-height:1.45;max-width:320px}
+td.why .risk{display:block;margin-top:2px;color:#8a5a1a}
 .sub{color:var(--muted);font-size:11.5px}
 .ev{font-weight:800}
 .ev.pos{color:var(--green)} .ev.neg{color:var(--red)}
@@ -217,6 +222,22 @@ function renderLeans(){
       ${kc.verdict?` · kill-check: <b>${esc(kc.verdict)}</b>`:""}
       <div class="sub">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live (Phase 3).")}</div></div>`;
   const sideLabel = l => l.market==="anytime_td" ? "YES" : (l.side||"").toUpperCase();
+  // After a T-90 patch the payload is the WHOLE week and w.clock reads "t90".
+  // Without a per-game marker every untouched Wednesday game would look
+  // freshly refreshed 90 minutes before kickoff, which is the opposite of
+  // what the two-clock design promises. Each game says which read it is on.
+  const clockBadge = g => g.clock==="t90"
+    ? '<span class="badge t90" title="re-ranked on the pre-kickoff availability read">T-90 refreshed</span>'
+    : '<span class="badge wed" title="still on the Wednesday provisional read">Wednesday read</span>';
+  // The Why is the rationale + counter-case the canonical payload attached --
+  // the same strings the markdown, the HTML drop and the leans row carry. A
+  // lean that arrives without one is shown as unexplained rather than blank.
+  const whyCell = l => {
+    const reason = (l.reason||"").trim();
+    const risk = (l.risk||"").trim();
+    if(!reason && !risk) return '<span class="sub">no rationale recorded — treat this row as unexplained</span>';
+    return esc(reason) + (risk?`<span class="risk">${esc(risk)}</span>`:"");
+  };
   const games = w.games.map(g=>{
     const ctx=(w.contexts||{})[g.game_id];
     const rows=g.leans.map(l=>`<tr>
@@ -226,10 +247,11 @@ function renderLeans(){
       <td><b>${sideLabel(l)}</b></td>
       <td>${esc(l.mean)}</td>
       <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
-      <td class="price">${esc(l.composite)}</td></tr>`).join("");
+      <td class="price">${esc(l.composite)}</td>
+      <td class="why">${whyCell(l)}</td></tr>`).join("");
     const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
-    return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
-      <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th></tr></thead>
+    return `<div class="box"><b>${esc(g.matchup)}</b>${clockBadge(g)} <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
+      <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th><th>Why</th></tr></thead>
       <tbody>${rows}</tbody></table>
       ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;
   }).join("");
@@ -757,7 +779,17 @@ def write_dashboard(data: Dict, path: str = None) -> str:
                 payload["real_line"] = json.load(_fh)
         except Exception:
             payload["real_line"] = None     # box simply doesn't render
-    html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
+    # The payload is inlined INTO a <script> block, so any string in it that
+    # contains "</script>" (a manual note, an ESPN headline, a pasted quote)
+    # would close the block early and kill the entire page -- the same class
+    # of failure as the Phase 8 duplicate-declaration SyntaxError, and just as
+    # invisible to a string-presence test. `<\/` is a legal JSON escape for
+    # `/`, so the parsed string is byte-identical; only the HTML tokenizer
+    # sees the difference. `<!--` gets the same treatment.
+    data_json = (json.dumps(payload, default=str)
+                 .replace("</", "<\\/")
+                 .replace("<!--", "<\\!--"))
+    html = TEMPLATE.replace("__DATA_JSON__", data_json)
     with open(path, "w") as f:
         f.write(html)
     return path
