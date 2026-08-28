@@ -236,9 +236,21 @@ function renderLeans(){
     : (l.line!=null ? '<span class="badge synthetic">SYNTHETIC</span>'
                     : '<span class="badge nomarket">NO MARKET</span>');
   const rep = DATA.weekly_report||{};
+  // Three states, not two. A report whose week we cannot confirm, or one from
+  // an earlier week, is still worth linking -- but never under a label that
+  // implies it is this week's.
+  const repWeek = (rep.season!=null&&rep.week!=null)
+    ? esc(rep.season)+" week "+esc(rep.week) : null;
+  const repNote = rep.stale===true
+    ? `<div class="warnbox"><b>This report is for ${repWeek}, not the week shown above.</b>
+       It is the most recent one written; treat it as an older week's picks until a new run replaces it.</div>`
+    : (rep.stale===false
+        ? `<div class="sub">The full per-game writeup behind these leans — ${repWeek}.</div>`
+        : `<div class="sub">The full per-game writeup. Its week was not recorded, so it may cover an
+           earlier week than the leans above.</div>`);
   const repBox = rep.available
     ? `<div class="box"><a class="reportlink" href="${esc(rep.href||"reports/latest.html")}">View weekly top-five report</a>
-       <div class="sub">The full per-game writeup behind these leans.</div></div>`
+       ${repNote}</div>`
     : `<div class="box"><b>Weekly top-five report — not available.</b>
        <div class="sub">No current report sits next to this page, so there is nothing to link to yet.
        One appears here after a weekly run writes it.</div></div>`;
@@ -789,11 +801,31 @@ def write_dashboard(data: Dict, path: str = None) -> str:
         # deployed copy cannot reach. Absent report -> explicit unavailable
         # state in the UI, never a dead href.
         page_dir = os.path.dirname(os.path.abspath(path))
-        payload["weekly_report"] = {
-            "available": os.path.exists(
-                os.path.join(page_dir, "reports", "latest.html")),
+        reports = os.path.join(page_dir, "reports")
+        report = {
+            "available": os.path.exists(os.path.join(reports, "latest.html")),
             "href": "reports/latest.html",
+            "season": None, "week": None, "clock": None, "stale": None,
         }
+        # nflvalue.document writes latest.json beside latest.html naming the
+        # week the report covers. Its ABSENCE is not evidence of currency --
+        # unknown provenance stays None, so the page says "week not recorded"
+        # rather than implying the file is this week's.
+        try:
+            with open(os.path.join(reports, "latest.json")) as _fh:
+                meta = json.load(_fh)
+            report["season"] = meta.get("season")
+            report["week"] = meta.get("week")
+            report["clock"] = meta.get("clock")
+            leans = payload.get("weekly_leans") or {}
+            if (report["season"] is not None and report["week"] is not None
+                    and leans.get("season") is not None
+                    and leans.get("week") is not None):
+                report["stale"] = (str(report["season"]) != str(leans["season"])
+                                   or str(report["week"]) != str(leans["week"]))
+        except (OSError, ValueError, AttributeError):
+            pass                    # unknown provenance; stale stays None
+        payload["weekly_report"] = report
     # json.dumps does not escape "<", so a player or matchup string containing
     # "</script>" would close this block early and drop the rest of the payload
     # into the document as live HTML -- and a "<script" inside it can flip the

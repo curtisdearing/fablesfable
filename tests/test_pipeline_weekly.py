@@ -32,6 +32,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(rptmod, "REPORTS_DIR", str(tmp_path / "reports"))
     monkeypatch.setattr(rptmod, "WEEKLY_PROPS_JSON", str(tmp_path / "weekly_props.json"))
     monkeypatch.setattr(docmod, "DROPS_DIR", str(tmp_path / "drops"))
+    monkeypatch.setattr(docmod, "REPORTS_DIR", str(tmp_path / "reports"))
     monkeypatch.setattr(cfgmod, "LATEST_PATH", str(tmp_path / "latest.json"))
     monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(tmp_path / "dashboard.html"))
     return {"tmp": tmp_path, "db_path": db_path}
