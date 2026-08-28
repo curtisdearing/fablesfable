@@ -253,7 +253,7 @@ function renderLeans(){
        ${repNote}</div>`
     : `<div class="box"><b>Weekly top-five report — not available.</b>
        <div class="sub">No current report sits next to this page, so there is nothing to link to yet.
-       One appears here after a weekly run writes it.</div></div>`;
+       One appears here after a weekly run writes it.${rep.reason?" Build reason: <code>"+esc(rep.reason)+"</code>.":""}</div></div>`;
   const games = w.games.map(g=>{
     const ctx=(w.contexts||{})[g.game_id];
     const rows=g.leans.map((l,i)=>`<tr class="${i===0?"toplean":""}">
@@ -805,26 +805,50 @@ def write_dashboard(data: Dict, path: str = None) -> str:
         report = {
             "available": os.path.exists(os.path.join(reports, "latest.html")),
             "href": "reports/latest.html",
-            "season": None, "week": None, "clock": None, "stale": None,
+            "season": None, "week": None, "clock": None,
+            "stale": None, "reason": None,
         }
-        # nflvalue.document writes latest.json beside latest.html naming the
-        # week the report covers. Its ABSENCE is not evidence of currency --
-        # unknown provenance stays None, so the page says "week not recorded"
-        # rather than implying the file is this week's.
-        try:
-            with open(os.path.join(reports, "latest.json")) as _fh:
-                meta = json.load(_fh)
-            report["season"] = meta.get("season")
-            report["week"] = meta.get("week")
-            report["clock"] = meta.get("clock")
-            leans = payload.get("weekly_leans") or {}
-            if (report["season"] is not None and report["week"] is not None
-                    and leans.get("season") is not None
-                    and leans.get("week") is not None):
-                report["stale"] = (str(report["season"]) != str(leans["season"])
-                                   or str(report["week"]) != str(leans["week"]))
-        except (OSError, ValueError, AttributeError):
-            pass                    # unknown provenance; stale stays None
+        # Two sidecars can name the week, and they are not equals.
+        #
+        #   reports/index.json  -- written by scripts/prepare_pages.py at DEPLOY
+        #     time. Authoritative on the published site, because it records what
+        #     that build actually published. Critically it carries `published`:
+        #     when prepare_pages cannot find a current drop it OVERWRITES
+        #     latest.html with a visible notice, so the file exists while there
+        #     is no report. A bare existence check would link the reader to a
+        #     page telling them there is no report.
+        #   reports/latest.json -- written by nflvalue.document.write_drop, so a
+        #     local pipeline run keeps a locally-opened dashboard honest without
+        #     anyone running the deploy script.
+        #
+        # Absence of both is NOT evidence of currency: provenance stays None and
+        # the page says the week was not recorded rather than implying it is
+        # this week's.
+        meta, from_manifest = None, False
+        for name in ("index.json", "latest.json"):
+            try:
+                with open(os.path.join(reports, name)) as _fh:
+                    meta = json.load(_fh)
+                from_manifest = name == "index.json"
+                break
+            except (OSError, ValueError):
+                continue
+        if isinstance(meta, dict):
+            if from_manifest and not meta.get("published"):
+                # The deploy says it published a notice, not a report. Believe it.
+                report["available"] = False
+                report["reason"] = meta.get("reason")
+            else:
+                report["season"] = meta.get("season")
+                report["week"] = meta.get("week")
+                report["clock"] = meta.get("clock")
+                leans = payload.get("weekly_leans") or {}
+                if (report["season"] is not None and report["week"] is not None
+                        and leans.get("season") is not None
+                        and leans.get("week") is not None):
+                    report["stale"] = (
+                        str(report["season"]) != str(leans["season"])
+                        or str(report["week"]) != str(leans["week"]))
         payload["weekly_report"] = report
     # json.dumps does not escape "<", so a player or matchup string containing
     # "</script>" would close this block early and drop the rest of the payload

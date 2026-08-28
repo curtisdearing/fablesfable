@@ -209,60 +209,122 @@ def test_end_to_end_a_real_drop_makes_the_dashboard_link_live(tmp_path):
 # --------------------------------------------------------------------------- #
 # 4. ...and the deployed site must actually serve it
 #
-# Text assertions, not a YAML parse: PyYAML is not a dependency of this repo
-# (requirements.txt is deliberately near-empty) and adding one so a test can
-# read a 200-line workflow is a bad trade. importorskip would be worse -- it
-# would turn this into a silent skip in CI, the exact failure mode
-# FABLESFABLE_STRICT_FIXTURES exists to prevent.
+# scripts/prepare_pages.py owns the deploy, and tests/test_pages_workflow_
+# contract.py covers it in depth. The one thing neither file can check alone
+# is that the two AGREE: the path the page asks for and the path the deploy
+# writes are the same string, in two files that are edited by different people
+# at different times.
 # --------------------------------------------------------------------------- #
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-WORKFLOW = os.path.join(ROOT, ".github", "workflows", "live-weekly.yml")
-
-
-def _pages_step() -> str:
-    with open(WORKFLOW, encoding="utf-8") as fh:
-        wf = fh.read()
-    start = wf.index("Prepare dashboard for GitHub Pages")
-    end = wf.index("actions/configure-pages", start)
-    return wf[start:end]
-
-
-def test_the_pages_deploy_publishes_the_report_next_to_the_dashboard():
-    """dashboard.html becomes _site/index.html, and it links to
-    reports/latest.html RELATIVE TO ITSELF. If the deploy copies only the
-    dashboard, that link 404s on the public site for every reader."""
-    step = _pages_step()
-    assert "reports/latest.html" in step, (
-        "the Pages step must publish reports/latest.html")
-    assert "_site/reports" in step, (
-        "it must land at _site/reports/ so the relative link resolves")
 
 
 def test_the_published_path_matches_the_href_the_dashboard_renders():
-    """The invariant that keeps these two files from drifting apart: the path
-    the page asks for and the path the deploy writes are the same string."""
     with open(os.path.join(ROOT, "nflvalue", "dashboard.py"), encoding="utf-8") as fh:
         dash = fh.read()
     hrefs = set(re.findall(r'"href": "([^"]+)"', dash))
     assert hrefs == {"reports/latest.html"}, f"unexpected href(s): {hrefs}"
-    step = _pages_step()
-    href = hrefs.pop()
-    assert f"_site/{os.path.dirname(href)}" in step, (
-        "the deploy must publish into the directory the href names")
+    with open(os.path.join(ROOT, "scripts", "prepare_pages.py"), encoding="utf-8") as fh:
+        pages = fh.read()
+    assert '"latest": "reports/latest.html"' in pages, (
+        "prepare_pages.py must publish the exact path the dashboard links to")
 
 
-def test_a_missing_report_does_not_fail_the_deploy():
-    """Push-to-main runs a deploy-only heartbeat with no model run, so there is
-    often no report at all. That must publish the dashboard, not fail."""
-    step = _pages_step()
-    assert re.search(r"if \[ -f reports/latest\.html \]", step), (
-        "the copy must be guarded on the file existing")
+def test_the_page_and_the_deploy_read_the_same_manifest_name():
+    """prepare_pages.py writes reports/index.json; write_dashboard reads it.
+    A rename on either side silently drops the page back to its weakest state
+    (report offered, week unknown), which is the kind of regression nobody
+    notices."""
+    with open(os.path.join(ROOT, "scripts", "prepare_pages.py"), encoding="utf-8") as fh:
+        assert '"index.json"' in fh.read()
+    with open(os.path.join(ROOT, "nflvalue", "dashboard.py"), encoding="utf-8") as fh:
+        assert '"index.json"' in fh.read()
 
 
-def test_the_sidecar_ships_with_the_report():
-    """Without latest.json the deployed page cannot tell which week the report
-    covers, and falls back to the weakest of its three states."""
-    assert "latest.json" in _pages_step()
+# --------------------------------------------------------------------------- #
+# 5. The page agrees with the deploy's own verdict
+# --------------------------------------------------------------------------- #
+def _dash_with_manifest(tmp_path, manifest, leans_week=10, latest_html=True):
+    reports = tmp_path / "reports"
+    reports.mkdir(exist_ok=True)
+    if latest_html:
+        (reports / "latest.html").write_text("<html>report or notice</html>")
+    if manifest is not None:
+        (reports / "index.json").write_text(json.dumps(manifest))
+    out = tmp_path / "dashboard.html"
+    dashboard.write_dashboard({"weekly_leans": dict(PAYLOAD, week=leans_week)}, str(out))
+    js = max(re.findall(r"<script>(.*?)</script>", out.read_text(), flags=re.S), key=len)
+    return json.loads(re.search(r"^const DATA = (.*);$", js, flags=re.M).group(1))["weekly_report"]
+
+
+def test_an_unpublished_manifest_means_the_file_is_a_notice_not_a_report():
+    """The integration that matters. When prepare_pages cannot find a current
+    drop it OVERWRITES latest.html with a visible notice and records
+    published=false. The file exists, so a bare existence check would offer it
+    as "the weekly report" -- linking the reader to a page that says there
+    isn't one. The manifest is the authority, not the file."""
+    import tempfile, pathlib as _pl
+    with tempfile.TemporaryDirectory() as td:
+        rep = _dash_with_manifest(_pl.Path(td), {
+            "schema_version": 1, "published": False, "reason": "stale_payload",
+            "season": 2025, "week": 10, "clock": "wed", "as_of": None,
+            "paths": {"latest": "reports/latest.html", "versioned": None}})
+    assert rep["available"] is False, (
+        "a notice page must not be offered as the weekly report")
+    assert rep["reason"] == "stale_payload", "the deploy's reason must survive to the UI"
+
+
+def test_a_published_manifest_names_the_week():
+    import tempfile, pathlib as _pl
+    with tempfile.TemporaryDirectory() as td:
+        rep = _dash_with_manifest(_pl.Path(td), {
+            "schema_version": 1, "published": True, "reason": None,
+            "season": 2025, "week": 10, "clock": "wed", "as_of": "x",
+            "paths": {"latest": "reports/latest.html", "versioned": None}})
+    assert rep["available"] is True and rep["week"] == 10 and rep["stale"] is False
+
+
+def test_a_published_manifest_from_another_week_is_stale():
+    import tempfile, pathlib as _pl
+    with tempfile.TemporaryDirectory() as td:
+        rep = _dash_with_manifest(_pl.Path(td), {
+            "schema_version": 1, "published": True, "reason": None,
+            "season": 2025, "week": 9, "clock": "wed", "as_of": "x",
+            "paths": {"latest": "reports/latest.html", "versioned": None}}, leans_week=10)
+    assert rep["available"] is True and rep["stale"] is True and rep["week"] == 9
+
+
+def test_the_deploy_manifest_outranks_the_local_sidecar():
+    """Both can exist: write_drop leaves latest.json in the repo, prepare_pages
+    writes index.json into _site. On the deployed page the manifest is the one
+    that describes what was actually published."""
+    import tempfile, pathlib as _pl
+    with tempfile.TemporaryDirectory() as td:
+        tmp = _pl.Path(td)
+        (tmp / "reports").mkdir()
+        (tmp / "reports" / "latest.json").write_text(
+            json.dumps({"season": 2025, "week": 3, "clock": "wed"}))
+        rep = _dash_with_manifest(tmp, {
+            "schema_version": 1, "published": True, "reason": None,
+            "season": 2025, "week": 10, "clock": "wed", "as_of": "x",
+            "paths": {"latest": "reports/latest.html", "versioned": None}})
+    assert rep["week"] == 10, "index.json must win over latest.json"
+
+
+def test_the_local_sidecar_still_works_with_no_manifest():
+    """A developer running pipeline_weekly locally never runs prepare_pages;
+    write_drop's own sidecar has to keep the local page honest."""
+    import tempfile, pathlib as _pl
+    with tempfile.TemporaryDirectory() as td:
+        tmp = _pl.Path(td)
+        (tmp / "reports").mkdir()
+        (tmp / "reports" / "latest.html").write_text("<html>r</html>")
+        (tmp / "reports" / "latest.json").write_text(
+            json.dumps({"season": 2025, "week": 10, "clock": "wed"}))
+        out = tmp / "dashboard.html"
+        dashboard.write_dashboard({"weekly_leans": PAYLOAD}, str(out))
+        js = max(re.findall(r"<script>(.*?)</script>", out.read_text(), flags=re.S), key=len)
+        rep = json.loads(re.search(r"^const DATA = (.*);$", js, flags=re.M).group(1))["weekly_report"]
+    assert rep["available"] is True and rep["week"] == 10 and rep["stale"] is False
 
 
 def test_the_committed_dashboard_never_promises_a_report_the_repo_lacks():

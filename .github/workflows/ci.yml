@@ -73,3 +73,5 @@ jobs:
           tests/test_explainability.py
           tests/test_explain_cards.py
           tests/test_pages_workflow_contract.py
+          tests/test_dashboard_top_lean.py
+          tests/test_weekly_report_latest.py
