@@ -9,12 +9,14 @@ counts, synthetic-line daggers, display-only context, 1-800-GAMBLER.
 from __future__ import annotations
 
 import html
+import json
 import os
 from typing import Dict, List, Optional
 
 from . import config as cfgmod
 
 DROPS_DIR = os.path.join(cfgmod.ROOT, "drops")
+REPORTS_DIR = os.path.join(cfgmod.ROOT, "reports")
 
 _CSS = """
 body{font:15px/1.55 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
@@ -101,12 +103,49 @@ def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
     return "".join(parts)
 
 
+def write_latest(html_text: str, payload: Dict,
+                 reports_dir: Optional[str] = None) -> Optional[str]:
+    """Publish the week's document as ``reports/latest.html`` -- the stable
+    path the dashboard's "View weekly top-five report" link points at -- plus
+    a ``latest.json`` sidecar naming the week it covers.
+
+    The sidecar is the load-bearing half. Without it a report from an earlier
+    week sits at a path labelled "the weekly report" with nothing saying so,
+    which is a worse failure than a dead link: the reader gets last week's
+    picks and no reason to doubt them. The dashboard compares this against
+    the week it is itself rendering.
+
+    Best-effort by design. This is a convenience pointer; the drop is the
+    deliverable, so a failure here returns None rather than taking the
+    weekly run down with it.
+    """
+    d = reports_dir or REPORTS_DIR
+    try:
+        os.makedirs(d, exist_ok=True)
+        path = os.path.join(d, "latest.html")
+        with open(path, "w") as f:
+            f.write(html_text)
+        with open(os.path.join(d, "latest.json"), "w") as f:
+            json.dump({"season": payload.get("season"),
+                       "week": payload.get("week"),
+                       "clock": payload.get("clock"),
+                       "as_of": payload.get("as_of")}, f, default=str)
+        return path
+    except OSError:
+        return None
+
+
 def write_drop(payload: Dict, contexts: Optional[Dict] = None,
-               drops_dir: Optional[str] = None) -> str:
+               drops_dir: Optional[str] = None,
+               reports_dir: Optional[str] = None) -> str:
     d = drops_dir or DROPS_DIR
     os.makedirs(d, exist_ok=True)
     path = os.path.join(d, f"props_week_{payload.get('season')}_{payload.get('week')}"
                            + ("_t90" if payload.get("clock") == "t90" else "") + ".html")
+    doc = render_drop(payload, contexts)
     with open(path, "w") as f:
-        f.write(render_drop(payload, contexts))
+        f.write(doc)
+    # Every dated drop is kept; only latest.* is overwritten, so the newest
+    # run is what the dashboard links to.
+    write_latest(doc, payload, reports_dir)
     return path

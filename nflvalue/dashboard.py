@@ -95,6 +95,17 @@ tr:hover td{background:#172033}
 .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--line);color:var(--muted)}
 .badge.synthetic{border:1px dashed #ffce54;color:#ffce54}
 .badge.real{border:1px solid #2fd07a;color:#2fd07a}
+.badge.nomarket{border:1px dotted #8b97ad;color:#8b97ad}
+/* ---- rank-1 lean ---------------------------------------------------------
+   Same rule as the explainability cards: meaning is never carried by colour.
+   The top lean is marked by a HEAVY RULE around its row and by the WORDS
+   "Top model lean", so it survives a greyscale screenshot. It states the
+   model's own ordering -- rank 1 of what was screened -- and claims nothing
+   about the outcome. */
+tr.toplean td{border-top:2px solid var(--text);border-bottom:2px solid var(--text)}
+.topbadge{display:inline-block;margin-left:7px;padding:1px 7px;border:2px solid var(--text);
+  border-radius:20px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.reportlink{display:inline-block;font-weight:700;text-decoration:underline}
 .warnbox{border:1px solid #ffce54;background:rgba(255,206,84,.07);border-radius:10px;padding:12px 14px;margin:10px 0;color:#f6e6bd}
 .counter{border-left:3px solid var(--muted);padding-left:10px;margin:4px 0;color:#dbe4f3}
 .pline{margin:5px 0;color:#dbe4f3;line-height:1.55}
@@ -217,12 +228,39 @@ function renderLeans(){
       ${kc.verdict?` · kill-check: <b>${esc(kc.verdict)}</b>`:""}
       <div class="sub">${esc(kc.detail||"CLV accrues only once real prop lines are pulled live (Phase 3).")}</div></div>`;
   const sideLabel = l => l.market==="anytime_td" ? "YES" : (l.side||"").toUpperCase();
+  // Where the line came from, said out loud on every row. A synthetic
+  // reference line shown without this reads as a sportsbook price, which is
+  // the most expensive misread this page can produce.
+  const sourceState = l => l.line_source==="odds_api"
+    ? '<span class="badge real">REAL MARKET</span>'
+    : (l.line!=null ? '<span class="badge synthetic">SYNTHETIC</span>'
+                    : '<span class="badge nomarket">NO MARKET</span>');
+  const rep = DATA.weekly_report||{};
+  // Three states, not two. A report whose week we cannot confirm, or one from
+  // an earlier week, is still worth linking -- but never under a label that
+  // implies it is this week's.
+  const repWeek = (rep.season!=null&&rep.week!=null)
+    ? esc(rep.season)+" week "+esc(rep.week) : null;
+  const repNote = rep.stale===true
+    ? `<div class="warnbox"><b>This report is for ${repWeek}, not the week shown above.</b>
+       It is the most recent one written; treat it as an older week's picks until a new run replaces it.</div>`
+    : (rep.stale===false
+        ? `<div class="sub">The full per-game writeup behind these leans — ${repWeek}.</div>`
+        : `<div class="sub">The full per-game writeup. Its week was not recorded, so it may cover an
+           earlier week than the leans above.</div>`);
+  const repBox = rep.available
+    ? `<div class="box"><a class="reportlink" href="${esc(rep.href||"reports/latest.html")}">View weekly top-five report</a>
+       ${repNote}</div>`
+    : `<div class="box"><b>Weekly top-five report — not available.</b>
+       <div class="sub">No current report sits next to this page, so there is nothing to link to yet.
+       One appears here after a weekly run writes it.${rep.reason?" Build reason: <code>"+esc(rep.reason)+"</code>.":""}</div></div>`;
   const games = w.games.map(g=>{
     const ctx=(w.contexts||{})[g.game_id];
-    const rows=g.leans.map(l=>`<tr>
-      <td><div class="pick">${esc(l.name)}</div><div class="sub">${esc(l.pos)} · ${esc(l.team)}</div></td>
+    const rows=g.leans.map((l,i)=>`<tr class="${i===0?"toplean":""}">
+      <td><div class="pick">${esc(l.name)}${i===0?'<span class="topbadge">★ Top model lean</span>':""}</div>
+          <div class="sub">${esc(l.pos)} · ${esc(l.team)}${i===0?" · rank 1 of this matchup by model score":""}</div></td>
       <td>${esc(String(l.market||"").replace(/_/g," "))}</td>
-      <td class="price">${esc(l.line)}${l.line_source==="odds_api"?"":"†"}</td>
+      <td class="price">${l.line!=null?esc(l.line):"—"}${l.line!=null&&l.line_source!=="odds_api"?"†":""}<div>${sourceState(l)}</div></td>
       <td><b>${sideLabel(l)}</b></td>
       <td>${esc(l.mean)}</td>
       <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
@@ -233,8 +271,8 @@ function renderLeans(){
       <tbody>${rows}</tbody></table>
       ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;
   }).join("");
-  el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>
-    ${pub}${clvBox}${games}`;
+  el.innerHTML = `<div class="note"><b>Leans, not locks.</b> ${esc(w.season)} week ${esc(w.week)} · clock ${esc(w.clock)} · as of ${esc(w.as_of)} · † = synthetic reference line (player's own trailing mean), not a market price — edge needs a real sportsbook line. Every row states its source: REAL MARKET, SYNTHETIC or NO MARKET. <b>Top model lean</b> marks rank 1 of each matchup by model score — an ordering, not a prediction of the result. If you or someone you know has a gambling problem: <b>1-800-GAMBLER</b>.</div>
+    ${pub}${repBox}${clvBox}${games}`;
 }
 
 function renderGames(){
@@ -757,7 +795,70 @@ def write_dashboard(data: Dict, path: str = None) -> str:
                 payload["real_line"] = json.load(_fh)
         except Exception:
             payload["real_line"] = None     # box simply doesn't render
-    html = TEMPLATE.replace("__DATA_JSON__", json.dumps(payload, default=str))
+    if "weekly_report" not in payload:
+        # The link is relative to the PAGE, so existence is checked relative to
+        # the page too -- checking the repo root would advertise a report the
+        # deployed copy cannot reach. Absent report -> explicit unavailable
+        # state in the UI, never a dead href.
+        page_dir = os.path.dirname(os.path.abspath(path))
+        reports = os.path.join(page_dir, "reports")
+        report = {
+            "available": os.path.exists(os.path.join(reports, "latest.html")),
+            "href": "reports/latest.html",
+            "season": None, "week": None, "clock": None,
+            "stale": None, "reason": None,
+        }
+        # Two sidecars can name the week, and they are not equals.
+        #
+        #   reports/index.json  -- written by scripts/prepare_pages.py at DEPLOY
+        #     time. Authoritative on the published site, because it records what
+        #     that build actually published. Critically it carries `published`:
+        #     when prepare_pages cannot find a current drop it OVERWRITES
+        #     latest.html with a visible notice, so the file exists while there
+        #     is no report. A bare existence check would link the reader to a
+        #     page telling them there is no report.
+        #   reports/latest.json -- written by nflvalue.document.write_drop, so a
+        #     local pipeline run keeps a locally-opened dashboard honest without
+        #     anyone running the deploy script.
+        #
+        # Absence of both is NOT evidence of currency: provenance stays None and
+        # the page says the week was not recorded rather than implying it is
+        # this week's.
+        meta, from_manifest = None, False
+        for name in ("index.json", "latest.json"):
+            try:
+                with open(os.path.join(reports, name)) as _fh:
+                    meta = json.load(_fh)
+                from_manifest = name == "index.json"
+                break
+            except (OSError, ValueError):
+                continue
+        if isinstance(meta, dict):
+            if from_manifest and not meta.get("published"):
+                # The deploy says it published a notice, not a report. Believe it.
+                report["available"] = False
+                report["reason"] = meta.get("reason")
+            else:
+                report["season"] = meta.get("season")
+                report["week"] = meta.get("week")
+                report["clock"] = meta.get("clock")
+                leans = payload.get("weekly_leans") or {}
+                if (report["season"] is not None and report["week"] is not None
+                        and leans.get("season") is not None
+                        and leans.get("week") is not None):
+                    report["stale"] = (
+                        str(report["season"]) != str(leans["season"])
+                        or str(report["week"]) != str(leans["week"]))
+        payload["weekly_report"] = report
+    # json.dumps does not escape "<", so a player or matchup string containing
+    # "</script>" would close this block early and drop the rest of the payload
+    # into the document as live HTML -- and a "<script" inside it can flip the
+    # parser into the double-escaped state, where the real "</script>" stops
+    # closing the block at all. Escaping every "<" as \u003c closes both: it is
+    # a valid escape in JS string literals AND in JSON, so the data round-trips
+    # byte-identical while no "<" reaches the HTML parser.
+    data_json = json.dumps(payload, default=str).replace("<", "\\u003c")
+    html = TEMPLATE.replace("__DATA_JSON__", data_json)
     with open(path, "w") as f:
         f.write(html)
     return path
