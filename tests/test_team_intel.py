@@ -185,3 +185,154 @@ def test_synthesis_shape_keeps_only_citation_fields():
     assert team_intel.synthesis_news(packet, ["BUF"]) == [
         {"text": "limited practice", "source": "team_intel:x", "timestamp": "2026-08-27T15:00:00Z"}
     ]
+
+
+def _reddit_registry():
+    return {
+        "schema_version": 1,
+        "teams": [
+            {
+                "abbr": "BAL",
+                "name": "Baltimore Ravens",
+                "aliases": ["Ravens"],
+                "sources": [
+                    {
+                        "id": "bal_reddit",
+                        "name": "r/ravens",
+                        "domain": "reddit.com",
+                        "source_class": "reddit",
+                        "url": "https://www.reddit.com/r/ravens/",
+                        "feed_url": "https://www.reddit.com/r/ravens/new.json?limit=25",
+                        "access": "free public JSON, no auth required",
+                    },
+                    {
+                        "id": "bal_x_handle",
+                        "name": "X: @exampleinsider",
+                        "domain": "x.com",
+                        "source_class": "x_twitter",
+                        "url": "https://x.com/exampleinsider",
+                        "handle": "exampleinsider",
+                        "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read tier)",
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def _reddit_listing(*posts):
+    return {"data": {"children": [{"kind": "t3", "data": post} for post in posts]}}
+
+
+def test_reddit_json_parses_as_corroboration_required_social_item():
+    request = team_intel.build_requests(_reddit_registry(), ["BAL"])[0]
+    assert request["method"] == "reddit_json"
+    raw = team_intel.json.dumps(_reddit_listing({
+        "id": "abc123",
+        "title": "Beat writer: RB1 took every first-team rep at camp today",
+        "selftext": "Full participant, no limitations reported.",
+        "permalink": "/r/ravens/comments/abc123/rb1_first_team_reps/",
+        "created_utc": 1798000000,
+        "stickied": False,
+    })).encode()
+    rows = team_intel.parse_reddit_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["source_class"] == "reddit"
+    assert row["source_id"] == "bal_reddit"
+    assert row["url"] == "https://www.reddit.com/r/ravens/comments/abc123/rb1_first_team_reps/"
+    assert row["requires_corroboration"] is True
+    assert row["discovery_only"] is False
+    assert row["performance_use"] == "context_only"
+    assert "role_usage" in row["categories"]
+
+
+def test_reddit_json_skips_stickied_and_bodyless_posts():
+    request = team_intel.build_requests(_reddit_registry(), ["BAL"])[0]
+    raw = team_intel.json.dumps(_reddit_listing(
+        {"id": "pin1", "title": "Weekly discussion thread", "stickied": True,
+         "permalink": "/r/ravens/comments/pin1/", "created_utc": 1798000000},
+        {"id": "", "title": "", "permalink": "", "created_utc": 1798000000},
+    )).encode()
+    rows = team_intel.parse_reddit_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
+    assert rows == []
+
+
+def test_x_recent_search_builds_authorized_request_and_parses_tweet():
+    registry = _reddit_registry()
+    request = [r for r in team_intel.build_requests(registry, ["BAL"]) if r["method"] == "x_recent_search"][0]
+    assert "from%3Aexampleinsider" in request["url"] or "from:exampleinsider" in request["url"]
+    headers = team_intel._auth_headers(request)
+    assert headers == {}  # no token configured in the test environment
+    raw = team_intel.json.dumps({
+        "data": [{
+            "id": "999",
+            "text": "Hearing the WR2 competition is now a real question after today's padded practice.",
+            "created_at": "2026-08-27T15:05:00.000Z",
+        }]
+    }).encode()
+    rows = team_intel.parse_x_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["source_class"] == "x_twitter"
+    assert row["url"] == "https://x.com/exampleinsider/status/999"
+    assert row["requires_corroboration"] is True
+    assert row["collection_method"] == "x_recent_search"
+
+
+def test_x_recent_search_auth_header_uses_env_token(monkeypatch):
+    monkeypatch.setenv("X_BEARER_TOKEN", "test-token-value")
+    request = {"method": "x_recent_search"}
+    assert team_intel._auth_headers(request) == {"Authorization": "Bearer test-token-value"}
+    monkeypatch.delenv("X_BEARER_TOKEN", raising=False)
+    monkeypatch.setenv("TWITTER_BEARER_TOKEN", "fallback-token")
+    assert team_intel._auth_headers(request) == {"Authorization": "Bearer fallback-token"}
+
+
+def test_x_recent_search_api_error_is_a_source_health_failure_not_a_crash():
+    request = [r for r in team_intel.build_requests(_reddit_registry(), ["BAL"]) if r["method"] == "x_recent_search"][0]
+    raw = team_intel.json.dumps({"errors": [{"detail": "Unauthorized"}]}).encode()
+    with pytest.raises(team_intel.TeamIntelSchemaError):
+        team_intel.parse_x_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
+
+    def failing_fetcher(_url, _timeout):
+        return raw
+
+    packet = team_intel.collect(_reddit_registry(), ["BAL"], as_of="2026-08-27T16:00:00Z", fetcher=failing_fetcher)
+    x_health = [row for row in packet["source_health"] if row["method"] == "x_recent_search"][0]
+    assert x_health["ok"] is False
+    assert "Unauthorized" in x_health["error"] or "TeamIntelSchemaError" in x_health["error"]
+
+
+def test_call_fetcher_supports_both_two_and_three_arg_test_doubles():
+    assert team_intel._call_fetcher(lambda url, timeout: b"two-arg", "u", 1.0, {"A": "B"}) == b"two-arg"
+    assert team_intel._call_fetcher(lambda url, timeout, headers: headers, "u", 1.0, {"A": "B"}) == {"A": "B"}
+
+
+def test_registry_accepts_reddit_x_twitter_and_independent_blog_classes():
+    registry = team_intel.validate_registry(_reddit_registry())
+    classes = {source["source_class"] for team in registry["teams"] for source in team["sources"]}
+    assert classes == {"reddit", "x_twitter"}
+
+
+def test_dedupe_ranks_official_above_independent_above_social_above_discovery():
+    fetched = "2026-08-27T16:00:00Z"
+    base = dict(team={"abbr": "BAL", "name": "Baltimore Ravens"})
+
+    def make(source_class, discovery_only, item_id):
+        source = {"id": item_id, "name": item_id, "domain": "x.test", "source_class": source_class}
+        return {
+            "team": "BAL", "title": "Same headline", "url": f"https://x.test/{item_id}",
+            "timestamp": fetched, "discovery_only": discovery_only, "source_class": source_class,
+            "source_id": item_id, "source": source,
+        }
+
+    rows = [
+        make("discovery", True, "disc"),
+        make("reddit", False, "red"),
+        make("independent_blog", False, "ind"),
+        make("official_team", False, "off"),
+    ]
+    deduped = team_intel._dedupe(rows)
+    assert len(deduped) == 1
+    assert deduped[0]["source_id"] == "off"

@@ -18,6 +18,7 @@ import email.utils
 import hashlib
 import html
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -27,13 +28,23 @@ from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
 SCHEMA_VERSION = 1
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search"
-USER_AGENT = "nfl-value-team-intel/1.0"
-VALID_SOURCE_CLASSES = {"official_team", "local_outlet"}
+USER_AGENT = (
+    "nfl-value-team-intel/1.0 "
+    "(context-only NFL research collector; https://github.com/curtisdearing/fablesfable)"
+)
+VALID_SOURCE_CLASSES = {
+    "official_team", "local_outlet", "independent_blog", "reddit", "x_twitter",
+}
+SOCIAL_SOURCE_CLASSES = {"reddit", "x_twitter"}
+X_SEARCH_URL = "https://api.x.com/2/tweets/search/recent"
+X_BEARER_TOKEN_ENV_VARS = ("X_BEARER_TOKEN", "TWITTER_BEARER_TOKEN")
 
 # These labels are deliberately descriptive, not numeric model features.
 _CATEGORY_TERMS = {
     "availability": (
-        "injur", "dnp", "did not practice", "limited practice", "full practice",
+        "injur", "dnp", "did not practice", "did not participate",
+        "limited practice", "limited at practice", "limited participant",
+        "full practice", "full participant",
         "questionable", "doubtful", "ruled out", "inactive", "concussion",
         "illness", "hamstring", "ankle", "knee", "shoulder", "reserve/",
         "injured reserve", "return to practice",
@@ -220,12 +231,49 @@ def build_google_news_url(team: Mapping) -> str:
     return GOOGLE_NEWS_RSS + "?" + urllib.parse.urlencode(params)
 
 
+def x_bearer_token() -> str:
+    """Read the X API v2 bearer token from the environment (never committed).
+    Curtis holds the key in his own keychain/CI secret, matching the existing
+    ODDS_API_KEY pattern in nflvalue/config.py."""
+    for env_var in X_BEARER_TOKEN_ENV_VARS:
+        value = str(os.environ.get(env_var) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def build_x_search_url(handle: str) -> str:
+    """One X API v2 recent-search query for a single handle's original posts.
+    Requires a paid API tier with read access (Basic+) -- the free tier is
+    write-only and this request will 401 there, same as any other feed error."""
+    query = f"from:{handle} -is:retweet"
+    params = {"query": query, "max_results": "10", "tweet.fields": "created_at,author_id"}
+    return X_SEARCH_URL + "?" + urllib.parse.urlencode(params)
+
+
 def build_requests(registry: Mapping, abbreviations: Sequence[str]) -> List[Dict]:
-    """Return direct-feed requests plus one discovery request for each team."""
+    """Return direct-feed/social requests plus one discovery request per team."""
     requests: List[Dict] = []
     for team in select_teams(registry, abbreviations):
         for source in team.get("sources", []):
-            if source.get("feed_url"):
+            source_class = str(source.get("source_class") or "")
+            if source_class == "reddit" and source.get("feed_url"):
+                requests.append({
+                    "id": f'{team["abbr"]}:{source["id"]}:reddit',
+                    "team": team,
+                    "method": "reddit_json",
+                    "url": str(source["feed_url"]),
+                    "source": source,
+                })
+            elif source_class == "x_twitter" and source.get("handle"):
+                requests.append({
+                    "id": f'{team["abbr"]}:{source["id"]}:x',
+                    "team": team,
+                    "method": "x_recent_search",
+                    "url": build_x_search_url(str(source["handle"])),
+                    "source": source,
+                })
+            elif source.get("feed_url"):
                 requests.append({
                     "id": f'{team["abbr"]}:{source["id"]}:direct',
                     "team": team,
@@ -350,16 +398,178 @@ def parse_feed(raw: object, request: Mapping, *, fetched_at: object) -> List[Dic
     return items
 
 
-def _fetch_bytes(url: str, timeout: float) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def _social_item(
+    *,
+    request: Mapping,
+    source: Mapping,
+    item_id_seed: str,
+    title: str,
+    text: str,
+    url: str,
+    published_dt: Optional[dt.datetime],
+    fetched_dt: dt.datetime,
+    url_kind: str,
+    collection_method: str,
+) -> Dict:
+    """Shared item shape for reddit/X posts: always corroboration-required
+    (evidence Tier F -- a lead, never an established fact; see
+    docs/TEAM_INTELLIGENCE.md)."""
+    timestamp = iso_utc(published_dt or fetched_dt)
+    timestamp_basis = "published_at" if published_dt else "fetched_at"
+    categories = classify_signal(text)
+    fingerprint = "|".join((str(source["id"]), url, item_id_seed, timestamp))
+    return {
+        "id": hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()[:20],
+        "team": str(request["team"]["abbr"]),
+        "team_name": str(request["team"]["name"]),
+        "title": clean_text(title, 240),
+        "summary": clean_text(text, 400),
+        "text": clean_text(text, 640),
+        "url": url,
+        "published_at": iso_utc(published_dt) if published_dt else None,
+        "timestamp": timestamp,
+        "timestamp_basis": timestamp_basis,
+        "fetched_at": iso_utc(fetched_dt),
+        "source": f'team_intel:{source["id"]}',
+        "source_id": str(source["id"]),
+        "source_name": str(source["name"]),
+        "source_domain": str(source["domain"]),
+        "source_class": str(source["source_class"]),
+        "source_registry_match": True,
+        "publisher_name": str(source["name"]),
+        "publisher_url": str(source.get("url") or ""),
+        "collection_method": collection_method,
+        "url_kind": url_kind,
+        "discovery_only": False,
+        "requires_corroboration": True,
+        "categories": categories,
+        "performance_use": "context_only",
+    }
+
+
+def parse_reddit_json(raw: object, request: Mapping, *, fetched_at: object) -> List[Dict]:
+    """Parse Reddit's free public listing JSON (no auth needed) into evidence
+    items. Reddit posts are a fan/community source (evidence Tier F): a lead,
+    never an established fact, and always requires_corroboration."""
+    source = request.get("source") or {}
+    fetched_dt = parse_timestamp(fetched_at)
+    if fetched_dt is None:
+        raise TeamIntelSchemaError("fetched_at must be a parseable timestamp")
+    try:
+        payload = json.loads(raw if isinstance(raw, (str, bytes, bytearray)) else str(raw))
+    except (TypeError, ValueError) as exc:
+        raise TeamIntelSchemaError(f'{request.get("id", "reddit")}: invalid JSON: {exc}') from exc
+    children = (((payload or {}).get("data") or {}).get("children")) or []
+    items: List[Dict] = []
+    for child in children:
+        data = (child or {}).get("data") or {}
+        title = str(data.get("title") or "")
+        if not title or data.get("stickied"):
+            continue
+        body = str(data.get("selftext") or "")
+        permalink = str(data.get("permalink") or "")
+        url = f"https://www.reddit.com{permalink}" if permalink else str(data.get("url") or "")
+        if not url:
+            continue
+        created = data.get("created_utc")
+        published_dt = None
+        if created is not None:
+            try:
+                published_dt = dt.datetime.fromtimestamp(float(created), tz=dt.timezone.utc)
+            except (TypeError, ValueError, OSError):
+                published_dt = None
+        text = f"{title}. {body}".strip(". ")
+        items.append(_social_item(
+            request=request, source=source, item_id_seed=str(data.get("id") or url),
+            title=title, text=text, url=url, published_dt=published_dt, fetched_dt=fetched_dt,
+            url_kind="social_post", collection_method="reddit_json",
+        ))
+    return items
+
+
+def parse_x_json(raw: object, request: Mapping, *, fetched_at: object) -> List[Dict]:
+    """Parse an X API v2 recent-search response into evidence items. Requires
+    X_BEARER_TOKEN/TWITTER_BEARER_TOKEN; with no token (or a read-restricted
+    tier) the request 401s and is recorded as an ordinary source-health
+    failure, same as any other dead feed. A post is a fan/insider social
+    source (evidence Tier F): always requires_corroboration."""
+    source = request.get("source") or {}
+    handle = str(source.get("handle") or "")
+    fetched_dt = parse_timestamp(fetched_at)
+    if fetched_dt is None:
+        raise TeamIntelSchemaError("fetched_at must be a parseable timestamp")
+    try:
+        payload = json.loads(raw if isinstance(raw, (str, bytes, bytearray)) else str(raw))
+    except (TypeError, ValueError) as exc:
+        raise TeamIntelSchemaError(f'{request.get("id", "x")}: invalid JSON: {exc}') from exc
+    if isinstance(payload, Mapping) and payload.get("errors") and not payload.get("data"):
+        raise TeamIntelSchemaError(f'{request.get("id", "x")}: X API error: {payload["errors"]}')
+    tweets = (payload or {}).get("data") or []
+    items: List[Dict] = []
+    for tweet in tweets:
+        text = str((tweet or {}).get("text") or "")
+        tweet_id = str((tweet or {}).get("id") or "")
+        if not text or not tweet_id:
+            continue
+        url = f"https://x.com/{handle}/status/{tweet_id}" if handle else f"https://x.com/i/status/{tweet_id}"
+        published_dt = parse_timestamp((tweet or {}).get("created_at"))
+        title = text[:80]
+        items.append(_social_item(
+            request=request, source=source, item_id_seed=tweet_id,
+            title=title, text=text, url=url, published_dt=published_dt, fetched_dt=fetched_dt,
+            url_kind="social_post", collection_method="x_recent_search",
+        ))
+    return items
+
+
+def _parse_response(raw: object, request: Mapping, *, fetched_at: object) -> List[Dict]:
+    """Dispatch to the parser matching the request's collection method."""
+    method = request.get("method")
+    if method == "reddit_json":
+        return parse_reddit_json(raw, request, fetched_at=fetched_at)
+    if method == "x_recent_search":
+        return parse_x_json(raw, request, fetched_at=fetched_at)
+    return parse_feed(raw, request, fetched_at=fetched_at)
+
+
+def _auth_headers(request: Mapping) -> Dict[str, str]:
+    """Per-request auth headers. Only X recent-search needs one (a bearer
+    token); everything else is anonymous/public. Returns {} when no token is
+    configured -- the request then 401s and is recorded as a normal
+    source-health failure rather than raising."""
+    if request.get("method") == "x_recent_search":
+        token = x_bearer_token()
+        if token:
+            return {"Authorization": f"Bearer {token}"}
+    return {}
+
+
+def _fetch_bytes(url: str, timeout: float, headers: Optional[Mapping[str, str]] = None) -> bytes:
+    merged = {"User-Agent": USER_AGENT}
+    merged.update(headers or {})
+    request = urllib.request.Request(url, headers=merged)
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return response.read()
+
+
+def _call_fetcher(fetcher: Callable, url: str, timeout: float, headers: Mapping[str, str]) -> bytes:
+    """Call a 2-arg (url, timeout) or 3-arg (url, timeout, headers) fetcher.
+    Keeps collect()'s public `fetcher=` override backward compatible with
+    existing 2-arg test doubles while letting the real default fetcher send
+    request-specific auth headers (the X bearer token)."""
+    try:
+        return fetcher(url, timeout, headers)
+    except TypeError:
+        return fetcher(url, timeout)
 
 
 def _dedupe(items: Iterable[Dict]) -> List[Dict]:
     """Prefer direct/official evidence when titles collide within a team."""
     best: Dict[str, Dict] = {}
-    ranks = {"official_team": 2, "local_outlet": 1, "discovery": 0}
+    ranks = {
+        "official_team": 2, "local_outlet": 1, "independent_blog": 1,
+        "reddit": -2, "x_twitter": -2, "discovery": 0,
+    }
     for item in items:
         title_key = re.sub(r"[^a-z0-9]+", " ", item["title"].lower()).strip()
         key = f'{item["team"]}|{title_key}'
@@ -394,8 +604,8 @@ def collect(
 
     for request in requests:
         try:
-            raw = fetcher(str(request["url"]), timeout)
-            parsed = parse_feed(raw, request, fetched_at=as_of_dt)
+            raw = _call_fetcher(fetcher, str(request["url"]), timeout, _auth_headers(request))
+            parsed = _parse_response(raw, request, fetched_at=as_of_dt)
         except Exception as exc:  # feed failures are reported; strict mode re-raises
             source_health.append({
                 "request_id": request["id"], "team": request["team"]["abbr"],
