@@ -1,7 +1,7 @@
 # NFL Team Intelligence: Local Practice and Team Context
 
 **Product:** Fablesfable (game/team and player-prop research)  
-**Status:** version-1 collector is implemented; context-only; not load-bearing; not automatically invoked by `pipeline_weekly.py`  
+**Status:** version-2 collector is implemented; context-only; not load-bearing; not automatically invoked by `pipeline_weekly.py`. Version 2 (2026-09-02) adds three source classes -- `independent_blog`, `reddit`, `x_twitter` -- across all 32 teams, per the owner's ask to exhaust the local/niche-blog, Reddit, and X avenue for individual player-performance insight (see the vault's fablesfable project notes for the 2026-09-02 feasibility writeup this follows on from).  
 **Machine-readable registry:** `config/team_sources.json`  
 **Collector:** `scripts/collect_team_intel.py`  
 **Parser/schema:** `nflvalue/sources/team_intel.py`
@@ -47,12 +47,23 @@ of work is the teams in one matchup or slate.
 | B | Team-owned practice report or press conference | Corroboration and context; remember team media can be selective |
 | C | Credentialed local outlet with regular team/practice access | Role, rep, lineup, staff, and locker-room leads; corroborate before escalation |
 | D | ESPN/national reporting | Cross-check and broader context |
+| D+ | `independent_blog` (e.g. a single-author, team-dedicated SB Nation site) | Same corroboration posture as Tier C/D local reporting; ranked with `local_outlet` in dedup, not above it |
 | E | Google News RSS or another aggregator | Discovery only; open and verify the named publisher. Unregistered publisher domains are counted and dropped. |
-| F | Social post, fan account, anonymous rumor | Lead only; never enters the packet as established fact |
+| F | `reddit`, `x_twitter`, or any other social post/fan account/anonymous rumor | Lead only; `requires_corroboration` is hardcoded `true` on every item and it never enters the packet as established fact |
 
 `config/team_sources.json` gives every franchise at least one official team source
 and one established local outlet. A source URL is a discovery surface, not a
 claim that every article is free or that every headline is correct.
+
+As of 2026-09-02 every franchise also carries one `independent_blog` (a
+single-author or small-team niche site focused solely on that franchise --
+the pattern is `ebonybird.com` for the Ravens), one `reddit` source (the
+team's primary active subreddit), and 2-4 `x_twitter` sources (beat writers,
+team insiders, or independent team-dedicated analysts -- never generic
+national NFL accounts). A handful of `independent_blog` feed URLs were not
+independently fetch-verified (robots.txt blocked the verification request) --
+each carries `feed_verified_2026_09_02: false` and a `note` saying so; treat
+those as pattern-matched, not confirmed, until a live run proves the feed.
 
 ## Weekly practice intelligence clock
 
@@ -93,12 +104,14 @@ Each item includes:
 - stable evidence ID;
 - canonical team abbreviation/name;
 - bounded title, summary, and combined `text`;
-- article/feed URL plus `url_kind` (`publisher_article` or
-  `aggregator_redirect`), publisher, source domain/class, registry source ID,
-  and registry-match flag;
+- article/feed URL plus `url_kind` (`publisher_article`, `aggregator_redirect`,
+  or `social_post` for a reddit/X item), publisher, source domain/class,
+  registry source ID, and registry-match flag;
 - `published_at`, evidence `timestamp`, `fetched_at`, and timestamp basis;
-- collection method (`direct_rss` or `google_news_rss`);
-- `discovery_only` and `requires_corroboration` flags;
+- collection method (`direct_rss`, `reddit_json`, `x_recent_search`, or
+  `google_news_rss`);
+- `discovery_only` and `requires_corroboration` flags (`requires_corroboration`
+  is hardcoded `true` for every reddit/X item -- Tier F, never established fact);
 - deterministic categories; and
 - `performance_use: context_only`.
 
@@ -121,6 +134,28 @@ measure source health/duplication. If it is later wired:
 
 Team-wide signals that do not name a player should remain in a game brief. Do not
 attach every team headline to every player.
+
+## Setting up Reddit and X access
+
+**Reddit** needs nothing. `reddit_json` hits Reddit's free public listing JSON
+(`https://www.reddit.com/r/<sub>/new.json`) anonymously -- no key, no OAuth app.
+Reddit rate-limits anonymous traffic by IP; the collector is not meant to run
+more than the normal wed/t90/tuesday cadence, so this has not been an issue in
+testing, but a sustained `--all` loop could trip it.
+
+**X** needs a bearer token with read access. Set `X_BEARER_TOKEN` (or
+`TWITTER_BEARER_TOKEN`) as an environment variable -- matches the existing
+`ODDS_API_KEY` pattern (env var overrides nothing in a committed file; there is
+no `x_bearer_token` field in `config.json`, and none should ever be added).
+**The free X API tier is write-only and cannot read search results** -- recent
+search (what `x_recent_search` calls) requires at least the Basic paid tier.
+With no token configured, or a token on a read-restricted tier, every
+`x_recent_search` request 401s; `team_intel.collect()` catches that like any
+other dead feed and records it in `source_health` with `ok: false` -- it does
+not raise, and every other source class keeps working normally. Check
+`packet["quality"]["failed_requests"]` and `source_health` after a run to see
+whether X access is actually live before trusting any `x_twitter` item in the
+packet.
 
 ## Promotion protocol: from story to simulator feature
 
