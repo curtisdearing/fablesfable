@@ -51,6 +51,24 @@ def _rank_score(lean: Dict):
     return lean.get("ml_score") if lean.get("ml_score") is not None else lean.get("composite")
 
 
+def _feed_notice(payload: Dict) -> str:
+    """Name every feed problem the freshness gate recorded, published or not.
+
+    A missing load-bearing feed already puts NOT PUBLISHED in the header; a
+    missing context feed (news, fantasy cross-check) lets the board publish
+    but caps confidence at low, and that reason must be on the page too --
+    otherwise a reader sees only that nothing rates above low and cannot tell
+    a quiet week from a dead feed.
+    """
+    reasons = [str(r) for r in (payload.get("publish_reasons") or []) if r]
+    if not reasons:
+        return ""
+    label = ("Publish gate failed" if not payload.get("publish", True)
+             else "Feed warnings (published; confidence capped at low)")
+    return (f"<div class='notes'><b>{label}:</b> "
+            + "; ".join(_e(r) for r in reasons) + "</div>")
+
+
 def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
     season, week = payload.get("season"), payload.get("week")
     contexts = contexts or payload.get("contexts") or {}
@@ -61,6 +79,7 @@ def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
         f"<div class='sub'>Generated {_e(payload.get('as_of'))} · clock {_e(payload.get('clock'))}"
         + ("" if payload.get("publish", True) else
            " · <b style='color:#a32d2d'>NOT PUBLISHED — data gate failed</b>") + "</div>",
+        _feed_notice(payload),
         "<div class='banner'><b>Leans, not locks.</b> Model-ranked research on free data — "
         "variance is variance and any lean can lose. † marks a synthetic reference line "
         "(the player's own trailing mean), not a market price; edge exists only against real "

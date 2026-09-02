@@ -411,6 +411,14 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                                  clock="wed", inject=inject_feeds)
         statuses, sleeper_df, feeds_ts = live["statuses"], live["sleeper_df"], live["ts"]
         news_by_player = live.get("news_by_player") or {}
+        # as_of is the moment the decision is made, and the decision rests on
+        # feeds that were fetched just now.  Stamping it BEFORE candidate
+        # enumeration and the fetches made every feed whose fetch outlived
+        # the wall-clock second "future-dated" -- H10's leakage guard firing
+        # on its own inputs (2026-09-02, run 33578444172: the fantasy feed at
+        # :14Z against an as_of of :09Z; injuries would have followed the
+        # moment its fetch succeeded).  Re-stamp after the feeds are in hand.
+        as_of = stamp_now()
         g = gate(live["feeds"], as_of=as_of,
                  staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
         publish, publish_reasons = g["publish"], g["reasons"]
@@ -596,6 +604,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
                              inject=inject_feeds)
     statuses = live["statuses"]
+    as_of = stamp_now()  # the decision follows the fetch; see run_week
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
 

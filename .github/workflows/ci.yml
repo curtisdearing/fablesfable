@@ -75,3 +75,5 @@ jobs:
           tests/test_pages_workflow_contract.py
           tests/test_dashboard_top_lean.py
           tests/test_weekly_report_latest.py
+          tests/test_http_user_agent.py
+          tests/test_feed_warnings_visible.py

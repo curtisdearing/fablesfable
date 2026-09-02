@@ -218,8 +218,17 @@ function renderLeans(){
   }
   const clv=DATA.leans_clv||{};
   const kc=DATA.leans_killcheck||{};
+  // A feed problem is shown whether or not it blocked the board. A load-bearing
+  // feed missing means NOT PUBLISHED; a context feed missing (news, fantasy
+  // cross-check) still publishes but caps every lean's confidence, and the
+  // reader is told which feed and why rather than left to wonder why nothing
+  // rates above "low".
+  const reasons = w.publish_reasons||[];
   const pub = w.publish===false
-    ? `<div class="box" style="border-color:var(--red)"><b>NOT PUBLISHED</b> — data gate failed: ${esc((w.publish_reasons||[]).join("; "))}</div>` : "";
+    ? `<div class="box" style="border-color:var(--red)"><b>NOT PUBLISHED</b> — data gate failed: ${esc(reasons.join("; "))}</div>`
+    : (reasons.length
+        ? `<div class="warnbox"><b>Feed warnings</b> — published, but a context feed was degraded, so confidence is capped at low: ${esc(reasons.join("; "))}</div>`
+        : "");
   const clvBox = `<div class="box"><b>Forward CLV</b> — resolved leans: ${clv.n||0}
       ${clv.lifetime_mean!=null?` · lifetime avg ${fmtPct(clv.lifetime_mean)} prob`:""}
       ${clv.rolling_mean!=null?` · rolling(${clv.window}) ${fmtPct(clv.rolling_mean)}`:""}
