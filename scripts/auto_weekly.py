@@ -51,7 +51,10 @@ def write_pipeline_heartbeat(status: str, detail: str, job: str) -> dict:
     else:
         discord = "configured" if resolve_webhook() else "missing"
     effective_status = "degraded" if status == "active" and odds != "configured" else status
-    if effective_status == "degraded":
+    # The sentence names the missing key, so it is written only when the key
+    # is missing -- not whenever the status is degraded for some other reason
+    # (a public heartbeat once said this beside odds_api: "configured").
+    if odds != "configured":
         detail += " Live sportsbook pricing is unavailable until ODDS_API_KEY is configured."
     data = cfgmod.load_json(cfgmod.LATEST_PATH, {}) or {}
     data["pipeline"] = {
