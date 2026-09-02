@@ -14,289 +14,2445 @@
     {
       "abbr": "ARI",
       "name": "Arizona Cardinals",
-      "aliases": ["Cardinals"],
+      "aliases": [
+        "Cardinals"
+      ],
       "sources": [
-        {"id": "ari_official", "name": "Arizona Cardinals", "domain": "azcardinals.com", "source_class": "official_team", "url": "https://www.azcardinals.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "ari_arizona_sports", "name": "Arizona Sports", "domain": "arizonasports.com", "source_class": "local_outlet", "url": "https://arizonasports.com/nfl/arizona-cardinals/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://arizonasports.com/nfl/arizona-cardinals/cardinals-training-camp-takeaways-defense-wins-day-2"}
+        {
+          "id": "ari_official",
+          "name": "Arizona Cardinals",
+          "domain": "azcardinals.com",
+          "source_class": "official_team",
+          "url": "https://www.azcardinals.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "ari_arizona_sports",
+          "name": "Arizona Sports",
+          "domain": "arizonasports.com",
+          "source_class": "local_outlet",
+          "url": "https://arizonasports.com/nfl/arizona-cardinals/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://arizonasports.com/nfl/arizona-cardinals/cardinals-training-camp-takeaways-defense-wins-day-2"
+        },
+        {
+          "id": "ari_blog",
+          "name": "Revenge of the Birds",
+          "domain": "revengeofthebirds.com",
+          "source_class": "independent_blog",
+          "url": "https://www.revengeofthebirds.com/",
+          "feed_url": "https://www.revengeofthebirds.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Cardinals; feed fetched and confirmed live Atom XML."
+        },
+        {
+          "id": "ari_reddit",
+          "name": "r/AZCardinals",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/AZCardinals/",
+          "feed_url": "https://www.reddit.com/r/AZCardinals/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "ari_x1",
+          "name": "X: @HBalzer721 (Howard Balzer)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/HBalzer721",
+          "handle": "HBalzer721",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Cardinals/NFL reporter for CardsWire; Hall of Fame selector"
+        },
+        {
+          "id": "ari_x2",
+          "name": "X: @Cardswire (CardsWire)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Cardswire",
+          "handle": "Cardswire",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "USA Today NFL Wire network's Cardinals team account"
+        },
+        {
+          "id": "ari_x3",
+          "name": "X: @kentsomers (Kent Somers)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/kentsomers",
+          "handle": "kentsomers",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Longtime Arizona Republic/azcentral columnist -- flagged as now retired from the beat"
+        }
       ]
     },
     {
       "abbr": "ATL",
       "name": "Atlanta Falcons",
-      "aliases": ["Falcons"],
+      "aliases": [
+        "Falcons"
+      ],
       "sources": [
-        {"id": "atl_official", "name": "Atlanta Falcons", "domain": "atlantafalcons.com", "source_class": "official_team", "url": "https://www.atlantafalcons.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "atl_fox5", "name": "FOX 5 Atlanta", "domain": "fox5atlanta.com", "source_class": "local_outlet", "url": "https://www.fox5atlanta.com/falcons", "feed_url": null, "access": "free, ad-supported; some practice evidence is video", "practice_evidence_url": "https://www.fox5atlanta.com/video/fmc-is0y40t8s4s5nzhi"}
+        {
+          "id": "atl_official",
+          "name": "Atlanta Falcons",
+          "domain": "atlantafalcons.com",
+          "source_class": "official_team",
+          "url": "https://www.atlantafalcons.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "atl_fox5",
+          "name": "FOX 5 Atlanta",
+          "domain": "fox5atlanta.com",
+          "source_class": "local_outlet",
+          "url": "https://www.fox5atlanta.com/falcons",
+          "feed_url": null,
+          "access": "free, ad-supported; some practice evidence is video",
+          "practice_evidence_url": "https://www.fox5atlanta.com/video/fmc-is0y40t8s4s5nzhi"
+        },
+        {
+          "id": "atl_blog",
+          "name": "The Falcoholic",
+          "domain": "thefalcoholic.com",
+          "source_class": "independent_blog",
+          "url": "https://www.thefalcoholic.com/",
+          "feed_url": "https://www.thefalcoholic.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Falcons; feed fetched and confirmed valid Atom XML updated within a day."
+        },
+        {
+          "id": "atl_reddit",
+          "name": "r/falcons",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/falcons/",
+          "feed_url": "https://www.reddit.com/r/falcons/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "atl_x1",
+          "name": "X: @ByDanielFlick (Daniel Flick)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ByDanielFlick",
+          "handle": "ByDanielFlick",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Atlanta Journal-Constitution Falcons beat writer"
+        },
+        {
+          "id": "atl_x2",
+          "name": "X: @tori_mcelhaney (Tori McElhaney)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/tori_mcelhaney",
+          "handle": "tori_mcelhaney",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Senior reporter for the Falcons' own team media -- team-affiliated, flagged as such"
+        },
+        {
+          "id": "atl_x3",
+          "name": "X: @thefalcoholic (The Falcoholic)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/thefalcoholic",
+          "handle": "thefalcoholic",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Falcons-dedicated blog's own account"
+        }
       ]
     },
     {
       "abbr": "BAL",
       "name": "Baltimore Ravens",
-      "aliases": ["Ravens"],
+      "aliases": [
+        "Ravens"
+      ],
       "sources": [
-        {"id": "bal_official", "name": "Baltimore Ravens", "domain": "baltimoreravens.com", "source_class": "official_team", "url": "https://www.baltimoreravens.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "bal_pressbox", "name": "PressBox Baltimore", "domain": "pressboxonline.com", "source_class": "local_outlet", "url": "https://pressboxonline.com/category/ravens/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://pressboxonline.com/2025/07/30/ravens-training-camp-notebook-isaiah-likely-suffers-foot-injury-out-a-few-weeks"}
+        {
+          "id": "bal_official",
+          "name": "Baltimore Ravens",
+          "domain": "baltimoreravens.com",
+          "source_class": "official_team",
+          "url": "https://www.baltimoreravens.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "bal_pressbox",
+          "name": "PressBox Baltimore",
+          "domain": "pressboxonline.com",
+          "source_class": "local_outlet",
+          "url": "https://pressboxonline.com/category/ravens/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://pressboxonline.com/2025/07/30/ravens-training-camp-notebook-isaiah-likely-suffers-foot-injury-out-a-few-weeks"
+        },
+        {
+          "id": "bal_blog",
+          "name": "Ebony Bird",
+          "domain": "ebonybird.com",
+          "source_class": "independent_blog",
+          "url": "https://ebonybird.com",
+          "feed_url": "https://ebonybird.com/feed",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Ravens; lead author Connor Burke. Feed fetched live and confirmed valid RSS/XML. Owner-supplied example source."
+        },
+        {
+          "id": "bal_reddit",
+          "name": "r/ravens",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/ravens/",
+          "feed_url": "https://www.reddit.com/r/ravens/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "bal_x1",
+          "name": "X: @jeffzrebiec (Jeff Zrebiec)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/jeffzrebiec",
+          "handle": "jeffzrebiec",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Ravens beat writer"
+        },
+        {
+          "id": "bal_x2",
+          "name": "X: @ChildsWalker (Childs Walker)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ChildsWalker",
+          "handle": "ChildsWalker",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Baltimore Sun/Baltimore Banner Ravens beat reporter"
+        },
+        {
+          "id": "bal_x3",
+          "name": "X: @jamisonhensley (Jamison Hensley)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/jamisonhensley",
+          "handle": "jamisonhensley",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's dedicated Ravens reporter"
+        }
       ]
     },
     {
       "abbr": "BUF",
       "name": "Buffalo Bills",
-      "aliases": ["Bills"],
+      "aliases": [
+        "Bills"
+      ],
       "sources": [
-        {"id": "buf_official", "name": "Buffalo Bills", "domain": "buffalobills.com", "source_class": "official_team", "url": "https://www.buffalobills.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "buf_wgrz", "name": "WGRZ / Channel 2", "domain": "wgrz.com", "source_class": "local_outlet", "url": "https://www.wgrz.com/bills", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.wgrz.com/article/sports/nfl/bills/bills-and-browns-pleased-with-joint-practice-in-berea/71-0659acbe-ac1f-464e-8882-872f31fe45f9"}
+        {
+          "id": "buf_official",
+          "name": "Buffalo Bills",
+          "domain": "buffalobills.com",
+          "source_class": "official_team",
+          "url": "https://www.buffalobills.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "buf_wgrz",
+          "name": "WGRZ / Channel 2",
+          "domain": "wgrz.com",
+          "source_class": "local_outlet",
+          "url": "https://www.wgrz.com/bills",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.wgrz.com/article/sports/nfl/bills/bills-and-browns-pleased-with-joint-practice-in-berea/71-0659acbe-ac1f-464e-8882-872f31fe45f9"
+        },
+        {
+          "id": "buf_blog",
+          "name": "Buffalo Rumblings",
+          "domain": "buffalorumblings.com",
+          "source_class": "independent_blog",
+          "url": "https://www.buffalorumblings.com/",
+          "feed_url": "https://www.buffalorumblings.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Bills; feed fetched and confirmed live Atom/XML."
+        },
+        {
+          "id": "buf_reddit",
+          "name": "r/buffalobills",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/buffalobills/",
+          "feed_url": "https://www.reddit.com/r/buffalobills/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "buf_x1",
+          "name": "X: @JoeBuscaglia (Joe Buscaglia)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/JoeBuscaglia",
+          "handle": "JoeBuscaglia",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic's Bills insider; roster/cap/draft analysis"
+        },
+        {
+          "id": "buf_x2",
+          "name": "X: @agetzenberg (Alaina Getzenberg)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/agetzenberg",
+          "handle": "agetzenberg",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Bills beat reporter; practice/camp coverage"
+        },
+        {
+          "id": "buf_x3",
+          "name": "X: @JaySkurski (Jay Skurski)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/JaySkurski",
+          "handle": "JaySkurski",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Buffalo News Bills beat writer"
+        }
       ]
     },
     {
       "abbr": "CAR",
       "name": "Carolina Panthers",
-      "aliases": ["Panthers"],
+      "aliases": [
+        "Panthers"
+      ],
       "sources": [
-        {"id": "car_official", "name": "Carolina Panthers", "domain": "panthers.com", "source_class": "official_team", "url": "https://www.panthers.com/news/", "feed_url": null, "access": "free public team page; official site publishes an RSS directory"},
-        {"id": "car_qcnews", "name": "Queen City News", "domain": "qcnews.com", "source_class": "local_outlet", "url": "https://www.qcnews.com/nfl/carolina-panthers/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://qcnews.com/nfl/carolina-panthers/panthers-53-man-roster-prediction-ahead-of-sundays-deadline"}
+        {
+          "id": "car_official",
+          "name": "Carolina Panthers",
+          "domain": "panthers.com",
+          "source_class": "official_team",
+          "url": "https://www.panthers.com/news/",
+          "feed_url": null,
+          "access": "free public team page; official site publishes an RSS directory"
+        },
+        {
+          "id": "car_qcnews",
+          "name": "Queen City News",
+          "domain": "qcnews.com",
+          "source_class": "local_outlet",
+          "url": "https://www.qcnews.com/nfl/carolina-panthers/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://qcnews.com/nfl/carolina-panthers/panthers-53-man-roster-prediction-ahead-of-sundays-deadline"
+        },
+        {
+          "id": "car_blog",
+          "name": "Cat Scratch Reader",
+          "domain": "catscratchreader.com",
+          "source_class": "independent_blog",
+          "url": "https://www.catscratchreader.com/",
+          "feed_url": "https://www.catscratchreader.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Panthers; feed fetched and confirmed valid Atom XML updated within a day."
+        },
+        {
+          "id": "car_reddit",
+          "name": "r/panthers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/panthers/",
+          "feed_url": "https://www.reddit.com/r/panthers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "car_x1",
+          "name": "X: @mike_e_kaye (Mike Kaye)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/mike_e_kaye",
+          "handle": "mike_e_kaye",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Carolina Panthers beat reporter (ex-Charlotte Observer)"
+        },
+        {
+          "id": "car_x2",
+          "name": "X: @josephperson (Joe Person)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/josephperson",
+          "handle": "josephperson",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Panthers beat writer"
+        },
+        {
+          "id": "car_x3",
+          "name": "X: @CatScratchReadr (Cat Scratch Reader)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/CatScratchReadr",
+          "handle": "CatScratchReadr",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Panthers-dedicated blog's own account"
+        }
       ]
     },
     {
       "abbr": "CHI",
       "name": "Chicago Bears",
-      "aliases": ["Bears"],
+      "aliases": [
+        "Bears"
+      ],
       "sources": [
-        {"id": "chi_official", "name": "Chicago Bears", "domain": "chicagobears.com", "source_class": "official_team", "url": "https://www.chicagobears.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "chi_suntimes", "name": "Chicago Sun-Times", "domain": "chicago.suntimes.com", "source_class": "local_outlet", "url": "https://chicago.suntimes.com/bears", "feed_url": null, "access": "mixed access; use feed metadata and respect subscriber boundaries"}
+        {
+          "id": "chi_official",
+          "name": "Chicago Bears",
+          "domain": "chicagobears.com",
+          "source_class": "official_team",
+          "url": "https://www.chicagobears.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "chi_suntimes",
+          "name": "Chicago Sun-Times",
+          "domain": "chicago.suntimes.com",
+          "source_class": "local_outlet",
+          "url": "https://chicago.suntimes.com/bears",
+          "feed_url": null,
+          "access": "mixed access; use feed metadata and respect subscriber boundaries"
+        },
+        {
+          "id": "chi_blog",
+          "name": "Windy City Gridiron",
+          "domain": "windycitygridiron.com",
+          "source_class": "independent_blog",
+          "url": "https://www.windycitygridiron.com/",
+          "feed_url": "https://www.windycitygridiron.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Bears; managing editor Lester A. Wiltfong Jr. Feed URL unconfirmed (robots.txt blocked verification)."
+        },
+        {
+          "id": "chi_reddit",
+          "name": "r/CHIBears",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/CHIBears/",
+          "feed_url": "https://www.reddit.com/r/CHIBears/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "chi_x1",
+          "name": "X: @BradBiggs (Brad Biggs)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/BradBiggs",
+          "handle": "BradBiggs",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Chicago Tribune Bears beat reporter"
+        },
+        {
+          "id": "chi_x2",
+          "name": "X: @kfishbain (Kevin Fishbain)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/kfishbain",
+          "handle": "kfishbain",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Bears beat writer"
+        },
+        {
+          "id": "chi_x3",
+          "name": "X: @danwiederer (Dan Wiederer)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/danwiederer",
+          "handle": "danwiederer",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic senior Bears writer (ex-Chicago Tribune)"
+        },
+        {
+          "id": "chi_x4",
+          "name": "X: @CourtneyRCronin (Courtney Cronin)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/CourtneyRCronin",
+          "handle": "CourtneyRCronin",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Chicago Bears beat reporter"
+        }
       ]
     },
     {
       "abbr": "CIN",
       "name": "Cincinnati Bengals",
-      "aliases": ["Bengals"],
+      "aliases": [
+        "Bengals"
+      ],
       "sources": [
-        {"id": "cin_official", "name": "Cincinnati Bengals", "domain": "bengals.com", "source_class": "official_team", "url": "https://www.bengals.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "cin_wlwt", "name": "WLWT News 5", "domain": "wlwt.com", "source_class": "local_outlet", "url": "https://www.wlwt.com/sports/bengals", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.wlwt.com/article/cincinnati-bengals-training-camp-burrow-hendrickson/65452358"}
+        {
+          "id": "cin_official",
+          "name": "Cincinnati Bengals",
+          "domain": "bengals.com",
+          "source_class": "official_team",
+          "url": "https://www.bengals.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "cin_wlwt",
+          "name": "WLWT News 5",
+          "domain": "wlwt.com",
+          "source_class": "local_outlet",
+          "url": "https://www.wlwt.com/sports/bengals",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.wlwt.com/article/cincinnati-bengals-training-camp-burrow-hendrickson/65452358"
+        },
+        {
+          "id": "cin_blog",
+          "name": "Cincy Jungle",
+          "domain": "cincyjungle.com",
+          "source_class": "independent_blog",
+          "url": "https://www.cincyjungle.com/",
+          "feed_url": "https://www.cincyjungle.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Bengals; multi-author. Feed URL follows the network pattern but robots.txt blocked direct verification -- treat feed_url as unconfirmed."
+        },
+        {
+          "id": "cin_reddit",
+          "name": "r/bengals",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/bengals/",
+          "feed_url": "https://www.reddit.com/r/bengals/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "cin_x1",
+          "name": "X: @KelseyLConway (Kelsey Conway)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/KelseyLConway",
+          "handle": "KelseyLConway",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Cincinnati Enquirer Bengals beat reporter"
+        },
+        {
+          "id": "cin_x2",
+          "name": "X: @Ben_Baby (Ben Baby)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Ben_Baby",
+          "handle": "Ben_Baby",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's dedicated Bengals reporter"
+        },
+        {
+          "id": "cin_x3",
+          "name": "X: @GeoffHobsonCin (Geoff Hobson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/GeoffHobsonCin",
+          "handle": "GeoffHobsonCin",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Bengals.com senior writer -- team-affiliated, not independent, flagged as such"
+        }
       ]
     },
     {
       "abbr": "CLE",
       "name": "Cleveland Browns",
-      "aliases": ["Browns"],
+      "aliases": [
+        "Browns"
+      ],
       "sources": [
-        {"id": "cle_official", "name": "Cleveland Browns", "domain": "clevelandbrowns.com", "source_class": "official_team", "url": "https://www.clevelandbrowns.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "cle_news5", "name": "News 5 Cleveland", "domain": "news5cleveland.com", "source_class": "local_outlet", "url": "https://www.news5cleveland.com/sports/browns", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://news5cleveland.com/sports/browns/3-qbs-increase-reps-practice-intensifies-as-browns-hold-first-padded-practice-of-2025-training-camp"}
+        {
+          "id": "cle_official",
+          "name": "Cleveland Browns",
+          "domain": "clevelandbrowns.com",
+          "source_class": "official_team",
+          "url": "https://www.clevelandbrowns.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "cle_news5",
+          "name": "News 5 Cleveland",
+          "domain": "news5cleveland.com",
+          "source_class": "local_outlet",
+          "url": "https://www.news5cleveland.com/sports/browns",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://news5cleveland.com/sports/browns/3-qbs-increase-reps-practice-intensifies-as-browns-hold-first-padded-practice-of-2025-training-camp"
+        },
+        {
+          "id": "cle_blog",
+          "name": "Dawgs By Nature",
+          "domain": "dawgsbynature.com",
+          "source_class": "independent_blog",
+          "url": "https://www.dawgsbynature.com/",
+          "feed_url": "https://www.dawgsbynature.com/rss/current.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Browns; multi-author. Feed URL unconfirmed (robots.txt blocked direct fetch)."
+        },
+        {
+          "id": "cle_reddit",
+          "name": "r/Browns",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Browns/",
+          "feed_url": "https://www.reddit.com/r/Browns/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "cle_x1",
+          "name": "X: @MaryKayCabot (Mary Kay Cabot)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MaryKayCabot",
+          "handle": "MaryKayCabot",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "cleveland.com veteran Browns beat writer"
+        },
+        {
+          "id": "cle_x2",
+          "name": "X: @AkronJackson (Zac Jackson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/AkronJackson",
+          "handle": "AkronJackson",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Browns beat writer"
+        },
+        {
+          "id": "cle_x3",
+          "name": "X: @ScottPetrak (Scott Petrak)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ScottPetrak",
+          "handle": "ScottPetrak",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Browns insider, runs BrownsZone full-time"
+        }
       ]
     },
     {
       "abbr": "DAL",
       "name": "Dallas Cowboys",
-      "aliases": ["Cowboys"],
+      "aliases": [
+        "Cowboys"
+      ],
       "sources": [
-        {"id": "dal_official", "name": "Dallas Cowboys", "domain": "dallascowboys.com", "source_class": "official_team", "url": "https://www.dallascowboys.com/news", "feed_url": null, "access": "free public team page"},
-        {"id": "dal_dmn", "name": "The Dallas Morning News", "domain": "dallasnews.com", "source_class": "local_outlet", "url": "https://www.dallasnews.com/sports/cowboys/", "feed_url": null, "access": "mixed/metered; metadata only when subscriber access is required", "practice_evidence_url": "https://www.dallasnews.com/sports/cowboys/article/cowboys-injury-report-jonathan-bullard-trigg-blue-22396374.php"}
+        {
+          "id": "dal_official",
+          "name": "Dallas Cowboys",
+          "domain": "dallascowboys.com",
+          "source_class": "official_team",
+          "url": "https://www.dallascowboys.com/news",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "dal_dmn",
+          "name": "The Dallas Morning News",
+          "domain": "dallasnews.com",
+          "source_class": "local_outlet",
+          "url": "https://www.dallasnews.com/sports/cowboys/",
+          "feed_url": null,
+          "access": "mixed/metered; metadata only when subscriber access is required",
+          "practice_evidence_url": "https://www.dallasnews.com/sports/cowboys/article/cowboys-injury-report-jonathan-bullard-trigg-blue-22396374.php"
+        },
+        {
+          "id": "dal_blog",
+          "name": "Blogging The Boys",
+          "domain": "bloggingtheboys.com",
+          "source_class": "independent_blog",
+          "url": "https://www.bloggingtheboys.com/",
+          "feed_url": "https://www.bloggingtheboys.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Cowboys; ~12 named bloggers. Feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "dal_reddit",
+          "name": "r/cowboys",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/cowboys/",
+          "feed_url": "https://www.reddit.com/r/cowboys/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "dal_x1",
+          "name": "X: @toddarcher (Todd Archer)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/toddarcher",
+          "handle": "toddarcher",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Dallas Cowboys beat reporter"
+        },
+        {
+          "id": "dal_x2",
+          "name": "X: @jonmachota (Jon Machota)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/jonmachota",
+          "handle": "jonmachota",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Cowboys staff writer (ex-Dallas Morning News)"
+        }
       ]
     },
     {
       "abbr": "DEN",
       "name": "Denver Broncos",
-      "aliases": ["Broncos"],
+      "aliases": [
+        "Broncos"
+      ],
       "sources": [
-        {"id": "den_official", "name": "Denver Broncos", "domain": "denverbroncos.com", "source_class": "official_team", "url": "https://www.denverbroncos.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "den_9news", "name": "9NEWS Denver", "domain": "9news.com", "source_class": "local_outlet", "url": "https://www.9news.com/broncos", "feed_url": null, "access": "free, ad-supported; some automated clients may be blocked", "practice_evidence_url": "https://www.9news.com/article/sports/nfl/denver-broncos/mike-klis/broncos-moss-crum-injuries/73-52f24f8b-ae59-458a-b2ae-22cbe7bd813d"}
+        {
+          "id": "den_official",
+          "name": "Denver Broncos",
+          "domain": "denverbroncos.com",
+          "source_class": "official_team",
+          "url": "https://www.denverbroncos.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "den_9news",
+          "name": "9NEWS Denver",
+          "domain": "9news.com",
+          "source_class": "local_outlet",
+          "url": "https://www.9news.com/broncos",
+          "feed_url": null,
+          "access": "free, ad-supported; some automated clients may be blocked",
+          "practice_evidence_url": "https://www.9news.com/article/sports/nfl/denver-broncos/mike-klis/broncos-moss-crum-injuries/73-52f24f8b-ae59-458a-b2ae-22cbe7bd813d"
+        },
+        {
+          "id": "den_blog",
+          "name": "Mile High Report",
+          "domain": "milehighreport.com",
+          "source_class": "independent_blog",
+          "url": "https://www.milehighreport.com/",
+          "feed_url": "https://www.milehighreport.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Broncos; lead editor Tim Lynch since 2007. Feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "den_reddit",
+          "name": "r/DenverBroncos",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/DenverBroncos/",
+          "feed_url": "https://www.reddit.com/r/DenverBroncos/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "den_x1",
+          "name": "X: @TroyRenck (Troy Renck)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/TroyRenck",
+          "handle": "TroyRenck",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Denver7 sports director; long-tenured Broncos beat reporter"
+        },
+        {
+          "id": "den_x2",
+          "name": "X: @MaseDenver (Andrew Mason)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MaseDenver",
+          "handle": "MaseDenver",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Senior Broncos writer, DenverSports.com/104.3 The Fan"
+        },
+        {
+          "id": "den_x3",
+          "name": "X: @AllbrightNFL (Benjamin Allbright)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/AllbrightNFL",
+          "handle": "AllbrightNFL",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "KOA 850 Broncos insider; roster/injury scoops"
+        }
       ]
     },
     {
       "abbr": "DET",
       "name": "Detroit Lions",
-      "aliases": ["Lions"],
+      "aliases": [
+        "Lions"
+      ],
       "sources": [
-        {"id": "det_official", "name": "Detroit Lions", "domain": "detroitlions.com", "source_class": "official_team", "url": "https://www.detroitlions.com/news", "feed_url": "https://www.detroitlions.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "det_mlive", "name": "MLive", "domain": "mlive.com", "source_class": "local_outlet", "url": "https://www.mlive.com/lions/", "feed_url": null, "access": "mixed/metered", "practice_evidence_url": "https://www.mlive.com/lions/2026/08/detroit-lions-get-star-te-back-at-practice-as-3-others-exit-early.html"}
+        {
+          "id": "det_official",
+          "name": "Detroit Lions",
+          "domain": "detroitlions.com",
+          "source_class": "official_team",
+          "url": "https://www.detroitlions.com/news",
+          "feed_url": "https://www.detroitlions.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "det_mlive",
+          "name": "MLive",
+          "domain": "mlive.com",
+          "source_class": "local_outlet",
+          "url": "https://www.mlive.com/lions/",
+          "feed_url": null,
+          "access": "mixed/metered",
+          "practice_evidence_url": "https://www.mlive.com/lions/2026/08/detroit-lions-get-star-te-back-at-practice-as-3-others-exit-early.html"
+        },
+        {
+          "id": "det_blog",
+          "name": "Pride of Detroit",
+          "domain": "prideofdetroit.com",
+          "source_class": "independent_blog",
+          "url": "https://www.prideofdetroit.com/",
+          "feed_url": "https://www.prideofdetroit.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Lions; managing editor Jeremy Reisman. Feed URL unconfirmed (robots.txt blocked verification)."
+        },
+        {
+          "id": "det_reddit",
+          "name": "r/detroitlions",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/detroitlions/",
+          "feed_url": "https://www.reddit.com/r/detroitlions/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "det_x1",
+          "name": "X: @davebirkett (Dave Birkett)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/davebirkett",
+          "handle": "davebirkett",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Detroit Free Press Lions beat reporter"
+        },
+        {
+          "id": "det_x2",
+          "name": "X: @Justin_Rogers (Justin Rogers)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Justin_Rogers",
+          "handle": "Justin_Rogers",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Lions coverage, ex-Detroit News (Detroit Football Network)"
+        },
+        {
+          "id": "det_x3",
+          "name": "X: @DetroitOnLion (Jeremy Reisman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/DetroitOnLion",
+          "handle": "DetroitOnLion",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Managing editor of Pride of Detroit"
+        }
       ]
     },
     {
       "abbr": "GB",
       "name": "Green Bay Packers",
-      "aliases": ["Packers"],
+      "aliases": [
+        "Packers"
+      ],
       "sources": [
-        {"id": "gb_official", "name": "Green Bay Packers", "domain": "packers.com", "source_class": "official_team", "url": "https://www.packers.com/news/all-news", "feed_url": null, "access": "free public team page"},
-        {"id": "gb_wbay", "name": "WBAY Action 2 News", "domain": "wbay.com", "source_class": "local_outlet", "url": "https://www.wbay.com/sports/football/packers/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.wbay.com/2026/08/10/next-man-up-injuries-reshaping-packers-secondary-receiver-room-practice"}
+        {
+          "id": "gb_official",
+          "name": "Green Bay Packers",
+          "domain": "packers.com",
+          "source_class": "official_team",
+          "url": "https://www.packers.com/news/all-news",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "gb_wbay",
+          "name": "WBAY Action 2 News",
+          "domain": "wbay.com",
+          "source_class": "local_outlet",
+          "url": "https://www.wbay.com/sports/football/packers/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.wbay.com/2026/08/10/next-man-up-injuries-reshaping-packers-secondary-receiver-room-practice"
+        },
+        {
+          "id": "gb_blog",
+          "name": "Acme Packing Company",
+          "domain": "acmepackingcompany.com",
+          "source_class": "independent_blog",
+          "url": "https://www.acmepackingcompany.com/",
+          "feed_url": "https://www.acmepackingcompany.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Packers. Feed URL unconfirmed (robots.txt blocked verification)."
+        },
+        {
+          "id": "gb_reddit",
+          "name": "r/GreenBayPackers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/GreenBayPackers/",
+          "feed_url": "https://www.reddit.com/r/GreenBayPackers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "gb_x1",
+          "name": "X: @TomSilverstein (Tom Silverstein)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/TomSilverstein",
+          "handle": "TomSilverstein",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Milwaukee Journal Sentinel veteran Packers beat reporter"
+        },
+        {
+          "id": "gb_x2",
+          "name": "X: @RobDemovsky (Rob Demovsky)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/RobDemovsky",
+          "handle": "RobDemovsky",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Packers beat reporter"
+        },
+        {
+          "id": "gb_x3",
+          "name": "X: @mattschneidman (Matt Schneidman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/mattschneidman",
+          "handle": "mattschneidman",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Packers beat writer, 'The Tundra' podcast"
+        },
+        {
+          "id": "gb_x4",
+          "name": "X: @acmepackingco (Acme Packing Company)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/acmepackingco",
+          "handle": "acmepackingco",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Packers-dedicated blog's own account"
+        }
       ]
     },
     {
       "abbr": "HOU",
       "name": "Houston Texans",
-      "aliases": ["Texans"],
+      "aliases": [
+        "Texans"
+      ],
       "sources": [
-        {"id": "hou_official", "name": "Houston Texans", "domain": "houstontexans.com", "source_class": "official_team", "url": "https://www.houstontexans.com/news/", "feed_url": "https://www.houstontexans.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "hou_kprc", "name": "KPRC 2 / Click2Houston", "domain": "click2houston.com", "source_class": "local_outlet", "url": "https://www.click2houston.com/topic/Houston_Texans/", "feed_url": null, "access": "free, ad-supported; optional account prompts"}
+        {
+          "id": "hou_official",
+          "name": "Houston Texans",
+          "domain": "houstontexans.com",
+          "source_class": "official_team",
+          "url": "https://www.houstontexans.com/news/",
+          "feed_url": "https://www.houstontexans.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "hou_kprc",
+          "name": "KPRC 2 / Click2Houston",
+          "domain": "click2houston.com",
+          "source_class": "local_outlet",
+          "url": "https://www.click2houston.com/topic/Houston_Texans/",
+          "feed_url": null,
+          "access": "free, ad-supported; optional account prompts"
+        },
+        {
+          "id": "hou_blog",
+          "name": "Battle Red Blog",
+          "domain": "battleredblog.com",
+          "source_class": "independent_blog",
+          "url": "https://www.battleredblog.com/",
+          "feed_url": "https://www.battleredblog.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Texans; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "hou_reddit",
+          "name": "r/Texans",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Texans/",
+          "feed_url": "https://www.reddit.com/r/Texans/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "hou_x1",
+          "name": "X: @AaronWilson_NFL (Aaron Wilson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/AaronWilson_NFL",
+          "handle": "AaronWilson_NFL",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "KPRC-2 Houston Texans insider; roster/contract news"
+        },
+        {
+          "id": "hou_x2",
+          "name": "X: @jonmalexander (Jonathan M. Alexander)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/jonmalexander",
+          "handle": "jonmalexander",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Houston Chronicle Texans/NFL beat reporter"
+        }
       ]
     },
     {
       "abbr": "IND",
       "name": "Indianapolis Colts",
-      "aliases": ["Colts"],
+      "aliases": [
+        "Colts"
+      ],
       "sources": [
-        {"id": "ind_official", "name": "Indianapolis Colts", "domain": "colts.com", "source_class": "official_team", "url": "https://www.colts.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "ind_wish", "name": "WISH-TV", "domain": "wishtv.com", "source_class": "local_outlet", "url": "https://www.wishtv.com/sports/indianapolis-colts/", "feed_url": null, "access": "free, ad-supported"}
+        {
+          "id": "ind_official",
+          "name": "Indianapolis Colts",
+          "domain": "colts.com",
+          "source_class": "official_team",
+          "url": "https://www.colts.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "ind_wish",
+          "name": "WISH-TV",
+          "domain": "wishtv.com",
+          "source_class": "local_outlet",
+          "url": "https://www.wishtv.com/sports/indianapolis-colts/",
+          "feed_url": null,
+          "access": "free, ad-supported"
+        },
+        {
+          "id": "ind_blog",
+          "name": "Stampede Blue",
+          "domain": "stampedeblue.com",
+          "source_class": "independent_blog",
+          "url": "https://www.stampedeblue.com/",
+          "feed_url": "https://www.stampedeblue.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Colts; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "ind_reddit",
+          "name": "r/Colts",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Colts/",
+          "feed_url": "https://www.reddit.com/r/Colts/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "ind_x1",
+          "name": "X: @joelaerickson (Joel A. Erickson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/joelaerickson",
+          "handle": "joelaerickson",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "IndyStar Colts beat writer, Colts Cover 2 Podcast"
+        },
+        {
+          "id": "ind_x2",
+          "name": "X: @NateAtkins_ (Nate Atkins)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/NateAtkins_",
+          "handle": "NateAtkins_",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "IndyStar Colts beat writer"
+        }
       ]
     },
     {
       "abbr": "JAX",
       "name": "Jacksonville Jaguars",
-      "aliases": ["Jaguars", "Jags"],
+      "aliases": [
+        "Jaguars",
+        "Jags"
+      ],
       "sources": [
-        {"id": "jax_official", "name": "Jacksonville Jaguars", "domain": "jaguars.com", "source_class": "official_team", "url": "https://www.jaguars.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "jax_news4jax", "name": "News4JAX", "domain": "news4jax.com", "source_class": "local_outlet", "url": "https://www.news4jax.com/sports/jaguars/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.news4jax.com/sports/2026/08/23/jaguars-training-camp-notebook-parker-washington-cole-van-lanen-return-to-practice"}
+        {
+          "id": "jax_official",
+          "name": "Jacksonville Jaguars",
+          "domain": "jaguars.com",
+          "source_class": "official_team",
+          "url": "https://www.jaguars.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "jax_news4jax",
+          "name": "News4JAX",
+          "domain": "news4jax.com",
+          "source_class": "local_outlet",
+          "url": "https://www.news4jax.com/sports/jaguars/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.news4jax.com/sports/2026/08/23/jaguars-training-camp-notebook-parker-washington-cole-van-lanen-return-to-practice"
+        },
+        {
+          "id": "jax_blog",
+          "name": "Big Cat Country",
+          "domain": "bigcatcountry.com",
+          "source_class": "independent_blog",
+          "url": "https://www.bigcatcountry.com/",
+          "feed_url": "https://www.bigcatcountry.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Jaguars; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "jax_reddit",
+          "name": "r/Jaguars",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Jaguars/",
+          "feed_url": "https://www.reddit.com/r/Jaguars/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "jax_x1",
+          "name": "X: @JohnReid64 (John Reid)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/JohnReid64",
+          "handle": "JohnReid64",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Florida Times-Union Jaguars beat writer"
+        },
+        {
+          "id": "jax_x2",
+          "name": "X: @_John_Shipley (John Shipley)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/_John_Shipley",
+          "handle": "_John_Shipley",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Sports Illustrated Jaguars-dedicated writer"
+        }
       ]
     },
     {
       "abbr": "KC",
       "name": "Kansas City Chiefs",
-      "aliases": ["Chiefs"],
+      "aliases": [
+        "Chiefs"
+      ],
       "sources": [
-        {"id": "kc_official", "name": "Kansas City Chiefs", "domain": "chiefs.com", "source_class": "official_team", "url": "https://www.chiefs.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "kc_kshb", "name": "KSHB 41", "domain": "kshb.com", "source_class": "local_outlet", "url": "https://www.kshb.com/sports/football/chiefs", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.kshb.com/sports/football/chiefs/nick-jacobs-chiefs-camp-notebook-wind-and-injuries-challenge-the-team"}
+        {
+          "id": "kc_official",
+          "name": "Kansas City Chiefs",
+          "domain": "chiefs.com",
+          "source_class": "official_team",
+          "url": "https://www.chiefs.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "kc_kshb",
+          "name": "KSHB 41",
+          "domain": "kshb.com",
+          "source_class": "local_outlet",
+          "url": "https://www.kshb.com/sports/football/chiefs",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.kshb.com/sports/football/chiefs/nick-jacobs-chiefs-camp-notebook-wind-and-injuries-challenge-the-team"
+        },
+        {
+          "id": "kc_blog",
+          "name": "Arrowhead Pride",
+          "domain": "arrowheadpride.com",
+          "source_class": "independent_blog",
+          "url": "https://www.arrowheadpride.com/",
+          "feed_url": "https://www.arrowheadpride.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Chiefs; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "kc_reddit",
+          "name": "r/KansasCityChiefs",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/KansasCityChiefs/",
+          "feed_url": "https://www.reddit.com/r/KansasCityChiefs/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "kc_x1",
+          "name": "X: @ByNateTaylor (Nate Taylor)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ByNateTaylor",
+          "handle": "ByNateTaylor",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Chiefs beat writer, moved The Athletic to ESPN to cover KC"
+        },
+        {
+          "id": "kc_x2",
+          "name": "X: @jessenewell (Jesse Newell)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/jessenewell",
+          "handle": "jessenewell",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Kansas City Star Chiefs beat writer"
+        }
       ]
     },
     {
       "abbr": "LV",
       "name": "Las Vegas Raiders",
-      "aliases": ["Raiders"],
+      "aliases": [
+        "Raiders"
+      ],
       "sources": [
-        {"id": "lv_official", "name": "Las Vegas Raiders", "domain": "raiders.com", "source_class": "official_team", "url": "https://www.raiders.com/news/", "feed_url": "https://www.raiders.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "lv_ktnv", "name": "KTNV 13 Action News", "domain": "ktnv.com", "source_class": "local_outlet", "url": "https://www.ktnv.com/sports/raiders", "feed_url": null, "access": "free, ad-supported"}
+        {
+          "id": "lv_official",
+          "name": "Las Vegas Raiders",
+          "domain": "raiders.com",
+          "source_class": "official_team",
+          "url": "https://www.raiders.com/news/",
+          "feed_url": "https://www.raiders.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "lv_ktnv",
+          "name": "KTNV 13 Action News",
+          "domain": "ktnv.com",
+          "source_class": "local_outlet",
+          "url": "https://www.ktnv.com/sports/raiders",
+          "feed_url": null,
+          "access": "free, ad-supported"
+        },
+        {
+          "id": "lv_blog",
+          "name": "Silver And Black Pride",
+          "domain": "silverandblackpride.com",
+          "source_class": "independent_blog",
+          "url": "https://www.silverandblackpride.com/",
+          "feed_url": "https://www.silverandblackpride.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Raiders; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "lv_reddit",
+          "name": "r/raiders",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/raiders/",
+          "feed_url": "https://www.reddit.com/r/raiders/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "lv_x1",
+          "name": "X: @tashanreed (Tashan Reed)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/tashanreed",
+          "handle": "tashanreed",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Raiders beat writer"
+        },
+        {
+          "id": "lv_x2",
+          "name": "X: @HondoCarpenter (Hondo Carpenter)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/HondoCarpenter",
+          "handle": "HondoCarpenter",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Longtime independent Raiders insider/publisher"
+        },
+        {
+          "id": "lv_x3",
+          "name": "X: @RaidersBeat (Raiders Beat)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/RaidersBeat",
+          "handle": "RaidersBeat",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Raiders-dedicated news/analysis outlet"
+        }
       ]
     },
     {
       "abbr": "LAC",
       "name": "Los Angeles Chargers",
-      "aliases": ["Chargers"],
+      "aliases": [
+        "Chargers"
+      ],
       "sources": [
-        {"id": "lac_official", "name": "Los Angeles Chargers", "domain": "chargers.com", "source_class": "official_team", "url": "https://www.chargers.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "lac_nbcla", "name": "NBC Los Angeles", "domain": "nbclosangeles.com", "source_class": "local_outlet", "url": "https://www.nbclosangeles.com/tag/los-angeles-chargers/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.nbclosangeles.com/news/sports/chargers-center-tyler-biadasz-injury/3930945/"}
+        {
+          "id": "lac_official",
+          "name": "Los Angeles Chargers",
+          "domain": "chargers.com",
+          "source_class": "official_team",
+          "url": "https://www.chargers.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "lac_nbcla",
+          "name": "NBC Los Angeles",
+          "domain": "nbclosangeles.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nbclosangeles.com/tag/los-angeles-chargers/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.nbclosangeles.com/news/sports/chargers-center-tyler-biadasz-injury/3930945/"
+        },
+        {
+          "id": "lac_blog",
+          "name": "Bolts From The Blue",
+          "domain": "boltsfromtheblue.com",
+          "source_class": "independent_blog",
+          "url": "https://www.boltsfromtheblue.com/",
+          "feed_url": "https://www.boltsfromtheblue.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Chargers; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "lac_reddit",
+          "name": "r/Chargers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Chargers/",
+          "feed_url": "https://www.reddit.com/r/Chargers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "lac_x1",
+          "name": "X: @ElliottTeaford (Elliott Teaford)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ElliottTeaford",
+          "handle": "ElliottTeaford",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "SoCal News Group (OC Register/LA Daily News) Chargers beat writer"
+        },
+        {
+          "id": "lac_x2",
+          "name": "X: @danielrpopper (Daniel Popper)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/danielrpopper",
+          "handle": "danielrpopper",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Covered Chargers for The Athletic 7 seasons; flagged as recently moved to a national role, re-check currency"
+        },
+        {
+          "id": "lac_x3",
+          "name": "X: @BFTB_Chargers (Bolts From The Blue)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/BFTB_Chargers",
+          "handle": "BFTB_Chargers",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Chargers-dedicated blog's own account"
+        }
       ]
     },
     {
       "abbr": "LAR",
       "name": "Los Angeles Rams",
-      "aliases": ["Rams"],
+      "aliases": [
+        "Rams"
+      ],
       "sources": [
-        {"id": "lar_official", "name": "Los Angeles Rams", "domain": "therams.com", "source_class": "official_team", "url": "https://www.therams.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "lar_sporting_tribune", "name": "The Sporting Tribune", "domain": "thesportingtribune.com", "source_class": "local_outlet", "url": "https://thesportingtribune.com/category/nfl/los-angeles-rams/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://thesportingtribune.com/2026/08/12/rams-get-valuable-test-against-cowboys-in-joint-practice"}
+        {
+          "id": "lar_official",
+          "name": "Los Angeles Rams",
+          "domain": "therams.com",
+          "source_class": "official_team",
+          "url": "https://www.therams.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "lar_sporting_tribune",
+          "name": "The Sporting Tribune",
+          "domain": "thesportingtribune.com",
+          "source_class": "local_outlet",
+          "url": "https://thesportingtribune.com/category/nfl/los-angeles-rams/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://thesportingtribune.com/2026/08/12/rams-get-valuable-test-against-cowboys-in-joint-practice"
+        },
+        {
+          "id": "lar_blog",
+          "name": "Turf Show Times",
+          "domain": "turfshowtimes.com",
+          "source_class": "independent_blog",
+          "url": "https://www.turfshowtimes.com/",
+          "feed_url": "https://www.turfshowtimes.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Rams; feed fetched and confirmed live Atom XML."
+        },
+        {
+          "id": "lar_reddit",
+          "name": "r/LosAngelesRams",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/LosAngelesRams/",
+          "feed_url": "https://www.reddit.com/r/LosAngelesRams/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "lar_x1",
+          "name": "X: @LATimesklein (Gary Klein)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/LATimesklein",
+          "handle": "LATimesklein",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Los Angeles Times Rams beat reporter"
+        },
+        {
+          "id": "lar_x2",
+          "name": "X: @JourdanRodrigue (Jourdan Rodrigue)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/JourdanRodrigue",
+          "handle": "JourdanRodrigue",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic senior NFL writer; Rams-focused podcasts"
+        },
+        {
+          "id": "lar_x3",
+          "name": "X: @camdasilva (Cameron DaSilva)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/camdasilva",
+          "handle": "camdasilva",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Managing Editor of Rams Wire"
+        },
+        {
+          "id": "lar_x4",
+          "name": "X: @TheRamsWire (Rams Wire)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/TheRamsWire",
+          "handle": "TheRamsWire",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "USA Today NFL Wire network's Rams team account"
+        }
       ]
     },
     {
       "abbr": "MIA",
       "name": "Miami Dolphins",
-      "aliases": ["Dolphins"],
+      "aliases": [
+        "Dolphins"
+      ],
       "sources": [
-        {"id": "mia_official", "name": "Miami Dolphins", "domain": "miamidolphins.com", "source_class": "official_team", "url": "https://www.miamidolphins.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "mia_local10", "name": "WPLG Local 10", "domain": "local10.com", "source_class": "local_outlet", "url": "https://www.local10.com/topic/Miami_Dolphins/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.local10.com/sports/local/2026/08/03/dolphins-1st-padded-practice-of-2026-training-camp-who-stood-out-and-who-struggled"}
+        {
+          "id": "mia_official",
+          "name": "Miami Dolphins",
+          "domain": "miamidolphins.com",
+          "source_class": "official_team",
+          "url": "https://www.miamidolphins.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "mia_local10",
+          "name": "WPLG Local 10",
+          "domain": "local10.com",
+          "source_class": "local_outlet",
+          "url": "https://www.local10.com/topic/Miami_Dolphins/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.local10.com/sports/local/2026/08/03/dolphins-1st-padded-practice-of-2026-training-camp-who-stood-out-and-who-struggled"
+        },
+        {
+          "id": "mia_blog",
+          "name": "The Phinsider",
+          "domain": "thephinsider.com",
+          "source_class": "independent_blog",
+          "url": "https://www.thephinsider.com/",
+          "feed_url": "https://www.thephinsider.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Dolphins; feed fetched and confirmed live Atom/XML."
+        },
+        {
+          "id": "mia_reddit",
+          "name": "r/miamidolphins",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/miamidolphins/",
+          "feed_url": "https://www.reddit.com/r/miamidolphins/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "mia_x1",
+          "name": "X: @Marcel_LJ (Marcel Louis-Jacques)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Marcel_LJ",
+          "handle": "Marcel_LJ",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Dolphins beat reporter; daily camp/practice notes"
+        },
+        {
+          "id": "mia_x2",
+          "name": "X: @flasportsbuzz (Barry Jackson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/flasportsbuzz",
+          "handle": "flasportsbuzz",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Miami Herald South Florida sports insider"
+        },
+        {
+          "id": "mia_x3",
+          "name": "X: @schadjoe (Joe Schad)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/schadjoe",
+          "handle": "schadjoe",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Dolphins insider (WQAM radio/South Florida media)"
+        }
       ]
     },
     {
       "abbr": "MIN",
       "name": "Minnesota Vikings",
-      "aliases": ["Vikings"],
+      "aliases": [
+        "Vikings"
+      ],
       "sources": [
-        {"id": "min_official", "name": "Minnesota Vikings", "domain": "vikings.com", "source_class": "official_team", "url": "https://www.vikings.com/news", "feed_url": "https://www.vikings.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "min_fox9", "name": "FOX 9 Minneapolis-St. Paul", "domain": "fox9.com", "source_class": "local_outlet", "url": "https://www.fox9.com/tag/nfl/vikings", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.fox9.com/sports/vikings-training-camp-randy-moss-returns-ravens-give-offense-different-look"}
+        {
+          "id": "min_official",
+          "name": "Minnesota Vikings",
+          "domain": "vikings.com",
+          "source_class": "official_team",
+          "url": "https://www.vikings.com/news",
+          "feed_url": "https://www.vikings.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "min_fox9",
+          "name": "FOX 9 Minneapolis-St. Paul",
+          "domain": "fox9.com",
+          "source_class": "local_outlet",
+          "url": "https://www.fox9.com/tag/nfl/vikings",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.fox9.com/sports/vikings-training-camp-randy-moss-returns-ravens-give-offense-different-look"
+        },
+        {
+          "id": "min_blog",
+          "name": "Daily Norseman",
+          "domain": "dailynorseman.com",
+          "source_class": "independent_blog",
+          "url": "https://www.dailynorseman.com/",
+          "feed_url": "https://www.dailynorseman.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Vikings; Christopher Gates most frequent byline. Feed URL unconfirmed (robots.txt blocked verification)."
+        },
+        {
+          "id": "min_reddit",
+          "name": "r/minnesotavikings",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/minnesotavikings/",
+          "feed_url": "https://www.reddit.com/r/minnesotavikings/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "min_x1",
+          "name": "X: @BenGoessling (Ben Goessling)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/BenGoessling",
+          "handle": "BenGoessling",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Minnesota Star Tribune Vikings beat reporter"
+        },
+        {
+          "id": "min_x2",
+          "name": "X: @alec_lewis (Alec Lewis)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/alec_lewis",
+          "handle": "alec_lewis",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Minnesota Vikings beat writer"
+        },
+        {
+          "id": "min_x3",
+          "name": "X: @DailyNorseman (The Daily Norseman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/DailyNorseman",
+          "handle": "DailyNorseman",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Vikings-dedicated blog's own account"
+        }
       ]
     },
     {
       "abbr": "NE",
       "name": "New England Patriots",
-      "aliases": ["Patriots", "Pats"],
+      "aliases": [
+        "Patriots",
+        "Pats"
+      ],
       "sources": [
-        {"id": "ne_official", "name": "New England Patriots", "domain": "patriots.com", "source_class": "official_team", "url": "https://www.patriots.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "ne_nbcsb", "name": "NBC Sports Boston", "domain": "nbcsportsboston.com", "source_class": "local_outlet", "url": "https://www.nbcsportsboston.com/nfl/new-england-patriots/", "feed_url": null, "access": "free, ad-supported"}
+        {
+          "id": "ne_official",
+          "name": "New England Patriots",
+          "domain": "patriots.com",
+          "source_class": "official_team",
+          "url": "https://www.patriots.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "ne_nbcsb",
+          "name": "NBC Sports Boston",
+          "domain": "nbcsportsboston.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nbcsportsboston.com/nfl/new-england-patriots/",
+          "feed_url": null,
+          "access": "free, ad-supported"
+        },
+        {
+          "id": "ne_blog",
+          "name": "Pats Pulpit",
+          "domain": "patspulpit.com",
+          "source_class": "independent_blog",
+          "url": "https://www.patspulpit.com/",
+          "feed_url": "https://www.patspulpit.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Patriots; feed fetched and confirmed live Atom/XML."
+        },
+        {
+          "id": "ne_reddit",
+          "name": "r/patriots",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/patriots/",
+          "feed_url": "https://www.reddit.com/r/patriots/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "ne_x1",
+          "name": "X: @MikeReiss (Mike Reiss)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MikeReiss",
+          "handle": "MikeReiss",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's longtime dedicated Patriots beat reporter"
+        },
+        {
+          "id": "ne_x2",
+          "name": "X: @ByMarkDaniels (Mark Daniels)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ByMarkDaniels",
+          "handle": "ByMarkDaniels",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "MassLive/Boston.com Patriots beat writer"
+        },
+        {
+          "id": "ne_x3",
+          "name": "X: @DougKyed (Doug Kyed)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/DougKyed",
+          "handle": "DougKyed",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "A to Z Sports/NESN Patriots insider; injuries/depth chart"
+        }
       ]
     },
     {
       "abbr": "NO",
       "name": "New Orleans Saints",
-      "aliases": ["Saints"],
+      "aliases": [
+        "Saints"
+      ],
       "sources": [
-        {"id": "no_official", "name": "New Orleans Saints", "domain": "neworleanssaints.com", "source_class": "official_team", "url": "https://www.neworleanssaints.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "no_nola", "name": "NOLA.com / The Times-Picayune", "domain": "nola.com", "source_class": "local_outlet", "url": "https://www.nola.com/sports/saints/", "feed_url": null, "access": "mixed/metered; metadata only when subscriber access is required", "practice_evidence_url": "https://www.nola.com/sports/saints/saints-tulane-practice-observations/article_2cbdc70b-2256-4d89-88c0-78172e97b45c.html"}
+        {
+          "id": "no_official",
+          "name": "New Orleans Saints",
+          "domain": "neworleanssaints.com",
+          "source_class": "official_team",
+          "url": "https://www.neworleanssaints.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "no_nola",
+          "name": "NOLA.com / The Times-Picayune",
+          "domain": "nola.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nola.com/sports/saints/",
+          "feed_url": null,
+          "access": "mixed/metered; metadata only when subscriber access is required",
+          "practice_evidence_url": "https://www.nola.com/sports/saints/saints-tulane-practice-observations/article_2cbdc70b-2256-4d89-88c0-78172e97b45c.html"
+        },
+        {
+          "id": "no_blog",
+          "name": "Canal Street Chronicles",
+          "domain": "canalstreetchronicles.com",
+          "source_class": "independent_blog",
+          "url": "https://www.canalstreetchronicles.com/",
+          "feed_url": "https://www.canalstreetchronicles.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Saints; feed fetched and confirmed valid Atom XML updated within a day."
+        },
+        {
+          "id": "no_reddit",
+          "name": "r/Saints",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Saints/",
+          "feed_url": "https://www.reddit.com/r/Saints/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "no_x1",
+          "name": "X: @nick_underhill (Nick Underhill)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/nick_underhill",
+          "handle": "nick_underhill",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Saints insider, founder of NewOrleans.Football"
+        },
+        {
+          "id": "no_x2",
+          "name": "X: @MikeTriplett (Mike Triplett)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MikeTriplett",
+          "handle": "MikeTriplett",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Veteran Saints beat reporter"
+        }
       ]
     },
     {
       "abbr": "NYG",
       "name": "New York Giants",
-      "aliases": ["Giants"],
+      "aliases": [
+        "Giants"
+      ],
       "sources": [
-        {"id": "nyg_official", "name": "New York Giants", "domain": "giants.com", "source_class": "official_team", "url": "https://www.giants.com/news/", "feed_url": "https://www.giants.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "nyg_nj", "name": "NJ.com Giants", "domain": "nj.com", "source_class": "local_outlet", "url": "https://www.nj.com/giants/", "feed_url": null, "access": "mixed/metered", "practice_evidence_url": "https://www.nj.com/giants/2026/08/giants-star-injured-during-training-camp-practice.html"}
+        {
+          "id": "nyg_official",
+          "name": "New York Giants",
+          "domain": "giants.com",
+          "source_class": "official_team",
+          "url": "https://www.giants.com/news/",
+          "feed_url": "https://www.giants.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "nyg_nj",
+          "name": "NJ.com Giants",
+          "domain": "nj.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nj.com/giants/",
+          "feed_url": null,
+          "access": "mixed/metered",
+          "practice_evidence_url": "https://www.nj.com/giants/2026/08/giants-star-injured-during-training-camp-practice.html"
+        },
+        {
+          "id": "nyg_blog",
+          "name": "Big Blue View",
+          "domain": "bigblueview.com",
+          "source_class": "independent_blog",
+          "url": "https://www.bigblueview.com/",
+          "feed_url": "https://www.bigblueview.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Giants; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "nyg_reddit",
+          "name": "r/NYGiants",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/NYGiants/",
+          "feed_url": "https://www.reddit.com/r/NYGiants/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "nyg_x1",
+          "name": "X: @art_stapleton (Art Stapleton)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/art_stapleton",
+          "handle": "art_stapleton",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "NorthJersey.com/USA Today Network Giants beat writer"
+        },
+        {
+          "id": "nyg_x2",
+          "name": "X: @pleonardnydn (Pat Leonard)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/pleonardnydn",
+          "handle": "pleonardnydn",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "New York Daily News NFL columnist/Giants beat writer"
+        },
+        {
+          "id": "nyg_x3",
+          "name": "X: @rydunleavy (Ryan Dunleavy)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/rydunleavy",
+          "handle": "rydunleavy",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "New York Post Giants beat writer"
+        }
       ]
     },
     {
       "abbr": "NYJ",
       "name": "New York Jets",
-      "aliases": ["Jets"],
+      "aliases": [
+        "Jets"
+      ],
       "sources": [
-        {"id": "nyj_official", "name": "New York Jets", "domain": "newyorkjets.com", "source_class": "official_team", "url": "https://www.newyorkjets.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "nyj_nj", "name": "NJ.com Jets", "domain": "nj.com", "source_class": "local_outlet", "url": "https://www.nj.com/jets/", "feed_url": null, "access": "mixed/metered", "practice_evidence_url": "https://www.nj.com/jets/2025/08/jets-give-injury-update-on-key-starters-who-will-miss-time-and-whos-back-at-practice.html"}
+        {
+          "id": "nyj_official",
+          "name": "New York Jets",
+          "domain": "newyorkjets.com",
+          "source_class": "official_team",
+          "url": "https://www.newyorkjets.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "nyj_nj",
+          "name": "NJ.com Jets",
+          "domain": "nj.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nj.com/jets/",
+          "feed_url": null,
+          "access": "mixed/metered",
+          "practice_evidence_url": "https://www.nj.com/jets/2025/08/jets-give-injury-update-on-key-starters-who-will-miss-time-and-whos-back-at-practice.html"
+        },
+        {
+          "id": "nyj_blog",
+          "name": "Gang Green Nation",
+          "domain": "ganggreennation.com",
+          "source_class": "independent_blog",
+          "url": "https://www.ganggreennation.com/",
+          "feed_url": "https://www.ganggreennation.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Jets; feed fetched and confirmed live Atom/XML."
+        },
+        {
+          "id": "nyj_reddit",
+          "name": "r/nyjets",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/nyjets/",
+          "feed_url": "https://www.reddit.com/r/nyjets/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "nyj_x1",
+          "name": "X: @RichCimini (Rich Cimini)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/RichCimini",
+          "handle": "RichCimini",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's longtime dedicated Jets beat reporter"
+        },
+        {
+          "id": "nyj_x2",
+          "name": "X: @Connor_J_Hughes (Connor Hughes)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Connor_J_Hughes",
+          "handle": "Connor_J_Hughes",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "SNY Jets insider; roster/coaching-search scoops"
+        },
+        {
+          "id": "nyj_x3",
+          "name": "X: @BrianCoz (Brian Costello)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/BrianCoz",
+          "handle": "BrianCoz",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "New York Post Jets beat writer"
+        }
       ]
     },
     {
       "abbr": "PHI",
       "name": "Philadelphia Eagles",
-      "aliases": ["Eagles"],
+      "aliases": [
+        "Eagles"
+      ],
       "sources": [
-        {"id": "phi_official", "name": "Philadelphia Eagles", "domain": "philadelphiaeagles.com", "source_class": "official_team", "url": "https://www.philadelphiaeagles.com/news/all", "feed_url": "https://www.philadelphiaeagles.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "phi_nbcsp", "name": "NBC Sports Philadelphia", "domain": "nbcsportsphiladelphia.com", "source_class": "local_outlet", "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-training-camp-observations-jalen-hurts-and-offense-bounce-back/745131/"}
+        {
+          "id": "phi_official",
+          "name": "Philadelphia Eagles",
+          "domain": "philadelphiaeagles.com",
+          "source_class": "official_team",
+          "url": "https://www.philadelphiaeagles.com/news/all",
+          "feed_url": "https://www.philadelphiaeagles.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "phi_nbcsp",
+          "name": "NBC Sports Philadelphia",
+          "domain": "nbcsportsphiladelphia.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.nbcsportsphiladelphia.com/nfl/philadelphia-eagles/eagles-training-camp-observations-jalen-hurts-and-offense-bounce-back/745131/"
+        },
+        {
+          "id": "phi_blog",
+          "name": "Bleeding Green Nation",
+          "domain": "bleedinggreennation.com",
+          "source_class": "independent_blog",
+          "url": "https://www.bleedinggreennation.com/",
+          "feed_url": "https://www.bleedinggreennation.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Eagles; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "phi_reddit",
+          "name": "r/eagles",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/eagles/",
+          "feed_url": "https://www.reddit.com/r/eagles/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "phi_x1",
+          "name": "X: @Jeff_McLane (Jeff McLane)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Jeff_McLane",
+          "handle": "Jeff_McLane",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Philadelphia Inquirer Eagles beat writer"
+        },
+        {
+          "id": "phi_x2",
+          "name": "X: @ZBerm (Zach Berman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/ZBerm",
+          "handle": "ZBerm",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic senior writer covering the Eagles"
+        }
       ]
     },
     {
       "abbr": "PIT",
       "name": "Pittsburgh Steelers",
-      "aliases": ["Steelers"],
+      "aliases": [
+        "Steelers"
+      ],
       "sources": [
-        {"id": "pit_official", "name": "Pittsburgh Steelers", "domain": "steelers.com", "source_class": "official_team", "url": "https://www.steelers.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "pit_triblive", "name": "TribLIVE", "domain": "triblive.com", "source_class": "local_outlet", "url": "https://triblive.com/category/sports/steelers/", "feed_url": null, "access": "free, ad-supported; privacy-consent UI may appear", "practice_evidence_url": "https://triblive.com/sports/steelers-inside-the-ropes-defense-again-holds-twice-in-2-minute-drills/"}
+        {
+          "id": "pit_official",
+          "name": "Pittsburgh Steelers",
+          "domain": "steelers.com",
+          "source_class": "official_team",
+          "url": "https://www.steelers.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "pit_triblive",
+          "name": "TribLIVE",
+          "domain": "triblive.com",
+          "source_class": "local_outlet",
+          "url": "https://triblive.com/category/sports/steelers/",
+          "feed_url": null,
+          "access": "free, ad-supported; privacy-consent UI may appear",
+          "practice_evidence_url": "https://triblive.com/sports/steelers-inside-the-ropes-defense-again-holds-twice-in-2-minute-drills/"
+        },
+        {
+          "id": "pit_blog",
+          "name": "Behind the Steel Curtain",
+          "domain": "behindthesteelcurtain.com",
+          "source_class": "independent_blog",
+          "url": "https://www.behindthesteelcurtain.com/",
+          "feed_url": "https://www.behindthesteelcurtain.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": false,
+          "note": "SB Nation network site dedicated to the Steelers; multi-author. Feed URL is the lowest-confidence guess in this batch (pattern-matched, not directory-sourced, robots.txt blocked verification)."
+        },
+        {
+          "id": "pit_reddit",
+          "name": "r/steelers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/steelers/",
+          "feed_url": "https://www.reddit.com/r/steelers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "pit_x1",
+          "name": "X: @gerrydulac (Gerry Dulac)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/gerrydulac",
+          "handle": "gerrydulac",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Pittsburgh Post-Gazette veteran Steelers beat writer"
+        },
+        {
+          "id": "pit_x2",
+          "name": "X: @bepryor (Brooke Pryor)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/bepryor",
+          "handle": "bepryor",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's dedicated Steelers reporter"
+        },
+        {
+          "id": "pit_x3",
+          "name": "X: @MarkKaboly (Mark Kaboly)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MarkKaboly",
+          "handle": "MarkKaboly",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Steelers insider (Steelers Now/DKPS)"
+        }
       ]
     },
     {
       "abbr": "SEA",
       "name": "Seattle Seahawks",
-      "aliases": ["Seahawks"],
+      "aliases": [
+        "Seahawks"
+      ],
       "sources": [
-        {"id": "sea_official", "name": "Seattle Seahawks", "domain": "seahawks.com", "source_class": "official_team", "url": "https://www.seahawks.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "sea_mynorthwest", "name": "Seattle Sports / MyNorthwest", "domain": "sports.mynorthwest.com", "source_class": "local_outlet", "url": "https://sports.mynorthwest.com/nfl/seattle-seahawks/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://sports.mynorthwest.com/nfl/seattle-seahawks/what-stood-out-seattle-seahawks-annual-lumen-field-practice"}
+        {
+          "id": "sea_official",
+          "name": "Seattle Seahawks",
+          "domain": "seahawks.com",
+          "source_class": "official_team",
+          "url": "https://www.seahawks.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "sea_mynorthwest",
+          "name": "Seattle Sports / MyNorthwest",
+          "domain": "sports.mynorthwest.com",
+          "source_class": "local_outlet",
+          "url": "https://sports.mynorthwest.com/nfl/seattle-seahawks/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://sports.mynorthwest.com/nfl/seattle-seahawks/what-stood-out-seattle-seahawks-annual-lumen-field-practice"
+        },
+        {
+          "id": "sea_blog",
+          "name": "Field Gulls",
+          "domain": "fieldgulls.com",
+          "source_class": "independent_blog",
+          "url": "https://www.fieldgulls.com/",
+          "feed_url": "https://www.fieldgulls.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Seahawks; feed fetched and confirmed live Atom XML."
+        },
+        {
+          "id": "sea_reddit",
+          "name": "r/Seahawks",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Seahawks/",
+          "feed_url": "https://www.reddit.com/r/Seahawks/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "sea_x1",
+          "name": "X: @bcondotta (Bob Condotta)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/bcondotta",
+          "handle": "bcondotta",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Seattle Times Seahawks beat writer"
+        },
+        {
+          "id": "sea_x2",
+          "name": "X: @MikeDugar (Michael-Shawn Dugar)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/MikeDugar",
+          "handle": "MikeDugar",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic Seahawks writer; #SeahawksMan2Man podcast"
+        },
+        {
+          "id": "sea_x3",
+          "name": "X: @CorbinSmithNFL (Corbin K. Smith)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/CorbinSmithNFL",
+          "handle": "CorbinSmithNFL",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent Seahawks reporter, Emerald City Spectrum"
+        },
+        {
+          "id": "sea_x4",
+          "name": "X: @KoleMusgrove23 (Kole Musgrove)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/KoleMusgrove23",
+          "handle": "KoleMusgrove23",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Managing editor of Seahawks Wire"
+        }
       ]
     },
     {
       "abbr": "SF",
       "name": "San Francisco 49ers",
-      "aliases": ["49ers", "Niners"],
+      "aliases": [
+        "49ers",
+        "Niners"
+      ],
       "sources": [
-        {"id": "sf_official", "name": "San Francisco 49ers", "domain": "49ers.com", "source_class": "official_team", "url": "https://www.49ers.com/news/", "feed_url": "https://www.49ers.com/rss/news", "access": "free verified RSS and public team page"},
-        {"id": "sf_nbcsba", "name": "NBC Sports Bay Area", "domain": "nbcsportsbayarea.com", "source_class": "local_outlet", "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/christian-mccaffrey-george-kittle-practice-return/1958214/"}
+        {
+          "id": "sf_official",
+          "name": "San Francisco 49ers",
+          "domain": "49ers.com",
+          "source_class": "official_team",
+          "url": "https://www.49ers.com/news/",
+          "feed_url": "https://www.49ers.com/rss/news",
+          "access": "free verified RSS and public team page"
+        },
+        {
+          "id": "sf_nbcsba",
+          "name": "NBC Sports Bay Area",
+          "domain": "nbcsportsbayarea.com",
+          "source_class": "local_outlet",
+          "url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/christian-mccaffrey-george-kittle-practice-return/1958214/"
+        },
+        {
+          "id": "sf_blog",
+          "name": "Niners Nation",
+          "domain": "ninersnation.com",
+          "source_class": "independent_blog",
+          "url": "https://www.ninersnation.com/",
+          "feed_url": "https://www.ninersnation.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the 49ers; feed fetched and confirmed live Atom XML."
+        },
+        {
+          "id": "sf_reddit",
+          "name": "r/49ers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/49ers/",
+          "feed_url": "https://www.reddit.com/r/49ers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "sf_x1",
+          "name": "X: @mattbarrows (Matt Barrows)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/mattbarrows",
+          "handle": "mattbarrows",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "The Athletic 49ers beat writer"
+        },
+        {
+          "id": "sf_x2",
+          "name": "X: @CamInman (Cam Inman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/CamInman",
+          "handle": "CamInman",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Bay Area News Group 49ers reporter"
+        },
+        {
+          "id": "sf_x3",
+          "name": "X: @Eric_Branch (Eric Branch)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/Eric_Branch",
+          "handle": "Eric_Branch",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "San Francisco Chronicle 49ers beat writer"
+        },
+        {
+          "id": "sf_x4",
+          "name": "X: @KyleAMadson (Kyle Madson)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/KyleAMadson",
+          "handle": "KyleAMadson",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Lead writer for Niners Wire"
+        }
       ]
     },
     {
       "abbr": "TB",
       "name": "Tampa Bay Buccaneers",
-      "aliases": ["Buccaneers", "Bucs"],
+      "aliases": [
+        "Buccaneers",
+        "Bucs"
+      ],
       "sources": [
-        {"id": "tb_official", "name": "Tampa Bay Buccaneers", "domain": "buccaneers.com", "source_class": "official_team", "url": "https://www.buccaneers.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "tb_tbt", "name": "Tampa Bay Times", "domain": "tampabay.com", "source_class": "local_outlet", "url": "https://www.tampabay.com/sports/bucs/", "feed_url": null, "access": "mixed/metered; metadata only when subscriber access is required", "practice_evidence_url": "https://www.tampabay.com/sports/bucs/2026/08/05/vita-vea-trade-request-back-injury-collin-roberts-todd-bowles/"}
+        {
+          "id": "tb_official",
+          "name": "Tampa Bay Buccaneers",
+          "domain": "buccaneers.com",
+          "source_class": "official_team",
+          "url": "https://www.buccaneers.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "tb_tbt",
+          "name": "Tampa Bay Times",
+          "domain": "tampabay.com",
+          "source_class": "local_outlet",
+          "url": "https://www.tampabay.com/sports/bucs/",
+          "feed_url": null,
+          "access": "mixed/metered; metadata only when subscriber access is required",
+          "practice_evidence_url": "https://www.tampabay.com/sports/bucs/2026/08/05/vita-vea-trade-request-back-injury-collin-roberts-todd-bowles/"
+        },
+        {
+          "id": "tb_blog",
+          "name": "Bucs Nation",
+          "domain": "bucsnation.com",
+          "source_class": "independent_blog",
+          "url": "https://www.bucsnation.com/",
+          "feed_url": "https://www.bucsnation.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Buccaneers; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "tb_reddit",
+          "name": "r/buccaneers",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/buccaneers/",
+          "feed_url": "https://www.reddit.com/r/buccaneers/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "tb_x1",
+          "name": "X: @NFLSTROUD (Rick Stroud)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/NFLSTROUD",
+          "handle": "NFLSTROUD",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Tampa Bay Times veteran Bucs/NFL beat writer"
+        },
+        {
+          "id": "tb_x2",
+          "name": "X: @gregauman (Greg Auman)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/gregauman",
+          "handle": "gregauman",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "FOX Sports NFL reporter covering the Bucs since 2013"
+        }
       ]
     },
     {
       "abbr": "TEN",
       "name": "Tennessee Titans",
-      "aliases": ["Titans"],
+      "aliases": [
+        "Titans"
+      ],
       "sources": [
-        {"id": "ten_official", "name": "Tennessee Titans", "domain": "tennesseetitans.com", "source_class": "official_team", "url": "https://www.tennesseetitans.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "ten_nc5", "name": "NewsChannel 5 Nashville", "domain": "newschannel5.com", "source_class": "local_outlet", "url": "https://www.newschannel5.com/sports/nfl/tennessee-titans", "feed_url": null, "access": "free, ad-supported"}
+        {
+          "id": "ten_official",
+          "name": "Tennessee Titans",
+          "domain": "tennesseetitans.com",
+          "source_class": "official_team",
+          "url": "https://www.tennesseetitans.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "ten_nc5",
+          "name": "NewsChannel 5 Nashville",
+          "domain": "newschannel5.com",
+          "source_class": "local_outlet",
+          "url": "https://www.newschannel5.com/sports/nfl/tennessee-titans",
+          "feed_url": null,
+          "access": "free, ad-supported"
+        },
+        {
+          "id": "ten_blog",
+          "name": "Music City Miracles",
+          "domain": "musiccitymiracles.com",
+          "source_class": "independent_blog",
+          "url": "https://www.musiccitymiracles.com/",
+          "feed_url": "https://www.musiccitymiracles.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Titans; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "ten_reddit",
+          "name": "r/Tennesseetitans",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Tennesseetitans/",
+          "feed_url": "https://www.reddit.com/r/Tennesseetitans/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "ten_x1",
+          "name": "X: @TDavenport_NFL (Turron Davenport)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/TDavenport_NFL",
+          "handle": "TDavenport_NFL",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN Titans beat reporter"
+        },
+        {
+          "id": "ten_x2",
+          "name": "X: @PaulKuharskyNFL (Paul Kuharsky)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/PaulKuharskyNFL",
+          "handle": "PaulKuharskyNFL",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Independent longtime Titans insider (paulkuharsky.com)"
+        }
       ]
     },
     {
       "abbr": "WAS",
       "name": "Washington Commanders",
-      "aliases": ["Commanders"],
+      "aliases": [
+        "Commanders"
+      ],
       "sources": [
-        {"id": "was_official", "name": "Washington Commanders", "domain": "commanders.com", "source_class": "official_team", "url": "https://www.commanders.com/news/", "feed_url": null, "access": "free public team page"},
-        {"id": "was_wusa9", "name": "WUSA9", "domain": "wusa9.com", "source_class": "local_outlet", "url": "https://www.wusa9.com/washington-commanders", "feed_url": null, "access": "free, ad-supported", "practice_evidence_url": "https://www.wusa9.com/article/sports/nfl/washington-commanders/washington-commanders-2026-rookie-minicamp-sonny-styles-antonio-williams/65-b8880a21-08cd-4a62-be35-af029c32e4fe"}
+        {
+          "id": "was_official",
+          "name": "Washington Commanders",
+          "domain": "commanders.com",
+          "source_class": "official_team",
+          "url": "https://www.commanders.com/news/",
+          "feed_url": null,
+          "access": "free public team page"
+        },
+        {
+          "id": "was_wusa9",
+          "name": "WUSA9",
+          "domain": "wusa9.com",
+          "source_class": "local_outlet",
+          "url": "https://www.wusa9.com/washington-commanders",
+          "feed_url": null,
+          "access": "free, ad-supported",
+          "practice_evidence_url": "https://www.wusa9.com/article/sports/nfl/washington-commanders/washington-commanders-2026-rookie-minicamp-sonny-styles-antonio-williams/65-b8880a21-08cd-4a62-be35-af029c32e4fe"
+        },
+        {
+          "id": "was_blog",
+          "name": "Hogs Haven",
+          "domain": "hogshaven.com",
+          "source_class": "independent_blog",
+          "url": "https://www.hogshaven.com/",
+          "feed_url": "https://www.hogshaven.com/rss/index.xml",
+          "access": "free, ad-supported; independent/niche team-dedicated blog",
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Commanders; feed fetched and confirmed valid Atom XML."
+        },
+        {
+          "id": "was_reddit",
+          "name": "r/Commanders",
+          "domain": "reddit.com",
+          "source_class": "reddit",
+          "url": "https://www.reddit.com/r/Commanders/",
+          "feed_url": "https://www.reddit.com/r/Commanders/new.json?limit=25",
+          "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
+        },
+        {
+          "id": "was_x1",
+          "name": "X: @NickiJhabvala (Nicki Jhabvala)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/NickiJhabvala",
+          "handle": "NickiJhabvala",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "Commanders reporter, The Athletic (ex-Washington Post)"
+        },
+        {
+          "id": "was_x2",
+          "name": "X: @john_keim (John Keim)",
+          "domain": "x.com",
+          "source_class": "x_twitter",
+          "url": "https://x.com/john_keim",
+          "handle": "john_keim",
+          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
+          "note": "ESPN's longtime Washington beat reporter"
+        }
       ]
     }
   ]

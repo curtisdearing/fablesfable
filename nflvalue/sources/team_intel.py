@@ -224,7 +224,10 @@ def select_teams(registry: Mapping, abbreviations: Sequence[str]) -> List[Dict]:
 
 def build_google_news_url(team: Mapping) -> str:
     """Build one domain-allowlisted Google News RSS discovery query per team."""
-    domains = [str(source["domain"]) for source in team.get("sources", [])]
+    # dict.fromkeys dedupes while preserving first-seen order; with 91 X
+    # handles now sharing domain "x.com" across the registry, a plain list
+    # would repeat "site:x.com" once per handle and bloat the query.
+    domains = list(dict.fromkeys(str(source["domain"]) for source in team.get("sources", [])))
     site_clause = " OR ".join(f"site:{domain}" for domain in domains)
     query = f'"{team["name"]}" ({_SIGNAL_QUERY}) ({site_clause})'
     params = {"q": query, "hl": "en-US", "gl": "US", "ceid": "US:en"}

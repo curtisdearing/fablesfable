@@ -336,3 +336,28 @@ def test_dedupe_ranks_official_above_independent_above_social_above_discovery():
     deduped = team_intel._dedupe(rows)
     assert len(deduped) == 1
     assert deduped[0]["source_id"] == "off"
+
+
+def test_shipped_registry_covers_independent_blog_reddit_and_x_for_all_32_teams():
+    registry = team_intel.load_registry(ROOT / "config" / "team_sources.json")
+    assert len(registry["teams"]) == 32
+    for team in registry["teams"]:
+        classes = {source["source_class"] for source in team["sources"]}
+        assert {"official_team", "local_outlet", "independent_blog", "reddit"}.issubset(classes), team["abbr"]
+        x_sources = [s for s in team["sources"] if s["source_class"] == "x_twitter"]
+        assert 2 <= len(x_sources) <= 4, (team["abbr"], len(x_sources))
+        for source in x_sources:
+            assert source.get("handle"), (team["abbr"], source["id"])
+        reddit_sources = [s for s in team["sources"] if s["source_class"] == "reddit"]
+        assert len(reddit_sources) == 1
+        assert reddit_sources[0]["feed_url"].endswith("new.json?limit=25")
+
+
+def test_shipped_registry_builds_every_request_without_error():
+    registry = team_intel.load_registry(ROOT / "config" / "team_sources.json")
+    all_abbrs = [team["abbr"] for team in registry["teams"]]
+    requests = team_intel.build_requests(registry, all_abbrs)
+    methods = {row["method"] for row in requests}
+    assert methods == {"direct_rss", "reddit_json", "x_recent_search", "google_news_rss"}
+    # one google_news_rss discovery request per team, everything else additive
+    assert sum(1 for row in requests if row["method"] == "google_news_rss") == 32
