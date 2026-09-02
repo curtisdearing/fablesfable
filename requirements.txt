@@ -23,9 +23,23 @@ nflreadpy>=0.1
 # TF-IDF index (Chroma/FAISS intentionally not required; see docs/phases_3-5.md).
 
 # ML ranking layer (nflvalue/ml_ranker.py, ml_test.py) -- flag-gated via
-# config.json "ml_ranker"; the rest of the app runs without these:
-scikit-learn>=1.3
-joblib>=1.3
+# config.json "ml_ranker"; the rest of the app runs without these.
+#
+# PINNED, not floated: data/ml_ranker.joblib and data/seq_encoder.joblib are
+# pickles that cross the local/runner boundary through the checksummed
+# production state (scripts/state_store.py).  A pickle written by one
+# scikit-learn is not readable by another -- 2026-09-02: a ranker fitted
+# locally on 1.7.2 failed to unpickle on the Actions runner, which had
+# resolved ">=1.3" to 1.9.0 (ModuleNotFoundError: No module named '_loss'),
+# and the restore of an otherwise valid state broke silently at fit time.
+# Whoever produces an artifact that enters state must run these exact
+# versions.  scikit-learn >=1.8 needs Python 3.11+ (the Cowork device VM is
+# 3.10 and cannot install it), so a local fit happens on 3.11+ or is left to
+# the runner -- publishing state WITHOUT the ranker lets the Tuesday job
+# fit it in place.  Bump both pins together, then re-fit and re-publish the
+# artifacts in the same change.
+scikit-learn==1.9.0
+joblib==1.6.0
 
 # Optional, for running the test suite (tests/):
 # pytest>=7.0
