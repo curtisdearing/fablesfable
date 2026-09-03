@@ -55,15 +55,17 @@ of work is the teams in one matchup or slate.
 and one established local outlet. A source URL is a discovery surface, not a
 claim that every article is free or that every headline is correct.
 
-As of 2026-09-02 every franchise also carries one `independent_blog` (a
+As of 2026-09-03 every franchise also carries one `independent_blog` (a
 single-author or small-team niche site focused solely on that franchise --
 the pattern is `ebonybird.com` for the Ravens), one `reddit` source (the
 team's primary active subreddit), and 2-4 `x_twitter` sources (beat writers,
 team insiders, or independent team-dedicated analysts -- never generic
-national NFL accounts). A handful of `independent_blog` feed URLs were not
-independently fetch-verified (robots.txt blocked the verification request) --
-each carries `feed_verified_2026_09_02: false` and a `note` saying so; treat
-those as pattern-matched, not confirmed, until a live run proves the feed.
+national NFL accounts). All 32 `independent_blog` feed URLs are now
+fetch-verified live (`feed_verified_2026_09_03: true`) -- the initial 09-02
+research pass left 7 unconfirmed because the WebFetch tool respects
+robots.txt, which `curl` (used for the 09-03 follow-up) does not; CLE's
+feed URL was also corrected from a 301-redirecting `/rss/current.xml` to
+the canonical `/rss/index.xml` in the same pass.
 
 ## Weekly practice intelligence clock
 

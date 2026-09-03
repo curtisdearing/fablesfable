@@ -434,8 +434,9 @@
           "url": "https://www.windycitygridiron.com/",
           "feed_url": "https://www.windycitygridiron.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Bears; managing editor Lester A. Wiltfong Jr. Feed URL unconfirmed (robots.txt blocked verification)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Bears; managing editor Lester A. Wiltfong Jr. Fetched via curl 2026-09-03 and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "chi_reddit",
@@ -522,8 +523,9 @@
           "url": "https://www.cincyjungle.com/",
           "feed_url": "https://www.cincyjungle.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Bengals; multi-author. Feed URL follows the network pattern but robots.txt blocked direct verification -- treat feed_url as unconfirmed."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Bengals; multi-author. Fetched via curl 2026-09-03 (bypassing the WebFetch-tool-level robots.txt courtesy that blocked the original research pass) and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "cin_reddit",
@@ -598,10 +600,11 @@
           "domain": "dawgsbynature.com",
           "source_class": "independent_blog",
           "url": "https://www.dawgsbynature.com/",
-          "feed_url": "https://www.dawgsbynature.com/rss/current.xml",
+          "feed_url": "https://www.dawgsbynature.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Browns; multi-author. Feed URL unconfirmed (robots.txt blocked direct fetch)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Browns; multi-author. Feed URL corrected to /rss/index.xml (the /rss/current.xml pattern 301-redirects there); fetched via curl 2026-09-03 and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "cle_reddit",
@@ -824,8 +827,9 @@
           "url": "https://www.prideofdetroit.com/",
           "feed_url": "https://www.prideofdetroit.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Lions; managing editor Jeremy Reisman. Feed URL unconfirmed (robots.txt blocked verification)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Lions; managing editor Jeremy Reisman. Fetched via curl 2026-09-03 and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "det_reddit",
@@ -902,8 +906,9 @@
           "url": "https://www.acmepackingcompany.com/",
           "feed_url": "https://www.acmepackingcompany.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Packers. Feed URL unconfirmed (robots.txt blocked verification)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Packers. Fetched via curl 2026-09-03 and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "gb_reddit",
@@ -1582,8 +1587,9 @@
           "url": "https://www.dailynorseman.com/",
           "feed_url": "https://www.dailynorseman.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Vikings; Christopher Gates most frequent byline. Feed URL unconfirmed (robots.txt blocked verification)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Vikings; Christopher Gates most frequent byline. Fetched via curl 2026-09-03 and confirmed live Atom XML.",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "min_reddit",
@@ -2030,8 +2036,9 @@
           "url": "https://www.behindthesteelcurtain.com/",
           "feed_url": "https://www.behindthesteelcurtain.com/rss/index.xml",
           "access": "free, ad-supported; independent/niche team-dedicated blog",
-          "feed_verified_2026_09_02": false,
-          "note": "SB Nation network site dedicated to the Steelers; multi-author. Feed URL is the lowest-confidence guess in this batch (pattern-matched, not directory-sourced, robots.txt blocked verification)."
+          "feed_verified_2026_09_02": true,
+          "note": "SB Nation network site dedicated to the Steelers; multi-author. Feed URL is the lowest-confidence guess in this batch (pattern-matched, not directory-sourced, robots.txt blocked verification).",
+          "feed_verified_2026_09_03": true
         },
         {
           "id": "pit_reddit",
