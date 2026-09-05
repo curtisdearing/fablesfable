@@ -205,15 +205,6 @@ def _reddit_registry():
                         "feed_url": "https://www.reddit.com/r/ravens/new.json?limit=25",
                         "access": "free public JSON, no auth required",
                     },
-                    {
-                        "id": "bal_x_handle",
-                        "name": "X: @exampleinsider",
-                        "domain": "x.com",
-                        "source_class": "x_twitter",
-                        "url": "https://x.com/exampleinsider",
-                        "handle": "exampleinsider",
-                        "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read tier)",
-                    },
                 ],
             }
         ],
@@ -258,61 +249,10 @@ def test_reddit_json_skips_stickied_and_bodyless_posts():
     assert rows == []
 
 
-def test_x_recent_search_builds_authorized_request_and_parses_tweet():
-    registry = _reddit_registry()
-    request = [r for r in team_intel.build_requests(registry, ["BAL"]) if r["method"] == "x_recent_search"][0]
-    assert "from%3Aexampleinsider" in request["url"] or "from:exampleinsider" in request["url"]
-    headers = team_intel._auth_headers(request)
-    assert headers == {}  # no token configured in the test environment
-    raw = team_intel.json.dumps({
-        "data": [{
-            "id": "999",
-            "text": "Hearing the WR2 competition is now a real question after today's padded practice.",
-            "created_at": "2026-08-27T15:05:00.000Z",
-        }]
-    }).encode()
-    rows = team_intel.parse_x_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
-    assert len(rows) == 1
-    row = rows[0]
-    assert row["source_class"] == "x_twitter"
-    assert row["url"] == "https://x.com/exampleinsider/status/999"
-    assert row["requires_corroboration"] is True
-    assert row["collection_method"] == "x_recent_search"
-
-
-def test_x_recent_search_auth_header_uses_env_token(monkeypatch):
-    monkeypatch.setenv("X_BEARER_TOKEN", "test-token-value")
-    request = {"method": "x_recent_search"}
-    assert team_intel._auth_headers(request) == {"Authorization": "Bearer test-token-value"}
-    monkeypatch.delenv("X_BEARER_TOKEN", raising=False)
-    monkeypatch.setenv("TWITTER_BEARER_TOKEN", "fallback-token")
-    assert team_intel._auth_headers(request) == {"Authorization": "Bearer fallback-token"}
-
-
-def test_x_recent_search_api_error_is_a_source_health_failure_not_a_crash():
-    request = [r for r in team_intel.build_requests(_reddit_registry(), ["BAL"]) if r["method"] == "x_recent_search"][0]
-    raw = team_intel.json.dumps({"errors": [{"detail": "Unauthorized"}]}).encode()
-    with pytest.raises(team_intel.TeamIntelSchemaError):
-        team_intel.parse_x_json(raw, request, fetched_at="2026-08-27T16:00:00Z")
-
-    def failing_fetcher(_url, _timeout):
-        return raw
-
-    packet = team_intel.collect(_reddit_registry(), ["BAL"], as_of="2026-08-27T16:00:00Z", fetcher=failing_fetcher)
-    x_health = [row for row in packet["source_health"] if row["method"] == "x_recent_search"][0]
-    assert x_health["ok"] is False
-    assert "Unauthorized" in x_health["error"] or "TeamIntelSchemaError" in x_health["error"]
-
-
-def test_call_fetcher_supports_both_two_and_three_arg_test_doubles():
-    assert team_intel._call_fetcher(lambda url, timeout: b"two-arg", "u", 1.0, {"A": "B"}) == b"two-arg"
-    assert team_intel._call_fetcher(lambda url, timeout, headers: headers, "u", 1.0, {"A": "B"}) == {"A": "B"}
-
-
-def test_registry_accepts_reddit_x_twitter_and_independent_blog_classes():
+def test_registry_accepts_reddit_and_independent_blog_classes():
     registry = team_intel.validate_registry(_reddit_registry())
     classes = {source["source_class"] for team in registry["teams"] for source in team["sources"]}
-    assert classes == {"reddit", "x_twitter"}
+    assert classes == {"reddit"}
 
 
 def test_dedupe_ranks_official_above_independent_above_social_above_discovery():
@@ -338,16 +278,13 @@ def test_dedupe_ranks_official_above_independent_above_social_above_discovery():
     assert deduped[0]["source_id"] == "off"
 
 
-def test_shipped_registry_covers_independent_blog_reddit_and_x_for_all_32_teams():
+def test_shipped_registry_covers_independent_blog_and_reddit_for_all_32_teams():
     registry = team_intel.load_registry(ROOT / "config" / "team_sources.json")
     assert len(registry["teams"]) == 32
     for team in registry["teams"]:
         classes = {source["source_class"] for source in team["sources"]}
         assert {"official_team", "local_outlet", "independent_blog", "reddit"}.issubset(classes), team["abbr"]
-        x_sources = [s for s in team["sources"] if s["source_class"] == "x_twitter"]
-        assert 2 <= len(x_sources) <= 4, (team["abbr"], len(x_sources))
-        for source in x_sources:
-            assert source.get("handle"), (team["abbr"], source["id"])
+        assert "x_twitter" not in classes, team["abbr"]
         reddit_sources = [s for s in team["sources"] if s["source_class"] == "reddit"]
         assert len(reddit_sources) == 1
         assert reddit_sources[0]["feed_url"].endswith("new.json?limit=25")
@@ -358,6 +295,6 @@ def test_shipped_registry_builds_every_request_without_error():
     all_abbrs = [team["abbr"] for team in registry["teams"]]
     requests = team_intel.build_requests(registry, all_abbrs)
     methods = {row["method"] for row in requests}
-    assert methods == {"direct_rss", "reddit_json", "x_recent_search", "google_news_rss"}
+    assert methods == {"direct_rss", "reddit_json", "google_news_rss"}
     # one google_news_rss discovery request per team, everything else additive
     assert sum(1 for row in requests if row["method"] == "google_news_rss") == 32

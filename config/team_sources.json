@@ -56,36 +56,6 @@
           "url": "https://www.reddit.com/r/AZCardinals/",
           "feed_url": "https://www.reddit.com/r/AZCardinals/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "ari_x1",
-          "name": "X: @HBalzer721 (Howard Balzer)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/HBalzer721",
-          "handle": "HBalzer721",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Cardinals/NFL reporter for CardsWire; Hall of Fame selector"
-        },
-        {
-          "id": "ari_x2",
-          "name": "X: @Cardswire (CardsWire)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Cardswire",
-          "handle": "Cardswire",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "USA Today NFL Wire network's Cardinals team account"
-        },
-        {
-          "id": "ari_x3",
-          "name": "X: @kentsomers (Kent Somers)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/kentsomers",
-          "handle": "kentsomers",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Longtime Arizona Republic/azcentral columnist -- flagged as now retired from the beat"
         }
       ]
     },
@@ -134,36 +104,6 @@
           "url": "https://www.reddit.com/r/falcons/",
           "feed_url": "https://www.reddit.com/r/falcons/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "atl_x1",
-          "name": "X: @ByDanielFlick (Daniel Flick)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ByDanielFlick",
-          "handle": "ByDanielFlick",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Atlanta Journal-Constitution Falcons beat writer"
-        },
-        {
-          "id": "atl_x2",
-          "name": "X: @tori_mcelhaney (Tori McElhaney)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/tori_mcelhaney",
-          "handle": "tori_mcelhaney",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Senior reporter for the Falcons' own team media -- team-affiliated, flagged as such"
-        },
-        {
-          "id": "atl_x3",
-          "name": "X: @thefalcoholic (The Falcoholic)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/thefalcoholic",
-          "handle": "thefalcoholic",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Falcons-dedicated blog's own account"
         }
       ]
     },
@@ -212,36 +152,6 @@
           "url": "https://www.reddit.com/r/ravens/",
           "feed_url": "https://www.reddit.com/r/ravens/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "bal_x1",
-          "name": "X: @jeffzrebiec (Jeff Zrebiec)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/jeffzrebiec",
-          "handle": "jeffzrebiec",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Ravens beat writer"
-        },
-        {
-          "id": "bal_x2",
-          "name": "X: @ChildsWalker (Childs Walker)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ChildsWalker",
-          "handle": "ChildsWalker",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Baltimore Sun/Baltimore Banner Ravens beat reporter"
-        },
-        {
-          "id": "bal_x3",
-          "name": "X: @jamisonhensley (Jamison Hensley)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/jamisonhensley",
-          "handle": "jamisonhensley",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's dedicated Ravens reporter"
         }
       ]
     },
@@ -290,36 +200,6 @@
           "url": "https://www.reddit.com/r/buffalobills/",
           "feed_url": "https://www.reddit.com/r/buffalobills/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "buf_x1",
-          "name": "X: @JoeBuscaglia (Joe Buscaglia)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/JoeBuscaglia",
-          "handle": "JoeBuscaglia",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic's Bills insider; roster/cap/draft analysis"
-        },
-        {
-          "id": "buf_x2",
-          "name": "X: @agetzenberg (Alaina Getzenberg)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/agetzenberg",
-          "handle": "agetzenberg",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Bills beat reporter; practice/camp coverage"
-        },
-        {
-          "id": "buf_x3",
-          "name": "X: @JaySkurski (Jay Skurski)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/JaySkurski",
-          "handle": "JaySkurski",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Buffalo News Bills beat writer"
         }
       ]
     },
@@ -368,36 +248,6 @@
           "url": "https://www.reddit.com/r/panthers/",
           "feed_url": "https://www.reddit.com/r/panthers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "car_x1",
-          "name": "X: @mike_e_kaye (Mike Kaye)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/mike_e_kaye",
-          "handle": "mike_e_kaye",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Carolina Panthers beat reporter (ex-Charlotte Observer)"
-        },
-        {
-          "id": "car_x2",
-          "name": "X: @josephperson (Joe Person)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/josephperson",
-          "handle": "josephperson",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Panthers beat writer"
-        },
-        {
-          "id": "car_x3",
-          "name": "X: @CatScratchReadr (Cat Scratch Reader)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/CatScratchReadr",
-          "handle": "CatScratchReadr",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Panthers-dedicated blog's own account"
         }
       ]
     },
@@ -446,46 +296,6 @@
           "url": "https://www.reddit.com/r/CHIBears/",
           "feed_url": "https://www.reddit.com/r/CHIBears/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "chi_x1",
-          "name": "X: @BradBiggs (Brad Biggs)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/BradBiggs",
-          "handle": "BradBiggs",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Chicago Tribune Bears beat reporter"
-        },
-        {
-          "id": "chi_x2",
-          "name": "X: @kfishbain (Kevin Fishbain)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/kfishbain",
-          "handle": "kfishbain",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Bears beat writer"
-        },
-        {
-          "id": "chi_x3",
-          "name": "X: @danwiederer (Dan Wiederer)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/danwiederer",
-          "handle": "danwiederer",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic senior Bears writer (ex-Chicago Tribune)"
-        },
-        {
-          "id": "chi_x4",
-          "name": "X: @CourtneyRCronin (Courtney Cronin)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/CourtneyRCronin",
-          "handle": "CourtneyRCronin",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Chicago Bears beat reporter"
         }
       ]
     },
@@ -535,36 +345,6 @@
           "url": "https://www.reddit.com/r/bengals/",
           "feed_url": "https://www.reddit.com/r/bengals/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "cin_x1",
-          "name": "X: @KelseyLConway (Kelsey Conway)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/KelseyLConway",
-          "handle": "KelseyLConway",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Cincinnati Enquirer Bengals beat reporter"
-        },
-        {
-          "id": "cin_x2",
-          "name": "X: @Ben_Baby (Ben Baby)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Ben_Baby",
-          "handle": "Ben_Baby",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's dedicated Bengals reporter"
-        },
-        {
-          "id": "cin_x3",
-          "name": "X: @GeoffHobsonCin (Geoff Hobson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/GeoffHobsonCin",
-          "handle": "GeoffHobsonCin",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Bengals.com senior writer -- team-affiliated, not independent, flagged as such"
         }
       ]
     },
@@ -614,36 +394,6 @@
           "url": "https://www.reddit.com/r/Browns/",
           "feed_url": "https://www.reddit.com/r/Browns/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "cle_x1",
-          "name": "X: @MaryKayCabot (Mary Kay Cabot)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MaryKayCabot",
-          "handle": "MaryKayCabot",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "cleveland.com veteran Browns beat writer"
-        },
-        {
-          "id": "cle_x2",
-          "name": "X: @AkronJackson (Zac Jackson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/AkronJackson",
-          "handle": "AkronJackson",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Browns beat writer"
-        },
-        {
-          "id": "cle_x3",
-          "name": "X: @ScottPetrak (Scott Petrak)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ScottPetrak",
-          "handle": "ScottPetrak",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Browns insider, runs BrownsZone full-time"
         }
       ]
     },
@@ -692,26 +442,6 @@
           "url": "https://www.reddit.com/r/cowboys/",
           "feed_url": "https://www.reddit.com/r/cowboys/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "dal_x1",
-          "name": "X: @toddarcher (Todd Archer)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/toddarcher",
-          "handle": "toddarcher",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Dallas Cowboys beat reporter"
-        },
-        {
-          "id": "dal_x2",
-          "name": "X: @jonmachota (Jon Machota)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/jonmachota",
-          "handle": "jonmachota",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Cowboys staff writer (ex-Dallas Morning News)"
         }
       ]
     },
@@ -760,36 +490,6 @@
           "url": "https://www.reddit.com/r/DenverBroncos/",
           "feed_url": "https://www.reddit.com/r/DenverBroncos/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "den_x1",
-          "name": "X: @TroyRenck (Troy Renck)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/TroyRenck",
-          "handle": "TroyRenck",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Denver7 sports director; long-tenured Broncos beat reporter"
-        },
-        {
-          "id": "den_x2",
-          "name": "X: @MaseDenver (Andrew Mason)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MaseDenver",
-          "handle": "MaseDenver",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Senior Broncos writer, DenverSports.com/104.3 The Fan"
-        },
-        {
-          "id": "den_x3",
-          "name": "X: @AllbrightNFL (Benjamin Allbright)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/AllbrightNFL",
-          "handle": "AllbrightNFL",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "KOA 850 Broncos insider; roster/injury scoops"
         }
       ]
     },
@@ -839,36 +539,6 @@
           "url": "https://www.reddit.com/r/detroitlions/",
           "feed_url": "https://www.reddit.com/r/detroitlions/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "det_x1",
-          "name": "X: @davebirkett (Dave Birkett)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/davebirkett",
-          "handle": "davebirkett",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Detroit Free Press Lions beat reporter"
-        },
-        {
-          "id": "det_x2",
-          "name": "X: @Justin_Rogers (Justin Rogers)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Justin_Rogers",
-          "handle": "Justin_Rogers",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Lions coverage, ex-Detroit News (Detroit Football Network)"
-        },
-        {
-          "id": "det_x3",
-          "name": "X: @DetroitOnLion (Jeremy Reisman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/DetroitOnLion",
-          "handle": "DetroitOnLion",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Managing editor of Pride of Detroit"
         }
       ]
     },
@@ -918,46 +588,6 @@
           "url": "https://www.reddit.com/r/GreenBayPackers/",
           "feed_url": "https://www.reddit.com/r/GreenBayPackers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "gb_x1",
-          "name": "X: @TomSilverstein (Tom Silverstein)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/TomSilverstein",
-          "handle": "TomSilverstein",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Milwaukee Journal Sentinel veteran Packers beat reporter"
-        },
-        {
-          "id": "gb_x2",
-          "name": "X: @RobDemovsky (Rob Demovsky)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/RobDemovsky",
-          "handle": "RobDemovsky",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Packers beat reporter"
-        },
-        {
-          "id": "gb_x3",
-          "name": "X: @mattschneidman (Matt Schneidman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/mattschneidman",
-          "handle": "mattschneidman",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Packers beat writer, 'The Tundra' podcast"
-        },
-        {
-          "id": "gb_x4",
-          "name": "X: @acmepackingco (Acme Packing Company)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/acmepackingco",
-          "handle": "acmepackingco",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Packers-dedicated blog's own account"
         }
       ]
     },
@@ -1005,26 +635,6 @@
           "url": "https://www.reddit.com/r/Texans/",
           "feed_url": "https://www.reddit.com/r/Texans/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "hou_x1",
-          "name": "X: @AaronWilson_NFL (Aaron Wilson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/AaronWilson_NFL",
-          "handle": "AaronWilson_NFL",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "KPRC-2 Houston Texans insider; roster/contract news"
-        },
-        {
-          "id": "hou_x2",
-          "name": "X: @jonmalexander (Jonathan M. Alexander)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/jonmalexander",
-          "handle": "jonmalexander",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Houston Chronicle Texans/NFL beat reporter"
         }
       ]
     },
@@ -1072,26 +682,6 @@
           "url": "https://www.reddit.com/r/Colts/",
           "feed_url": "https://www.reddit.com/r/Colts/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "ind_x1",
-          "name": "X: @joelaerickson (Joel A. Erickson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/joelaerickson",
-          "handle": "joelaerickson",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "IndyStar Colts beat writer, Colts Cover 2 Podcast"
-        },
-        {
-          "id": "ind_x2",
-          "name": "X: @NateAtkins_ (Nate Atkins)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/NateAtkins_",
-          "handle": "NateAtkins_",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "IndyStar Colts beat writer"
         }
       ]
     },
@@ -1141,26 +731,6 @@
           "url": "https://www.reddit.com/r/Jaguars/",
           "feed_url": "https://www.reddit.com/r/Jaguars/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "jax_x1",
-          "name": "X: @JohnReid64 (John Reid)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/JohnReid64",
-          "handle": "JohnReid64",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Florida Times-Union Jaguars beat writer"
-        },
-        {
-          "id": "jax_x2",
-          "name": "X: @_John_Shipley (John Shipley)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/_John_Shipley",
-          "handle": "_John_Shipley",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Sports Illustrated Jaguars-dedicated writer"
         }
       ]
     },
@@ -1209,26 +779,6 @@
           "url": "https://www.reddit.com/r/KansasCityChiefs/",
           "feed_url": "https://www.reddit.com/r/KansasCityChiefs/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "kc_x1",
-          "name": "X: @ByNateTaylor (Nate Taylor)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ByNateTaylor",
-          "handle": "ByNateTaylor",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Chiefs beat writer, moved The Athletic to ESPN to cover KC"
-        },
-        {
-          "id": "kc_x2",
-          "name": "X: @jessenewell (Jesse Newell)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/jessenewell",
-          "handle": "jessenewell",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Kansas City Star Chiefs beat writer"
         }
       ]
     },
@@ -1276,36 +826,6 @@
           "url": "https://www.reddit.com/r/raiders/",
           "feed_url": "https://www.reddit.com/r/raiders/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "lv_x1",
-          "name": "X: @tashanreed (Tashan Reed)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/tashanreed",
-          "handle": "tashanreed",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Raiders beat writer"
-        },
-        {
-          "id": "lv_x2",
-          "name": "X: @HondoCarpenter (Hondo Carpenter)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/HondoCarpenter",
-          "handle": "HondoCarpenter",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Longtime independent Raiders insider/publisher"
-        },
-        {
-          "id": "lv_x3",
-          "name": "X: @RaidersBeat (Raiders Beat)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/RaidersBeat",
-          "handle": "RaidersBeat",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Raiders-dedicated news/analysis outlet"
         }
       ]
     },
@@ -1354,36 +874,6 @@
           "url": "https://www.reddit.com/r/Chargers/",
           "feed_url": "https://www.reddit.com/r/Chargers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "lac_x1",
-          "name": "X: @ElliottTeaford (Elliott Teaford)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ElliottTeaford",
-          "handle": "ElliottTeaford",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "SoCal News Group (OC Register/LA Daily News) Chargers beat writer"
-        },
-        {
-          "id": "lac_x2",
-          "name": "X: @danielrpopper (Daniel Popper)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/danielrpopper",
-          "handle": "danielrpopper",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Covered Chargers for The Athletic 7 seasons; flagged as recently moved to a national role, re-check currency"
-        },
-        {
-          "id": "lac_x3",
-          "name": "X: @BFTB_Chargers (Bolts From The Blue)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/BFTB_Chargers",
-          "handle": "BFTB_Chargers",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Chargers-dedicated blog's own account"
         }
       ]
     },
@@ -1432,46 +922,6 @@
           "url": "https://www.reddit.com/r/LosAngelesRams/",
           "feed_url": "https://www.reddit.com/r/LosAngelesRams/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "lar_x1",
-          "name": "X: @LATimesklein (Gary Klein)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/LATimesklein",
-          "handle": "LATimesklein",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Los Angeles Times Rams beat reporter"
-        },
-        {
-          "id": "lar_x2",
-          "name": "X: @JourdanRodrigue (Jourdan Rodrigue)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/JourdanRodrigue",
-          "handle": "JourdanRodrigue",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic senior NFL writer; Rams-focused podcasts"
-        },
-        {
-          "id": "lar_x3",
-          "name": "X: @camdasilva (Cameron DaSilva)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/camdasilva",
-          "handle": "camdasilva",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Managing Editor of Rams Wire"
-        },
-        {
-          "id": "lar_x4",
-          "name": "X: @TheRamsWire (Rams Wire)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/TheRamsWire",
-          "handle": "TheRamsWire",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "USA Today NFL Wire network's Rams team account"
         }
       ]
     },
@@ -1520,36 +970,6 @@
           "url": "https://www.reddit.com/r/miamidolphins/",
           "feed_url": "https://www.reddit.com/r/miamidolphins/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "mia_x1",
-          "name": "X: @Marcel_LJ (Marcel Louis-Jacques)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Marcel_LJ",
-          "handle": "Marcel_LJ",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Dolphins beat reporter; daily camp/practice notes"
-        },
-        {
-          "id": "mia_x2",
-          "name": "X: @flasportsbuzz (Barry Jackson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/flasportsbuzz",
-          "handle": "flasportsbuzz",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Miami Herald South Florida sports insider"
-        },
-        {
-          "id": "mia_x3",
-          "name": "X: @schadjoe (Joe Schad)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/schadjoe",
-          "handle": "schadjoe",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Dolphins insider (WQAM radio/South Florida media)"
         }
       ]
     },
@@ -1599,36 +1019,6 @@
           "url": "https://www.reddit.com/r/minnesotavikings/",
           "feed_url": "https://www.reddit.com/r/minnesotavikings/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "min_x1",
-          "name": "X: @BenGoessling (Ben Goessling)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/BenGoessling",
-          "handle": "BenGoessling",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Minnesota Star Tribune Vikings beat reporter"
-        },
-        {
-          "id": "min_x2",
-          "name": "X: @alec_lewis (Alec Lewis)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/alec_lewis",
-          "handle": "alec_lewis",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Minnesota Vikings beat writer"
-        },
-        {
-          "id": "min_x3",
-          "name": "X: @DailyNorseman (The Daily Norseman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/DailyNorseman",
-          "handle": "DailyNorseman",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Vikings-dedicated blog's own account"
         }
       ]
     },
@@ -1677,36 +1067,6 @@
           "url": "https://www.reddit.com/r/patriots/",
           "feed_url": "https://www.reddit.com/r/patriots/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "ne_x1",
-          "name": "X: @MikeReiss (Mike Reiss)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MikeReiss",
-          "handle": "MikeReiss",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's longtime dedicated Patriots beat reporter"
-        },
-        {
-          "id": "ne_x2",
-          "name": "X: @ByMarkDaniels (Mark Daniels)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ByMarkDaniels",
-          "handle": "ByMarkDaniels",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "MassLive/Boston.com Patriots beat writer"
-        },
-        {
-          "id": "ne_x3",
-          "name": "X: @DougKyed (Doug Kyed)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/DougKyed",
-          "handle": "DougKyed",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "A to Z Sports/NESN Patriots insider; injuries/depth chart"
         }
       ]
     },
@@ -1755,26 +1115,6 @@
           "url": "https://www.reddit.com/r/Saints/",
           "feed_url": "https://www.reddit.com/r/Saints/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "no_x1",
-          "name": "X: @nick_underhill (Nick Underhill)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/nick_underhill",
-          "handle": "nick_underhill",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Saints insider, founder of NewOrleans.Football"
-        },
-        {
-          "id": "no_x2",
-          "name": "X: @MikeTriplett (Mike Triplett)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MikeTriplett",
-          "handle": "MikeTriplett",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Veteran Saints beat reporter"
         }
       ]
     },
@@ -1823,36 +1163,6 @@
           "url": "https://www.reddit.com/r/NYGiants/",
           "feed_url": "https://www.reddit.com/r/NYGiants/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "nyg_x1",
-          "name": "X: @art_stapleton (Art Stapleton)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/art_stapleton",
-          "handle": "art_stapleton",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "NorthJersey.com/USA Today Network Giants beat writer"
-        },
-        {
-          "id": "nyg_x2",
-          "name": "X: @pleonardnydn (Pat Leonard)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/pleonardnydn",
-          "handle": "pleonardnydn",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "New York Daily News NFL columnist/Giants beat writer"
-        },
-        {
-          "id": "nyg_x3",
-          "name": "X: @rydunleavy (Ryan Dunleavy)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/rydunleavy",
-          "handle": "rydunleavy",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "New York Post Giants beat writer"
         }
       ]
     },
@@ -1901,36 +1211,6 @@
           "url": "https://www.reddit.com/r/nyjets/",
           "feed_url": "https://www.reddit.com/r/nyjets/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "nyj_x1",
-          "name": "X: @RichCimini (Rich Cimini)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/RichCimini",
-          "handle": "RichCimini",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's longtime dedicated Jets beat reporter"
-        },
-        {
-          "id": "nyj_x2",
-          "name": "X: @Connor_J_Hughes (Connor Hughes)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Connor_J_Hughes",
-          "handle": "Connor_J_Hughes",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "SNY Jets insider; roster/coaching-search scoops"
-        },
-        {
-          "id": "nyj_x3",
-          "name": "X: @BrianCoz (Brian Costello)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/BrianCoz",
-          "handle": "BrianCoz",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "New York Post Jets beat writer"
         }
       ]
     },
@@ -1979,26 +1259,6 @@
           "url": "https://www.reddit.com/r/eagles/",
           "feed_url": "https://www.reddit.com/r/eagles/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "phi_x1",
-          "name": "X: @Jeff_McLane (Jeff McLane)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Jeff_McLane",
-          "handle": "Jeff_McLane",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Philadelphia Inquirer Eagles beat writer"
-        },
-        {
-          "id": "phi_x2",
-          "name": "X: @ZBerm (Zach Berman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/ZBerm",
-          "handle": "ZBerm",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic senior writer covering the Eagles"
         }
       ]
     },
@@ -2048,36 +1308,6 @@
           "url": "https://www.reddit.com/r/steelers/",
           "feed_url": "https://www.reddit.com/r/steelers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "pit_x1",
-          "name": "X: @gerrydulac (Gerry Dulac)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/gerrydulac",
-          "handle": "gerrydulac",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Pittsburgh Post-Gazette veteran Steelers beat writer"
-        },
-        {
-          "id": "pit_x2",
-          "name": "X: @bepryor (Brooke Pryor)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/bepryor",
-          "handle": "bepryor",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's dedicated Steelers reporter"
-        },
-        {
-          "id": "pit_x3",
-          "name": "X: @MarkKaboly (Mark Kaboly)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MarkKaboly",
-          "handle": "MarkKaboly",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Steelers insider (Steelers Now/DKPS)"
         }
       ]
     },
@@ -2126,46 +1356,6 @@
           "url": "https://www.reddit.com/r/Seahawks/",
           "feed_url": "https://www.reddit.com/r/Seahawks/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "sea_x1",
-          "name": "X: @bcondotta (Bob Condotta)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/bcondotta",
-          "handle": "bcondotta",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Seattle Times Seahawks beat writer"
-        },
-        {
-          "id": "sea_x2",
-          "name": "X: @MikeDugar (Michael-Shawn Dugar)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/MikeDugar",
-          "handle": "MikeDugar",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic Seahawks writer; #SeahawksMan2Man podcast"
-        },
-        {
-          "id": "sea_x3",
-          "name": "X: @CorbinSmithNFL (Corbin K. Smith)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/CorbinSmithNFL",
-          "handle": "CorbinSmithNFL",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent Seahawks reporter, Emerald City Spectrum"
-        },
-        {
-          "id": "sea_x4",
-          "name": "X: @KoleMusgrove23 (Kole Musgrove)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/KoleMusgrove23",
-          "handle": "KoleMusgrove23",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Managing editor of Seahawks Wire"
         }
       ]
     },
@@ -2215,46 +1405,6 @@
           "url": "https://www.reddit.com/r/49ers/",
           "feed_url": "https://www.reddit.com/r/49ers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "sf_x1",
-          "name": "X: @mattbarrows (Matt Barrows)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/mattbarrows",
-          "handle": "mattbarrows",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "The Athletic 49ers beat writer"
-        },
-        {
-          "id": "sf_x2",
-          "name": "X: @CamInman (Cam Inman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/CamInman",
-          "handle": "CamInman",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Bay Area News Group 49ers reporter"
-        },
-        {
-          "id": "sf_x3",
-          "name": "X: @Eric_Branch (Eric Branch)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/Eric_Branch",
-          "handle": "Eric_Branch",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "San Francisco Chronicle 49ers beat writer"
-        },
-        {
-          "id": "sf_x4",
-          "name": "X: @KyleAMadson (Kyle Madson)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/KyleAMadson",
-          "handle": "KyleAMadson",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Lead writer for Niners Wire"
         }
       ]
     },
@@ -2304,26 +1454,6 @@
           "url": "https://www.reddit.com/r/buccaneers/",
           "feed_url": "https://www.reddit.com/r/buccaneers/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "tb_x1",
-          "name": "X: @NFLSTROUD (Rick Stroud)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/NFLSTROUD",
-          "handle": "NFLSTROUD",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Tampa Bay Times veteran Bucs/NFL beat writer"
-        },
-        {
-          "id": "tb_x2",
-          "name": "X: @gregauman (Greg Auman)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/gregauman",
-          "handle": "gregauman",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "FOX Sports NFL reporter covering the Bucs since 2013"
         }
       ]
     },
@@ -2371,26 +1501,6 @@
           "url": "https://www.reddit.com/r/Tennesseetitans/",
           "feed_url": "https://www.reddit.com/r/Tennesseetitans/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "ten_x1",
-          "name": "X: @TDavenport_NFL (Turron Davenport)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/TDavenport_NFL",
-          "handle": "TDavenport_NFL",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN Titans beat reporter"
-        },
-        {
-          "id": "ten_x2",
-          "name": "X: @PaulKuharskyNFL (Paul Kuharsky)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/PaulKuharskyNFL",
-          "handle": "PaulKuharskyNFL",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Independent longtime Titans insider (paulkuharsky.com)"
         }
       ]
     },
@@ -2439,26 +1549,6 @@
           "url": "https://www.reddit.com/r/Commanders/",
           "feed_url": "https://www.reddit.com/r/Commanders/new.json?limit=25",
           "access": "free public JSON, no auth required; fan/community source, always requires corroboration"
-        },
-        {
-          "id": "was_x1",
-          "name": "X: @NickiJhabvala (Nicki Jhabvala)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/NickiJhabvala",
-          "handle": "NickiJhabvala",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "Commanders reporter, The Athletic (ex-Washington Post)"
-        },
-        {
-          "id": "was_x2",
-          "name": "X: @john_keim (John Keim)",
-          "domain": "x.com",
-          "source_class": "x_twitter",
-          "url": "https://x.com/john_keim",
-          "handle": "john_keim",
-          "access": "requires X_BEARER_TOKEN (X API v2 recent search, paid read-capable tier)",
-          "note": "ESPN's longtime Washington beat reporter"
         }
       ]
     }
