@@ -32,6 +32,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(rptmod, "REPORTS_DIR", str(tmp_path / "reports"))
     monkeypatch.setattr(rptmod, "WEEKLY_PROPS_JSON", str(tmp_path / "weekly_props.json"))
     monkeypatch.setattr(docmod, "DROPS_DIR", str(tmp_path / "drops"))
+    monkeypatch.setattr(docmod, "REPORTS_DIR", str(tmp_path / "reports"))
     monkeypatch.setattr(cfgmod, "LATEST_PATH", str(tmp_path / "latest.json"))
     monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(tmp_path / "dashboard.html"))
     return {"tmp": tmp_path, "db_path": db_path}
@@ -162,3 +163,68 @@ def test_t90_requires_inactives_feed(env):
     with pytest.raises(ValueError, match="t90"):
         pw.run_t90(SEASON, WEEK, GAME_ID, mode="live",
                    inputs=synthetic_inputs(), inject_feeds=feeds)
+
+
+def _ticking_clock(monkeypatch, start="2026-09-02T01:13:00Z"):
+    """A stamp_now that advances one second per call, so the order in which
+    the pipeline stamps as_of versus fetches feeds is observable rather than
+    a matter of whether the run happened to straddle a second boundary."""
+    import datetime as dt
+    base = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+    calls = {"n": 0}
+
+    def tick():
+        stamp = base + dt.timedelta(seconds=calls["n"])
+        calls["n"] += 1
+        return stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    monkeypatch.setattr(pw, "stamp_now", tick)
+    return calls
+
+
+def _fetched_when_gathered(now: str, **kw):
+    """Feeds whose fetched_at is stamped by gather_live_feeds itself -- the
+    live shape -- rather than handed in from before the run began."""
+    feeds = _fresh_feeds(now, **kw)
+    feeds["active_roster"] = _roster("2026-09-02T01:12:00Z")   # asset Last-Modified predates the clock
+    feeds.pop("injuries_fetched_at")
+    feeds.pop("sleeper_fetched_at")
+    feeds["news_items"] = []
+    feeds.pop("news_fetched_at", None)
+    return feeds
+
+
+def test_live_feeds_fetched_after_as_of_are_not_future_dated(env, monkeypatch):
+    """2026-09-02, run 33578444172: the first live board of the season carried
+    `fantasy: timestamp ...:14Z is AFTER as_of (...:09) -- future-dated,
+    unusable`. as_of was stamped before candidates were enumerated and the
+    feeds fetched, so any feed whose fetch outlived the wall-clock second was
+    'leakage' -- and the load-bearing injuries feed, once its 403 is fixed,
+    would set publish=False on every board the same way. The leakage guard
+    exists for feeds dated after the DECISION; the decision is made after
+    the feeds are in hand, and as_of must say so."""
+    _ticking_clock(monkeypatch)
+    res = pw.run_week(SEASON, WEEK, mode="live", inputs=synthetic_inputs(),
+                      inject_feeds=_fetched_when_gathered("unused"))
+    assert not [r for r in res["publish_reasons"] if "future-dated" in r], res["publish_reasons"]
+    assert res["publish"] is True
+    # and the decision timestamp is the clock's LAST reading before the gate,
+    # not its first: it is not earlier than any feed it rests on
+    from nflvalue.freshness import parse_ts
+    assert parse_ts(res["as_of"]) > parse_ts("2026-09-02T01:13:00Z")
+
+
+def test_t90_feeds_fetched_after_as_of_are_not_future_dated(env, monkeypatch):
+    from nflvalue.freshness import stamp_now
+    now = stamp_now()
+    pw.run_week(SEASON, WEEK, mode="live", inputs=synthetic_inputs(),
+                inject_feeds=_fresh_feeds(now))
+    _ticking_clock(monkeypatch)
+    feeds = _fetched_when_gathered("unused")
+    feeds["inactive_rows"] = [
+        {"espn_id": "1", "name": "Alpha Wideout", "active": True, "did_not_play": False,
+         "starter": True, "team": "AAA"}]
+    res = pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=synthetic_inputs(),
+                     inject_feeds=feeds)
+    assert not [r for r in res["publish_reasons"] if "future-dated" in r], res["publish_reasons"]
+    assert res["publish"] is True

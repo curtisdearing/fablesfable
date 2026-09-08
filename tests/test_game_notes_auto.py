@@ -151,3 +151,28 @@ def test_active_heartbeat_degrades_without_real_odds(tmp_path, monkeypatch):
     assert heartbeat["status"] == "degraded"
     assert "ODDS_API_KEY" in heartbeat["detail"]
     assert heartbeat["integrations"]["discord"] == "disabled"
+
+
+def test_degraded_heartbeat_does_not_blame_a_configured_odds_key(tmp_path, monkeypatch):
+    """Run 33580295899 (the first published live board) shipped a public
+    heartbeat reading 'Live sportsbook pricing is unavailable until
+    ODDS_API_KEY is configured' next to integrations.odds_api == 'configured'
+    and four leans priced from the Odds API. The sentence was appended
+    whenever the status was degraded for ANY reason (there: current-season
+    pbp not yet published), not when the key was actually missing."""
+    aw, _ = _wrapper_slate()
+    from nflvalue import config as cfgmod
+    from nflvalue import notify
+
+    monkeypatch.setattr(cfgmod, "LATEST_PATH", str(tmp_path / "latest.json"))
+    monkeypatch.setattr(cfgmod, "DASHBOARD_PATH", str(tmp_path / "dashboard.html"))
+    monkeypatch.setattr(cfgmod, "load_config", lambda: {
+        "odds_api_key": "real-key", "discord_enabled": False,
+    })
+    monkeypatch.setattr(notify, "resolve_webhook", lambda: None)
+
+    heartbeat = aw.write_pipeline_heartbeat(
+        "degraded", "Refresh completed; current-season pbp not yet published.", "wed")
+    assert heartbeat["status"] == "degraded"
+    assert heartbeat["integrations"]["odds_api"] == "configured"
+    assert "ODDS_API_KEY" not in heartbeat["detail"]

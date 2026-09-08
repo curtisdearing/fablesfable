@@ -22,7 +22,20 @@ STATE_GLOBS = (
     "data/weekly.json",
     "data/weekly_props.json",
     "data/weights.json",
+    # The week's rendered document is production state too.  Every run of the
+    # live workflow ends by publishing Pages, and scripts/prepare_pages.py
+    # will only publish the drop that data/weekly_props.json names when that
+    # file is on disk.  Only the Wednesday run's runner ever had it: a
+    # deploy-on-push or a T-90 run restores the payload from this archive,
+    # finds no drops/, and replaces reports/latest.html with the visible
+    # "no current weekly report" notice -- knocking the board off the site
+    # on Thursday before the first kickoff.  Carrying the drop in state
+    # makes the manifest's "must exist" rule hold on every runner.
+    "drops/props_week_*.html",
 )
+# The roots an archive may write under, derived from the declaration above so
+# a new glob cannot quietly widen where a restore is allowed to place files.
+STATE_ROOTS = frozenset(PurePosixPath(pattern).parts[0] for pattern in STATE_GLOBS)
 
 
 def sha256(path: Path) -> str:
@@ -64,7 +77,8 @@ def _safe_member(member: tarfile.TarInfo) -> PurePosixPath:
     path = PurePosixPath(member.name)
     if member.issym() or member.islnk() or not member.isfile():
         raise ValueError(f"state archive contains unsupported member: {member.name}")
-    if path.is_absolute() or ".." in path.parts or not path.parts or path.parts[0] != "data":
+    if (path.is_absolute() or ".." in path.parts or not path.parts
+            or path.parts[0] not in STATE_ROOTS):
         raise ValueError(f"state archive contains unsafe member: {member.name}")
     allowed = any(Path(path.as_posix()).match(pattern) for pattern in STATE_GLOBS)
     if not allowed:

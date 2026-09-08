@@ -146,8 +146,14 @@ jobs:
           python scripts/state_store.py pointer --archive "$archive" --asset "$asset" --output "$RUNNER_TEMP/state-latest.json"
           gh release edit "$STATE_TAG" --notes-file "$RUNNER_TEMP/state-latest.json"
 
+      # Every job that fetches feeds must persist them: a Wednesday or T-90
+      # refetch that is thrown away is refetched from scratch next run.  A
+      # deploy-only run fetches nothing, so saving there would replace a
+      # populated cache with an empty one.  No `always()`: this step inherits
+      # step-level success-only semantics, so a half-finished ingest can never
+      # become the cache the next run restores.
       - name: Save rebuildable seasonal feeds
-        if: steps.select.outputs.job == 'tuesday'
+        if: contains(fromJSON('["wed","t90","tuesday"]'), steps.select.outputs.job)
         uses: actions/cache/save@v5
         with:
           path: |
@@ -173,20 +179,25 @@ jobs:
           name: model-run-${{ steps.select.outputs.job }}-${{ github.run_id }}
           if-no-files-found: ignore
           retention-days: 30
+          # Deliberately enumerated, never a bare `.`: evidence artifacts are
+          # downloadable by anyone with repo read access, and config.local.json
+          # (webhooks, API keys) lives at the repository root.
           path: |
             reports/
+            drops/*.html
             dashboard.html
             data/*.json
 
+      # Everything the published site contains is assembled by one script so
+      # it can be built and asserted on offline (tests/test_pages_workflow_
+      # contract.py): the dashboard as index.html, the slim hub feed for
+      # dearing-wedding.com, and this week's drop at both a stable
+      # reports/latest.html and a permanent reports/{season}/week-{n}.html.
+      # The season and week come from the generated payload, so a missing or
+      # stale document degrades to a visible notice instead of republishing a
+      # previous week.
       - name: Prepare dashboard for GitHub Pages
-        run: |
-          mkdir -p _site
-          cp dashboard.html _site/index.html
-          # Slim machine-readable feed for the Dearing Football hub
-          # (dearing-wedding.com). Verbatim numbers from the same artifacts
-          # the dashboard renders; missing inputs -> null sections, never a
-          # failed deploy.
-          python scripts/build_hub_feed.py --out _site/api/hub.json
+        run: python scripts/prepare_pages.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

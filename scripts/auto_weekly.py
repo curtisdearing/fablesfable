@@ -57,7 +57,10 @@ def write_pipeline_heartbeat(status: str, detail: str, job: str) -> dict:
     else:
         discord = "configured" if resolve_webhook() else "missing"
     effective_status = "degraded" if status == "active" and odds != "configured" else status
-    if effective_status == "degraded":
+    # The sentence names the missing key, so it is written only when the key
+    # is missing -- not whenever the status is degraded for some other reason
+    # (a public heartbeat once said this beside odds_api: "configured").
+    if odds != "configured":
         detail += " Live sportsbook pricing is unavailable until ODDS_API_KEY is configured."
     data = cfgmod.load_json(cfgmod.LATEST_PATH, {}) or {}
     data["pipeline"] = {
@@ -146,18 +149,83 @@ def last_completed_week(slate, now: dt.datetime):
     return int(last["season"]), int(last["week"])
 
 
+# --------------------------------------------------------------------------- #
+# Current-season input continuity (the shared entry point every job uses)
+# --------------------------------------------------------------------------- #
+def ensure_current_inputs(job: str) -> dict:
+    """Establish current-season inputs BEFORE a job selects a slate or week.
+
+    A clean Actions runner starts with the FROZEN 2019-2023 history only:
+    ``scripts/bootstrap_history.py`` validates that cohort and refuses any
+    other.  The 2024 -> current-season files -- above all
+    ``historical/lines_extra.parquet``, which is what makes a current game
+    visible to ``ingest.load_all_schedules()`` -- are written by
+    ``ingest.refresh()``, and the workflow's cache for them is saved only by
+    the Tuesday job and may be evicted at any time.  So no runner may assume
+    Wednesday's files are still on disk.
+
+    A job that reads the slate without calling this can therefore inspect a
+    2019-2023-only slate and conclude, silently and with exit code 0, that no
+    current game or week exists.
+
+    Never raises: a scheduled job must still run against whatever is cached.
+    Returns the ingest report plus ``degraded`` -- true when the SCHEDULE feed
+    that week selection depends on did not land -- which callers pass to
+    :func:`reported_status` / :func:`reported_detail` so a run that could not
+    refresh says so instead of implying freshness.
+    """
+    from nflvalue import ingest
+    try:
+        report = dict(ingest.refresh())
+    except Exception as exc:  # noqa: BLE001 -- a dead feed is not a crash
+        report = {"season": None, "pbp_rows": 0, "sched_rows": 0,
+                  "stale": True, "errors": [f"refresh raised: {exc}"]}
+    # Auxiliary feeds (NGS, contracts, rosters) failing is a warning; the
+    # schedule pull failing is what makes week selection untrustworthy.
+    report["degraded"] = bool(report.get("stale")) or not report.get("sched_rows")
+    print(f"[auto] {job} ingest: season {report.get('season')} "
+          f"sched_rows={report.get('sched_rows')} stale={report.get('stale')} "
+          f"errors={report.get('errors') or 'none'}")
+    return report
+
+
+def _errors_text(report: dict) -> str:
+    return "; ".join(str(e) for e in (report.get("errors") or [])) or "no detail reported"
+
+
+def reported_status(report: dict, status: str) -> str:
+    """A conclusion drawn from inputs we could not refresh is never 'healthy'."""
+    return "degraded" if report and report.get("degraded") else status
+
+
+def reported_detail(report: dict, detail: str) -> str:
+    """Say what the refresh did, so no heartbeat quietly implies freshness."""
+    if not report:
+        return detail
+    if report.get("degraded"):
+        cached = " Cached inputs were used." if report.get("stale") else ""
+        return (f"{detail} Current-season ingest did not complete, so this "
+                f"conclusion may be based on stale inputs: "
+                f"{_errors_text(report)}.{cached}")
+    if report.get("errors"):
+        return f"{detail} Non-blocking ingest warnings: {_errors_text(report)}."
+    return detail
+
+
 def job_wed() -> int:
-    from nflvalue import config as cfgmod, ingest
+    from nflvalue import config as cfgmod
     import pipeline_weekly as pw
-    r = ingest.refresh()
-    print(f"[auto] ingest: season {r['season']} stale={r['stale']} errors={r['errors'] or 'none'}")
+    report = ensure_current_inputs("wed")
     slate = load_slate()
     cw = current_week(slate, now_et())
     if cw is None or (slate[(slate.season == cw[0]) & (slate.week == cw[1])]["kickoff"].min()
                       - now_et()) > dt.timedelta(days=8):
         print("[auto] no upcoming REG week within 8 days — offseason no-op")
         write_pipeline_heartbeat(
-            "offseason", "Automation is healthy; no REG week starts within eight days.", "wed")
+            reported_status(report, "offseason"),
+            reported_detail(
+                report, "Automation is healthy; no REG week starts within eight days."),
+            "wed")
         return 0
     season, week = cw
     cfg = cfgmod.load_config()
@@ -170,20 +238,26 @@ def job_wed() -> int:
           f"publish={res['publish']}, odds={'live' if live_odds else 'no key -> no_market'}, "
           f"discord={res['discord']}")
     write_pipeline_heartbeat(
-        "active", f"Wednesday model refresh completed for {season} week {week}.", "wed")
+        reported_status(report, "active"),
+        reported_detail(
+            report, f"Wednesday model refresh completed for {season} week {week}."),
+        "wed")
     return 0
 
 
 def job_t90() -> int:
     from nflvalue import config as cfgmod, db as dbmod
     import pipeline_weekly as pw
+    report = ensure_current_inputs("t90")
     slate = load_slate()
     now = now_et()
     soon = games_due_for_t90(slate, now)
     if soon.empty:
         print("[auto] no kickoffs within the T-90 window — no-op")
         write_pipeline_heartbeat(
-            schedule_status(slate, now), "T-90 check completed; no kickoff is currently due.", "t90")
+            reported_status(report, schedule_status(slate, now)),
+            reported_detail(report, "T-90 check completed; no kickoff is currently due."),
+            "t90")
         return 0
     conn = dbmod.connect()
     done = set(dbmod.query_df(conn, "SELECT DISTINCT game_id FROM leans WHERE clock='t90'")
@@ -232,7 +306,9 @@ def job_t90() -> int:
         print(f"[auto] T-90 failed for {len(failures)} game(s): {', '.join(failures)}")
         return 1
     write_pipeline_heartbeat(
-        "active", f"T-90 refresh completed for {len(soon)} due game(s).", "t90")
+        reported_status(report, "active"),
+        reported_detail(report, f"T-90 refresh completed for {len(soon)} due game(s)."),
+        "t90")
     return 0
 
 
@@ -240,12 +316,14 @@ def job_tuesday() -> int:
     import subprocess
     import pipeline_weekly as pw
     from nflvalue import killcheck
+    report = ensure_current_inputs("tuesday")
     slate = load_slate()
     lw = last_completed_week(slate, now_et())
     if lw is None:
         print("[auto] no completed week — no-op")
         write_pipeline_heartbeat(
-            schedule_status(slate, now_et()), "Tuesday grade check completed; no week is ready.",
+            reported_status(report, schedule_status(slate, now_et())),
+            reported_detail(report, "Tuesday grade check completed; no week is ready."),
             "tuesday")
         return 0
     season, week = lw
@@ -267,13 +345,23 @@ def job_tuesday() -> int:
         print("[auto] weekly ML retraining failed; refusing to publish partial production state")
         return 1
     write_pipeline_heartbeat(
-        "active", f"Tuesday grading, CLV, and retraining completed for {season} week {week}.",
+        reported_status(report, "active"),
+        reported_detail(
+            report,
+            f"Tuesday grading, CLV, and retraining completed for {season} week {week}."),
         "tuesday")
     return 0
 
 
 def job_deploy() -> int:
-    """Refresh public metadata without spending odds credits or notifying."""
+    """Refresh public metadata without spending odds credits or notifying.
+
+    Deliberately does NOT call :func:`ensure_current_inputs`: a deploy fires on
+    every push to main and must stay a cheap metadata write.  It reports the
+    schedule status it can see from whatever is already on disk -- which on a
+    cold runner is the frozen cohort -- and the next scheduled job is what
+    re-establishes current-season inputs.
+    """
     try:
         slate = load_slate()
         status = schedule_status(slate, now_et())
