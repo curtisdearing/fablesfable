@@ -43,10 +43,11 @@ from nflvalue import config as cfgmod
 from nflvalue import db as dbmod
 from nflvalue import killcheck as kcmod
 from nflvalue import report as rptmod
+from nflvalue import prop_decision as pdmod
 from nflvalue import shortlist as slmod
 from nflvalue import synthesis as synmod
 from nflvalue.dashboard import write_dashboard
-from nflvalue.freshness import Feed, gate, stamp_now
+from nflvalue.freshness import Feed, gate, parse_ts, stamp_now
 from nflvalue.sources import availability as avmod
 from nflvalue.sources import oddsapi_props as oapmod
 from nflvalue.sources import sleeper as slpmod
@@ -167,8 +168,8 @@ def _feature_packs(inputs: candmod.WeekInputs):
 def _maybe_stamp_ml(cfg: Dict, cands: pd.DataFrame,
                     inputs: candmod.WeekInputs) -> pd.DataFrame:
     """Flag-gated ML ranking (config "ml_ranker"): the trained classifier's
-    P(over) replaces the ranking probability (side + ordering), while every
-    published NUMBER (mean/sd/line) stays the deterministic model's. Fails
+    P(over) ORDERS candidates (ordinal only); side, probability, edge, EV and
+    Kelly stay the deterministic distribution's. Fails
     LOUD on a walk-forward violation (model trained on/after these weeks) and
     falls back to pure composite if no model artifact exists yet."""
     ml_cfg = cfg.get("ml_ranker") or {}
@@ -194,14 +195,18 @@ def _maybe_stamp_ml(cfg: Dict, cands: pd.DataFrame,
         # still fail loudly there -- this fallback is only for the past.)
         print(f"[pipeline] ml_ranker skipped (walk-forward guard): {exc}")
         return cands
+    # ``p`` is ORDINAL only. It orders candidates (shortlist.rank_game turns
+    # ``ml_p_over`` into a score for the side the distribution/market chose)
+    # and must never overwrite ``p_over``/``p_under``: those are the
+    # distribution probabilities every edge/EV/Kelly number is derived from.
+    # Nothing here is a calibration claim.
     cands = cands.copy()
-    cands["p_over"] = [round(float(x), 4) for x in p]
-    cands["p_under"] = [round(1 - float(x), 4) for x in p]
     yes_only = cands["market"].isin({"anytime_td"})
     p_side = [max(x, 1 - x) for x in p]
+    cands["ml_p_over"] = [round(float(x), 4) for x in p]
     cands["ml_score"] = [round(100 * (x if yo else ps), 2)
                          for x, ps, yo in zip(p, p_side, yes_only)]
-    cands["prob_source"] = f"ml_{model.model_name}"
+    cands["rank_source"] = f"ml_{model.model_name}"
     return cands
 
 
@@ -264,7 +269,9 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     """Fetch injuries (+ inactives at t90) and Sleeper projections; stamp
     everything for the freshness gate. ``inject`` overrides any feed for
     tests/offline runs: {injury_rows, injuries_fetched_at, inactive_rows,
-    inactives_fetched_at, sleeper_df, sleeper_fetched_at}."""
+    inactives_fetched_at, sleeper_df, sleeper_fetched_at, active_roster}.
+    ``active_roster`` is the ``sources.active_roster.fetch_active_roster``
+    payload ({rows: [{player_id, team, status, week}], snapshot_at, ...})."""
     inject = inject or {}
     feeds: List[Feed] = []
 
@@ -328,16 +335,40 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     feeds.append(Feed("fantasy", slp_ts, n_records=0 if sleeper_df is None else len(sleeper_df),
                       load_bearing=False))
 
+    # -- active roster (load-bearing in live mode) --------------------------- #
+    # Carry-forward history is not roster membership. The snapshot's OWN
+    # timestamp (nflverse asset Last-Modified) is what the gate ages, so a
+    # fresh fetch of a stale asset cannot pass as fresh.
+    if "active_roster" in inject:
+        roster = inject["active_roster"]
+    else:
+        try:
+            from nflvalue.sources import active_roster as armod
+            roster = armod.fetch_active_roster(season)
+        except Exception as exc:  # noqa: BLE001 -- fail LOUD via the gate, not a crash
+            print(f"[pipeline] active roster fetch FAILED: {exc}")
+            roster = None
+    roster_ts = (roster or {}).get("snapshot_at") or (roster or {}).get("fetched_at")
+    feeds.append(Feed("active_roster", roster_ts,
+                      n_records=len((roster or {}).get("rows") or []), load_bearing=True))
+
     resolved = avmod.resolve_statuses(players, injury_rows, inactive_rows=inactive_rows,
                                       clock=clock, injuries_fetched_at=inj_ts,
                                       inactives_fetched_at=ina_ts)
     from nflvalue.sources.espn_news import news_by_player as _nbp
     news_map = _nbp(news_items or [], players) if news_items else {}
+    # T-90: names the event roster lists as ACTIVE (a practice-squad elevation
+    # shows up here, never in the weekly roster asset)
+    t90_active_names = None
+    if clock == "t90" and inactive_rows is not None:
+        t90_active_names = {avmod.normalize_name(r.get("name"))
+                            for r in inactive_rows if r.get("active")}
     return {"feeds": feeds, "statuses": resolved["statuses"],
+            "active_roster": roster, "t90_active_names": t90_active_names,
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
             "news_by_player": news_map,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
-                   "rosters": stamp_now(), "news": news_ts, "lines": None}}
+                   "rosters": roster_ts, "news": news_ts, "lines": None}}
 
 
 # --------------------------------------------------------------------------- #
@@ -404,6 +435,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
 
     # 2. live feeds + freshness gate
     publish, publish_reasons = True, []
+    roster_gate: Dict = {"publish": False, "reason": "not a live run"}
+    roster_diag: Dict = {}
     statuses: Dict[str, Dict] = {}
     sleeper_df, feeds_ts, news_by_player = None, {}, {}
     if mode == "live":
@@ -422,6 +455,21 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         g = gate(live["feeds"], as_of=as_of,
                  staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
         publish, publish_reasons = g["publish"], g["reasons"]
+        # ACTIVE ROSTER GATE (fail closed). History is not membership: a
+        # candidate who is retired, released, on reserve, on the practice
+        # squad, or on another team is excluded WITH its reason; a snapshot
+        # that is missing, stale, future-dated, for the wrong season/week, or
+        # missing a slate team blocks publication outright.
+        roster_gate = pdmod.validate_roster_snapshot(
+            live.get("active_roster"), season=season, week=week,
+            slate_teams=set(slate["home_team"]) | set(slate["away_team"]),
+            now=parse_ts(as_of))      # the decision clock, same as the freshness gate
+        if not roster_gate["publish"]:
+            publish = False
+            publish_reasons = list(publish_reasons) + [roster_gate["reason"]]
+            cands = cands.iloc[0:0].copy()
+        else:
+            cands, roster_diag = pdmod.apply_roster_eligibility(cands, live["active_roster"])
         # OUT players never reach the ranker (availability gate) -- and their
         # vacated usage is PRICED into teammates' projections (bounded; H8)
         out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
@@ -454,6 +502,13 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                 season, week, inputs=inputs,
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
                 prop_lines=prop_lines, roster_mode=roster_mode)
+            if mode == "live":
+                # the re-enumeration must pass the same roster gate
+                if roster_gate["publish"]:
+                    cands, roster_diag = pdmod.apply_roster_eligibility(
+                        cands, live["active_roster"])
+                else:
+                    cands = cands.iloc[0:0].copy()
             out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
             if out_ids:
                 realloc = [avmod.reallocate_usage(inputs.pw, season, week, pid)
@@ -518,6 +573,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         write_files=False, persist=False, line_note=line_note,
         candidates_df=cands)
 
+    result["roster_gate"] = {k: v for k, v in roster_gate.items()}
+    result["roster_eligibility"] = roster_diag
     if mode == "live":
         from nflvalue.game_notes import attach_notes
         attach_notes(result["games"], cands, inputs.schedules, season, week)
@@ -607,6 +664,22 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     as_of = stamp_now()  # the decision follows the fetch; see run_week
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
+    # ACTIVE ROSTER GATE at T-90 (same contract as the Wednesday run; a
+    # practice-squad player the event roster lists as active is an elevation)
+    slate_t = candmod.games_for_week(season, week, inputs.schedules)
+    slate_t = slate_t[slate_t["game_id"] == game_id]
+    roster_gate = pdmod.validate_roster_snapshot(
+        live.get("active_roster"), season=season, week=week,
+        slate_teams=set(slate_t["home_team"]) | set(slate_t["away_team"]),
+        now=parse_ts(as_of))
+    roster_diag: Dict = {}
+    if roster_gate["publish"]:
+        cands, roster_diag = pdmod.apply_roster_eligibility(
+            cands, live["active_roster"], t90_active_names=live.get("t90_active_names"))
+    else:
+        cands = cands.iloc[0:0].copy()
+        g["publish"] = False
+        g["reasons"] = list(g["reasons"]) + [roster_gate["reason"]]
 
     # 1. VOID wed leans whose player is now OUT (auto, with provenance)
     wed = dbmod.query_df(conn, """
@@ -649,12 +722,13 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}_t90_{game_id}.md")
     with open(md_path, "w") as f:
         f.write(md)
-    rptmod.persist_leans(conn, season, week, "t90", games, as_of)
+    rptmod.persist_leans(conn, season, week, "t90", games, as_of, game_ids=[game_id])
 
     payload = {"season": season, "week": week, "clock": "t90", "as_of": as_of,
                "publish": g["publish"], "publish_reasons": g["reasons"],
                "mode": mode, "games": games, "contexts": contexts,
-               "voided": voided, "md_path": md_path}
+               "voided": voided, "md_path": md_path,
+               "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag}
     from nflvalue.document import write_drop
     payload["drop_path"] = write_drop(payload, contexts)
     dash = update_dashboard(payload, conn)

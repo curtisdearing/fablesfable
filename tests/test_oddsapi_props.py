@@ -177,23 +177,29 @@ def test_consensus_and_best_price_across_books():
 
     # the composite consumes consensus for edge, best price for EV
     from nflvalue.composite import score_candidate
+    from nflvalue.projection import p_over
+    # the DISTRIBUTION probability (not a calibration claim: agreement with
+    # mean/sd/line/dist is self-consistency, empirical calibration is a
+    # held-out result reported elsewhere)
+    dist_p = round(p_over(60.0, 20.0, 52.5, "gamma"), 4)
     cand = {"player_id": "00-A1", "market": "receiving_yards", "mean": 60.0,
-            "sd": 20.0, "line": 52.5, "p_over": 0.60, "p_under": 0.40,
+            "sd": 20.0, "line": 52.5, "dist": "gamma", "p_over": dist_p,
+            "p_under": 1 - dist_p,
             "components": {"opp_factor": 1.0, "game_script": 1.0},
             "low_confidence": False,
             "prices": {"over": r["over_price"], "under": r["under_price"],
                        "book": r["book"], "consensus_p_over": r["consensus_p_over"],
                        "n_books": r["n_books"]}}
     s = score_candidate(cand)
-    assert s["edge"] == pytest.approx(0.60 - r["consensus_p_over"], abs=1e-4)
-    assert s["components"]["ev_best_price"] == pytest.approx(0.60 * 2.05 - 1, abs=1e-3)
+    assert s["edge"] == pytest.approx(dist_p - r["consensus_p_over"], abs=1e-4)
+    assert s["components"]["ev_best_price"] == pytest.approx(dist_p * 2.05 - 1, abs=1e-3)
     assert s["components"]["n_books"] == 3
 
 
 def test_matchup_includes_epa_dimension():
     from nflvalue.composite import score_candidate
     base = {"player_id": "P", "market": "receiving_yards", "mean": 70.0, "sd": 25.0,
-            "line": 65.5, "p_over": 0.58, "p_under": 0.42,
+            "line": 65.5, "dist": "gamma", "p_over": 0.58, "p_under": 0.42,
             "components": {"opp_factor": 1.0, "game_script": 1.0},
             "low_confidence": False, "prices": None}
     soft = score_candidate({**base, "opp_epa_factor": 1.12})   # bleeds EPA -> over-friendly

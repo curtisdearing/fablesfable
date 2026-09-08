@@ -33,6 +33,7 @@ DEFAULT_STALENESS_HOURS: Dict[str, float] = {
     "injuries": 36.0,     # ESPN team injuries: should refresh at least daily in-season
     "inactives": 2.0,     # T-90 per-event actives: only meaningful ~90min pre-kick
     "rosters": 26.0 * 7,  # weekly rosters: a week-old snapshot is normal
+    "active_roster": 48.0,  # live roster membership (nflverse asset Last-Modified)
     "lines": 24.0,
     "news": 48.0,
     "fantasy": 72.0,      # Sleeper projections update a few times per week

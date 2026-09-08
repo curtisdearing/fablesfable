@@ -272,7 +272,7 @@ function renderLeans(){
       <td class="price">${l.line!=null?esc(l.line):"—"}${l.line!=null&&l.line_source!=="odds_api"?"†":""}<div>${sourceState(l)}</div></td>
       <td><b>${sideLabel(l)}</b></td>
       <td>${esc(l.mean)}</td>
-      <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">no_market</span>'}</td>
+      <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">'+esc((l.market_state&&l.market_state!=="NO_MARKET"&&l.market_state!=="REAL_MARKET")?String(l.market_state).toLowerCase():"no_market")+'</span>'}</td>
       <td class="price">${esc(l.composite)}</td></tr>`).join("");
     const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
     return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>

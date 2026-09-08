@@ -15,8 +15,20 @@ from nflvalue.composite import score_candidate  # noqa: E402
 from nflvalue.shortlist import build_context_panel, rank_game  # noqa: E402
 
 
+def _prices(over, under, n_books=2, book="bookx"):
+    """A quote the market-quality gate accepts: >= 2 distinct books at the
+    line. One-book quotes are context-only by contract (see
+    tests/test_accuracy_review_regressions.py)."""
+    return {"over": over, "under": under, "book": book, "n_books": n_books}
+
+
 def _cand(pid="P1", name="Alpha One", market="receiving_yards", mean=78.0, sd=25.0,
-          line=68.5, p_over=0.62, prices=None, opp_factor=1.12, game_script=1.03):
+          line=68.5, p_over=None, prices=None, opp_factor=1.12, game_script=1.03):
+    # p_over defaults to the DISTRIBUTION's value: a stored probability that
+    # disagrees with mean/sd/line/dist is a killcheck, not an input
+    if p_over is None:
+        from nflvalue.projection import p_over as _po
+        p_over = round(_po(mean, sd, line, "gamma"), 4)
     return {
         "player_id": pid, "name": name, "pos": "WR", "team": "AAA", "defteam": "BBB",
         "game_id": "2023_10_AAA_BBB", "matchup": "AAA @ BBB",
@@ -117,20 +129,21 @@ def test_no_market_renormalizes_and_tags():
 def test_edge_dominant_with_real_prices():
     """Same projection: a big model-vs-market edge must outrank a bigger
     z-score with no market disagreement (best VALUE, not best projection)."""
-    # candidate A: modest conviction but the market price disagrees with us hard
-    a = _cand(pid="A", mean=72.0, line=68.5, sd=25.0, p_over=0.60,
-              prices={"over": 2.10, "under": 1.80, "book": "bookx"})  # devig p_over ~.462
-    # candidate B: huge z distance but priced dead-on by the market
-    b = _cand(pid="B", mean=95.0, line=60.5, sd=15.0, p_over=0.80,
-              prices={"over": 1.25, "under": 4.60, "book": "bookx"})  # devig p_over ~.786
+    # candidate A: modest conviction (gamma P(over) ~.647, z .46) but the
+    # market price disagrees with us hard
+    a = _cand(pid="A", mean=80.0, line=68.5, sd=25.0,
+              prices=_prices(2.10, 1.80))  # devig p_over ~.462
+    # candidate B: bigger z distance (.83, P(over) ~.794) but priced dead-on
+    b = _cand(pid="B", mean=95.0, line=82.5, sd=15.0,
+              prices=_prices(1.25, 4.60))  # devig p_over ~.786
     sa, sb = score_candidate(a), score_candidate(b)
-    assert sa["edge"] > 0.10                          # ~14 prob-points of edge
+    assert sa["edge"] > 0.10                          # ~18 prob-points of edge
     assert sb["edge"] < 0.02
     assert sa["composite"] > sb["composite"]
 
 
 def test_calibration_gate_forces_no_market():
-    priced = _cand(prices={"over": 2.10, "under": 1.80, "book": "bookx"})
+    priced = _cand(prices=_prices(2.10, 1.80))
     open_gate = score_candidate(priced)
     closed_gate = score_candidate(priced, params={"calibration_passed": False})
     assert open_gate["no_market"] is False
@@ -139,8 +152,8 @@ def test_calibration_gate_forces_no_market():
 
 
 def test_side_flips_to_under_when_market_overprices_over():
-    c = _cand(mean=60.0, line=68.5, p_over=0.38,
-              prices={"over": 1.75, "under": 2.15, "book": "bookx"})
+    c = _cand(mean=60.0, line=68.5,                    # gamma P(over) ~.32
+              prices=_prices(1.75, 2.15))               # devig p_under ~.449
     s = score_candidate(c)
     assert s["side"] == "under"
     assert s["edge"] is not None and s["edge"] > 0

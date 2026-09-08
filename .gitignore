@@ -16,3 +16,7 @@ data/analysis_cache/
 book/*.parquet
 data/explain_cards.json
 data/*.joblib.sha256
+# ephemeral local-news evidence packets (regenerate with collect_team_intel.py)
+data/team_intel_latest.json
+reports/team_intel_latest.md
+reports/team_intel_runtime_check.html

@@ -55,9 +55,10 @@ def _side_label(lean: Dict) -> str:
 
 
 def _game_embed(game: Dict, context: Optional[Dict]) -> Dict:
+    from .report import gate_label
     fields = []
     for l in game.get("leans", [])[:MAX_FIELDS_PER_EMBED - 1]:
-        edge = (f"{l['edge']*100:+.1f}%" if l.get("edge") is not None else "no_market")
+        edge = (f"{l['edge']*100:+.1f}%" if l.get("edge") is not None else gate_label(l))
         synth = "" if l.get("line_source") == "odds_api" else "†"
         name = f"{l.get('name')} · {str(l.get('market','')).replace('_',' ')}"
         rank_score = l.get("ml_score") if l.get("ml_score") is not None else l.get("composite")

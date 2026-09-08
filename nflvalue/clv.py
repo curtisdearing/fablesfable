@@ -82,9 +82,14 @@ def log_close_for_week(conn, season: int, week: int,
     Leans without any line snapshots resolve to nothing -- visibly absent,
     never faked.
     """
+    # A CLV ENTRY is an actionable decision: a real line AND the market-quality
+    # gate open (>= 2 distinct books at the line, coherent probability). A
+    # one-book context row is not an entry. Rows from before the gate existed
+    # carry NULL and are kept as the entries they were when logged.
     leans = dbmod.query_df(conn, """
         SELECT * FROM leans
         WHERE season=? AND week=? AND status='active' AND line_source='odds_api'
+          AND (market_state IS NULL OR market_state='REAL_MARKET')
         """, (season, week))
     rows: List[Dict] = []
     for l in leans.itertuples(index=False):
