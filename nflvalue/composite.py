@@ -37,6 +37,7 @@ import math
 from typing import Dict, Optional
 
 from . import oddsmath
+from . import prop_decision
 
 DEFAULT_WEIGHTS = {"edge": 0.5, "confidence": 0.3, "matchup": 0.2}
 DEFAULT_PARAMS = {
@@ -111,40 +112,64 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     mean = float(cand["mean"])
     sd = max(float(cand["sd"]), 1e-6)
     line = cand.get("line")
-    p_over = cand.get("p_over")
-    p_under = cand.get("p_under")
+    # Never use an ML ranker score as a decision probability. Re-derive from
+    # the displayed distribution; drift between the stored p_over and the
+    # distribution is a hard killcheck for ACTION (edge/EV/Kelly), never
+    # silently recomputed into an actionable number.
+    probs = prop_decision.side_probabilities(cand)
+    p_over, p_under, p_push = probs["p_over"], probs["p_under"], probs["p_push"]
+    coherent = prop_decision.probability_coherent(cand, p_over)
+    # conditional-on-no-push side probabilities: the de-vigged two-way market
+    # is conditional on no push too, and Kelly/EV per unit at risk use them
+    p_over_c = p_under_c = None
+    if p_over is not None:
+        no_push = max(1.0 - float(p_push or 0.0), 1e-9)
+        p_over_c, p_under_c = float(p_over) / no_push, float(p_under) / no_push
 
     # ---- side + market comparison ---------------------------------------- #
     yes_only = cand.get("market") in YES_ONLY_MARKETS
     fair = None
     prices = cand.get("prices") or None
-    if prices and prm["calibration_passed"]:
+    n_books = prop_decision.valid_book_count((prices or {}).get("n_books"))
+    enough_books = n_books is not None and n_books >= 2
+    side_price_ok = bool(prices) and (
+        prop_decision.valid_price(prices.get("over")) if yes_only
+        else (prop_decision.valid_price(prices.get("over"))
+              and prop_decision.valid_price(prices.get("under"))))
+    actionable = bool(prices and side_price_ok and enough_books and coherent
+                      and prm["calibration_passed"] and p_over_c is not None)
+    if actionable:
         fair = _devig_probs(prices)
 
     if yes_only:
         side = "over"  # rendered as YES; the only side a book quotes
-        if fair is not None and p_over is not None:
-            edge_raw = float(p_over) - fair["over"]
+        if fair is not None and p_over_c is not None:
+            edge_raw = float(p_over_c) - fair["over"]
             market_prob = fair["over"]
-        elif (prices and prm["calibration_passed"] and prices.get("over")
-              and p_over is not None):
+        elif actionable and prices.get("over"):
             # one-sided market: no de-vig possible; compare against the RAW
             # implied probability (vig included -> conservative, edge understated)
             market_prob = oddsmath.implied_prob(float(prices["over"]))
-            edge_raw = float(p_over) - market_prob
+            edge_raw = float(p_over_c) - market_prob
         else:
             edge_raw, market_prob = None, None
-    elif fair is not None and p_over is not None:
-        edge_over = float(p_over) - fair["over"]
-        edge_under = float(p_under) - fair["under"]
+    elif fair is not None and p_over_c is not None:
+        edge_over = float(p_over_c) - fair["over"]
+        edge_under = float(p_under_c) - fair["under"]
         side = "over" if edge_over >= edge_under else "under"
         edge_raw = max(edge_over, edge_under)
         market_prob = fair[side]
+    elif p_over_c is not None:
+        side = "over" if float(p_over_c) >= 0.5 else "under"
+        edge_raw, market_prob = None, None
     else:
-        side = "over" if (p_over is not None and float(p_over) >= 0.5) else "under"
+        # no distribution probability could be derived: the projection's own
+        # direction (mean vs line) picks the side; nothing here is actionable
+        side = "over" if (line is None or mean >= float(line)) else "under"
         edge_raw, market_prob = None, None
 
-    model_prob = float(p_over if side == "over" else p_under) if p_over is not None else None
+    model_prob = (float(p_over_c if side == "over" else p_under_c)
+                  if p_over_c is not None else None)
 
     # ---- components ------------------------------------------------------- #
     no_market = edge_raw is None
@@ -205,10 +230,28 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     if context_mult is not None:
         composite *= float(context_mult)
 
+    if not no_market:
+        market_state = "REAL_MARKET"
+    elif not prices:
+        market_state = "NO_MARKET"
+    elif not side_price_ok:
+        market_state = "INVALID_PRICE"
+    elif not enough_books:
+        market_state = "ONE_BOOK_CONTEXT_ONLY"
+    elif not coherent or p_over_c is None:
+        market_state = "PROBABILITY_KILLCHECK"
+    elif not prm["calibration_passed"]:
+        market_state = "CALIBRATION_GATE_CLOSED"
+    else:
+        market_state = "NO_MARKET"
+    side_price = (prices or {}).get("over" if side == "over" else "under")
+    can_stake = (not no_market and model_prob is not None
+                 and prop_decision.valid_price(side_price))
     return {
         "composite": round(composite, 2),
         "side": side,
         "no_market": no_market,
+        "market_state": market_state,
         "edge": round(edge_raw, 4) if edge_raw is not None else None,
         "confidence": round(conf_comp, 4),
         "matchup": round(matchup_comp, 4),
@@ -217,6 +260,8 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "edge_component": round(edge_comp, 4) if edge_comp is not None else None,
             "market_prob": round(market_prob, 4) if market_prob is not None else None,
             "model_prob": round(model_prob, 4) if model_prob is not None else None,
+            "model_prob_source": "mean_sd_line_distribution",
+            "probability_coherent": bool(coherent),
             "z": round(z, 3),
             "opp_sub": round(opp_sub, 4),
             "script_sub": round(script_sub, 4),
@@ -224,13 +269,12 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "weights_used": ({"confidence": w["confidence"], "matchup": w["matchup"]}
                              if no_market else dict(w)),
             "calibration_gate": bool(prm["calibration_passed"]),
-            "ev_best_price": (round(model_prob * float(
-                (prices or {}).get("over") if side == "over" else (prices or {}).get("under")
-            ) - 1.0, 4)
-                if (not no_market and model_prob is not None
-                    and (prices or {}).get("over" if side == "over" else "under"))
-                else None),
-            "n_books": (prices or {}).get("n_books") if prices else None,
+            "p_push": (round(float(p_push), 4) if p_push is not None else None),
+            "ev_best_price": (round(model_prob * float(side_price) - 1.0, 4)
+                              if can_stake else None),
+            "kelly_fraction": (round(oddsmath.kelly_fraction(model_prob, float(side_price)), 4)
+                               if can_stake else None),
+            "n_books": n_books if prices else None,
             "reliability_mult": (round(float(reliability_mult), 4)
                                  if reliability_mult is not None else None),
             "context_mult": (round(float(context_mult), 4)

@@ -49,6 +49,11 @@ def _rank_score(lean: Dict):
     return lean.get("ml_score") if lean.get("ml_score") is not None else lean.get("composite")
 
 
+def _gate_label(lean):
+    from .report import gate_label
+    return gate_label(lean)
+
+
 def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
     season, week = payload.get("season"), payload.get("week")
     contexts = contexts or payload.get("contexts") or {}
@@ -77,7 +82,7 @@ def render_drop(payload: Dict, contexts: Optional[Dict] = None) -> str:
         for l in g.get("leans", []):
             dag = "" if l.get("line_source") == "odds_api" else "<span class='dagger'>†</span>"
             edge = (f"{l['edge']*100:+.1f}%" if l.get("edge") is not None
-                    else "<span class='sub'>no_market</span>")
+                    else f"<span class='sub'>{_e(_gate_label(l))}</span>")
             parts.append(
                 f"<tr><td><b>{_e(l.get('name'))}</b> <span class='sub'>{_e(l.get('pos'))} · "
                 f"{_e(l.get('team'))}</span></td>"

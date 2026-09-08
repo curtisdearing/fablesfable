@@ -11,13 +11,32 @@ on:
         default: wed
         type: choice
         options: [deploy, wed, t90, tuesday]
+  # GitHub Actions evaluates cron in UTC and `on.schedule` has no timezone
+  # field, so Eastern kickoffs are expressed twice: EDT months (Sep-Oct,
+  # UTC-4) and EST months (Nov-Jan, UTC-5; DST ends 2026-11-01). The T-90
+  # slots are placed ~60-80 minutes before every kickoff time on the 2026
+  # slate (Wed/Fri/Sat games and 9:30 ET London kickoffs included);
+  # tests/test_t90_schedule_contract.py replays these strings against the
+  # real slate. The job itself only processes games in [T-90, T-0).
   schedule:
-    - cron: "17 10 * 9-12,1 3"
-      timezone: "America/New_York"
-    - cron: "47 11,15,19 * 9-12,1 0,1,4"
-      timezone: "America/New_York"
-    - cron: "23 10 * 9-12,1 2"
-      timezone: "America/New_York"
+    # -- Wednesday model refresh (10:17 ET, as originally intended) --------
+    - cron: "17 14 * 9,10 3"
+    - cron: "17 15 * 11,12,1 3"
+    # -- Tuesday grade + CLV + retrain (10:23 ET) --------------------------
+    - cron: "23 14 * 9,10 2"
+    - cron: "23 15 * 11,12,1 2"
+    # -- T-90 refresh, EDT months ------------------------------------------
+    - cron: "5 12 * 9,10 0"          # Sun 08:05 ET  (09:30 London)
+    - cron: "55 15 * 9,10 0"         # Sun 11:55 ET  (13:00)
+    - cron: "20 19 * 9,10 0"         # Sun 15:20 ET  (16:05 / 16:25)
+    - cron: "15 23 * 9,10 0,1,3,4"   # Sun/Mon/Wed/Thu 19:15 ET (20:00-20:35)
+    # -- T-90 refresh, EST months ------------------------------------------
+    - cron: "5 13 * 11,12,1 0"       # Sun 08:05 ET  (09:30 London)
+    - cron: "55 16 * 11,12,1 0,4,5"  # Sun/Thu/Fri 11:55 ET (13:00; Thanksgiving)
+    - cron: "50 18 * 11,12,1 5"      # Fri 13:50 ET  (15:00 Black Friday)
+    - cron: "20 20 * 11,12,1 0,4,5"  # Sun/Thu/Fri 15:20 ET (16:05 / 16:25 / 16:30)
+    - cron: "50 20 * 11,12,1 6"      # Sat 15:50 ET  (17:00)
+    - cron: "15 0 * 11,12,1 *"       # every day 19:15 ET previous evening (night games)
 
 permissions:
   contents: write
@@ -100,9 +119,9 @@ jobs:
             echo "job=deploy" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "job=${{ github.event.inputs.job }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event.schedule }}" == "23 10 * 9-12,1 2" ]]; then
+          elif [[ "${{ github.event.schedule }}" == "23 14 * 9,10 2" || "${{ github.event.schedule }}" == "23 15 * 11,12,1 2" ]]; then
             echo "job=tuesday" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event.schedule }}" == "17 10 * 9-12,1 3" ]]; then
+          elif [[ "${{ github.event.schedule }}" == "17 14 * 9,10 3" || "${{ github.event.schedule }}" == "17 15 * 11,12,1 3" ]]; then
             echo "job=wed" >> "$GITHUB_OUTPUT"
           else
             echo "job=t90" >> "$GITHUB_OUTPUT"

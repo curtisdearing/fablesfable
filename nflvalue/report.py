@@ -43,9 +43,25 @@ DISCLAIMER = (
 
 
 def _fmt_edge(lean: Dict) -> str:
+    """Edge, or the market-quality gate state that withheld it.
+
+    ``no_market`` means no price at all; a real line that failed the gate
+    (one book, invalid price, probability killcheck, closed calibration gate)
+    is named as such so a one-book quote can never read as a priced edge."""
     if lean.get("no_market") or lean.get("edge") is None:
+        state = lean.get("market_state")
+        if state and state not in ("NO_MARKET", "REAL_MARKET"):
+            return f"`{str(state).lower()}`"
         return "`no_market`"
     return f"{lean['edge']*100:+.1f}%"
+
+
+def gate_label(lean: Dict) -> str:
+    """Plain-text label for non-markdown renderers (dashboard, drop, Discord)."""
+    state = lean.get("market_state")
+    if lean.get("edge") is None and state and state not in ("NO_MARKET", "REAL_MARKET"):
+        return str(state).lower()
+    return "no_market"
 
 
 def _fmt_line(lean: Dict) -> str:
@@ -155,15 +171,26 @@ def render_markdown(season: int, week: int, games: List[Dict],
 # Persistence
 # --------------------------------------------------------------------------- #
 def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
-                  as_of: str, status: str = "active") -> int:
+                  as_of: str, status: str = "active",
+                  game_ids: Optional[List[str]] = None) -> int:
     """Replace-the-run semantics: the forward log for a (season, week, clock)
     is whatever the LATEST run published. The whole slice is deleted first so
     a rerun after a ranking change can't leave orphan leans behind (found
     live: a pre-fix run's degenerate TD-unders survived a rerun's upsert
     because their (player, market) keys differed). Clocks run in order —
-    wed, then t90 — so a t90 void is never clobbered by design."""
-    conn.execute("DELETE FROM leans WHERE season=? AND week=? AND clock=?",
-                 (season, week, clock))
+    wed, then t90 — so a t90 void is never clobbered by design.
+
+    ``game_ids`` scopes the replace to those games: a T-90 run covers ONE
+    game, and an unscoped delete here wiped every other game's T-90 leans for
+    the week (found in review: only the last T-90 game of a week survived
+    into grading/CLV)."""
+    if game_ids:
+        marks = ",".join("?" for _ in game_ids)
+        conn.execute(f"DELETE FROM leans WHERE season=? AND week=? AND clock=? "
+                     f"AND game_id IN ({marks})", (season, week, clock, *game_ids))
+    else:
+        conn.execute("DELETE FROM leans WHERE season=? AND week=? AND clock=?",
+                     (season, week, clock))
     conn.commit()
     rows = []
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -179,7 +206,9 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
                 "price": prices.get("over") if l.get("side") == "over" else prices.get("under"),
                 "book": prices.get("book"),
                 "mean": l.get("mean"), "sd": l.get("sd"),
-                "p_side": (l.get("p_over") if l.get("side") == "over" else l.get("p_under")),
+                "p_side": (l.get("components") or {}).get("model_prob"),
+                "market_state": l.get("market_state"),
+                "n_books": (l.get("components") or {}).get("n_books"),
                 "composite": l.get("composite"), "edge": l.get("edge"),
                 "confidence_comp": l.get("confidence"), "matchup_comp": l.get("matchup"),
                 "screened_n": g.get("screened_n"), "reason": _one_line_reason(l),

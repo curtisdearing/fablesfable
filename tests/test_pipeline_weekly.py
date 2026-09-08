@@ -37,6 +37,17 @@ def env(tmp_path, monkeypatch):
     return {"tmp": tmp_path, "db_path": db_path}
 
 
+def _roster(now: str, week: int = WEEK, extra=None):
+    """A roster snapshot in the ``sources.active_roster`` payload shape,
+    covering every synthetic-inputs player on his synthetic team."""
+    rows = [{"player_id": "WR_A", "team": "AAA", "status": "ACT", "week": week},
+            {"player_id": "RB_A", "team": "AAA", "status": "ACT", "week": week},
+            {"player_id": "QB_B", "team": "BBB", "status": "ACT", "week": week}]
+    rows += list(extra or [])
+    return {"source": "test", "season": SEASON, "week": week, "rows": rows,
+            "n_rows": len(rows), "snapshot_at": now, "fetched_at": now}
+
+
 def _fresh_feeds(now: str, wr_a_status: str = "Active"):
     return {
         "injury_rows": [
@@ -47,6 +58,9 @@ def _fresh_feeds(now: str, wr_a_status: str = "Active"):
         "injuries_fetched_at": now,
         "sleeper_df": None,
         "sleeper_fetched_at": now,
+        "news_items": [],            # keep the suite offline (ESPN 403s in CI)
+        "news_fetched_at": now,
+        "active_roster": _roster(now),
     }
 
 

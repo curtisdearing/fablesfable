@@ -26,7 +26,13 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 ET = ZoneInfo("America/New_York")
-T90_WINDOW_HOURS = 2.75      # refresh games kicking off within this window
+T90_WINDOW_HOURS = 2.75      # legacy outer bound (kept for the heartbeat text)
+#: A game is DUE for its T-90 refresh only once the NFL inactives list is
+#: expected to exist (posted 90 minutes before kickoff) and until kickoff.
+#: Processing earlier would read a roster without game-day inactives and --
+#: because a processed game is skipped by every later run -- never re-read
+#: it. So the window is [T-90, T-0), not "anything in the next 2.75h".
+T90_DUE_MINUTES = 90
 
 
 def utc_stamp() -> str:
@@ -117,6 +123,21 @@ def current_week(slate, now: dt.datetime):
     return int(nxt["season"]), int(nxt["week"])
 
 
+def games_due_for_t90(slate, now: dt.datetime):
+    """Every regular-season kickoff whose T-90 refresh is due NOW.
+
+    Slate-driven, not weekday-driven: a Wednesday, Friday, Saturday or 9:30
+    ET London kickoff is a first-class target. Due means
+    ``kickoff - T90_DUE_MINUTES <= now < kickoff``: the inactives are expected
+    to be posted, and the game has not started. Whether a run actually FIRES
+    at such a moment is the scheduler's job (.github/workflows/live-weekly.yml,
+    UTC crons for both EDT and EST months); tests/test_t90_schedule_contract.py
+    checks the two together against the real 2026 slate.
+    """
+    lead = dt.timedelta(minutes=T90_DUE_MINUTES)
+    return slate[(slate["kickoff"] > now) & (slate["kickoff"] - now <= lead)].copy()
+
+
 def last_completed_week(slate, now: dt.datetime):
     done = slate[(slate["kickoff"] < now - dt.timedelta(hours=8)) & slate["result"].notna()]
     if done.empty:
@@ -158,8 +179,7 @@ def job_t90() -> int:
     import pipeline_weekly as pw
     slate = load_slate()
     now = now_et()
-    soon = slate[(slate["kickoff"] > now)
-                 & (slate["kickoff"] <= now + dt.timedelta(hours=T90_WINDOW_HOURS))]
+    soon = games_due_for_t90(slate, now)
     if soon.empty:
         print("[auto] no kickoffs within the T-90 window — no-op")
         write_pipeline_heartbeat(
@@ -172,7 +192,9 @@ def job_t90() -> int:
 
     # CLOSING SNAPSHOT (evaluation catch): without a second pre-kick line
     # pull, entry == close and CLV could never resolve — the kill-check
-    # would starve forever. Resnap exactly the games that have entry lines.
+    # would starve forever. Resnap exactly the games that have entry lines
+    # AND are not already processed: a duplicate invocation inside the same
+    # window (cron drift, manual dispatch) must not spend credits twice.
     if cfg.get("odds_api_key"):
         try:
             from nflvalue.sources import oddsapi_props as oap
@@ -180,7 +202,7 @@ def job_t90() -> int:
             have_lines = set(dbmod.query_df(
                 conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
             targets = [g.game_id for g in soon.itertuples(index=False)
-                       if g.game_id in have_lines]
+                       if g.game_id in have_lines and g.game_id not in done]
             if targets:
                 emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
                 res = oap.resnap_lines(cfg, emap, conn=conn)

@@ -102,6 +102,7 @@ SCHEMA = {
             screened_n INTEGER, reason TEXT,
             status TEXT DEFAULT 'active',                    -- 'active' | 'voided'
             void_reason TEXT, as_of TEXT, created_at TEXT,
+            market_state TEXT, n_books INTEGER,             -- v2: market-quality gate
             PRIMARY KEY (season, week, clock, game_id, player_id, market)
         );
     """,
@@ -209,13 +210,20 @@ SCHEMA = {
 #   * Every statement must be idempotent or guarded, because a migration may
 #     be re-attempted after a partial failure.
 #   * Bump SCHEMA_VERSION to match the highest key.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 #: {version: (description, [sql statements])}. Version 1 is the baseline that
 #: SCHEMA itself creates, so it carries no statements: it exists to stamp
 #: already-deployed databases that predate versioning.
 MIGRATIONS: "dict[int, tuple]" = {
     1: ("baseline: tables as created by SCHEMA", []),
+    # Market-quality gate provenance on every stored decision. NULL on rows
+    # written before the gate existed -- they are neither promoted nor
+    # demoted retroactively.
+    2: ("leans: market_state + n_books (accuracy review, 2026-09-08)", [
+        lambda conn: add_column_if_missing(conn, "leans", "market_state", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "n_books", "INTEGER"),
+    ]),
 }
 
 

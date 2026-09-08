@@ -59,9 +59,28 @@ def rank_game(cands: List[Dict], weights: Optional[Dict] = None,
     n_screened = len(scored)
 
     # ML ranking mode (flag-gated upstream): candidates arrive stamped with
-    # ``ml_score`` (100 x the classifier's side probability). Ordering uses it;
-    # the deterministic composite is still computed and displayed so every
-    # lean stays explainable. Absent the stamp, ranking is pure composite.
+    # ``ml_p_over`` (the classifier's ORDINAL P(over)) and/or ``ml_score``
+    # (100 x its side probability). Ordering uses the score; the deterministic
+    # composite is still computed and displayed so every lean stays
+    # explainable. Absent the stamp, ranking is pure composite.
+    #
+    # The published SIDE is decided above by the distribution/market, not by
+    # the classifier. So the ranking score must be the classifier's belief in
+    # THAT side: a candidate the ranker is 80% sure goes UNDER must not rank
+    # first as an OVER because 80 > 60. When ``ml_p_over`` is present the
+    # side-aware score is recomputed here; a bare ``ml_score`` (older
+    # artifacts, tests) is used as given.
+    for r in scored:
+        mlp = r.get("ml_p_over")
+        if mlp is None:
+            continue
+        try:
+            mlp = float(mlp)
+        except (TypeError, ValueError):
+            continue
+        if not (0.0 <= mlp <= 1.0):
+            continue
+        r["ml_score"] = round(100.0 * (mlp if r.get("side") == "over" else 1.0 - mlp), 2)
     use_ml = all(r.get("ml_score") is not None for r in scored) and bool(scored)
     rank_key = (lambda r: (-r["ml_score"], str(r["player_id"]), r["market"])) if use_ml \
         else (lambda r: (-r["composite"], str(r["player_id"]), r["market"]))

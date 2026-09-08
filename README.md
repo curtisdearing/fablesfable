@@ -76,6 +76,10 @@ The original game-line dashboard this grew from still works:
 
 ## Reviewer\'s map
 
+- **[docs/AGENT_MAP.md](docs/AGENT_MAP.md)** — architecture routes, safe commands,
+  invariants, verified GitHub baseline, and bounded advancement packets.
+- **[docs/TEAM_INTELLIGENCE.md](docs/TEAM_INTELLIGENCE.md)** — the context-only
+  local-practice/journalism evidence lane and its promotion boundary.
 - **[docs/HOW_A_PICK_IS_MADE.md](docs/HOW_A_PICK_IS_MADE.md)** — the full
   pipeline, every formula, every measured adjustment, and where each number
   on a pick comes from. Start here.

@@ -23,6 +23,12 @@ equivalent from play-by-play or say plainly that we don't have it.
 | Sleeper projections | Sleeper API | current | B− | Divergence cross-check only — never a target (H5) |
 | Prop lines + prices | The Odds API (free tier, 500 credits/mo) | live only | A for quotes | Edge vs consensus, line shopping, CLV. Hard-stopped at 450/mo |
 
+## Free context/research feeds (not production inputs)
+
+| Feed | Source | Coverage | Trust | Used for |
+|---|---|---|---|---|
+| Team/local practice and team news metadata | `config/team_sources.json`: official team sites plus one reviewed local outlet per club; direct RSS where verified, otherwise domain-allowlisted Google News RSS discovery | current metadata for all 32 teams; no historical guarantee | C for official metadata, D for local/discovery | Agent briefing and source-health research only. `scripts/collect_team_intel.py`; never changes projections/ranks and is not invoked by `pipeline_weekly.py`. See `TEAM_INTELLIGENCE.md`. |
+
 ## The paywall boundary (what we genuinely don't have)
 
 | Data | Who sells it | Price (July 2026) | Our stance |
@@ -30,7 +36,7 @@ equivalent from play-by-play or say plainly that we don't have it.
 | Exact formations, personnel groupings, the 22 on field | NGS participation was free 2016–**2023**, then discontinued. FTN Data API (participation + charting since 2019) | CSV $599; API tier custom-priced; site sub $69.99/yr (no API) | Derived free proxies instead: shotgun/no-huddle rates, per-player shotgun-vs-under-center usage tilts, FTN PA/motion/blitz/box. If live CLV ever proves edge, the FTN API is the first justified purchase. |
 | Alignment/slot rates, per-route data, PFF grades | PFF+ | $79.99/yr or $9.99/mo (browsable, no API) | Not used. Closest free proxies: NGS separation + air-yards share; pbp `pass_location` was derived and MEASURED 2026-07-30 (location shares + matchup EPA): rejected by its walk-forward gate at both seeds (book/loc_features_eval.json). |
 | Historical prop **lines/prices** | SportsDataIO, others | enterprise | Cannot be reconstructed free — this is why backtests grade at synthetic reference lines (labeled †) and why forward CLV is the only accepted edge proof. |
-| Real-time beat-reporter news | X/Twitter API | prohibitive | Accepted gap (premortem H4): ESPN editorial news feeds the context panel; the tool is honest that sharps see news first. |
+| Real-time social/beat firehose and licensed article bodies | X/Twitter API and publishers | paid/restricted | Still a gap. The free metadata collector improves discovery but supplies no social firehose, article-body license, reliable historical backfill, or automatic production effect. |
 
 ## Derivation ledger (paid-adjacent signals we rebuilt free)
 

@@ -39,9 +39,11 @@ def env(tmp_path, monkeypatch):
 
 
 def _feeds(now):
+    from tests.test_pipeline_weekly import _roster
     return {"injury_rows": [], "injuries_fetched_at": now,
             "sleeper_df": None, "sleeper_fetched_at": now,
-            "news_items": [], "news_fetched_at": now}
+            "news_items": [], "news_fetched_at": now,
+            "active_roster": _roster(now)}
 
 
 def _fake_odds(payload):
@@ -99,15 +101,19 @@ def test_t90_leans_carry_notes_and_features(env):
 
 
 def test_anytime_td_one_sided_edge():
+    from nflvalue.projection import p_over as _po
+    p = round(_po(0.9, 0.95, 0.5, "poisson"), 4)        # P(>=1 TD) ~.593
     c = {"player_id": "P", "name": "N", "pos": "RB", "team": "T", "market": "anytime_td",
-         "mean": 0.9, "sd": 0.95, "line": 0.5, "p_over": 0.62, "p_under": 0.38,
+         "mean": 0.9, "sd": 0.95, "line": 0.5, "dist": "poisson",
+         "p_over": p, "p_under": round(1 - p, 4),
          "components": {"opp_factor": 1.0, "game_script": 1.0},
-         "prices": {"over": 2.30, "under": None, "book": "bookx"},
+         # yes-only quote from two books; no consensus carried -> raw implied
+         "prices": {"over": 2.30, "under": None, "book": "bookx", "n_books": 2},
          "low_confidence": True}
     s = score_candidate(c)
     assert s["no_market"] is False
-    # raw implied of 2.30 = .4348; model .62 -> edge ~ .185 (conservative, vig included)
-    assert s["edge"] == pytest.approx(0.62 - 1 / 2.30, abs=1e-3)
+    # raw implied of 2.30 = .4348; model ~.593 -> edge ~ .158 (conservative, vig included)
+    assert s["edge"] == pytest.approx(p - 1 / 2.30, abs=1e-3)
 
 
 def test_drop_document_renders():
