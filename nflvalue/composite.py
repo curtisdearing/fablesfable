@@ -270,8 +270,16 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
                              if no_market else dict(w)),
             "calibration_gate": bool(prm["calibration_passed"]),
             "p_push": (round(float(p_push), 4) if p_push is not None else None),
+            # ev_best_price is CONDITIONAL on settlement (no push); a push
+            # returns the stake, so the expected return per ORIGINAL stake is
+            # (1 - p_push) x that.  Kelly is correct on the conditional
+            # probability; the per-stake return is the smaller number.
             "ev_best_price": (round(model_prob * float(side_price) - 1.0, 4)
                               if can_stake else None),
+            "ev_per_stake": (round((1.0 - float(p_push or 0.0)) * (model_prob * float(side_price) - 1.0), 4)
+                             if can_stake else None),
+            "ev_basis": {"ev_best_price": "conditional_on_settlement",
+                         "ev_per_stake": "per_original_stake"},
             "kelly_fraction": (round(oddsmath.kelly_fraction(model_prob, float(side_price)), 4)
                                if can_stake else None),
             "n_books": n_books if prices else None,

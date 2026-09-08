@@ -49,6 +49,7 @@ import numpy as np
 import pandas as pd
 
 from . import db as dbmod
+from . import settlement as st
 
 DEFAULTS = {"enabled": True, "lr": 0.35, "bias_clip": 0.08,
             "reliability_k": 50.0, "reliability_clip": 0.15,
@@ -69,14 +70,19 @@ def attribute(lean: Dict, player_actual_row: Optional[Dict],
     """Why did this lean hit or miss? Deterministic decomposition."""
     from .projection import MARKETS
     out = {"volume_log_err": None, "efficiency_log_err": None}
+    settlement = lean.get("settlement")
+    if settlement in (st.PUSH, st.VOID, st.UNRESOLVED):
+        # not a miss: nothing to attribute.  A missing stat row is UNRESOLVED,
+        # never an "availability surprise" asserted from an absence.
+        return {**out, "primary_reason": settlement, "detail": lean.get("settlement_detail", "")}
     hit = bool(lean["hit"])
     if hit:
         return {**out, "primary_reason": "as_projected",
                 "detail": "actual landed on the projected side"}
 
     if player_actual_row is None:
-        return {**out, "primary_reason": "availability_surprise",
-                "detail": "no stat line recorded — player effectively absent"}
+        return {**out, "primary_reason": "unresolved",
+                "detail": "no stat line recorded; not settled"}
 
     spec = MARKETS.get(lean["market"], {})
     opp_key = spec.get("opportunity")
@@ -150,24 +156,30 @@ def grade_week(conn, season: int, week: int, pw: pd.DataFrame,
             margins[g.game_id] = (exp, act)
 
     rows: List[Dict] = []
-    for l in leans.to_dict("records"):
+    for lean in leans.to_dict("records"):
+        l = lean  # noqa: E741 -- local alias kept for the row-building block below
         arow = actual_rows.get(l["player_id"])
         if l["market"] == "anytime_td":
-            actual = (arow["rush_tds"] + arow["rec_tds"]) if arow else 0.0
-            hit = actual >= 1.0
+            actual = (arow["rush_tds"] + arow["rec_tds"]) if arow else None
         else:
-            col = ACTUAL_COL[l["market"]]
-            actual = arow[col] if arow else 0.0
-            hit = (actual > l["line"]) if l["side"] == "over" else (actual < l["line"])
+            actual = arow[ACTUAL_COL[l["market"]]] if arow else None
+        # Settlement contract (nflvalue/settlement.py): push at an integer
+        # line, void for a non-active lean, UNRESOLVED when no stat row exists
+        # -- never a settled zero invented from an absence.
+        verdict = st.settle(l["market"], l["side"], l.get("line"), actual,
+                            has_stat_row=arow is not None,
+                            lean_status=str(l.get("status") or "active"))
         exp_m, act_m = margins.get(l["game_id"], (None, None))
         # margins are home-relative; flip for away teams when we know the side
-        graded = {**l, "actual": float(actual), "hit": bool(hit)}
+        graded = {**l, "actual": verdict.actual, "hit": verdict.hit,
+                  "settlement": verdict.settlement, "settlement_detail": verdict.detail}
         attr = attribute(graded, arow, exp_m, act_m)
         rows.append({
             "season": season, "week": week, "clock": clock, "game_id": l["game_id"],
             "player_id": l["player_id"], "name": l["name"], "market": l["market"],
             "side": l["side"], "line": l["line"], "mean": l["mean"],
-            "composite": l["composite"], "actual": float(actual), "hit": int(hit),
+            "composite": l["composite"], "actual": verdict.actual, "hit": verdict.hit,
+            "settlement": verdict.settlement,
             "primary_reason": attr["primary_reason"],
             "volume_log_err": attr.get("volume_log_err"),
             "efficiency_log_err": attr.get("efficiency_log_err"),
@@ -282,8 +294,8 @@ def apply_to_candidates(cands: pd.DataFrame, adjustments: Dict[str, Dict],
     bias = cands["market"].map(lambda m: (adjustments.get(m) or {}).get("bias_mult", 1.0))
     cands["mean"] = (cands["mean"] * bias).round(3)
     new_po = [
-        round(p_over_fn(m, s, l, d), 4) if l is not None and not pd.isna(l) else None
-        for m, s, l, d in zip(cands["mean"], cands["sd"], cands["line"], cands["dist"])
+        round(p_over_fn(m, s, ln, d), 4) if ln is not None and not pd.isna(ln) else None
+        for m, s, ln, d in zip(cands["mean"], cands["sd"], cands["line"], cands["dist"])
     ]
     cands["p_over"] = new_po
     cands["p_under"] = [round(1 - p, 4) if p is not None else None for p in new_po]
@@ -321,6 +333,15 @@ def record_candidate_aggregates(conn, season: int, week: int,
     return len(rows)
 
 
+def settled_hits(outcomes: pd.DataFrame) -> List[int]:
+    """Binary hits of SETTLED (win/loss) rows; legacy NULL-settlement rows count
+    by their stored hit; push/void/unresolved rows (hit NULL) are excluded."""
+    if outcomes.empty or "hit" not in outcomes:
+        return []
+    hits = pd.to_numeric(outcomes["hit"], errors="coerce")
+    return [int(h) for h in hits.dropna().tolist() if h in (0, 1)]
+
+
 def rebuild_state(conn, params: Optional[Dict] = None,
                   before: Optional[tuple] = None) -> LearningState:
     """Deterministically rebuild the learning state from the DB (aggregates +
@@ -335,7 +356,9 @@ def rebuild_state(conn, params: Optional[Dict] = None,
         wk_agg = agg[(agg["season"] == s) & (agg["week"] == w)]
         wk_out = outs[(outs["season"] == s) & (outs["week"] == w)] if len(outs) else outs
         for r in wk_agg.itertuples(index=False):
-            hits = (wk_out[wk_out["market"] == r.market]["hit"].tolist()
+            # settled non-push outcomes only: push/void/unresolved carry hit=NULL;
+            # legacy rows (settlement NULL) keep their recorded binary hit
+            hits = (settled_hits(wk_out[wk_out["market"] == r.market])
                     if len(wk_out) else [])
             state.observe(r.market, r.n, r.sum_pred, r.sum_actual, hits)
     return state
@@ -365,8 +388,10 @@ def grade_and_learn(conn, season: int, week: int, inputs, clock: str = "wed",
     state = rebuild_state(conn, params=params)
     nxt_week = week + 1
     state.persist(conn, season, nxt_week)
-    return {"graded": int(len(outcomes)),
-            "hit_rate": (round(float(outcomes["hit"].mean()), 4) if len(outcomes) else None),
+    settled = settled_hits(outcomes) if len(outcomes) else []
+    return {"graded": int(len(outcomes)), "settled": len(settled),
+            "settlement_counts": (outcomes["settlement"].value_counts().to_dict() if len(outcomes) else {}),
+            "hit_rate": (round(float(np.mean(settled)), 4) if settled else None),
             "adjustments_effective": (season, nxt_week),
             "adjustments": state.adjustments(),
             "why": why_report(conn, season)}
@@ -379,13 +404,28 @@ def why_report(conn, season: int, last_n_weeks: int = 4) -> Dict:
         """, (season,))
     if df.empty:
         return {"n": 0}
+    if "settlement" not in df:
+        df["settlement"] = None
     recent = df[df["week"] >= df["week"].max() - last_n_weeks + 1]
+    settled_mask = pd.to_numeric(df["hit"], errors="coerce").isin([0, 1])
+    settled = df[settled_mask]
+    recent_settled = recent[pd.to_numeric(recent["hit"], errors="coerce").isin([0, 1])]
+
+    def _rate(frame):
+        h = settled_hits(frame)
+        return round(float(np.mean(h)), 4) if h else None
+
     return {
-        "n": int(len(df)), "hit_rate": round(float(df["hit"].mean()), 4),
+        "n": int(len(df)),
+        "settled": int(len(settled)),
+        "push": int((df["settlement"] == st.PUSH).sum()),
+        "void": int((df["settlement"] == st.VOID).sum()),
+        "unresolved": int((df["settlement"] == st.UNRESOLVED).sum()),
+        "legacy_binary": int((df["settlement"].isna() & settled_mask).sum()),
+        "hit_rate": _rate(settled),
         "recent_weeks": sorted(recent["week"].unique().tolist()),
-        "recent_hit_rate": round(float(recent["hit"].mean()), 4),
-        "miss_reasons": df[df["hit"] == 0]["primary_reason"].value_counts().to_dict(),
-        "recent_miss_reasons": recent[recent["hit"] == 0]["primary_reason"].value_counts().to_dict(),
-        "by_market_hit": {m: round(float(g["hit"].mean()), 4)
-                          for m, g in df.groupby("market")},
+        "recent_hit_rate": _rate(recent_settled),
+        "miss_reasons": settled[settled["hit"] == 0]["primary_reason"].value_counts().to_dict(),
+        "recent_miss_reasons": recent_settled[recent_settled["hit"] == 0]["primary_reason"].value_counts().to_dict(),
+        "by_market_hit": {m: _rate(g) for m, g in settled.groupby("market")},
     }

@@ -353,7 +353,9 @@ def _row(i, **kw):
     r = {"p_side": 0.6, "hit": int(i % 3 != 0), "line_source": "odds_api",
          "market_state": "REAL_MARKET", "season": 2026, "week": 1 + (i % 8),
          "game_id": f"g{i % 4}", "player_id": f"p{i}", "market": "receptions",
-         "side": "over", "clock": "wed", "status": "active"}
+         "side": "over", "clock": "wed", "status": "active",
+         # provenance: a pre-kickoff creation stamp is what makes a row prospective
+         "created_at": "2026-09-02T17:54:18Z", "kickoff": "2026-09-13T17:00:00Z"}
     r.update(kw)
     return r
 
@@ -375,7 +377,7 @@ def test_grade_reports_denominators_and_rejects_bad_rows_explicitly():
     assert cov["real_line_context_only"] == 1
     assert cov["real_line_ungated_pre_gate_rows"] == 1
     assert cov["synthetic_or_reference"] == 1
-    assert cov["superseded_duplicate_clock"] == 1
+    assert cov["superseded_duplicate_decision"] == 1
     assert rep["evidence_kind"] == "real_line_insufficient"
     assert len(rep["invalid_rows"]) == 3
 

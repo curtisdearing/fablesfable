@@ -143,6 +143,35 @@ def parse_event_props(payload: Dict, ts: str) -> List[Dict]:
     return rows
 
 
+def books_in_payload(payload) -> List[str]:
+    """Bookmaker keys present in one v4 event-odds payload (sorted, unique)."""
+    if not isinstance(payload, dict):
+        return []
+    keys = {str(bk.get("key")) for bk in (payload.get("bookmakers") or []) if bk.get("key")}
+    return sorted(keys)
+
+
+def book_coverage(cfg: Dict, books_by_game: Dict[str, List[str]]) -> Dict:
+    """Requested-vs-returned bookmaker diagnostic for a pull.
+
+    The client stores every bookmaker the provider returns (no per-book
+    filter), so a book that is requested via ``bookmakers=`` yet absent here
+    was absent from the PROVIDER'S response at that snapshot -- not filtered,
+    not rejected.  A stored ``lines`` table with one book therefore means the
+    provider returned one book.  This puts that fact in the run log.
+    """
+    requested = [str(b) for b in (cfg.get("books") or [])]
+    returned = sorted({b for books in books_by_game.values() for b in books})
+    return {
+        "requested": requested,
+        "selector": "bookmakers" if requested else f"regions={cfg.get('regions', 'us')}",
+        "returned": returned,
+        "absent_from_provider_response": [b for b in requested if b not in returned],
+        "unrequested_returned": [b for b in returned if requested and b not in requested],
+        "by_game": {g: list(b) for g, b in books_by_game.items()},
+    }
+
+
 def match_player_ids(rows: List[Dict], candidates: pd.DataFrame) -> List[Dict]:
     """Attach gsis player_ids by normalized name against the candidate pool.
 
@@ -233,7 +262,7 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                 "game_id": gid, "market": market, "player_id": pid, "point": 0.5,
                 "over_price": yes_only[best_book], "under_price": None,
                 "book": best_book,
-                "consensus_p_over": round(float(np_mean := sum(
+                "consensus_p_over": round(float(sum(
                     oddsmath.implied_prob(v) for v in yes_only.values()) / len(yes_only)), 4),
                 "n_books": len(yes_only),
             })
@@ -287,6 +316,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
     spent = 0.0
+    books_by_game: Dict[str, List[str]] = {}
 
     for game_id in ordered:
         if len(pulled) >= cap:
@@ -327,15 +357,21 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             r["game_id"] = game_id
         all_rows.extend(rows)
         pulled.append(game_id)
+        books_by_game[game_id] = books_in_payload(payload)
 
     written = 0
     if all_rows:
         written = dbmod.upsert(conn, "lines", all_rows,
                                ["ts", "game_id", "book", "market", "player_name", "side"])
+    coverage = book_coverage(cfg, books_by_game)
+    if coverage["absent_from_provider_response"]:
+        print(f"[oddsapi] books requested but absent from the provider response: "
+              f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "skipped_error": skipped_error,
             "rows_written": written, "credits_spent": spent,
-            "budget_remaining": budget.remaining, "ts": ts}
+            "budget_remaining": budget.remaining, "ts": ts,
+            "book_coverage": coverage}
 
 
 def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
@@ -355,6 +391,7 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     cost = float(len(markets) * len(regions.split(",")))
     ts = ts or stamp_now()
     pulled, skipped, rows = [], [], []
+    books_by_game: Dict[str, List[str]] = {}
     for game_id, event_id in sorted(event_map.items()):
         if not budget.can_spend(cost):
             skipped.append(game_id)
@@ -372,7 +409,12 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
             r["game_id"] = game_id
             rows.append(r)
         pulled.append(game_id)
+        books_by_game[game_id] = books_in_payload(payload)
     written = dbmod.upsert(conn, "lines", rows,
                            ["ts", "game_id", "book", "market", "player_name", "side"]) if rows else 0
+    coverage = book_coverage(cfg, books_by_game)
+    if coverage["absent_from_provider_response"]:
+        print(f"[oddsapi] resnap: books requested but absent from the provider response: "
+              f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
     return {"pulled": pulled, "skipped_budget": skipped, "rows_written": written,
-            "ts": ts, "budget_remaining": budget.remaining}
+            "ts": ts, "budget_remaining": budget.remaining, "book_coverage": coverage}

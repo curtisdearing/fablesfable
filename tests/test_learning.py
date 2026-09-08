@@ -98,7 +98,8 @@ def test_attribution_paths():
     assert hit["primary_reason"] == "as_projected"
 
     absent = pl.attribute(_lean(False), None, 3.0, 7.0)
-    assert absent["primary_reason"] == "availability_surprise"
+    # settlement contract: a missing stat row is UNRESOLVED, not an absence asserted as a miss
+    assert absent["primary_reason"] == "unresolved"
 
     collapsed = pl.attribute(_lean(False, volume=8.0), {"targets": 1.0}, 3.0, 7.0)
     assert collapsed["primary_reason"] == "availability_surprise"
