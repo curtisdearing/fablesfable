@@ -306,21 +306,46 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     feeds.append(Feed("injuries", inj_ts, n_records=len(injury_rows), load_bearing=True))
 
     # -- inactives (t90 only; load-bearing at t90) --------------------------- #
+    # Three distinct states, and conflating any two of them is how a board
+    # either voids a whole game or publishes a fiction:
+    #   never fetched      -- no event id, or every fetch threw. No timestamp.
+    #   fetched, unpopulated -- ESPN answered but has not filled the event in
+    #                        (period 0, nobody marked active). Timestamped,
+    #                        rows EMPTY, and it must never imply anyone is out.
+    #   fetched, populated -- the real actives list.
     inactive_rows, ina_ts = None, None
+    inactives_state, inactives_reason = "not_fetched", ""
     if clock == "t90":
         if "inactive_rows" in inject:
             inactive_rows = inject["inactive_rows"]
             ina_ts = inject.get("inactives_fetched_at", stamp_now())
+            inactives_state = inject.get("inactives_state", "populated")
         else:
             inactive_rows = []
+            reasons: List[str] = []
             for eid in game_event_ids or []:
                 try:
                     res = avmod.fetch_event_rosters(eid)
-                    inactive_rows.extend(res["rows"])
                     ina_ts = res["fetched_at"]
+                    if res.get("populated"):
+                        inactive_rows.extend(res["rows"])
+                        inactives_state = "populated"
+                    else:
+                        reasons.append(res.get("reason") or "unpopulated")
+                        if inactives_state != "populated":
+                            inactives_state = "unpopulated"
                 except Exception as exc:  # noqa: BLE001
+                    reasons.append(f"{eid}: {type(exc).__name__}: {exc}")
                     print(f"[pipeline] event roster fetch FAILED for {eid}: {exc}")
-        feeds.append(Feed("inactives", ina_ts, n_records=len(inactive_rows or []),
+            inactives_reason = "; ".join(reasons)
+            if not (game_event_ids or []):
+                inactives_reason = "no ESPN event id resolved for this game"
+        if inactives_state != "populated":
+            # Never let an unpopulated feed reach the resolver: `active: false`
+            # on every entry becomes OUT on every player.
+            inactive_rows = []
+        feeds.append(Feed("inactives", ina_ts if inactives_state == "populated" else None,
+                          n_records=len(inactive_rows or []),
                           load_bearing=True))
 
     # -- league news (context only -> not load-bearing; text is untrusted) --- #
@@ -376,12 +401,16 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     news_map = _nbp(news_items or [], players) if news_items else {}
     # T-90: names the event roster lists as ACTIVE (a practice-squad elevation
     # shows up here, never in the weekly roster asset)
+    # Only from a POPULATED roster. An unpopulated one yields the empty set,
+    # which is not "nobody was elevated" -- it is "we do not know", and the
+    # eligibility check must not read the two the same way.
     t90_active_names = None
-    if clock == "t90" and inactive_rows is not None:
+    if clock == "t90" and inactives_state == "populated" and inactive_rows is not None:
         t90_active_names = {avmod.normalize_name(r.get("name"))
                             for r in inactive_rows if r.get("active")}
     return {"feeds": feeds, "statuses": resolved["statuses"],
             "active_roster": roster, "t90_active_names": t90_active_names,
+            "inactives_state": inactives_state, "inactives_reason": inactives_reason,
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
             "news_by_player": news_map,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
@@ -723,12 +752,36 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         cands = depthp.attach(cands) if depthp is not None else depth_neutral(cands)
         cands = candmod.apply_backup_qb_adjustment(cands)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
+    # The ESPN event id for THIS game. Without it `gather_live_feeds` iterates
+    # an empty list and the inactives feed -- the entire reason T-90 exists --
+    # arrives empty and unstamped. `game_event_ids` had no caller until now.
+    event_ids: List[str] = []
+    if not (inject_feeds or {}).get("inactive_rows"):
+        slate_e = candmod.games_for_week(season, week, inputs.schedules)
+        slate_e = slate_e[slate_e["game_id"] == game_id]
+        try:
+            found = avmod.find_event_ids(slate_e.to_dict("records"))
+            event_ids = [found[game_id]] if game_id in found else []
+            if not event_ids:
+                print(f"[t90] no ESPN event id resolved for {game_id}")
+        except Exception as exc:  # noqa: BLE001 -- missing feed, not a dead run
+            print(f"[t90] event id lookup failed for {game_id}: {exc}")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
-                             inject=inject_feeds)
+                             game_event_ids=event_ids, inject=inject_feeds)
     statuses = live["statuses"]
     as_of = stamp_now()  # the decision follows the fetch; see run_week
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
+    # Say WHY, precisely. "no/unparseable timestamp" is what the gate sees, but
+    # it reads as a parsing bug when the truth is usually that ESPN has not
+    # published the event roster yet. A wrong reason sends the next reader
+    # hunting for a defect that is not there.
+    if live.get("inactives_state") not in (None, "populated"):
+        g["reasons"] = [r for r in g["reasons"] if not r.startswith("inactives:")]
+        g["reasons"].append(
+            f"inactives: source has not published yet "
+            f"({live.get('inactives_reason') or live.get('inactives_state')})")
+        g["publish"] = False
     # ACTIVE ROSTER GATE at T-90 (same contract as the Wednesday run; a
     # practice-squad player the event roster lists as active is an elevation)
     slate_t = candmod.games_for_week(season, week, inputs.schedules)
