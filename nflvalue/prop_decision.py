@@ -291,6 +291,57 @@ def probability_from_projection(candidate: dict) -> Optional[float]:
     return float(value) if _finite(value) and 0.0 <= value <= 1.0 else None
 
 
+#: How far the pooled SD is assumed to be from a player's true SD when
+#: measuring whether an edge survives that uncertainty. Not a fitted number:
+#: it is a deliberately mild stress, and a real per-player SD will miss the
+#: pooled one by far more than this for a QB at either tail.
+SD_STRESS_FRACTION = 0.25
+
+
+def sd_stress(candidate: dict, fraction: float = SD_STRESS_FRACTION) -> Optional[float]:
+    """How much P(over) moves when SD is scaled by 1 +/- ``fraction``.
+
+    ``candidates.market_residual_sd`` fits ONE residual SD per market across
+    every player, so every quarterback on a board carries the identical
+    passing-yards SD (97.375 on 2026 Week 1 -- D.Maye and S.Darnold alike).
+    A pooled SD that wide pins P(over) near 0.5 and, differenced against a
+    real book, manufactures a small "edge" out of a quantity the model never
+    estimated for that player.
+
+    This returns the half-width of the probability interval the pooled SD
+    leaves open. Compared against the edge, it answers the only question that
+    matters for ACTION: is this edge bigger than our ignorance about SD?
+    Returns None when the probability cannot be re-derived.
+    """
+    base = probability_from_projection(candidate)
+    if base is None:
+        return None
+    try:
+        sd = float(candidate["sd"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not _finite(sd) or sd <= 0:
+        return None
+    moved = []
+    for scale in (1.0 - float(fraction), 1.0 + float(fraction)):
+        probe = dict(candidate)
+        probe["sd"] = sd * scale
+        p = probability_from_projection(probe)
+        if p is not None:
+            moved.append(abs(float(p) - float(base)))
+    return max(moved) if moved else None
+
+
+def edge_survives_sd_uncertainty(edge: Optional[float], stress: Optional[float]) -> Optional[bool]:
+    """Is ``edge`` larger than the probability swing a mis-specified SD buys?
+
+    None when either input is unknown -- absence of the check is not a pass.
+    """
+    if edge is None or stress is None:
+        return None
+    return abs(float(edge)) > float(stress)
+
+
 def side_probabilities(candidate: dict) -> Dict[str, Optional[float]]:
     """{p_over, p_under, p_push} from the distribution.
 

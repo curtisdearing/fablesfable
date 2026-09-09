@@ -247,6 +247,15 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     side_price = (prices or {}).get("over" if side == "over" else "under")
     can_stake = (not no_market and model_prob is not None
                  and prop_decision.valid_price(side_price))
+    # Is this edge bigger than our ignorance about SD? `market_residual_sd`
+    # fits ONE residual SD per market for every player, so a quarterback's
+    # passing-yards SD is a league-wide number (97.375 on 2026 Week 1, the
+    # same for D.Maye and S.Darnold). Differencing a probability built on that
+    # against a real book can manufacture a few points of "edge" out of a
+    # quantity never estimated for this player. Report the swing next to the
+    # edge so a reader -- and the shortlist -- can tell the two apart.
+    sd_swing = prop_decision.sd_stress(cand)
+    edge_survives = prop_decision.edge_survives_sd_uncertainty(edge_raw, sd_swing)
     return {
         "composite": round(composite, 2),
         "side": side,
@@ -262,6 +271,13 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
             "model_prob": round(model_prob, 4) if model_prob is not None else None,
             "model_prob_source": "mean_sd_line_distribution",
             "probability_coherent": bool(coherent),
+            # SD provenance and stress. `sd_scope: "market"` says out loud
+            # that this SD was not estimated for this player.
+            "sd_scope": cand.get("sd_scope") or "market",
+            "sd_source": cand.get("sd_source"),
+            "sd_stress_fraction": prop_decision.SD_STRESS_FRACTION,
+            "sd_prob_swing": round(sd_swing, 4) if sd_swing is not None else None,
+            "edge_survives_sd_uncertainty": edge_survives,
             "z": round(z, 3),
             "opp_sub": round(opp_sub, 4),
             "script_sub": round(script_sub, 4),

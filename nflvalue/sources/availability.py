@@ -131,10 +131,48 @@ def parse_team_injuries(raw: Dict) -> List[Dict]:
     return rows
 
 
+def event_roster_populated(raw: Dict) -> Tuple[bool, str]:
+    """Has ESPN actually filled this event roster in, or is it scaffolding?
+
+    Measured on the 2026 Week 1 opener 43 minutes before kickoff (event
+    401872656, 2026-09-09T23:37Z): ``period: 0``, ``active: false`` on all 56
+    entries -- Darnold, the starting quarterback, included -- and
+    ``didNotPlay: true`` on 40 of 56. ESPN flips ``active`` as players
+    actually enter the game, so before kickoff the payload carries NO
+    inactives information at all. It is a participation record, not an
+    inactives list.
+
+    That matters because :func:`parse_event_roster` reads absent/false
+    ``active`` as "not playing" and :func:`resolve_statuses` turns that into
+    OUT. Consuming an unpopulated payload would mark BOTH ENTIRE ROSTERS out
+    and void every lean in the game. So the shape is checked before the
+    content, and an unpopulated roster is a distinct state -- "the source has
+    not published yet" -- never an empty inactives list.
+
+    Returns ``(populated, reason)``; ``reason`` is "" when populated.
+    """
+    if not isinstance(raw, dict) or "entries" not in raw:
+        raise EspnSchemaError("event roster payload missing 'entries'")
+    entries = raw.get("entries") or []
+    if not entries:
+        return False, "event roster has no entries"
+    period = raw.get("period")
+    if period is None:
+        period = (raw.get("competition") or {}).get("period")
+    if not any(bool(e.get("active", False)) for e in entries):
+        return False, (f"no entry is marked active (period={period}); ESPN has not "
+                       f"populated this event roster yet")
+    return True, ""
+
+
 def parse_event_roster(raw: Dict) -> List[Dict]:
     """Per-event competitor roster payload -> rows with the pre-kick active flag.
 
     Row: {espn_id, name, active, did_not_play, starter, jersey}.
+
+    NOTE: ``active`` is only meaningful once ESPN has populated the event --
+    check :func:`event_roster_populated` FIRST. On an unpopulated payload
+    every row parses as ``active=False``, which downstream means OUT.
     """
     if not isinstance(raw, dict) or "entries" not in raw:
         raise EspnSchemaError("event roster payload missing 'entries'")
@@ -151,6 +189,52 @@ def parse_event_roster(raw: Dict) -> List[Dict]:
     return rows
 
 
+def find_event_ids(games: Iterable[Dict]) -> Dict[str, str]:
+    """{game_id -> ESPN event id} for games given as {game_id, gameday,
+    home_team, away_team} (nflverse abbrs).
+
+    The T-90 inactives fetch needs an ESPN event id and nothing produced one:
+    ``gather_live_feeds``'s ``game_event_ids`` parameter had no caller, so the
+    fetch loop never ran and the feed reached the freshness gate empty and
+    unstamped. This resolves the id from the scoreboard for the game's date.
+
+    One scoreboard call per distinct date, matched on abbreviation in both
+    orientations. A game that cannot be matched is simply absent from the
+    result -- the caller reports a missing feed rather than guessing an id.
+    """
+    by_date: Dict[str, List[Dict]] = {}
+    for g in games:
+        day = str(g.get("gameday") or "")
+        if day:
+            by_date.setdefault(day.replace("-", ""), []).append(g)
+    out: Dict[str, str] = {}
+    for yyyymmdd, group in by_date.items():
+        try:
+            board = get_json(f"{SITE}/scoreboard", params={"dates": yyyymmdd})
+        except Exception as exc:  # noqa: BLE001 -- absent id, not a dead run
+            print(f"[availability] scoreboard fetch failed for {yyyymmdd}: {exc}")
+            continue
+        pairs: Dict[Tuple[str, str], str] = {}
+        for ev in board.get("events") or []:
+            comps = (ev.get("competitions") or [{}])[0].get("competitors") or []
+            home = away = ""
+            for c in comps:
+                abbr = str((c.get("team") or {}).get("abbreviation") or "").upper()
+                if c.get("homeAway") == "home":
+                    home = abbr
+                elif c.get("homeAway") == "away":
+                    away = abbr
+            if home and away:
+                pairs[(home, away)] = str(ev.get("id"))
+        for g in group:
+            h = str(g.get("home_team") or "").upper()
+            a = str(g.get("away_team") or "").upper()
+            eid = pairs.get((h, a)) or pairs.get((a, h))
+            if eid:
+                out[str(g.get("game_id"))] = eid
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # Fetch (thin, timestamped)
 # --------------------------------------------------------------------------- #
@@ -163,7 +247,15 @@ def fetch_team_injuries() -> Dict:
 
 
 def fetch_event_rosters(event_id: str) -> Dict:
-    """T-90 actives for one event -> {"rows": [...], "fetched_at": iso}.
+    """T-90 actives for one event.
+
+    Returns ``{"rows", "fetched_at", "populated", "reason"}``. ``populated``
+    is False when ESPN has not filled the event in yet (see
+    :func:`event_roster_populated`), and in that case ``rows`` is EMPTY --
+    deliberately, so a caller that ignores the flag degrades to "no inactives
+    information" instead of "everyone is inactive". ``fetched_at`` is stamped
+    either way: the fetch really did happen, and the freshness gate needs to
+    tell "not published yet" apart from "never fetched".
 
     Resolves the event's two competitor team ids via the site summary, then
     pulls each competitor's core-API roster (the payload carrying ``active``).
@@ -174,17 +266,27 @@ def fetch_event_rosters(event_id: str) -> Dict:
     if not competitors:
         raise EspnSchemaError(f"event {event_id}: no competitors in summary header")
     rows: List[Dict] = []
+    unpopulated: List[str] = []
     for c in competitors:
         team_id = (c.get("team") or {}).get("id") or c.get("id")
         if not team_id:
             raise EspnSchemaError(f"event {event_id}: competitor without a team id")
         raw = get_json(f"{CORE}/events/{event_id}/competitions/{event_id}/competitors/{team_id}/roster")
-        team_rows = parse_event_roster(raw)
         abbr = (c.get("team") or {}).get("abbreviation", "")
+        ok, why = event_roster_populated(raw)
+        if not ok:
+            unpopulated.append(f"{abbr or team_id}: {why}")
+            continue
+        team_rows = parse_event_roster(raw)
         for r in team_rows:
             r["team"] = abbr
         rows.extend(team_rows)
-    return {"rows": rows, "fetched_at": stamp_now()}
+    if unpopulated:
+        # Partial data would be worse than none: one populated side and one
+        # empty side reads as "the whole away team is inactive".
+        return {"rows": [], "fetched_at": stamp_now(), "populated": False,
+                "reason": "; ".join(unpopulated)}
+    return {"rows": rows, "fetched_at": stamp_now(), "populated": True, "reason": ""}
 
 
 # --------------------------------------------------------------------------- #
