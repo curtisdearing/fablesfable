@@ -34,6 +34,7 @@ import argparse
 import datetime as dt
 import os
 from typing import Callable, Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -86,6 +87,22 @@ def build_event_map(cfg: Dict, slate: pd.DataFrame,
         eid = by_pair.get((g.home_team, g.away_team))
         if eid:
             out[g.game_id] = eid
+    return out
+
+
+def slate_kickoffs(slate: pd.DataFrame) -> Dict[str, dt.datetime]:
+    """{game_id -> aware kickoff}, built the same way ``auto_weekly`` does it:
+    ``gameday`` + ``gametime`` are Eastern clock time on the nflverse slate.
+    Games with an unparseable time are omitted, which degrades that game to
+    the plain rotation clock rather than mis-ordering the whole slate."""
+    out: Dict[str, dt.datetime] = {}
+    for g in slate.itertuples(index=False):
+        try:
+            out[g.game_id] = dt.datetime.strptime(
+                f"{g.gameday} {getattr(g, 'gametime', None) or '13:00'}",
+                "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo("America/New_York"))
+        except (ValueError, TypeError):
+            continue
     return out
 
 
@@ -486,16 +503,26 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     prop_lines, line_note = None, None
     if live_odds and cfg.get("odds_api_key"):
         event_map = build_event_map(cfg, slate, list_events_fn=list_events_fn)
-        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch)
+        kickoffs = slate_kickoffs(slate)
+        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
+                                      kickoffs=kickoffs)
         feeds_ts["lines"] = pull["ts"]
-        snap = dbmod.query_df(conn, "SELECT * FROM lines WHERE ts=?", (pull["ts"],))
-        rows = oapmod.match_player_ids(snap.to_dict("records"), _players_frame(cands)
+        # Every quote we still hold for THIS week's games, not just the rows
+        # this run happened to pull. The rotation prices a handful of games a
+        # run; reading only `ts = pull["ts"]` threw away every earlier pull and
+        # published NO_MARKET for games whose real lines were already stored.
+        snap_rows = oapmod.load_recent_lines(conn, game_ids=list(slate["game_id"]))
+        rows = oapmod.match_player_ids(snap_rows, _players_frame(cands)
                                        .rename(columns={"player_name": "name"}))
         prop_lines = oapmod.to_prop_lines_frame(rows)
+        carried = sorted({r["game_id"] for r in snap_rows} - set(pull["pulled"]))
         line_note = (f"Odds pull: {len(pull['pulled'])} game(s) pulled "
                      f"({', '.join(pull['pulled']) or 'none'}); "
+                     f"{len(carried)} game(s) priced from stored quotes "
+                     f"({', '.join(carried) or 'none'}); "
                      f"{len(pull['skipped_budget'])} skipped by credit budget, "
-                     f"{len(pull['skipped_cap'])} by per-run cap; "
+                     f"{len(pull['skipped_cap'])} by per-run cap, "
+                     f"{len(pull.get('skipped_started') or [])} already under way; "
                      f"{pull['budget_remaining']:.0f} credits left this month.")
         if not prop_lines.empty:
             cands = candmod.enumerate_candidates(
@@ -623,7 +650,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
 def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             inputs: Optional[candmod.WeekInputs] = None,
             inject_feeds: Optional[Dict] = None, discord: bool = False,
-            discord_dry_run: bool = True) -> Dict:
+            discord_dry_run: bool = True,
+            odds_fetch: Optional[Callable] = None,
+            list_events_fn: Optional[Callable] = None) -> Dict:
     cfg = cfgmod.load_config()
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
@@ -638,6 +667,42 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     if cands.empty:
         conn.close()
         raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+
+    # REAL LINES AT T-90. This is the best moment of the week to spend a
+    # credit on this game: the line is closest to its close and the inactives
+    # are out. Before 2026-09-09 T-90 touched `lines` neither way, so a game
+    # the rotation had skipped stayed NO_MARKET through kickoff and no run
+    # ever priced it. One event, one game, budget-checked like any other pull;
+    # pulled BEFORE feature/ML stamping so the re-enumerated frame keeps every
+    # layer (the same ordering catch run_week documents).
+    t90_line_note = None
+    if mode == "live" and cfg.get("odds_api_key"):
+        slate_all = candmod.games_for_week(season, week, inputs.schedules)
+        one = slate_all[slate_all["game_id"] == game_id]
+        try:
+            event_map = {k: v for k, v in
+                         build_event_map(cfg, one, list_events_fn=list_events_fn).items()
+                         if k == game_id}
+            if event_map:
+                pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
+                                              kickoffs=slate_kickoffs(one))
+                t90_line_note = (f"T-90 odds pull: {len(pull['pulled'])} game(s); "
+                                 f"{pull['budget_remaining']:.0f} credits left this month.")
+        except oapmod.BudgetExceeded:
+            raise
+        except Exception as exc:  # noqa: BLE001 -- degrade, don't abort
+            t90_line_note = f"T-90 odds pull failed ({type(exc).__name__}: {exc})"
+            print(f"[t90] odds pull failed for {game_id}: {exc}")
+        rows = oapmod.match_player_ids(
+            oapmod.load_recent_lines(conn, game_ids=[game_id]),
+            _players_frame(cands).rename(columns={"player_name": "name"}))
+        prop_lines = oapmod.to_prop_lines_frame(rows)
+        if not prop_lines.empty:
+            cands = candmod.enumerate_candidates(
+                season, week, inputs=inputs,
+                min_usage=(cfg.get("candidates") or {}).get("min_usage"),
+                prop_lines=prop_lines, roster_mode=roster_mode)
+            cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -728,7 +793,8 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "publish": g["publish"], "publish_reasons": g["reasons"],
                "mode": mode, "games": games, "contexts": contexts,
                "voided": voided, "md_path": md_path,
-               "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag}
+               "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag,
+               "line_note": t90_line_note}
     from nflvalue.document import write_drop
     payload["drop_path"] = write_drop(payload, contexts)
     dash = update_dashboard(payload, conn)

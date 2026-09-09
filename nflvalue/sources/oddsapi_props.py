@@ -203,6 +203,49 @@ def match_player_ids(rows: List[Dict], candidates: pd.DataFrame) -> List[Dict]:
 PROP_LINE_COLS = ["game_id", "market", "player_id", "point", "over_price",
                   "under_price", "book", "consensus_p_over", "n_books"]
 
+#: How old a stored quote may be and still price a board. Long enough to span
+#: the gap between two scheduled runs (a game pulled Tuesday still prices
+#: Wednesday's board), short enough that a genuinely abandoned line falls out.
+MAX_LINE_AGE_HOURS = 60.0
+
+
+def load_recent_lines(conn, game_ids: Optional[List[str]] = None,
+                      max_age_hours: float = MAX_LINE_AGE_HOURS,
+                      now: Optional[dt.datetime] = None) -> List[Dict]:
+    """The most recent stored quote per (game, book, market, player, side).
+
+    The pipeline used to price a board from ``SELECT * FROM lines WHERE ts=?``
+    -- only the rows the CURRENT run had just pulled. Because the rotation
+    prices four games a run, a game pulled on Tuesday was invisible on
+    Wednesday's board and rendered ``NO_MARKET`` with real quotes sitting in
+    the table. (2026-09-09: NE@SEA had DraftKings/BetMGM/HardRock rows from
+    2026-09-08T17:56Z and still published with no market.)
+
+    Rows older than ``max_age_hours`` are dropped rather than shown as
+    current: a stale quote priced as live is worse than no quote. Freshness
+    is the caller's to report -- each returned row keeps its own ``ts``.
+    """
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    floor = (now - dt.timedelta(hours=float(max_age_hours))
+             ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    params: List = [floor]
+    where = "WHERE ts >= ?"
+    if game_ids:
+        where += f" AND game_id IN ({','.join('?' * len(game_ids))})"
+        params.extend(game_ids)
+    sql = f"""
+        SELECT l.* FROM lines l
+        JOIN (SELECT game_id, book, market, player_name, side, MAX(ts) AS ts
+                FROM lines {where}
+            GROUP BY game_id, book, market, player_name, side) m
+          ON l.game_id = m.game_id AND l.book = m.book AND l.market = m.market
+         AND l.player_name = m.player_name AND l.side = m.side AND l.ts = m.ts
+    """
+    df = dbmod.query_df(conn, sql, tuple(params))
+    return [] if df.empty else df.to_dict("records")
+
 
 def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                         sharp_weight: float = 2.0) -> pd.DataFrame:
@@ -278,26 +321,105 @@ def list_events(cfg: Dict, fetch: Optional[Callable] = None) -> List[Dict]:
     return fetch(f"{BASE}/sports/{SPORT}/events", {"apiKey": cfg.get("odds_api_key", "")})
 
 
-def rotation_order(conn, game_ids: List[str]) -> List[str]:
-    """Least-recently-pulled first, never-pulled at the very front (stable)."""
+#: A game kicking off within this many hours is IMMINENT: it outranks the
+#: rotation clock. Sized to comfortably exceed the longest gap between two
+#: scheduled runs, so no game can pass through its last chance unpriced.
+IMMINENT_HORIZON_HOURS = 24.0
+
+
+def rotation_order(conn, game_ids: List[str],
+                   kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                   now: Optional[dt.datetime] = None,
+                   horizon_hours: float = IMMINENT_HORIZON_HOURS) -> List[str]:
+    """Pull order: imminent kickoffs first, then the rotation clock.
+
+    The original order was purely least-recently-pulled. That is fair but
+    blind: on 2026-09-09 it spent all four of the Wednesday run's event-calls
+    on Sunday games and skipped the game kicking off that night, so the
+    opener reached kickoff with no market at all. Fairness over a month is
+    worth nothing to a game that starts in five hours.
+
+    Three tiers:
+
+    0. **IMMINENT** -- kickoff in ``(now, now + horizon_hours]``, soonest
+       first. A game we will not get another scheduled chance to price
+       before it starts outranks a game five days out, whatever the
+       rotation clock says.
+    1. **FUTURE** -- kickoff beyond the horizon, or unknown. Least-recently-
+       pulled first, then ``game_id``: the original round-robin, unchanged.
+    2. **STARTED** -- kickoff already passed. Last, and normally unreachable
+       because :func:`pull_week_props` skips them outright; a credit spent on
+       a game in progress buys nothing.
+
+    ``kickoffs=None`` reproduces the pre-2026-09-09 behaviour exactly, so
+    every existing caller and test is unaffected.
+    """
     if not game_ids:
         return []
     df = dbmod.query_df(conn, "SELECT game_id, MAX(ts) AS last_ts FROM lines GROUP BY game_id")
     last = dict(zip(df["game_id"], df["last_ts"])) if not df.empty else {}
-    return sorted(game_ids, key=lambda g: (last.get(g) or "", g))
+    if not kickoffs:
+        return sorted(game_ids, key=lambda g: (last.get(g) or "", g))
+
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    horizon = dt.timedelta(hours=float(horizon_hours))
+
+    def key(game_id: str):
+        ko = kickoffs.get(game_id)
+        if ko is None:                       # unknown kickoff -> rotation clock
+            return (1, "", last.get(game_id) or "", game_id)
+        if ko.tzinfo is None:
+            ko = ko.replace(tzinfo=dt.timezone.utc)
+        if ko <= now:
+            return (2, "", "", game_id)
+        if ko - now <= horizon:
+            return (0, ko.astimezone(dt.timezone.utc).isoformat(), "", game_id)
+        return (1, "", last.get(game_id) or "", game_id)
+
+    return sorted(game_ids, key=key)
+
+
+def started_games(game_ids: List[str], kickoffs: Optional[Dict[str, dt.datetime]],
+                  now: Optional[dt.datetime] = None) -> List[str]:
+    """Game ids whose kickoff has already passed (never worth a credit)."""
+    if not kickoffs:
+        return []
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    out = []
+    for game_id in game_ids:
+        ko = kickoffs.get(game_id)
+        if ko is None:
+            continue
+        if ko.tzinfo is None:
+            ko = ko.replace(tzinfo=dt.timezone.utc)
+        if ko <= now:
+            out.append(game_id)
+    return out
 
 
 def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                     fetch: Optional[Callable] = None,
                     budget: Optional[CreditBudget] = None,
-                    ts: Optional[str] = None) -> Dict:
+                    ts: Optional[str] = None,
+                    kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                    now: Optional[dt.datetime] = None) -> Dict:
     """Pull props for a rotating, budget-capped subset of the week's games.
 
     ``event_map``: {nflverse game_id -> odds-api event id} (built by the
-    pipeline from team names + kickoff dates). Returns::
+    pipeline from team names + kickoff dates).
+
+    ``kickoffs`` ({game_id -> aware datetime}) makes the order kickoff-aware:
+    games starting within :data:`IMMINENT_HORIZON_HOURS` are pulled first and
+    games that have already started are not pulled at all. Omit it and the
+    order is the original least-recently-pulled rotation. Returns::
 
         {"pulled": [game_ids], "skipped_budget": [...], "skipped_cap": [...],
-         "rows_written": int, "credits_spent": float, "budget_remaining": float}
+         "skipped_started": [...], "rows_written": int, "credits_spent": float,
+         "budget_remaining": float}
     """
     fetch = fetch or get_json
     conn = conn or dbmod.connect()
@@ -311,14 +433,22 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     cap = int(cfg.get("max_prop_games_per_run", 4))
     ts = ts or stamp_now()
 
-    ordered = rotation_order(conn, list(event_map))
+    ordered = rotation_order(conn, list(event_map), kickoffs=kickoffs, now=now)
+    started = set(started_games(list(event_map), kickoffs, now=now))
     pulled, skipped_budget, skipped_cap = [], [], []
+    skipped_started: List[str] = []
     skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
     spent = 0.0
     books_by_game: Dict[str, List[str]] = {}
 
     for game_id in ordered:
+        # A game already under way cannot be bet from this board; spending a
+        # metered credit on its live line buys nothing. Checked before the
+        # cap so an in-progress game never consumes a slot either.
+        if game_id in started:
+            skipped_started.append(game_id)
+            continue
         if len(pulled) >= cap:
             skipped_cap.append(game_id)
             continue
@@ -368,7 +498,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
         print(f"[oddsapi] books requested but absent from the provider response: "
               f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
-            "skipped_error": skipped_error,
+            "skipped_started": skipped_started, "skipped_error": skipped_error,
             "rows_written": written, "credits_spent": spent,
             "budget_remaining": budget.remaining, "ts": ts,
             "book_coverage": coverage}
