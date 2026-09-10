@@ -125,7 +125,12 @@ def parse_team_injuries(raw: Dict) -> List[Dict]:
                              if isinstance(ath.get("position"), dict) else ath.get("position")) or "",
                 "status_raw": it.get("status") or "",
                 "status": normalize_status(it.get("status")),
+                # ESPN's own report stamp -- WHEN the designation was posted,
+                # which is the recency a game page needs (a Tuesday "Out" and
+                # a June "Active" are not the same kind of fact).
                 "date": it.get("date") or "",
+                "injury_type": ((it.get("details") or {}).get("type") or ""
+                                if isinstance(it.get("details"), dict) else ""),
                 "comment": (it.get("shortComment") or "")[:400],
             })
     return rows
@@ -256,10 +261,13 @@ def resolve_statuses(
                 row, matched_by = cands[0], "name_only"
 
         status, status_raw, source, ts, comment = "OK", "", "none(no injury listed)", inj_ts, ""
+        report_date, injury_type = "", ""
         if row is not None:
             matched_keys.add(pname)
             status, status_raw = row["status"], row["status_raw"]
             source, ts, comment = "espn_team_injuries", inj_ts, row.get("comment", "")
+            report_date = row.get("date") or ""
+            injury_type = row.get("injury_type") or ""
 
         if clock == "t90":
             ina = ina_by_name.get(pname)
@@ -276,7 +284,10 @@ def resolve_statuses(
 
         statuses[pid] = {"status": status, "status_raw": status_raw, "source": source,
                          "timestamp": ts, "matched_by": matched_by or "unmatched",
-                         "comment": comment}
+                         "comment": comment,
+                         # ``timestamp`` is when WE fetched; ``report_date`` is
+                         # when ESPN posted the designation. Both are kept.
+                         "report_date": report_date, "injury_type": injury_type}
 
     unmatched = [r for k, rows_ in by_name.items() if k not in matched_keys for r in rows_]
     return {"statuses": statuses, "unmatched_espn_rows": unmatched}

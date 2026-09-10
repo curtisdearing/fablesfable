@@ -1,0 +1,24 @@
+{
+  "_format": "keyed by nflverse game_id. arrival: {team: text}. not_playing: [{team, name, pos, note, source, published}]. notes: [{text, source, published}]. Hand-curated; the feeds never carry arrival dates or quotes.",
+  "2026_01_SF_LA": {
+    "arrival": {
+      "SF": "Departed Wed 09-02, arrived Melbourne Fri 09-04 — nine days out. Shanahan: \"you don't feel normal until like the third or fourth day.\" (CBS Sports, 09-03)",
+      "LA": "Departed Tue ~10pm PT, ~16h flight, arrived Thu 09-10 ~24h before kick; one practice 4:35pm AEST. McVay: \"keep guys in as close to a rhythm and routine as possible.\" Rams under McVay abroad 3-0 SU/ATS (three London games, 8h shift, not 17h). (CBS Sports 09-03; ABC Australia 09-10)"
+    },
+    "not_playing": [
+      {"team": "SF", "name": "Alfred Collins", "pos": "DT", "note": "OUT — torn patellar tendon at Tue 09-08 practice in Melbourne, season. Shanahan: \"We've lost two D-linemen pretty much for the year.\" Halton/Thompson next up.", "source": "https://www.foxnews.com/outkick-sports/injury-bug-bites-49ers-loses-key-defensive-tackle-practice-australia", "published": "2026-09-09 08:45 ET"},
+      {"team": "SF", "name": "James Thompson Jr.", "pos": "DT", "note": "QUESTIONABLE (hamstring); DNP Tue, LP Wed.", "source": "https://sports.yahoo.com/articles/49ers-week-1-injury-report-043237562.html", "published": "2026-09-10 04:32 UTC"},
+      {"team": "SF", "name": "Nick Bosa", "pos": "DE", "note": "Plays; LP Tue+Wed (knee). Shanahan: \"we've definitely got to be smart with that\" — snap share capped, unquantified.", "source": "https://www.49erswebzone.com/articles/203098-manage-george-kittle-christian-mccaffrey/", "published": "2026-09-08 20:48 PT"},
+      {"team": "SF", "name": "George Kittle", "pos": "TE", "note": "Plays; LP Tue+Wed (Achilles); same 'be smart' quote — workload uncertain.", "source": "https://www.49erswebzone.com/articles/203098-manage-george-kittle-christian-mccaffrey/", "published": "2026-09-08 20:48 PT"},
+      {"team": "SF", "name": "Brandon Aiyuk", "pos": "WR", "note": "Reserve/left squad — not on roster (Lynch, 08-31). Pearsall out for year (PCL), Kirk out until ≥ Wk 5 (DK Network 09-08).", "source": "https://www.nbcsportsbayarea.com/nfl/san-francisco-49ers/brandon-aiyuk-contract-john-lynch-4/1959836/", "published": "2026-08-31"},
+      {"team": "LA", "name": "Aaron Donald", "pos": "DL", "note": "OUT — did not travel. McVay: \"we're making a decision that we think is best for him and for our team.\" Week 2 targeted.", "source": "https://www.therams.com/news/aaron-donald-will-not-play-week-1-2026-49ers-myles-garrett-ready-to-go", "published": "2026-09-08 13:47"},
+      {"team": "LA", "name": "Myles Garrett", "pos": "OLB", "note": "Plays; DNP Tue (knee), FP Wed. McVay: \"He's looked great.\" Final tag not confirmed.", "source": "https://www.therams.com/news/aaron-donald-will-not-play-week-1-2026-49ers-myles-garrett-ready-to-go", "published": "2026-09-08 13:47"},
+      {"team": "LA", "name": "Jaylen Watson", "pos": "CB", "note": "DNP Tue, LP Wed (toe); final designation not found.", "source": "https://www.49erswebzone.com/articles/203128-injury-report-players-limited-practice/", "published": "2026-09-09 14:57 PT"},
+      {"team": "LA", "name": "Alaric Jackson", "pos": "OT", "note": "Official 'NIR-Rest' DNP Tue / FP Wed; DK Network says 'blood clot management' — conflicting reasons.", "source": "https://dknetwork.draftkings.com/2026/09/08/nfl-injury-report-week-1/", "published": "2026-09-08 20:35 ET"}
+    ],
+    "notes": [
+      {"text": "Kickoff 8:35pm ET = 10:35am Friday Melbourne; MCG open-air; Rams designated home.", "source": "https://www.49ers.com/news/49ers-to-open-2026-season-vs-rams-in-melbourne-on-sept-10", "published": "2026-03-25"},
+      {"text": "Spread moved LAR -3 → -3.5 → -4.5 at five books on a ~54/46 public split (TheSpread 09-08; Covers 09-10 01:10 ET). Total 49 → 48/48.5.", "source": "https://www.thespread.com/nfl-articles/49ers-vs-rams-odds-2026-nfl-season-opener-rams-spread-favorite/", "published": "2026-09-08 11:59 ET"}
+    ]
+  }
+}

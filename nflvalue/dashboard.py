@@ -263,6 +263,13 @@ function renderLeans(){
     : `<div class="box"><b>Weekly top-five report — not available.</b>
        <div class="sub">No current report sits next to this page, so there is nothing to link to yet.
        One appears here after a weekly run writes it.${rep.reason?" Build reason: <code>"+esc(rep.reason)+"</code>.":""}</div></div>`;
+  // Per-game page link: only when a page for THAT game_id is in the payload,
+  // so the board never carries a dead href to games/<id>.html.
+  const pageHrefs = {};
+  (DATA.game_pages||[]).forEach(p=>{ if(p&&p.game_id&&p.href){ pageHrefs[p.game_id]=p; } });
+  const pageLink = g => pageHrefs[g.game_id]
+    ? ` · <a class="gamelink" href="${esc(pageHrefs[g.game_id].href)}">Game page: odds, injuries, travel, why →</a>`
+    : "";
   const games = w.games.map(g=>{
     const ctx=(w.contexts||{})[g.game_id];
     const rows=g.leans.map((l,i)=>`<tr class="${i===0?"toplean":""}">
@@ -275,7 +282,7 @@ function renderLeans(){
       <td>${l.edge!=null?fmtPct(l.edge):'<span class="sub">'+esc((l.market_state&&l.market_state!=="NO_MARKET"&&l.market_state!=="REAL_MARKET")?String(l.market_state).toLowerCase():"no_market")+'</span>'}</td>
       <td class="price">${esc(l.composite)}</td></tr>`).join("");
     const ctxItems = ctx? ctx.entries.map(e=>e.items.map(i=>`<div class="sub">• <b>${esc(e.name)}</b> — ${esc(i)}</div>`).join("")).join("") : "";
-    return `<div class="box"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened</span>
+    return `<div class="box" id="game-${esc(g.game_id)}"><b>${esc(g.matchup)}</b> <span class="sub">top ${g.leans.length} of ${g.screened_n} screened${pageLink(g)}</span>
       <table><thead><tr><th>Player</th><th>Market</th><th>Line</th><th>Side</th><th>Proj</th><th>Edge</th><th>Score</th></tr></thead>
       <tbody>${rows}</tbody></table>
       ${ctx?`<div class="note"><b>Context — display only, never scored:</b>${ctxItems}</div>`:""}</div>`;

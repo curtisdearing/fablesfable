@@ -13,6 +13,11 @@ What ships
 ``_site/reports/latest.html``           this week's drop, or a visible notice
 ``_site/reports/{season}/week-{n}.html`` the same document, permanently addressed
 ``_site/reports/index.json``            what was published, and why/why not
+``_site/games/{game_id}.html``          one page per matchup (odds, injuries
+                                        with report dates, travel/body clock,
+                                        the model's drivers) -- from the
+                                        ``game_pages`` block of data/latest.json
+``_site/games/index.json``              which game pages were written
 
 Why the season and week come from the payload
 ---------------------------------------------
@@ -202,9 +207,55 @@ def build_hub_feed(root: Path, site: Path, script: Path) -> None:
         raise Fatal(f"hub feed build reported success but {out} does not exist")
 
 
+def build_game_pages(root: Path, site: Path, latest_path: Path,
+                     payload) -> dict:
+    """Write ``_site/games/*.html`` from the ``game_pages`` block of
+    ``data/latest.json``.  Pages from another season/week than the payload
+    names are NOT written (a stale page under a current board would be the
+    same lie the report guard exists to prevent).  Never fatal: a board with
+    no game pages is a board; a broken page builder is logged."""
+    result = {"written": 0, "skipped_stale": 0, "reason": None}
+    if not latest_path.is_file():
+        result["reason"] = "missing_latest"
+        log("game pages: no data/latest.json -> none written")
+        return result
+    try:
+        latest = json.loads(latest_path.read_text(encoding="utf-8"))
+        pages = latest.get("game_pages") or []
+    except (OSError, ValueError) as exc:
+        result["reason"] = f"unreadable_latest: {exc}"
+        log(f"WARN game pages: {result['reason']}")
+        return result
+    if payload is not None:
+        current = [p for p in pages
+                   if str(p.get("season")) == str(payload["season"])
+                   and str(p.get("week")) == str(payload["week"])]
+        result["skipped_stale"] = len(pages) - len(current)
+        pages = current
+    if not pages:
+        result["reason"] = latest.get("game_pages_error") or "no_pages_in_payload"
+        log(f"game pages: none to write ({result['reason']})")
+        return result
+    # the renderer is code, not state: it comes from this script's repository,
+    # not from ``--root`` (a fixture tree carries payloads, not packages)
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    try:
+        from nflvalue import game_pages as gpmod
+        written = gpmod.write_site_pages(pages, str(site))
+    except Exception as exc:  # noqa: BLE001 -- the board must still ship
+        result["reason"] = f"render_failed: {type(exc).__name__}: {exc}"
+        log(f"WARN game pages: {result['reason']}")
+        return result
+    result["written"] = len(written)
+    log(f"games/: {len(written)} page(s) written"
+        + (f", {result['skipped_stale']} stale skipped" if result["skipped_stale"] else ""))
+    return result
+
+
 def build(root: Path, site: Path, payload_path: Path, drops_dir: Path,
           dashboard: Path, hub_script: Path, now: dt.datetime,
-          max_age_hours: float) -> dict:
+          max_age_hours: float, latest_path: Path = None) -> dict:
     site.mkdir(parents=True, exist_ok=True)
 
     if not dashboard.is_file():
@@ -262,6 +313,9 @@ def build(root: Path, site: Path, payload_path: Path, drops_dir: Path,
         log("WARN reports/latest.html now carries a visible notice; no versioned "
             "report was written")
 
+    manifest["game_pages"] = build_game_pages(
+        root, site, latest_path or (root / "data" / "latest.json"), payload)
+
     (reports / "index.json").write_text(json.dumps(manifest, indent=2) + "\n",
                                         encoding="utf-8")
     return manifest
@@ -279,6 +333,8 @@ def main(argv=None) -> int:
                     help="default: {root}/dashboard.html")
     ap.add_argument("--hub-feed", type=Path, default=None,
                     help="default: {root}/scripts/build_hub_feed.py")
+    ap.add_argument("--latest", type=Path, default=None,
+                    help="dashboard payload carrying game_pages (default: {root}/data/latest.json)")
     ap.add_argument("--max-age-hours", type=float, default=DEFAULT_MAX_AGE_HOURS,
                     help="payloads older than this are not current (0 disables)")
     ap.add_argument("--now", default=None, help="ISO-8601 clock override, for tests")
@@ -292,6 +348,7 @@ def main(argv=None) -> int:
     drops_dir = (args.drops_dir or root / "drops").resolve()
     dashboard = (args.dashboard or root / "dashboard.html").resolve()
     hub_script = (args.hub_feed or root / "scripts" / "build_hub_feed.py").resolve()
+    latest_path = (args.latest or root / "data" / "latest.json").resolve()
 
     now = parse_timestamp(args.now) if args.now else dt.datetime.now(dt.timezone.utc)
     if now is None:
@@ -300,7 +357,7 @@ def main(argv=None) -> int:
 
     try:
         manifest = build(root, site, payload_path, drops_dir, dashboard, hub_script,
-                         now, args.max_age_hours)
+                         now, args.max_age_hours, latest_path=latest_path)
     except Fatal as exc:
         print(f"[pages] ERROR {exc}", file=sys.stderr)
         return 2

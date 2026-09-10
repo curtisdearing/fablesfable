@@ -367,6 +367,11 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
             "active_roster": roster, "t90_active_names": t90_active_names,
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
             "news_by_player": news_map,
+            # The raw league-wide rows, so a game page can list EVERY listed
+            # player on both teams (a starting DT is never a prop candidate,
+            # so ``statuses`` alone would never show he is out).
+            "injury_rows": list(injury_rows or []),
+            "inactive_rows": list(inactive_rows or []) if inactive_rows is not None else None,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
                    "rosters": roster_ts, "news": news_ts, "lines": None}}
 
@@ -405,6 +410,18 @@ def update_dashboard(report_payload: Dict, conn) -> str:
               f"{type(exc).__name__}: {exc}")
         data["explain"] = {"cards": [], "unexplainable": [],
                            "error": f"{type(exc).__name__}: {exc}"}
+    # Per-game pages: leans + explain drivers + the page context the run
+    # stamped.  A T-90 payload carries one game, so pages for the other games
+    # of the same week are carried forward from the previous payload.
+    try:
+        from nflvalue import game_pages as gpmod
+        new_pages = gpmod.build_pages(data["weekly_leans"], data.get("explain"))
+        data["game_pages"] = gpmod.merge_pages(
+            data.get("game_pages"), new_pages,
+            data["weekly_leans"].get("season"), data["weekly_leans"].get("week"))
+    except Exception as exc:  # noqa: BLE001 -- visible, never silent
+        print(f"[pipeline] game pages failed: {type(exc).__name__}: {exc}")
+        data["game_pages_error"] = f"{type(exc).__name__}: {exc}"
     data.setdefault("refresh_seconds", 90)
     cfgmod.save_json(cfgmod.LATEST_PATH, data)
     return write_dashboard(data)
@@ -439,6 +456,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     roster_diag: Dict = {}
     statuses: Dict[str, Dict] = {}
     sleeper_df, feeds_ts, news_by_player = None, {}, {}
+    live: Dict = {}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
                                  clock="wed", inject=inject_feeds)
@@ -578,6 +596,13 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     if mode == "live":
         from nflvalue.game_notes import attach_notes
         attach_notes(result["games"], cands, inputs.schedules, season, week)
+        # per-game page context (travel / body clock, both teams' listed
+        # players with ESPN report dates, hand notes) -- display-only
+        from nflvalue import game_pages as gpmod
+        gpmod.attach_context(result["games"], inputs.schedules, season, week,
+                             injury_rows=live.get("injury_rows"),
+                             inactive_rows=live.get("inactive_rows"),
+                             as_of=result["as_of"])
         syn = _synthesis_for_games(result["games"], statuses, sleeper_df,
                                    as_of, week, feeds_ts, news_by_player=news_by_player)
         notes = rptmod.load_manual_notes(conn, season, week)
@@ -709,6 +734,10 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                                                     .get("max_per_player", 2)))
     from nflvalue.game_notes import attach_notes
     attach_notes(games, cands2, inputs.schedules, season, week)
+    from nflvalue import game_pages as gpmod
+    gpmod.attach_context(games, inputs.schedules, season, week,
+                         injury_rows=live.get("injury_rows"),
+                         inactive_rows=live.get("inactive_rows"), as_of=as_of)
     contexts = {gm["game_id"]: slmod.build_context_panel(
         gm, availability=statuses, mode=mode) for gm in games}
 

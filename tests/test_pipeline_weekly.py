@@ -228,3 +228,44 @@ def test_t90_feeds_fetched_after_as_of_are_not_future_dated(env, monkeypatch):
                      inject_feeds=feeds)
     assert not [r for r in res["publish_reasons"] if "future-dated" in r], res["publish_reasons"]
     assert res["publish"] is True
+
+
+def test_wed_and_t90_runs_carry_a_page_per_game(env):
+    """The per-game page rides the same payload as the leans: the Wednesday
+    run stamps travel + both teams' listed players + hand notes on every
+    game, update_dashboard joins them with the explain cards into
+    ``latest.json["game_pages"]``, and a T-90 run REPLACES only its own
+    game's page (the inactive shows as OUT there) instead of dropping the
+    rest of the week's pages."""
+    from nflvalue.freshness import stamp_now
+    now = stamp_now()
+    feeds = _fresh_feeds(now)
+    feeds["injury_rows"].append(
+        {"team": "BBB", "name": "Some Lineman", "position": "OT", "status_raw": "Out",
+         "status": "OUT", "date": now, "injury_type": "Knee", "comment": "practice"})
+    wed = pw.run_week(SEASON, WEEK, mode="live", inputs=synthetic_inputs(),
+                      inject_feeds=feeds)
+    ctx = wed["games"][0]["page_context"]
+    assert ctx["availability"]["players"][0]["name"] == "Some Lineman"   # not a candidate, still listed
+    assert ctx["availability"]["players"][0]["status"] == "OUT"
+    assert "travel" in ctx
+    latest = json.loads((env["tmp"] / "latest.json").read_text())
+    pages = latest["game_pages"]
+    assert [p["game_id"] for p in pages] == [GAME_ID]
+    assert pages[0]["href"] == f"games/{GAME_ID}.html"
+    assert "game_pages_error" not in latest
+    html = (env["tmp"] / "dashboard.html").read_text()
+    assert f"games/{GAME_ID}.html" in html
+
+    t90_feeds = dict(_fresh_feeds(now))
+    t90_feeds["inactive_rows"] = [
+        {"espn_id": "1", "name": "Alpha Wideout", "active": False, "did_not_play": True,
+         "starter": True, "team": "AAA"}]
+    t90_feeds["inactives_fetched_at"] = now
+    pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=synthetic_inputs(),
+               inject_feeds=t90_feeds)
+    latest = json.loads((env["tmp"] / "latest.json").read_text())
+    pages = latest["game_pages"]
+    assert [p["game_id"] for p in pages] == [GAME_ID] and pages[0]["clock"] == "t90"
+    outs = [p["name"] for p in pages[0]["availability"]["players"] if p["status"] == "OUT"]
+    assert "Alpha Wideout" in outs
