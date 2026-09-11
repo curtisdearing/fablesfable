@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "project": "fablesfable",
+  "generated_at": "2026-09-11T07:00:38Z",
+  "mode": "research",
+  "disclaimer": "Saved model analysis, not live odds or approved wagers. Verify current price and availability.",
+  "summary": {
+    "n_games": 16,
+    "n_value_bets": 0,
+    "n_value_props": 0,
+    "n_model_candidates": 70,
+    "best_ev": null,
+    "mc_on": false
+  },
+  "metrics": {
+    "available": false,
+    "reason": "Legacy demo metrics are not carried forward; see native prop history.",
+    "graded_total": null,
+    "settled_total": null,
+    "win_rate": null,
+    "roi_all": null,
+    "brier": null
+  },
+  "value_bets": [],
+  "value_props": [],
+  "week": {
+    "label": "2026 Week 1",
+    "season": 2026,
+    "week": 1,
+    "record_to_date": null,
+    "games": []
+  },
+  "top_bets": {
+    "label": "2026 Week 1",
+    "meta": {
+      "status": "analysis_only"
+    },
+    "games": []
+  },
+  "model_analysis": {
+    "url": "https://curtisdearing.github.io/fablesfable/",
+    "source_as_of": "2026-09-11T07:00:38Z",
+    "n_candidates": 70,
+    "approval_status": "HOLD",
+    "approved_bets": 0,
+    "games": [
+      {
+        "game_id": "2026_01_ARI_LAC",
+        "matchup": "ARI @ LAC",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_ARI_LAC.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_ATL_PIT",
+        "matchup": "ATL @ PIT",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_ATL_PIT.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_BAL_IND",
+        "matchup": "BAL @ IND",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_BAL_IND.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_BUF_HOU",
+        "matchup": "BUF @ HOU",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_BUF_HOU.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_CHI_CAR",
+        "matchup": "CHI @ CAR",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_CHI_CAR.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_CLE_JAX",
+        "matchup": "CLE @ JAX",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_CLE_JAX.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_DAL_NYG",
+        "matchup": "DAL @ NYG",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_DAL_NYG.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_DEN_KC",
+        "matchup": "DEN @ KC",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_DEN_KC.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_GB_MIN",
+        "matchup": "GB @ MIN",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_GB_MIN.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_MIA_LV",
+        "matchup": "MIA @ LV",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_MIA_LV.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_NE_SEA",
+        "matchup": "NE @ SEA \u2014 FINAL (historical; no prospective lean)",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NE_SEA.html",
+        "n_candidates": 0
+      },
+      {
+        "game_id": "2026_01_NO_DET",
+        "matchup": "NO @ DET",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NO_DET.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_NYJ_TEN",
+        "matchup": "NYJ @ TEN",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NYJ_TEN.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_SF_LA",
+        "matchup": "SF @ LA \u2014 FINAL (historical; no prospective lean)",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_SF_LA.html",
+        "n_candidates": 0
+      },
+      {
+        "game_id": "2026_01_TB_CIN",
+        "matchup": "TB @ CIN",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_TB_CIN.html",
+        "n_candidates": 5
+      },
+      {
+        "game_id": "2026_01_WAS_PHI",
+        "matchup": "WAS @ PHI",
+        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_WAS_PHI.html",
+        "n_candidates": 5
+      }
+    ]
+  }
+}

@@ -3,6 +3,12 @@ name: Live weekly model loop
 on:
   push:
     branches: [main]
+    # UI publication must never trigger the data/state/notification loop.
+    paths-ignore:
+      - 'published-site/**'
+      - '.github/workflows/website.yml'
+      - '.github/workflows/live-weekly.yml'
+      - 'tests/test_readonly_website_workflow.py'
   workflow_dispatch:
     inputs:
       job:
@@ -204,6 +210,10 @@ jobs:
           path: _site
 
   deploy-dashboard:
+    # The website workflow publishes the reviewed reading artifact independently.
+    # Keep model run evidence, but never overwrite that site with a failed-run
+    # notice or the old committed demonstration dashboard.
+    if: ${{ false }}
     needs: run
     runs-on: ubuntu-latest
     permissions:

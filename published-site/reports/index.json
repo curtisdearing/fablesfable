@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "published": true,
+  "publication_kind": "saved-model-analysis",
+  "season": 2026,
+  "week": 1,
+  "as_of": "2026-09-11T07:00:38Z",
+  "approved_bets": 0,
+  "paths": {
+    "latest": "reports/latest.html",
+    "versioned": "reports/2026/week-1.html"
+  },
+  "reason": null
+}

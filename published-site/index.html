@@ -1,0 +1,77 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>FablesFable NFL — 2026 week 1</title><style>
+:root{--ink:#151a22;--sub:#5c6674;--rule:#e2e6ee;--bg:#fff;--box:#f7f8fb;
+--red:#b3261e;--amber:#9a6b00;--green:#1a6f38;--hold:#6b4fa0}
+*{box-sizing:border-box}
+body{font:16px/1.55 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+color:var(--ink);background:var(--bg);margin:0;padding:16px 14px 56px}
+main{max-width:47rem;margin:0 auto}
+h1{font-size:21px;margin:0 0 2px;line-height:1.25}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);
+margin:26px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:5px}
+.sub{color:var(--sub);font-size:13px}
+.box{background:var(--box);border:1px solid var(--rule);border-radius:8px;
+padding:12px 13px;margin:10px 0}
+.bet{border-left:4px solid var(--green)}
+.hold{border-left:4px solid var(--hold);background:#faf8fd}
+.empty{border-left:4px solid var(--amber);background:#fdfaf2}
+.warn{border-left:4px solid var(--amber);background:#fdfaf2;padding:10px 12px;
+border-radius:6px;margin:10px 0}
+.pick{font-size:18px;font-weight:650;margin:2px 0 6px}
+.kv{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--sub);margin:4px 0}
+.kv b{color:var(--ink);font-weight:600}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;
+background:#eceff6;color:var(--sub);margin:2px 4px 2px 0;white-space:nowrap}
+.out{color:var(--red);font-weight:600}.risk{color:var(--amber);font-weight:600}
+ul{margin:6px 0;padding-left:20px}li{margin:2px 0;font-size:14px}
+a{color:#17529c;display:inline-block;padding:4px 0;min-height:26px}
+.gamelist a{display:block;min-height:56px;padding:11px 12px;border:1px solid var(--rule);
+border-radius:8px;margin:7px 0;text-decoration:none;color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:13px;display:block;
+overflow-x:auto;white-space:nowrap}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--rule)}
+th{font-size:11px;color:var(--sub);text-transform:uppercase}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600;font-size:14px;
+padding:8px 0}
+footer{margin-top:30px;font-size:12px;color:var(--sub);border-top:1px solid var(--rule);
+padding-top:12px}
+/* Game-first surfaces.  Every interactive element is at least a 44px target
+   and every box is fluid: a 390px phone must not scroll sideways. */
+.brand{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;
+border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:12px}
+.brand .mark{font-weight:700;letter-spacing:.01em;font-size:17px}
+.nav{display:flex;flex-wrap:wrap;gap:4px 14px}
+.nav a,.navlink{min-height:44px;display:inline-flex;align-items:center;
+text-decoration:none;font-size:14px}
+.nav a[aria-current='page']{font-weight:700;text-decoration:underline}
+#week-selector{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+#week-selector .wk{min-height:44px;display:inline-flex;align-items:center;
+padding:0 14px;border:1px solid var(--rule);border-radius:22px;font-size:14px}
+#week-selector .wk[aria-current='true']{background:#17529c;color:#fff;
+border-color:#17529c;font-weight:650}
+.notice{background:var(--box);border:1px solid var(--rule);border-left:4px solid #17529c;
+border-radius:8px;padding:10px 12px;margin:12px 0;font-size:14px}
+.tiles{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0}
+.tile{display:block;min-height:44px;padding:12px 13px;border:1px solid var(--rule);
+border-radius:10px;text-decoration:none;color:var(--ink);background:var(--box)}
+.tile:hover,.tile:focus{border-color:#17529c}
+.tile .mu{font-weight:650;font-size:16px}
+.tile .teaser{font-size:13px;color:var(--sub);margin-top:3px;overflow-wrap:anywhere}
+.card{border:1px solid var(--rule);border-left:4px solid #17529c;border-radius:10px;
+padding:12px 13px;margin:12px 0;background:var(--bg);overflow-wrap:anywhere}
+.card.nomarket{border-left-color:var(--sub)}
+.rank{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub)}
+.basis{font-size:13px;margin:6px 0}
+.basis b{display:inline-block}
+.why{font-size:15px;margin:8px 0 6px}
+.card ul{padding-left:18px}
+.card .head{font-size:12px;text-transform:uppercase;letter-spacing:.04em;
+color:var(--sub);margin-top:8px}
+details.audit,details.preview{border:1px solid var(--rule);border-radius:8px;
+padding:2px 12px;background:var(--box)}
+details.audit>summary,details.preview>summary{min-height:44px;display:flex;
+align-items:center}
+@media (min-width:45em){body{padding:28px 20px 64px}h1{font-size:26px}
+table{white-space:normal}.tiles{grid-template-columns:1fr 1fr}}
+@media (prefers-color-scheme:dark){:root{--ink:#e8ecf3;--sub:#9aa4b4;--rule:#2b3240;
+--bg:#12151b;--box:#181d26;--hold:#9b83d4}}
+</style></head><body><main><div class='brand'><span class='mark'>FablesFable NFL</span><nav class='nav' aria-label='Site'><a href='index.html' aria-current='page'>Games</a><a href='best-bets.html'>Top ideas</a><a href='history.html'>History</a></nav></div><h1>2026 · week 1 football</h1><div class='sub'>16 games · 70 saved model views · model run clock wed (2026-09-11T07:00:38Z)</div><nav id='week-selector' aria-label='Week'><span class='wk' aria-current='true'>Week 1</span><span class='sub'>This build carries week 1 only; no other week is offered.</span></nav><div class='notice'><b>Saved model analysis, not live odds; verify current price and availability.</b> Quotes in this build were captured <b>2026-09-11T07:00:26Z</b> and were not refreshed for this page.</div><h2 id='upcoming'>Upcoming</h2><div class='tiles'><a class='tile' href='games/2026_01_ATL_PIT.html'><div class='mu'>ATL @ PIT</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: A.Rodgers projected 30.612 pass attempts · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_BAL_IND.html'><div class='mu'>BAL @ IND</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: R.Bateman UNDER 2.5 receptions · Saved market lean · 5 saved views</div></a><a class='tile' href='games/2026_01_BUF_HOU.html'><div class='mu'>BUF @ HOU</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: X.Hutchinson UNDER 2.5 receptions · Saved market lean · 5 saved views</div></a><a class='tile' href='games/2026_01_CHI_CAR.html'><div class='mu'>CHI @ CAR</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: C.Williams projected 34.881 pass attempts · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_CLE_JAX.html'><div class='mu'>CLE @ JAX</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: B.Tuten UNDER 46.5 rushing yards · Saved market lean — one book · 5 saved views</div></a><a class='tile' href='games/2026_01_NO_DET.html'><div class='mu'>NO @ DET</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: J.Goff projected 260.931 passing yards · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_NYJ_TEN.html'><div class='mu'>NYJ @ TEN</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: T.Pollard projected 67.342 rushing yards · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_TB_CIN.html'><div class='mu'>TB @ CIN</div><div class='teaser'>Kickoff Sun, Sep 13 · 1:00 PM EDT</div><div class='teaser'>Top model view: C.Brown projected 65.678 rushing yards · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_ARI_LAC.html'><div class='mu'>ARI @ LAC</div><div class='teaser'>Kickoff Sun, Sep 13 · 4:25 PM EDT</div><div class='teaser'>Top model view: J.Herbert UNDER 233.5 passing yards · Saved market lean — one book · 5 saved views</div></a><a class='tile' href='games/2026_01_GB_MIN.html'><div class='mu'>GB @ MIN</div><div class='teaser'>Kickoff Sun, Sep 13 · 4:25 PM EDT</div><div class='teaser'>Top model view: J.Mason projected 33.017 rushing yards · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_MIA_LV.html'><div class='mu'>MIA @ LV</div><div class='teaser'>Kickoff Sun, Sep 13 · 4:25 PM EDT</div><div class='teaser'>Top model view: D.Achane projected 88.988 rushing yards · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_WAS_PHI.html'><div class='mu'>WAS @ PHI</div><div class='teaser'>Kickoff Sun, Sep 13 · 4:25 PM EDT</div><div class='teaser'>Top model view: S.Barkley projected 18.625 rush attempts · Projection only — no sportsbook line · 5 saved views</div></a><a class='tile' href='games/2026_01_DAL_NYG.html'><div class='mu'>DAL @ NYG</div><div class='teaser'>Kickoff Sun, Sep 13 · 8:20 PM EDT</div><div class='teaser'>Top model view: C.Lamb UNDER 6.5 receptions · Saved market lean · 5 saved views</div></a><a class='tile' href='games/2026_01_DEN_KC.html'><div class='mu'>DEN @ KC</div><div class='teaser'>Kickoff Mon, Sep 14 · 8:15 PM EDT</div><div class='teaser'>Top model view: J.Dobbins projected 71.863 rushing yards · Projection only — no sportsbook line · 5 saved views</div></a></div><h2 id='completed'>Completed</h2><div class='tiles'><a class='tile' href='games/2026_01_NE_SEA.html'><div class='mu'>NE @ SEA — FINAL (historical; no prospective lean)</div><div class='teaser'>Final Wed, Sep 9 · 8:20 PM EDT</div><div class='teaser'>Completed — original forecasts and results are in History.</div></a><a class='tile' href='games/2026_01_SF_LA.html'><div class='mu'>SF @ LA — FINAL (historical; no prospective lean)</div><div class='teaser'>Final Thu, Sep 10 · 8:35 PM EDT</div><div class='teaser'>Completed — original forecasts and results are in History.</div></a></div><section id='audit-section'><h2>Behind the numbers</h2><details class='audit'><summary>Data &amp; methodology</summary><div id='data-methodology'><div class='sub'>This site is a saved, read-only research snapshot. Nothing on it was approved as a bet: every saved row failed at least one release check, most often because no verified two-book market was captured for it. The per-game pages carry the full receipt, and the held dashboard snapshot below is the original run's own report.</div><div><a href='dashboard.html'>Held run dashboard snapshot →</a></div></div></details></section><footer>Leans, not locks. Every figure here is read from the model's own weekly payload; nothing on this page is a settled result or a guarantee. 21+. 1-800-GAMBLER.</footer></main></body></html>
