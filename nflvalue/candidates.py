@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 
 from . import projection
+from . import features as featuresmod
 from .features import build_opp_pos_def, build_player_week, build_team_week, load_pbp
 from .projection import MARKETS, MIN_GAMES_ELIGIBLE, game_script_multipliers
 
@@ -227,20 +228,32 @@ def enumerate_candidates(
     if roster_mode == "as_played":
         week_rows = pw[(pw["season"] == season) & (pw["week"] == week)].copy()
     elif roster_mode == "carry_forward":
-        hist = pw[((pw["season"] < season) | ((pw["season"] == season) & (pw["week"] < week)))]
-        hist = hist[hist["team"].isin(team_to_game)]
-        latest = hist.sort_values(["season", "week"]).groupby("player_id").tail(1).copy()
-        # roll features on a player's LAST PLAYED row exclude that game itself;
-        # they are the freshest leak-free estimate available pre-slate. The
-        # honest cost: a player's very latest game isn't in his features and
-        # debuts/trades are invisible -- exactly what availability + Phase 3
-        # live rosters correct.
-        latest["season"], latest["week"] = season, week
-        week_rows = latest
+        # AS-OF rows: one placeholder row per player at (season, week) whose
+        # roll_* features include EVERY completed game strictly before it --
+        # identical to what the as_played row for this week would carry (see
+        # features.asof_player_week and tests/test_asof_serving_skew.py).
+        #
+        # This replaces the pre-2026-09-22 behaviour, which reused a player's
+        # last PLAYED row. Because roll_* features shift(1) before aggregating,
+        # that row's features excluded its own game, so the live board was one
+        # game staler than anything the backtest scored: the 2026 Week 2 board
+        # carried no 2026 Week 1 information for 73 of its 80 leans.
+        week_rows = featuresmod.asof_player_week(pw, season, week)
+        week_rows = week_rows[week_rows["team"].isin(team_to_game)].copy()
     else:
         raise ValueError(f"unknown roster_mode {roster_mode!r}")
 
     week_rows = week_rows[week_rows["team"].isin(team_to_game)]
+
+    # Team volume as of this week. build_team_week only has rows for weeks that
+    # have been PLAYED, so a live (season, week) has none and
+    # projection.expected_volume silently fell back to the player's own
+    # roll_targets/roll_carries -- a different formula from the one every
+    # backtest scored (team volume x player share). Supply the as-of row.
+    asof_team_rows: Dict[str, Dict] = {}
+    if not any((season, week, t) in inputs.team_idx for t in team_to_game):
+        _atw = featuresmod.asof_team_week(pw, season, week, teams=list(team_to_game))
+        asof_team_rows = {r.team: r._asdict() for r in _atw.itertuples(index=False)}
 
     # index real prop lines if provided
     line_idx: Dict = {}
@@ -267,6 +280,8 @@ def enumerate_candidates(
             continue
         gs = game_script_multipliers(ginfo["margin"])
         team_row = inputs.team_idx.get((season, week, player_row["team"]))
+        if team_row is None:
+            team_row = asof_team_rows.get(player_row["team"])
         for market in markets:
             spec = MARKETS[market]
             if role not in spec["role"]:
