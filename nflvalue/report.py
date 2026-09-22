@@ -127,6 +127,11 @@ def render_markdown(season: int, week: int, games: List[Dict],
     ]
     if not publish and publish_reasons:
         lines += ["> **Publish gate failed:** " + "; ".join(publish_reasons), ""]
+    elif publish_reasons:
+        # Published, but a feed was degraded or downgraded (e.g. the T-90
+        # inactives source not yet published, #27): the reason is printed on
+        # every surface, never only on the ones that happen to render it.
+        lines += ["> **Feed warnings (published):** " + "; ".join(publish_reasons), ""]
     lines += [
         f"Lines: {n_real} from live sportsbook pulls, {n_synth} synthetic (†). "
         "† = the player's own trailing mean, floor+0.5 — a modeling reference, NOT a "

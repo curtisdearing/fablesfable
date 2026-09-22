@@ -189,6 +189,19 @@ def parse_event_roster(raw: Dict) -> List[Dict]:
     return rows
 
 
+def canonical_abbr(abbr: str) -> str:
+    """ESPN abbreviation -> the nflverse code the slate uses.
+
+    ESPN says ``LAR`` and ``WSH``; nflverse says ``LA`` and ``WAS``. Matched
+    raw, the Rams' and Commanders' games never resolve an event id and their
+    T-90 inactives are "not fetched" every week. Bridged through the shared
+    team map (build_ratings.ABBR lists every alias against one display name).
+    Unknown codes pass through upper-cased.
+    """
+    a = str(abbr or "").upper()
+    return DISPLAY_TO_ABBR.get(_ABBR.get(a, ""), a)
+
+
 def find_event_ids(games: Iterable[Dict]) -> Dict[str, str]:
     """{game_id -> ESPN event id} for games given as {game_id, gameday,
     home_team, away_team} (nflverse abbrs).
@@ -219,7 +232,7 @@ def find_event_ids(games: Iterable[Dict]) -> Dict[str, str]:
             comps = (ev.get("competitions") or [{}])[0].get("competitors") or []
             home = away = ""
             for c in comps:
-                abbr = str((c.get("team") or {}).get("abbreviation") or "").upper()
+                abbr = canonical_abbr((c.get("team") or {}).get("abbreviation") or "")
                 if c.get("homeAway") == "home":
                     home = abbr
                 elif c.get("homeAway") == "away":
@@ -227,8 +240,8 @@ def find_event_ids(games: Iterable[Dict]) -> Dict[str, str]:
             if home and away:
                 pairs[(home, away)] = str(ev.get("id"))
         for g in group:
-            h = str(g.get("home_team") or "").upper()
-            a = str(g.get("away_team") or "").upper()
+            h = canonical_abbr(g.get("home_team") or "")
+            a = canonical_abbr(g.get("away_team") or "")
             eid = pairs.get((h, a)) or pairs.get((a, h))
             if eid:
                 out[str(g.get("game_id"))] = eid

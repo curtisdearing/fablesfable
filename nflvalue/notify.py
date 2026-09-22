@@ -89,6 +89,11 @@ def build_messages(report_payload: Dict) -> List[Dict]:
     header = (f"**NFL Prop Leans — {season} week {week}** (clock: {clock}, "
               f"as of {report_payload.get('as_of')})\n"
               "Personal, unmonetized research post. Leans, not locks.")
+    warnings = [str(r) for r in (report_payload.get("publish_reasons") or []) if r]
+    if warnings:
+        # A published board with a downgraded feed (T-90 inactives not yet
+        # published, #27) says so in the post itself, not only on the page.
+        header += "\n⚠ Feed warnings: " + "; ".join(warnings)[:900]
     embeds = []
     contexts = report_payload.get("contexts") or {}
     for g in report_payload.get("games", []):
