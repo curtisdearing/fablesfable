@@ -33,7 +33,7 @@ than silently passing as equally reliable.
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -277,28 +277,15 @@ def _league_role_prior_mean(df: pd.DataFrame, rate_col: str) -> pd.Series:
                      on=["role", "season", "week"], how="left")["league_prior_mean"]
 
 
-def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-    if pbp is None:
-        pbp = load_pbp()
-    team_week = _team_week(pbp)
-    pw = _combine_player_week(pbp)
-    pw = pw.merge(team_week, on=["season", "week", "team"], how="left")
-    pw = _assign_position(pw, rosters=rosters)
-    pw = pw.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
+def _add_rolling_player_features(pw: pd.DataFrame) -> pd.DataFrame:
+    """Attach every ``roll_*`` player feature to a frame that already carries
+    the raw per-week actuals and the ``_*`` per-week ratio columns.
 
-    # ---- per-week raw ratios (this week's realized rate; NOT leaked yet -- ---
-    # these are just intermediate columns used to build ROLLING features below)
-    pw["_target_share"] = _safe_ratio(pw["targets"], pw["team_pass_att"])
-    pw["_carry_share"] = _safe_ratio(pw["carries"], pw["team_rush_att"])
-    pw["_adot"] = _safe_ratio(pw["air_yards_sum"], pw["targets"])
-    pw["_ypt"] = _safe_ratio(pw["rec_yards"], pw["targets"])
-    pw["_catch_rate"] = _safe_ratio(pw["receptions"], pw["targets"])
-    pw["_ypc"] = _safe_ratio(pw["rush_yards"], pw["carries"])
-    pw["_ypa"] = _safe_ratio(pw["pass_yards"], pw["pass_attempts"])
-    pw["_pass_td_rate"] = _safe_ratio(pw["pass_tds"], pw["pass_attempts"])
-    pw["_rush_td_rate"] = _safe_ratio(pw["rush_tds"], pw["carries"])
-    pw["_rec_td_rate"] = _safe_ratio(pw["rec_tds"], pw["targets"])
-
+    Shared verbatim by the historical builder and by ``asof_player_week`` so a
+    live pre-slate row and a backtest row are produced by the SAME code. Every
+    feature here is shift(1)-before-aggregating, so a row never sees its own
+    week -- that holds for a placeholder row too (its raw actuals are NaN).
+    """
     g = pw.groupby("player_id")
     pw["roll_games"] = g["targets"].transform(lambda s: _rolling_shifted(s, how="count"))
     pw["roll_targets"] = g["targets"].transform(_rolling_shifted)
@@ -347,6 +334,33 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
             league_mean,
             (n * raw.fillna(0.0) + SHRINK_K * league_mean) / (n + SHRINK_K),
         )
+
+    return pw
+
+
+def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    if pbp is None:
+        pbp = load_pbp()
+    team_week = _team_week(pbp)
+    pw = _combine_player_week(pbp)
+    pw = pw.merge(team_week, on=["season", "week", "team"], how="left")
+    pw = _assign_position(pw, rosters=rosters)
+    pw = pw.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
+
+    # ---- per-week raw ratios (this week's realized rate; NOT leaked yet -- ---
+    # these are just intermediate columns used to build ROLLING features below)
+    pw["_target_share"] = _safe_ratio(pw["targets"], pw["team_pass_att"])
+    pw["_carry_share"] = _safe_ratio(pw["carries"], pw["team_rush_att"])
+    pw["_adot"] = _safe_ratio(pw["air_yards_sum"], pw["targets"])
+    pw["_ypt"] = _safe_ratio(pw["rec_yards"], pw["targets"])
+    pw["_catch_rate"] = _safe_ratio(pw["receptions"], pw["targets"])
+    pw["_ypc"] = _safe_ratio(pw["rush_yards"], pw["carries"])
+    pw["_ypa"] = _safe_ratio(pw["pass_yards"], pw["pass_attempts"])
+    pw["_pass_td_rate"] = _safe_ratio(pw["pass_tds"], pw["pass_attempts"])
+    pw["_rush_td_rate"] = _safe_ratio(pw["rush_tds"], pw["carries"])
+    pw["_rec_td_rate"] = _safe_ratio(pw["rec_tds"], pw["targets"])
+
+    pw = _add_rolling_player_features(pw)
 
     keep = [
         "season", "week", "player_id", "player_name", "team", "defteam", "role", "position_source",
@@ -476,17 +490,9 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     return opp[keep].reset_index(drop=True)
 
 
-def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-    """Rolling, PRIOR-WEEKS-ONLY team pass/rush volume (for expected-volume math).
-
-    This is the team-level analog of ``roll_pass_attempts``/``roll_carries`` on
-    ``player_week``: how many pass/rush plays a team is expected to run THIS
-    week, based on its own trailing games. ``projection.py`` multiplies this by
-    a player's rolling target/carry SHARE to get expected targets/carries.
-    """
-    if pbp is None:
-        pbp = load_pbp()
-    tw = _team_week(pbp).sort_values(["team", "season", "week"]).reset_index(drop=True)
+def _add_rolling_team_features(tw: pd.DataFrame) -> pd.DataFrame:
+    """Attach ``roll_team_pass_att``/``roll_team_rush_att`` to a raw team-week
+    frame. Shared verbatim by ``build_team_week`` and ``asof_team_week``."""
     g = tw.groupby("team")
     tw["roll_team_pass_att"] = g["team_pass_att"].transform(_rolling_shifted)
     tw["roll_team_rush_att"] = g["team_rush_att"].transform(_rolling_shifted)
@@ -506,7 +512,118 @@ def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     tw["roll_team_pass_att"] = tw["roll_team_pass_att"].fillna(tw["lp_pass"])
     tw["roll_team_rush_att"] = tw["roll_team_rush_att"].fillna(tw["lp_rush"])
     tw = tw.drop(columns=["lp_pass", "lp_rush"])
+    return tw
+
+
+def build_team_week(pbp: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """Rolling, PRIOR-WEEKS-ONLY team pass/rush volume (for expected-volume math).
+
+    This is the team-level analog of ``roll_pass_attempts``/``roll_carries`` on
+    ``player_week``: how many pass/rush plays a team is expected to run THIS
+    week, based on its own trailing games. ``projection.py`` multiplies this by
+    a player's rolling target/carry SHARE to get expected targets/carries.
+    """
+    if pbp is None:
+        pbp = load_pbp()
+    tw = _team_week(pbp).sort_values(["team", "season", "week"]).reset_index(drop=True)
+    tw = _add_rolling_team_features(tw)
     return tw[["season", "week", "team", "roll_team_pass_att", "roll_team_rush_att"]]
+
+
+
+# --------------------------------------------------------------------------- #
+# AS-OF (live pre-slate) rows
+# --------------------------------------------------------------------------- #
+# Why this exists: a live board is built BEFORE (season, week) is played, so no
+# player_week / team_week row exists for it yet. The pre-2026-09-22 live path
+# worked around that by reusing each player's LAST PLAYED row -- but a row's
+# roll_* features are shift(1)-before-aggregating, i.e. they EXCLUDE that row's
+# own game. Reusing it therefore served features one game staler than the
+# backtest ever scored: the 2026 Week 2 board carried no 2026 Week 1
+# information at all for 73 of its 80 leans. These builders instead append a
+# PLACEHOLDER row at the target week (raw actuals NaN, so nothing from the
+# target week can leak) and run the identical rolling machinery, which makes
+# the placeholder's features include every completed prior game -- exactly what
+# the as_played row for that week would have carried.
+_ASOF_RAW_COLS = [
+    "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum",
+    "carries", "rush_yards", "pass_attempts", "completions", "pass_yards",
+    "pass_tds", "rush_tds", "rec_tds",
+    "team_pass_att", "team_rush_att", "team_plays",
+]
+
+
+def _prior_rows(df: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
+    return df[(df["season"] < season) | ((df["season"] == season) & (df["week"] < week))]
+
+
+def asof_player_week(pw: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
+    """One row per player, as of the START of (season, week).
+
+    ``pw`` is a built ``player_week`` frame. Only rows STRICTLY BEFORE the
+    target week are used, so this is leak-free by construction. Returns the
+    placeholder rows only, with the same columns as ``pw``.
+    """
+    hist = _prior_rows(pw, season, week).copy()
+    if hist.empty:
+        return pw.iloc[0:0].copy()
+    hist = hist.sort_values(["player_id", "season", "week"])
+    latest = hist.groupby("player_id").tail(1).copy()
+
+    latest["season"], latest["week"] = season, week
+    for col in _ASOF_RAW_COLS:
+        if col in latest.columns:
+            latest[col] = np.nan
+    if "defteam" in latest.columns:
+        latest["defteam"] = np.nan
+
+    frame = pd.concat([hist, latest], ignore_index=True)
+    frame = frame.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
+    # rebuild the per-week ratios the rolling features consume (NaN on the
+    # placeholder row, which is what keeps the target week out of them)
+    frame["_target_share"] = _safe_ratio(frame["targets"], frame["team_pass_att"])
+    frame["_carry_share"] = _safe_ratio(frame["carries"], frame["team_rush_att"])
+    frame["_adot"] = _safe_ratio(frame["air_yards_sum"], frame["targets"])
+    frame["_ypt"] = _safe_ratio(frame["rec_yards"], frame["targets"])
+    frame["_catch_rate"] = _safe_ratio(frame["receptions"], frame["targets"])
+    frame["_ypc"] = _safe_ratio(frame["rush_yards"], frame["carries"])
+    frame["_ypa"] = _safe_ratio(frame["pass_yards"], frame["pass_attempts"])
+    frame["_pass_td_rate"] = _safe_ratio(frame["pass_tds"], frame["pass_attempts"])
+    frame["_rush_td_rate"] = _safe_ratio(frame["rush_tds"], frame["carries"])
+    frame["_rec_td_rate"] = _safe_ratio(frame["rec_tds"], frame["targets"])
+
+    frame = _add_rolling_player_features(frame)
+    out = frame[(frame["season"] == season) & (frame["week"] == week)]
+    return out[list(pw.columns)].reset_index(drop=True)
+
+
+def asof_team_week(pw: pd.DataFrame, season: int, week: int,
+                   teams: Optional[Sequence[str]] = None) -> pd.DataFrame:
+    """Team volume rows as of the START of (season, week).
+
+    Derived from ``player_week`` (which carries ``team_pass_att`` /
+    ``team_rush_att`` per team-week), so the live path needs no play-by-play
+    reload. Same columns as ``build_team_week``.
+    """
+    hist = _prior_rows(pw, season, week)
+    raw = (hist[["season", "week", "team", "team_pass_att", "team_rush_att"]]
+           .dropna(subset=["team"])
+           .drop_duplicates(subset=["season", "week", "team"])
+           .copy())
+    if raw.empty:
+        return pd.DataFrame(columns=["season", "week", "team",
+                                     "roll_team_pass_att", "roll_team_rush_att"])
+    raw["team_plays"] = raw["team_pass_att"] + raw["team_rush_att"]
+    target_teams = sorted(set(teams) if teams is not None else set(raw["team"]))
+    ph = pd.DataFrame({"season": season, "week": week, "team": target_teams,
+                       "team_pass_att": np.nan, "team_rush_att": np.nan,
+                       "team_plays": np.nan})
+    tw = pd.concat([raw, ph], ignore_index=True)
+    tw = tw.sort_values(["team", "season", "week"]).reset_index(drop=True)
+    tw = _add_rolling_team_features(tw)
+    out = tw[(tw["season"] == season) & (tw["week"] == week)]
+    return out[["season", "week", "team", "roll_team_pass_att",
+                "roll_team_rush_att"]].reset_index(drop=True)
 
 
 if __name__ == "__main__":
