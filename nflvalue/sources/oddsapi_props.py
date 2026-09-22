@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
@@ -138,7 +139,10 @@ def quota_preflight(cfg: Dict, budget: CreditBudget,
         headers = {str(k).lower(): v for k, v in (headers or {}).items()}
         used = float(headers["x-requests-used"])
         remaining = float(headers["x-requests-remaining"])
-        if used < 0 or remaining < 0 or float(headers.get("x-requests-last") or 0) != 0:
+        last = float(headers.get("x-requests-last") or 0)
+        # float() accepts 'nan'/'inf', and NaN passes every comparison
+        if not all(math.isfinite(v) for v in (used, remaining, last)) \
+                or used < 0 or remaining < 0 or last != 0:
             raise ValueError(f"inconsistent quota headers {headers}")
     except Exception as exc:  # noqa: BLE001 -- unknown quota is a refusal, never a pass
         return {"ok": False, "reason": f"provider quota unverified ({type(exc).__name__}: {exc})"}
@@ -250,7 +254,7 @@ def match_player_ids(rows: List[Dict], candidates: pd.DataFrame,
 
     def unique(pids):
         pids = set(pids)
-        return (pids.pop() if len(pids) == 1 else None), len(pids)
+        return (next(iter(pids)) if len(pids) == 1 else None), len(pids)
 
     for row in rows:
         key = normalize_name(row["player_name"])

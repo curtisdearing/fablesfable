@@ -146,3 +146,68 @@ def test_preflight_failure_is_a_refusal(conn):
     calls, fetch = _metered_spy()
     res = oap.resnap_lines(_cfg(), {"g1": "ev1"}, conn=conn, fetch=fetch, quota_fetch=boom)
     assert calls == [] and res["pulled"] == [] and res["quota_preflight"]["ok"] is False
+
+
+# --------------------------------------------------------------------------- #
+# A unique hit at a stronger rule is final (``unique`` once reported n=0 for a
+# single id, so the exact/authoritative hit fell through to the fallback).
+def test_unique_exact_hit_is_not_erased_by_ambiguous_fallback():
+    cands = pd.DataFrame([{"player_id": "p1", "name": "Bijan Robinson", "team": "ATL"},
+                          {"player_id": "p2", "name": "B.Robinson", "team": "ATL"}])
+    for roster in (None, [{"player_id": "p1", "name": "Bijan Robinson", "team": "ATL"},
+                          {"player_id": "p2", "name": "Brian Robinson", "team": "ATL"}]):
+        assert _ids(oap.match_player_ids(_rows("Bijan Robinson"), cands, roster_rows=roster,
+                                         game_teams=GT)) == {"Bijan Robinson": "p1"}
+
+
+def test_unique_authoritative_hit_is_not_erased_by_ambiguous_fallback():
+    cands = pd.DataFrame([{"player_id": "p1", "name": "B.Robinson", "team": "ATL"},
+                          {"player_id": "p2", "name": "B.Robinson", "team": "ATL"}])
+    roster = [{"player_id": "p1", "name": "Bijan Robinson", "team": "ATL"},
+              {"player_id": "p2", "name": "Brian Robinson", "team": "ATL"}]
+    got = _ids(oap.match_player_ids(_rows("Bijan Robinson", "Brian Robinson Jr.", "Bo Robinson"),
+                                    cands, roster_rows=roster, game_teams=GT))
+    # the fallback alone is ambiguous: an unmatched namesake still refuses
+    assert got == {"Bijan Robinson": "p1", "Brian Robinson Jr.": "p2", "Bo Robinson": None}
+    assert _ids(oap.match_player_ids(_rows("Bijan Robinson"), cands, game_teams=GT)) == {
+        "Bijan Robinson": None}
+
+
+# --------------------------------------------------------------------------- #
+# float() parses 'nan'/'inf' and NaN slips through every comparison.
+_OK = {"x-requests-used": "336", "x-requests-remaining": "164", "x-requests-last": "0"}
+
+
+@pytest.mark.parametrize("key", ["x-requests-used", "x-requests-remaining", "x-requests-last"])
+@pytest.mark.parametrize("bad", ["nan", "NaN", "inf", "+inf", "-inf", "Infinity"])
+@pytest.mark.parametrize("which", ["pull", "resnap"])
+def test_nonfinite_quota_spends_nothing(conn, key, bad, which):
+    calls, fetch = _metered_spy()
+    headers = dict(_OK, **{key: bad})
+    qf = lambda url, params: ([], headers)  # noqa: E731
+    if which == "pull":
+        res = oap.pull_week_props(_cfg(), {"g1": "ev1"}, conn=conn, fetch=fetch, quota_fetch=qf)
+    else:
+        res = oap.resnap_lines(_cfg(), {"g1": "ev1"}, conn=conn, fetch=fetch, quota_fetch=qf)
+    assert res["quota_preflight"]["ok"] is False
+    assert calls == [] and res["pulled"] == [] and res["skipped_budget"] == ["g1"]
+
+
+@pytest.mark.parametrize("which", ["pull", "resnap"])
+@pytest.mark.parametrize("used,remaining,last,pulls", [
+    ("0", "500", "0", True), ("0", "500", None, True), ("0", "500", "0.0", True),
+    ("450", "0", "0", False), ("0", "0", "0", False)])
+def test_finite_zero_quota_is_still_valid(conn, which, used, remaining, last, pulls):
+    calls, fetch = _metered_spy()
+    headers = {"x-requests-used": used, "x-requests-remaining": remaining}
+    if last is not None:
+        headers["x-requests-last"] = last
+    qf = lambda url, params: ([], headers)  # noqa: E731
+    if which == "pull":
+        res = oap.pull_week_props(_cfg(), {"g1": "ev1"}, conn=conn, fetch=fetch, quota_fetch=qf)
+    else:
+        res = oap.resnap_lines(_cfg(), {"g1": "ev1"}, conn=conn, fetch=fetch, quota_fetch=qf)
+    assert (res["pulled"] == ["g1"]) is pulls and (len(calls) == 1) is pulls
+    pre = oap.quota_preflight(_cfg(), oap.CreditBudget(conn, 500, 50), quota_fetch=qf)
+    assert pre["ok"] is True
+    assert (pre["used"], pre["remaining"]) == (float(used), float(remaining))
