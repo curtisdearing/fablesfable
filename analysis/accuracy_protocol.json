@@ -10,22 +10,47 @@
   "synthetic_lines": {
     "purpose": "historical ranking trend and regression testing only",
     "construction": "floor(strictly-prior player trailing mean) + 0.5; anytime TD is fixed at 0.5",
-    "required_columns": ["line_source", "season", "week", "player_id", "market"],
-    "forbidden_claims": ["profit", "ROI", "market edge", "closing-line value"],
+    "required_columns": [
+      "line_source",
+      "season",
+      "week",
+      "player_id",
+      "market"
+    ],
+    "forbidden_claims": [
+      "profit",
+      "ROI",
+      "market edge",
+      "closing-line value"
+    ],
     "real_market_judge": "forward same-side consensus closing-line value"
   },
   "matched_control": {
     "minimum_exposed_n": 100,
     "minimum_control_n": 100,
-    "match_keys": ["position_or_market", "depth_role", "season_phase"],
-    "game_script_strata": ["favored", "neutral", "underdog"],
+    "match_keys": [
+      "position_or_market",
+      "depth_role",
+      "season_phase"
+    ],
+    "game_script_strata": [
+      "favored",
+      "neutral",
+      "underdog"
+    ],
     "cluster_unit": "team-season",
     "multiple_testing": "Benjamini-Hochberg q < 0.05",
     "season_forward_replication_required": true,
     "fallback": "research_only when a required key or stratum is unavailable"
   },
   "narrative_factors": {
-    "examples": ["birthday", "revenge", "homecoming", "primetime", "stadium"],
+    "examples": [
+      "birthday",
+      "revenge",
+      "homecoming",
+      "primetime",
+      "stadium"
+    ],
     "minimum_exposed_n": 100,
     "minimum_control_n": 100,
     "maximum_live_effect": 0.03,
@@ -33,19 +58,26 @@
   },
   "acceptance": {
     "one_lever_per_track_per_checkpoint": true,
-    "parallel_tracks": ["tailstail_fantasy", "fablesfable_props"],
+    "parallel_tracks": [
+      "tailstail_fantasy",
+      "fablesfable_props"
+    ],
     "shared_core_changes": "serialize both tracks and rerun both suites",
     "paired_resampling_unit": "season-week",
-    "minimum_probability_of_improvement": 0.90,
+    "minimum_probability_of_improvement": 0.9,
     "stop_after_consecutive_rejections": 3,
     "sanity_top_n": 10,
-    "sanity_min_overlap": 0.50,
+    "sanity_min_overlap": 0.5,
     "expected_delta_required_before_run": true,
     "ensemble_challenger_after_single_lever_plateau": true
   },
   "calibration": {
     "bins": 10,
-    "metrics": ["brier", "ece", "overconfidence_ece"],
+    "metrics": [
+      "brier",
+      "ece",
+      "overconfidence_ece"
+    ],
     "overconfidence_definition": "sum bin_weight * max(mean_prediction - observed_rate, 0)"
   },
   "forward_clv": {
@@ -61,6 +93,37 @@
     "bye_week_checkpoint": "after Week 8: data/schema audit, calibration review, no lever promotion without the same gates",
     "public_baselines": "external until source, timestamp, scoring, coverage, and redistribution rights are pinned",
     "compute_budget": "record rows, simulations, runtime, seed, and package versions for every distribution audit",
-    "known_risks": ["NFL rule changes", "roster and free-agency churn", "data-vendor schema drift", "human lever-selection bias", "simulation compute growth"]
-  }
+    "known_risks": [
+      "NFL rule changes",
+      "roster and free-agency churn",
+      "data-vendor schema drift",
+      "human lever-selection bias",
+      "simulation compute growth"
+    ]
+  },
+  "preregistered_levers": [
+    {
+      "lever_id": "props-sd-conditioning-v1",
+      "registered": "2026-09-09",
+      "status": "registered_not_run",
+      "track": "props",
+      "hypothesis": "Conditioning the residual SD on the player (and, failing sufficient history, on the player's role and usage tier) rather than fitting one SD per market improves probability calibration on continuous markets. Today candidates.market_residual_sd fits a single SD per market across all players: on 2026 Week 1 every quarterback carried sd=97.375 passing yards.",
+      "motivation_evidence": "Observed on the published 2026 Week 1 board: D.Maye and S.Darnold carry an identical sd (97.375) and confidence of 0.036 and 0.037. Measured sensitivity: P(under) moves by 0.014 under a +/-25% SD stress at z=0.11, but by 0.055 at z=0.49 and ~0.065 at |z| near 1. So a pooled SD distorts prices most on lines set away from the projection, which is where large edges are claimed. It is NOT what makes a line-on-the-mean row weak -- an earlier reading that said so was wrong and is recorded here so it is not re-derived.",
+      "affected_shared_core": true,
+      "serializes_both_tracks": true,
+      "expected_delta": "Log loss improvement of 0.005-0.02 on continuous markets; no expected change on count markets. Stated as a hypothesis, not a promised gain.",
+      "feature_clock": "wed and t90; SD is computed at candidate enumeration from history strictly before (season, week), unchanged.",
+      "sample_definition": "All continuous-market candidate rows (passing_yards, rushing_yards, receiving_yards) with a graded actual, expanding season-forward folds through 2024. 2025 stays the locked regression benchmark; 2026 prospective rows are the final judge.",
+      "minimum_history_per_player": 8,
+      "fallback_order": [
+        "player",
+        "role_and_usage_tier",
+        "market_pooled"
+      ],
+      "compute_budget": "One full walk-forward refit of the prop projection path; no ranker retrain.",
+      "accept_gate": "Improves log loss AND Brier on the continuous-market subset with probability of improvement >= the protocol's acceptance minimum under the paired resampling unit, does not worsen ECE or overconfidence ECE, and does not reduce top-k hit rate. Any single failure rejects.",
+      "reject_action": "Record the negative result in the gate registry and keep the pooled SD. A rejected lever counts toward the consecutive-rejection stop.",
+      "guardrail_shipped_separately": "Rows now carry sd_scope, sd_source, sd_stress_fraction, sd_prob_swing and edge_survives_sd_uncertainty. These are DIAGNOSTICS ONLY -- they change no probability, no edge and no ranking, and they are not part of this lever."
+    }
+  ]
 }

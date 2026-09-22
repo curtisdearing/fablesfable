@@ -14,7 +14,7 @@
     "anytime_td"
   ],
   "fetch_props": true,
-  "max_prop_games_per_run": 4,
+  "max_prop_games_per_run": 16,
   "books": [
     "draftkings",
     "betmgm",

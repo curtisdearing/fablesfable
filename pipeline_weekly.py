@@ -34,6 +34,7 @@ import argparse
 import datetime as dt
 import os
 from typing import Callable, Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -51,6 +52,13 @@ from nflvalue.freshness import Feed, gate, parse_ts, stamp_now
 from nflvalue.sources import availability as avmod
 from nflvalue.sources import oddsapi_props as oapmod
 from nflvalue.sources import sleeper as slpmod
+
+#: A quote younger than this at T-90 is the close: the scheduled T-90 job
+#: (scripts/auto_weekly.job_t90) re-snaps every due game that already has
+#: entry lines minutes before run_t90 is called, so run_t90 must not spend a
+#: second event-call on the same game. It pulls only when nothing this fresh
+#: exists -- the case of a game the Wednesday run could not afford.
+T90_LINE_FRESH_HOURS = 1.0
 
 
 # --------------------------------------------------------------------------- #
@@ -86,6 +94,22 @@ def build_event_map(cfg: Dict, slate: pd.DataFrame,
         eid = by_pair.get((g.home_team, g.away_team))
         if eid:
             out[g.game_id] = eid
+    return out
+
+
+def slate_kickoffs(slate: pd.DataFrame) -> Dict[str, dt.datetime]:
+    """{game_id -> aware kickoff}, built the same way ``auto_weekly`` does it:
+    ``gameday`` + ``gametime`` are Eastern clock time on the nflverse slate.
+    Games with an unparseable time are omitted, which degrades that game to
+    the plain rotation clock rather than mis-ordering the whole slate."""
+    out: Dict[str, dt.datetime] = {}
+    for g in slate.itertuples(index=False):
+        try:
+            out[g.game_id] = dt.datetime.strptime(
+                f"{g.gameday} {getattr(g, 'gametime', None) or '13:00'}",
+                "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo("America/New_York"))
+        except (ValueError, TypeError):
+            continue
     return out
 
 
@@ -289,21 +313,47 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     feeds.append(Feed("injuries", inj_ts, n_records=len(injury_rows), load_bearing=True))
 
     # -- inactives (t90 only; load-bearing at t90) --------------------------- #
+    # Three distinct states, and conflating any two of them is how a board
+    # either voids a whole game or publishes a fiction:
+    #   never fetched      -- no event id, or every fetch threw. No timestamp.
+    #   fetched, unpopulated -- ESPN answered but has not filled the event in
+    #                        (period 0, nobody marked active). Timestamped,
+    #                        rows EMPTY, and it must never imply anyone is out.
+    #   fetched, populated -- the real actives list.
     inactive_rows, ina_ts = None, None
+    inactives_state, inactives_reason = "not_fetched", ""
     if clock == "t90":
         if "inactive_rows" in inject:
             inactive_rows = inject["inactive_rows"]
             ina_ts = inject.get("inactives_fetched_at", stamp_now())
+            inactives_state = inject.get("inactives_state", "populated")
+            inactives_reason = inject.get("inactives_reason", "")
         else:
             inactive_rows = []
+            reasons: List[str] = []
             for eid in game_event_ids or []:
                 try:
                     res = avmod.fetch_event_rosters(eid)
-                    inactive_rows.extend(res["rows"])
                     ina_ts = res["fetched_at"]
+                    if res.get("populated"):
+                        inactive_rows.extend(res["rows"])
+                        inactives_state = "populated"
+                    else:
+                        reasons.append(res.get("reason") or "unpopulated")
+                        if inactives_state != "populated":
+                            inactives_state = "unpopulated"
                 except Exception as exc:  # noqa: BLE001
+                    reasons.append(f"{eid}: {type(exc).__name__}: {exc}")
                     print(f"[pipeline] event roster fetch FAILED for {eid}: {exc}")
-        feeds.append(Feed("inactives", ina_ts, n_records=len(inactive_rows or []),
+            inactives_reason = "; ".join(reasons)
+            if not (game_event_ids or []):
+                inactives_reason = "no ESPN event id resolved for this game"
+        if inactives_state != "populated":
+            # Never let an unpopulated feed reach the resolver: `active: false`
+            # on every entry becomes OUT on every player.
+            inactive_rows = []
+        feeds.append(Feed("inactives", ina_ts if inactives_state == "populated" else None,
+                          n_records=len(inactive_rows or []),
                           load_bearing=True))
 
     # -- league news (context only -> not load-bearing; text is untrusted) --- #
@@ -359,12 +409,16 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     news_map = _nbp(news_items or [], players) if news_items else {}
     # T-90: names the event roster lists as ACTIVE (a practice-squad elevation
     # shows up here, never in the weekly roster asset)
+    # Only from a POPULATED roster. An unpopulated one yields the empty set,
+    # which is not "nobody was elevated" -- it is "we do not know", and the
+    # eligibility check must not read the two the same way.
     t90_active_names = None
-    if clock == "t90" and inactive_rows is not None:
+    if clock == "t90" and inactives_state == "populated" and inactive_rows is not None:
         t90_active_names = {avmod.normalize_name(r.get("name"))
                             for r in inactive_rows if r.get("active")}
     return {"feeds": feeds, "statuses": resolved["statuses"],
             "active_roster": roster, "t90_active_names": t90_active_names,
+            "inactives_state": inactives_state, "inactives_reason": inactives_reason,
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
             "news_by_player": news_map,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
@@ -486,17 +540,35 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     prop_lines, line_note = None, None
     if live_odds and cfg.get("odds_api_key"):
         event_map = build_event_map(cfg, slate, list_events_fn=list_events_fn)
-        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch)
+        kickoffs = slate_kickoffs(slate)
+        # Every scheduled game, soonest kickoff first, and each game pulled
+        # holds the credits for its own pre-kick close (#26; credit_plan).
+        pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
+                                      kickoffs=kickoffs, reserve_close=True)
         feeds_ts["lines"] = pull["ts"]
-        snap = dbmod.query_df(conn, "SELECT * FROM lines WHERE ts=?", (pull["ts"],))
-        rows = oapmod.match_player_ids(snap.to_dict("records"), _players_frame(cands)
+        unmatched = sorted(set(slate["game_id"]) - set(event_map))
+        if unmatched:
+            print(f"[pipeline] {len(unmatched)} scheduled game(s) absent from the odds "
+                  f"events listing (not pulled): {', '.join(unmatched)}")
+        # Every quote we still hold for THIS week's games, not just the rows
+        # this run happened to pull. The rotation prices a handful of games a
+        # run; reading only `ts = pull["ts"]` threw away every earlier pull and
+        # published NO_MARKET for games whose real lines were already stored.
+        snap_rows = oapmod.load_recent_lines(conn, game_ids=list(slate["game_id"]))
+        rows = oapmod.match_player_ids(snap_rows, _players_frame(cands)
                                        .rename(columns={"player_name": "name"}))
         prop_lines = oapmod.to_prop_lines_frame(rows)
+        carried = sorted({r["game_id"] for r in snap_rows} - set(pull["pulled"]))
         line_note = (f"Odds pull: {len(pull['pulled'])} game(s) pulled "
                      f"({', '.join(pull['pulled']) or 'none'}); "
+                     f"{len(carried)} game(s) priced from stored quotes "
+                     f"({', '.join(carried) or 'none'}); "
                      f"{len(pull['skipped_budget'])} skipped by credit budget, "
-                     f"{len(pull['skipped_cap'])} by per-run cap; "
-                     f"{pull['budget_remaining']:.0f} credits left this month.")
+                     f"{len(pull['skipped_cap'])} by per-run cap, "
+                     f"{len(pull.get('skipped_started') or [])} already under way; "
+                     f"{len(unmatched)} not in the odds events listing; "
+                     f"{pull['budget_remaining']:.0f} credits left this month. "
+                     + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else ""))
         if not prop_lines.empty:
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
@@ -623,7 +695,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
 def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             inputs: Optional[candmod.WeekInputs] = None,
             inject_feeds: Optional[Dict] = None, discord: bool = False,
-            discord_dry_run: bool = True) -> Dict:
+            discord_dry_run: bool = True,
+            odds_fetch: Optional[Callable] = None,
+            list_events_fn: Optional[Callable] = None) -> Dict:
     cfg = cfgmod.load_config()
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
@@ -638,6 +712,52 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     if cands.empty:
         conn.close()
         raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+
+    # REAL LINES AT T-90. This is the best moment of the week to spend a
+    # credit on this game: the line is closest to its close and the inactives
+    # are out. Before 2026-09-09 T-90 touched `lines` neither way, so a game
+    # the rotation had skipped stayed NO_MARKET through kickoff and no run
+    # ever priced it. One event, one game, budget-checked like any other pull;
+    # pulled BEFORE feature/ML stamping so the re-enumerated frame keeps every
+    # layer (the same ordering catch run_week documents).
+    t90_line_note = None
+    if mode == "live" and cfg.get("odds_api_key"):
+        slate_all = candmod.games_for_week(season, week, inputs.schedules)
+        one = slate_all[slate_all["game_id"] == game_id]
+        # The scheduled T-90 job has usually just re-snapped this game's close
+        # (auto_weekly.job_t90 -> resnap_lines). That quote IS the T-90 line;
+        # pulling again would spend a second event-call on the same game.
+        fresh = oapmod.load_recent_lines(conn, game_ids=[game_id],
+                                         max_age_hours=T90_LINE_FRESH_HOURS)
+        if fresh:
+            t90_line_note = (f"T-90 odds: {len(fresh)} quote row(s) already refreshed within "
+                             f"{T90_LINE_FRESH_HOURS:g}h; no credit spent.")
+            print(f"[t90] {game_id}: {t90_line_note}")
+        else:
+            try:
+                event_map = {k: v for k, v in
+                             build_event_map(cfg, one, list_events_fn=list_events_fn).items()
+                             if k == game_id}
+                if event_map:
+                    pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
+                                                  kickoffs=slate_kickoffs(one))
+                    t90_line_note = (f"T-90 odds pull: {len(pull['pulled'])} game(s); "
+                                     f"{pull['budget_remaining']:.0f} credits left this month.")
+            except oapmod.BudgetExceeded:
+                raise
+            except Exception as exc:  # noqa: BLE001 -- degrade, don't abort
+                t90_line_note = f"T-90 odds pull failed ({type(exc).__name__}: {exc})"
+                print(f"[t90] odds pull failed for {game_id}: {exc}")
+        rows = oapmod.match_player_ids(
+            oapmod.load_recent_lines(conn, game_ids=[game_id]),
+            _players_frame(cands).rename(columns={"player_name": "name"}))
+        prop_lines = oapmod.to_prop_lines_frame(rows)
+        if not prop_lines.empty:
+            cands = candmod.enumerate_candidates(
+                season, week, inputs=inputs,
+                min_usage=(cfg.get("candidates") or {}).get("min_usage"),
+                prop_lines=prop_lines, roster_mode=roster_mode)
+            cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -658,12 +778,56 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         cands = depthp.attach(cands) if depthp is not None else depth_neutral(cands)
         cands = candmod.apply_backup_qb_adjustment(cands)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
+    # The ESPN event id for THIS game. Without it `gather_live_feeds` iterates
+    # an empty list and the inactives feed -- the entire reason T-90 exists --
+    # arrives empty and unstamped. `game_event_ids` had no caller until now.
+    event_ids: List[str] = []
+    if "inactive_rows" not in (inject_feeds or {}):
+        slate_e = candmod.games_for_week(season, week, inputs.schedules)
+        slate_e = slate_e[slate_e["game_id"] == game_id]
+        try:
+            found = avmod.find_event_ids(slate_e.to_dict("records"))
+            event_ids = [found[game_id]] if game_id in found else []
+            if not event_ids:
+                print(f"[t90] no ESPN event id resolved for {game_id}")
+        except Exception as exc:  # noqa: BLE001 -- missing feed, not a dead run
+            print(f"[t90] event id lookup failed for {game_id}: {exc}")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
-                             inject=inject_feeds)
+                             game_event_ids=event_ids, inject=inject_feeds)
     statuses = live["statuses"]
     as_of = stamp_now()  # the decision follows the fetch; see run_week
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
+    # Say WHY, precisely. "no/unparseable timestamp" is what the gate sees, but
+    # it reads as a parsing bug when the truth is usually that ESPN has not
+    # published the event roster yet. A wrong reason sends the next reader
+    # hunting for a defect that is not there.
+    #
+    # OWNER DECISION 2026-09-22 (#27, option 2): ESPN's event roster is a
+    # participation record that is unpopulated until kickoff, so a load-
+    # bearing inactives feed meant no T-90 board could ever publish. When the
+    # source answered but has not published (state "unpopulated"), the feed
+    # is downgraded: the board PUBLISHES with a visible banner saying the
+    # game-day inactives check did not happen, and the Wednesday availability
+    # read (injuries) stands. A source that could not be fetched at all
+    # (state "not_fetched": no event id, or every fetch threw) still holds
+    # the board -- that is a defect on our side, not the source's timing.
+    inactives_state = live.get("inactives_state")
+    inactives_banner = None
+    if inactives_state == "unpopulated":
+        g = gate([f for f in live["feeds"] if f.name != "inactives"], as_of=as_of,
+                 staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
+        inactives_banner = (
+            f"inactives: source has not published yet "
+            f"({live.get('inactives_reason') or 'ESPN event roster unpopulated'}); "
+            f"published WITHOUT a game-day inactives check -- confirm inactives before acting")
+        g["reasons"] = list(g["reasons"]) + [inactives_banner]
+    elif inactives_state not in (None, "populated"):
+        g["reasons"] = [r for r in g["reasons"] if not r.startswith("inactives:")]
+        g["reasons"].append(
+            f"inactives: source could not be fetched "
+            f"({live.get('inactives_reason') or inactives_state})")
+        g["publish"] = False
     # ACTIVE ROSTER GATE at T-90 (same contract as the Wednesday run; a
     # practice-squad player the event roster lists as active is an elevation)
     slate_t = candmod.games_for_week(season, week, inputs.schedules)
@@ -728,7 +892,10 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "publish": g["publish"], "publish_reasons": g["reasons"],
                "mode": mode, "games": games, "contexts": contexts,
                "voided": voided, "md_path": md_path,
-               "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag}
+               "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag,
+               "line_note": t90_line_note,
+               "inactives_state": inactives_state,
+               "inactives_banner": inactives_banner}
     from nflvalue.document import write_drop
     payload["drop_path"] = write_drop(payload, contexts)
     dash = update_dashboard(payload, conn)

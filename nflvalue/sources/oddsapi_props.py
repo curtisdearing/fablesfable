@@ -8,10 +8,17 @@ would push the month past ``monthly_credits - reserve``. Refusal is not an
 error -- the pipeline continues and the untouched games are tagged
 ``no_market`` (PROP_SHORTLISTER_SPEC.md §3 graceful degradation).
 
-Because you can't afford props for every game, each run pulls a ROTATING
-subset: games are ordered least-recently-pulled first (from the ``lines``
-table), capped at ``max_prop_games_per_run``. Over a few weeks every game
-cycles through.
+Every scheduled game of the week is requested, ordered by kickoff (soonest
+first; see :func:`rotation_order`), capped at ``max_prop_games_per_run``
+(config.json: 16, the largest NFL slate). The cap is a safety valve, not a
+rotation: at 5 credits an event a 16-game Wednesday costs 80 credits, and the
+same again for the pre-kick closes. :func:`credit_plan` does that arithmetic
+up front, prints it, and :func:`pull_week_props` enforces it -- when the
+month cannot afford every game, the games kicking off soonest get their
+props and the rest are reported under ``skipped_budget`` (never fetched).
+The Wednesday run also HOLDS one close per game it pulls (``reserve_close``)
+so a game is never priced on Wednesday and then left without the credit for
+its T-90 close.
 
 Snapshots are idempotent: rows key on (ts, game_id, book, market,
 player_name, side), so re-running an identical pull cannot duplicate.
@@ -203,6 +210,49 @@ def match_player_ids(rows: List[Dict], candidates: pd.DataFrame) -> List[Dict]:
 PROP_LINE_COLS = ["game_id", "market", "player_id", "point", "over_price",
                   "under_price", "book", "consensus_p_over", "n_books"]
 
+#: How old a stored quote may be and still price a board. Long enough to span
+#: the gap between two scheduled runs (a game pulled Tuesday still prices
+#: Wednesday's board), short enough that a genuinely abandoned line falls out.
+MAX_LINE_AGE_HOURS = 60.0
+
+
+def load_recent_lines(conn, game_ids: Optional[List[str]] = None,
+                      max_age_hours: float = MAX_LINE_AGE_HOURS,
+                      now: Optional[dt.datetime] = None) -> List[Dict]:
+    """The most recent stored quote per (game, book, market, player, side).
+
+    The pipeline used to price a board from ``SELECT * FROM lines WHERE ts=?``
+    -- only the rows the CURRENT run had just pulled. Because the rotation
+    prices four games a run, a game pulled on Tuesday was invisible on
+    Wednesday's board and rendered ``NO_MARKET`` with real quotes sitting in
+    the table. (2026-09-09: NE@SEA had DraftKings/BetMGM/HardRock rows from
+    2026-09-08T17:56Z and still published with no market.)
+
+    Rows older than ``max_age_hours`` are dropped rather than shown as
+    current: a stale quote priced as live is worse than no quote. Freshness
+    is the caller's to report -- each returned row keeps its own ``ts``.
+    """
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    floor = (now - dt.timedelta(hours=float(max_age_hours))
+             ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    params: List = [floor]
+    where = "WHERE ts >= ?"
+    if game_ids:
+        where += f" AND game_id IN ({','.join('?' * len(game_ids))})"
+        params.extend(game_ids)
+    sql = f"""
+        SELECT l.* FROM lines l
+        JOIN (SELECT game_id, book, market, player_name, side, MAX(ts) AS ts
+                FROM lines {where}
+            GROUP BY game_id, book, market, player_name, side) m
+          ON l.game_id = m.game_id AND l.book = m.book AND l.market = m.market
+         AND l.player_name = m.player_name AND l.side = m.side AND l.ts = m.ts
+    """
+    df = dbmod.query_df(conn, sql, tuple(params))
+    return [] if df.empty else df.to_dict("records")
+
 
 def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                         sharp_weight: float = 2.0) -> pd.DataFrame:
@@ -278,26 +328,188 @@ def list_events(cfg: Dict, fetch: Optional[Callable] = None) -> List[Dict]:
     return fetch(f"{BASE}/sports/{SPORT}/events", {"apiKey": cfg.get("odds_api_key", "")})
 
 
-def rotation_order(conn, game_ids: List[str]) -> List[str]:
-    """Least-recently-pulled first, never-pulled at the very front (stable)."""
+#: A game kicking off within this many hours is IMMINENT: it outranks the
+#: rotation clock. Sized to comfortably exceed the longest gap between two
+#: scheduled runs, so no game can pass through its last chance unpriced.
+IMMINENT_HORIZON_HOURS = 24.0
+
+
+def rotation_order(conn, game_ids: List[str],
+                   kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                   now: Optional[dt.datetime] = None,
+                   horizon_hours: float = IMMINENT_HORIZON_HOURS) -> List[str]:
+    """Pull order: imminent kickoffs first, then the rotation clock.
+
+    The original order was purely least-recently-pulled. That is fair but
+    blind: on 2026-09-09 it spent all four of the Wednesday run's event-calls
+    on Sunday games and skipped the game kicking off that night, so the
+    opener reached kickoff with no market at all. Fairness over a month is
+    worth nothing to a game that starts in five hours.
+
+    Three tiers:
+
+    0. **IMMINENT** -- kickoff in ``(now, now + horizon_hours]``, soonest
+       first. A game we will not get another scheduled chance to price
+       before it starts outranks a game five days out, whatever the
+       rotation clock says.
+    1. **FUTURE** -- kickoff beyond the horizon: soonest kickoff first, then
+       least-recently-pulled, then ``game_id``. When the budget rations a
+       Wednesday, the games that kick off first are the ones priced (2026
+       Week 3, #26). A game with an UNKNOWN kickoff sorts at the head of
+       this tier on the rotation clock alone -- it cannot be ranked by time.
+    2. **STARTED** -- kickoff already passed. Last, and normally unreachable
+       because :func:`pull_week_props` skips them outright; a credit spent on
+       a game in progress buys nothing.
+
+    ``kickoffs=None`` reproduces the pre-2026-09-09 behaviour exactly, so
+    every existing caller and test is unaffected.
+    """
     if not game_ids:
         return []
     df = dbmod.query_df(conn, "SELECT game_id, MAX(ts) AS last_ts FROM lines GROUP BY game_id")
     last = dict(zip(df["game_id"], df["last_ts"])) if not df.empty else {}
-    return sorted(game_ids, key=lambda g: (last.get(g) or "", g))
+    if not kickoffs:
+        return sorted(game_ids, key=lambda g: (last.get(g) or "", g))
+
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    horizon = dt.timedelta(hours=float(horizon_hours))
+
+    def key(game_id: str):
+        ko = kickoffs.get(game_id)
+        if ko is None:                       # unknown kickoff -> rotation clock
+            return (1, "", last.get(game_id) or "", game_id)
+        if ko.tzinfo is None:
+            ko = ko.replace(tzinfo=dt.timezone.utc)
+        if ko <= now:
+            return (2, "", "", game_id)
+        iso = ko.astimezone(dt.timezone.utc).isoformat()
+        if ko - now <= horizon:
+            return (0, iso, "", game_id)
+        return (1, iso, last.get(game_id) or "", game_id)
+
+    return sorted(game_ids, key=key)
+
+
+def started_games(game_ids: List[str], kickoffs: Optional[Dict[str, dt.datetime]],
+                  now: Optional[dt.datetime] = None) -> List[str]:
+    """Game ids whose kickoff has already passed (never worth a credit)."""
+    if not kickoffs:
+        return []
+    now = now or dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    out = []
+    for game_id in game_ids:
+        ko = kickoffs.get(game_id)
+        if ko is None:
+            continue
+        if ko.tzinfo is None:
+            ko = ko.replace(tzinfo=dt.timezone.utc)
+        if ko <= now:
+            out.append(game_id)
+    return out
+
+
+def close_reserve_for(game_id: str, cost_per_event: float,
+                      kickoffs: Optional[Dict[str, dt.datetime]], month: str) -> float:
+    """Credits to HOLD for this game's pre-kick close when pulling it now.
+
+    The ledger is a calendar-month ledger (:class:`CreditBudget`), so a close
+    that falls in a later month draws on a fresh quota and needs no hold
+    here. A game with no known kickoff is assumed to close this month.
+    """
+    ko = (kickoffs or {}).get(game_id)
+    if ko is None:
+        return float(cost_per_event)
+    if ko.tzinfo is None:
+        ko = ko.replace(tzinfo=dt.timezone.utc)
+    return float(cost_per_event) if ko.astimezone(dt.timezone.utc).strftime("%Y-%m") == month else 0.0
+
+
+def credit_plan(budget: CreditBudget, cost_per_event: float, game_ids: List[str],
+                kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                reserve_close: bool = False, cap: Optional[int] = None) -> Dict:
+    """The credit arithmetic for one pull, BEFORE any credit is spent.
+
+    ``game_ids`` is the pull order (started games already removed). Walks it
+    the way :func:`pull_week_props` will -- pull cost plus, with
+    ``reserve_close``, the hold for that game's close -- and counts how many
+    games the month can afford. Pure: it reads the ledger and touches nothing.
+
+    Returned (all numbers are credits)::
+
+        {month, cost_per_event, ceiling, used, spendable, n_games,
+         pull_cost, close_reserve, needed, affordable_games, rationed_games,
+         affordable, rationed}
+    """
+    ids = list(game_ids)
+    if cap is not None:
+        ids = ids[:max(int(cap), 0)]
+    holds = {g: (close_reserve_for(g, cost_per_event, kickoffs, budget.month)
+                 if reserve_close else 0.0) for g in ids}
+    spendable = budget.remaining
+    committed = 0.0
+    affordable: List[str] = []
+    rationed: List[str] = []
+    for g in ids:
+        need = float(cost_per_event) + holds[g]
+        if committed + need <= spendable and not rationed:
+            affordable.append(g)
+            committed += need
+        else:
+            rationed.append(g)
+    return {
+        "month": budget.month, "cost_per_event": float(cost_per_event),
+        "ceiling": budget.ceiling, "used": budget.used, "spendable": spendable,
+        "n_games": len(ids), "pull_cost": float(cost_per_event) * len(ids),
+        "close_reserve": sum(holds.values()),
+        "needed": float(cost_per_event) * len(ids) + sum(holds.values()),
+        "affordable_games": len(affordable), "rationed_games": len(rationed),
+        "affordable": affordable, "rationed": rationed,
+    }
+
+
+def plan_text(plan: Dict) -> str:
+    """One line of the arithmetic, for the run log and the board's line note."""
+    return (f"credit plan {plan['month']}: {plan['n_games']} game(s) x "
+            f"{plan['cost_per_event']:.0f} = {plan['pull_cost']:.0f} to pull"
+            + (f" + {plan['close_reserve']:.0f} held for pre-kick closes"
+               if plan['close_reserve'] else "")
+            + f" = {plan['needed']:.0f} needed; {plan['spendable']:.0f} spendable "
+            f"({plan['used']:.0f} used of {plan['ceiling']:.0f}) -> "
+            f"{plan['affordable_games']} affordable, {plan['rationed_games']} rationed")
 
 
 def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                     fetch: Optional[Callable] = None,
                     budget: Optional[CreditBudget] = None,
-                    ts: Optional[str] = None) -> Dict:
-    """Pull props for a rotating, budget-capped subset of the week's games.
+                    ts: Optional[str] = None,
+                    kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                    now: Optional[dt.datetime] = None,
+                    reserve_close: bool = False) -> Dict:
+    """Pull props for the week's games, kickoff-ordered and budget-capped.
 
     ``event_map``: {nflverse game_id -> odds-api event id} (built by the
-    pipeline from team names + kickoff dates). Returns::
+    pipeline from team names + kickoff dates).
+
+    ``kickoffs`` ({game_id -> aware datetime}) makes the order kickoff-aware:
+    games starting within :data:`IMMINENT_HORIZON_HOURS` are pulled first,
+    the rest soonest-kickoff first, and games that have already started are
+    not pulled at all. Omit it and the order is the original
+    least-recently-pulled rotation.
+
+    ``reserve_close=True`` (the Wednesday run) holds one more event's worth
+    of credits per game pulled, for that game's pre-kick close in the same
+    ledger month: a game is either priced on Wednesday AND affordable to
+    close, or reported under ``skipped_budget``. The arithmetic is printed
+    before the first call and returned as ``plan`` (:func:`credit_plan`).
+    Returns::
 
         {"pulled": [game_ids], "skipped_budget": [...], "skipped_cap": [...],
-         "rows_written": int, "credits_spent": float, "budget_remaining": float}
+         "skipped_started": [...], "rows_written": int, "credits_spent": float,
+         "budget_remaining": float, "plan": {...}}
     """
     fetch = fetch or get_json
     conn = conn or dbmod.connect()
@@ -311,18 +523,33 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     cap = int(cfg.get("max_prop_games_per_run", 4))
     ts = ts or stamp_now()
 
-    ordered = rotation_order(conn, list(event_map))
+    ordered = rotation_order(conn, list(event_map), kickoffs=kickoffs, now=now)
+    started = set(started_games(list(event_map), kickoffs, now=now))
+    # The arithmetic, before the first metered call, in the log and the result.
+    plan = credit_plan(budget, cost_per_event, [g for g in ordered if g not in started],
+                       kickoffs=kickoffs, reserve_close=reserve_close, cap=cap)
+    print(f"[oddsapi] {plan_text(plan)}")
     pulled, skipped_budget, skipped_cap = [], [], []
+    skipped_started: List[str] = []
     skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
     spent = 0.0
+    reserved = 0.0          # closes held for games pulled in THIS call
     books_by_game: Dict[str, List[str]] = {}
 
     for game_id in ordered:
+        # A game already under way cannot be bet from this board; spending a
+        # metered credit on its live line buys nothing. Checked before the
+        # cap so an in-progress game never consumes a slot either.
+        if game_id in started:
+            skipped_started.append(game_id)
+            continue
         if len(pulled) >= cap:
             skipped_cap.append(game_id)
             continue
-        if not budget.can_spend(cost_per_event):
+        hold = (close_reserve_for(game_id, cost_per_event, kickoffs, budget.month)
+                if reserve_close else 0.0)
+        if not budget.can_spend(cost_per_event + reserved + hold):
             skipped_budget.append(game_id)
             continue
         params = {"apiKey": cfg.get("odds_api_key", ""),
@@ -352,6 +579,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
         budget.spend(cost_per_event, headers=headers)
         spent += cost_per_event
+        reserved += hold
         rows = parse_event_props(payload, ts)
         for r in rows:
             r["game_id"] = game_id
@@ -367,11 +595,16 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     if coverage["absent_from_provider_response"]:
         print(f"[oddsapi] books requested but absent from the provider response: "
               f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
+    print(f"[oddsapi] pulled {len(pulled)} game(s), {spent:.0f} credits spent, "
+          f"{reserved:.0f} held for closes, {budget.remaining:.0f} left in {budget.month}; "
+          f"skipped: budget={len(skipped_budget)} cap={len(skipped_cap)} "
+          f"started={len(skipped_started)} error={len(skipped_error)}")
     return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
-            "skipped_error": skipped_error,
+            "skipped_started": skipped_started, "skipped_error": skipped_error,
             "rows_written": written, "credits_spent": spent,
+            "close_reserved": reserved,
             "budget_remaining": budget.remaining, "ts": ts,
-            "book_coverage": coverage}
+            "book_coverage": coverage, "plan": plan}
 
 
 def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
