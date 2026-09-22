@@ -59,3 +59,14 @@ def get_json_with_headers(url: str, params: Optional[Dict] = None, timeout: floa
             data["_headers"] = {k.lower(): v for k, v in resp.headers.items()
                                 if k.lower().startswith("x-requests-")}
         return data
+
+
+def get_json_and_headers(url: str, params: Optional[Dict] = None, timeout: float = 15.0):
+    """``(payload, x-requests-* headers)`` for any payload shape (a list too)."""
+    if params:
+        url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": user_agent()})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        return data, {k.lower(): v for k, v in resp.headers.items()
+                      if k.lower().startswith("x-requests-")}

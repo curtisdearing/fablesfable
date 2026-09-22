@@ -58,6 +58,10 @@ def _patch_urlopen(monkeypatch, used: int):
 
     def fake_urlopen(req, timeout=None):
         seen.append(req.full_url)
+        if req.full_url.split("?")[0].endswith("/events"):   # free quota preflight
+            return _FakeResp(b"[]", {"x-requests-used": str(used - 5),
+                                     "x-requests-remaining": str(505 - used),
+                                     "x-requests-last": "0"})
         return _FakeResp(json.dumps(payload).encode(),
                          {"Content-Type": "application/json",
                           "x-requests-used": str(used), "x-requests-remaining": str(500 - used),
@@ -72,7 +76,8 @@ def test_default_fetch_reconciles_ledger_with_provider_usage(conn, monkeypatch):
     budget = oap.CreditBudget(conn, 500, 50, month="2026-09")
     budget.spend(165)                      # the stale local count
     res = oap.pull_week_props(_cfg(), {"g1": "ev1"}, conn=conn, budget=budget)
-    assert len(seen) == 1 and res["pulled"] == ["g1"]
+    assert [u.split("?")[0].rsplit("/", 1)[-1] for u in seen] == ["events", "odds"]
+    assert res["pulled"] == ["g1"]
     assert budget.used == 341              # provider's count, not 165 + 5
     row = dbmod.query_df(conn, "SELECT used, last_headers FROM api_credits WHERE month='2026-09'")
     assert float(row.iloc[0]["used"]) == 341

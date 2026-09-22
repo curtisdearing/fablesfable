@@ -113,6 +113,11 @@ def slate_kickoffs(slate: pd.DataFrame) -> Dict[str, dt.datetime]:
     return out
 
 
+def _game_teams(slate: pd.DataFrame) -> Dict[str, set]:
+    """{game_id: {home, away}} -- confines a quote to its own game's teams."""
+    return {g.game_id: {g.home_team, g.away_team} for g in slate.itertuples(index=False)}
+
+
 def _players_frame(cands: pd.DataFrame) -> pd.DataFrame:
     return (cands[["player_id", "name", "team"]].drop_duplicates()
             .rename(columns={"name": "player_name"}))
@@ -560,8 +565,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # run; reading only `ts = pull["ts"]` threw away every earlier pull and
         # published NO_MARKET for games whose real lines were already stored.
         snap_rows = oapmod.load_recent_lines(conn, game_ids=list(slate["game_id"]))
-        rows = oapmod.match_player_ids(snap_rows, _players_frame(cands)
-                                       .rename(columns={"player_name": "name"}))
+        rows = oapmod.match_player_ids(
+            snap_rows, _players_frame(cands).rename(columns={"player_name": "name"}),
+            roster_rows=(live.get("active_roster") or {}).get("rows") if mode == "live" else None,
+            game_teams=_game_teams(slate))
         prop_lines = oapmod.to_prop_lines_frame(rows)
         carried = sorted({r["game_id"] for r in snap_rows} - set(pull["pulled"]))
         line_note = (f"Odds pull: {len(pull['pulled'])} game(s) pulled "
@@ -573,7 +580,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                      f"{len(pull.get('skipped_started') or [])} already under way; "
                      f"{len(unmatched)} not in the odds events listing; "
                      f"{pull['budget_remaining']:.0f} credits left this month. "
-                     + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else ""))
+                     + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else "")
+                     + (f" NO odds pulled: {pull['quota_preflight']['reason']}."
+                        if (pull.get("quota_preflight") or {}).get("ok") is False else ""))
         if not prop_lines.empty:
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
@@ -755,7 +764,8 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                 print(f"[t90] odds pull failed for {game_id}: {exc}")
         rows = oapmod.match_player_ids(
             oapmod.load_recent_lines(conn, game_ids=[game_id]),
-            _players_frame(cands).rename(columns={"player_name": "name"}))
+            _players_frame(cands).rename(columns={"player_name": "name"}),
+            game_teams=_game_teams(one))
         prop_lines = oapmod.to_prop_lines_frame(rows)
         if not prop_lines.empty:
             cands = candmod.enumerate_candidates(
