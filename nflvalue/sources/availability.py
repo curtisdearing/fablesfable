@@ -305,6 +305,29 @@ def fetch_event_rosters(event_id: str) -> Dict:
 # --------------------------------------------------------------------------- #
 # Resolution: our players x ESPN feeds -> OK | RISK | OUT (with provenance)
 # --------------------------------------------------------------------------- #
+def _abbrev_match(pname: str, team: str, rows: List[Dict]) -> Optional[Dict]:
+    """Unique ESPN row for an nflverse-abbreviated candidate name.
+
+    Candidates carry 'D.London' / 'Bi.Robinson' (normalized 'd london' /
+    'bi robinson'); ESPN rows carry full names. Match when the last name is
+    equal, the full first name starts with the abbreviation, and the team
+    agrees wherever the row names one -- and only when exactly ONE row fits.
+    Ambiguity is never guessed."""
+    parts = pname.split()
+    if len(parts) != 2 or len(parts[0]) > 2:
+        return None
+    prefix, last = parts
+    hits = []
+    for r in rows:
+        full = normalize_name(r.get("name")).split()
+        if len(full) < 2 or full[-1] != last or not full[0].startswith(prefix):
+            continue
+        if r.get("team") and team and r.get("team") != team:
+            continue
+        hits.append(r)
+    return hits[0] if len(hits) == 1 else None
+
+
 def resolve_statuses(
     players: pd.DataFrame,
     injury_rows: Iterable[Dict],
@@ -340,6 +363,8 @@ def resolve_statuses(
     inj_ts = injuries_fetched_at or stamp_now()
     ina_ts = inactives_fetched_at or stamp_now()
 
+    injury_rows = list(injury_rows)
+    inactive_rows = None if inactive_rows is None else list(inactive_rows)
     # index ESPN injury rows by (normalized name, team) and by name alone
     by_name_team: Dict[Tuple[str, str], Dict] = {}
     by_name: Dict[str, List[Dict]] = {}
@@ -369,15 +394,19 @@ def resolve_statuses(
             cands = by_name.get(pname, [])
             if len(cands) == 1:  # unambiguous name-only match (team moved/renamed)
                 row, matched_by = cands[0], "name_only"
+        if row is None:
+            row = _abbrev_match(pname, pteam, injury_rows)
+            matched_by = "abbrev+team" if row is not None else None
 
         status, status_raw, source, ts, comment = "OK", "", "none(no injury listed)", inj_ts, ""
         if row is not None:
             matched_keys.add(pname)
+            matched_keys.add(normalize_name(row.get("name")))
             status, status_raw = row["status"], row["status_raw"]
             source, ts, comment = "espn_team_injuries", inj_ts, row.get("comment", "")
 
         if clock == "t90":
-            ina = ina_by_name.get(pname)
+            ina = ina_by_name.get(pname) or _abbrev_match(pname, pteam, inactive_rows or [])
             if ina is not None:
                 if not ina.get("active", False):
                     status, status_raw = "OUT", (status_raw or "") + "|inactive_t90"

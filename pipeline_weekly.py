@@ -125,11 +125,16 @@ def _apply_forecast_weather(adv, slate: pd.DataFrame) -> None:
     try:
         from build_ratings import ABBR
         from nflvalue.sources.weather import forecast_for_game
+        # gameday/gametime are Eastern clock time: the forecast hour is the
+        # real (UTC) kickoff, not that clock labelled +00:00.
+        kickoffs = slate_kickoffs(slate)
         for g in slate.itertuples(index=False):
             wx = adv.weather.get(g.game_id, (None, None))
             if wx[0] is not None and not pd.isna(wx[0]):
                 continue  # dome-neutralized or already known
-            commence = f"{g.gameday}T{(g.gametime or '13:00')}:00+00:00"
+            if g.game_id not in kickoffs:
+                continue  # unparseable kickoff: schedule values kept
+            commence = kickoffs[g.game_id].astimezone(dt.timezone.utc).isoformat()
             fc = (forecast_for_game(g.home_team, commence)
                   or forecast_for_game(ABBR.get(g.home_team, g.home_team), commence))
             if not fc:

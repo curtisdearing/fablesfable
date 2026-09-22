@@ -42,7 +42,7 @@ import pandas as pd
 
 from .. import db as dbmod
 from ..freshness import stamp_now
-from ._http import get_json
+from ._http import get_json, get_json_with_headers
 from .availability import normalize_name
 
 BASE = "https://api.the-odds-api.com/v4"
@@ -511,7 +511,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
          "skipped_started": [...], "rows_written": int, "credits_spent": float,
          "budget_remaining": float, "plan": {...}}
     """
-    fetch = fetch or get_json
+    fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
     ob = cfg.get("odds_budget") or {}
     budget = budget or CreditBudget(conn, int(ob.get("monthly_credits", 500)),
@@ -613,7 +613,7 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     caller passes exactly the games that already have entry lines and kick
     soon). This is what makes CLV resolvable: entry = Wednesday snapshot,
     close = this pre-kickoff snapshot. Budget hard-stop still applies."""
-    fetch = fetch or get_json
+    fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
     ob = cfg.get("odds_budget") or {}
     budget = CreditBudget(conn, int(ob.get("monthly_credits", 500)),

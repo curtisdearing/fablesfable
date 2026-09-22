@@ -43,3 +43,19 @@ def get_json(url: str, params: Optional[Dict] = None, timeout: float = 15.0):
     req = urllib.request.Request(url, headers={"User-Agent": user_agent()})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def get_json_with_headers(url: str, params: Optional[Dict] = None, timeout: float = 15.0):
+    """``get_json`` for a metered API: a dict payload also carries the
+    provider's ``x-requests-*`` quota headers under ``"_headers"`` (lower-
+    cased), which ``oddsapi_props.CreditBudget.spend`` reconciles against.
+    Without them the credit ledger only ever counts its own calls."""
+    if params:
+        url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": user_agent()})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        if isinstance(data, dict):
+            data["_headers"] = {k.lower(): v for k, v in resp.headers.items()
+                                if k.lower().startswith("x-requests-")}
+        return data
