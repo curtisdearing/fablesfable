@@ -36,13 +36,14 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 
 from .. import db as dbmod
 from ..freshness import stamp_now
-from ._http import get_json
+from ._http import get_json, get_json_and_headers, get_json_with_headers
 from .availability import normalize_name
 
 BASE = "https://api.the-odds-api.com/v4"
@@ -77,6 +78,7 @@ class CreditBudget:
                  month: Optional[str] = None):
         self.conn = conn
         self.ceiling = float(monthly_credits) - float(reserve)
+        self.reserve = float(reserve)
         self.month = month or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m")
         row = dbmod.query_df(conn, "SELECT used FROM api_credits WHERE month=?", (self.month,))
         self.used = float(row.iloc[0]["used"]) if not row.empty else 0.0
@@ -107,6 +109,45 @@ class CreditBudget:
     @property
     def remaining(self) -> float:
         return max(self.ceiling - self.used, 0.0)
+
+    def reconcile(self, used: float, remaining: float, headers: Optional[Dict] = None) -> None:
+        """Adopt the provider's own count BEFORE spending, and never plan past
+        what the provider says is left (less the reserve), whatever the
+        configured monthly figure claims."""
+        self.used = float(used)
+        self.ceiling = min(self.ceiling, float(used) + float(remaining) - self.reserve)
+        dbmod.upsert(self.conn, "api_credits", [{
+            "month": self.month, "used": self.used,
+            "last_headers": json.dumps(dict(headers or {}))[:500],
+            "updated_at": stamp_now(),
+        }], ["month"])
+
+
+def quota_preflight(cfg: Dict, budget: CreditBudget,
+                    quota_fetch: Optional[Callable] = None) -> Dict:
+    """Read the provider's quota from the FREE events listing and reconcile
+    the ledger before the first metered call.
+
+    The local ledger only learns the provider's count from a metered
+    response, so a stale ledger (2026-09-22: 165 local vs 336 at the
+    provider) would otherwise authorize the first paid request on its own
+    arithmetic. Missing, unparseable or inconsistent quota headers return
+    ``ok=False`` and the caller spends nothing."""
+    fetch = quota_fetch or get_json_and_headers
+    try:
+        _, headers = fetch(f"{BASE}/sports/{SPORT}/events", {"apiKey": cfg.get("odds_api_key", "")})
+        headers = {str(k).lower(): v for k, v in (headers or {}).items()}
+        used = float(headers["x-requests-used"])
+        remaining = float(headers["x-requests-remaining"])
+        last = float(headers.get("x-requests-last") or 0)
+        # float() accepts 'nan'/'inf', and NaN passes every comparison
+        if not all(math.isfinite(v) for v in (used, remaining, last)) \
+                or used < 0 or remaining < 0 or last != 0:
+            raise ValueError(f"inconsistent quota headers {headers}")
+    except Exception as exc:  # noqa: BLE001 -- unknown quota is a refusal, never a pass
+        return {"ok": False, "reason": f"provider quota unverified ({type(exc).__name__}: {exc})"}
+    budget.reconcile(used, remaining, headers=headers)
+    return {"ok": True, "used": used, "remaining": remaining, "ceiling": budget.ceiling}
 
 
 # --------------------------------------------------------------------------- #
@@ -179,31 +220,54 @@ def book_coverage(cfg: Dict, books_by_game: Dict[str, List[str]]) -> Dict:
     }
 
 
-def match_player_ids(rows: List[Dict], candidates: pd.DataFrame) -> List[Dict]:
+def match_player_ids(rows: List[Dict], candidates: pd.DataFrame,
+                     roster_rows: Optional[List[Dict]] = None,
+                     game_teams: Optional[Dict[str, set]] = None) -> List[Dict]:
     """Attach gsis player_ids by normalized name against the candidate pool.
 
     Ambiguous or unknown names stay ``player_id=None`` (kept + queryable);
     they simply can't join a projection, so they never mint an edge.
+
+    Order, first unique answer wins:
+      1. the candidate's own name, exactly;
+      2. the AUTHORITATIVE full name for a candidate id from ``roster_rows``
+         (the active-roster snapshot: ``{player_id, name, team}``);
+      3. the candidate's abbreviation: equal last name(s) and the book's
+         first name starting with the candidate's first token, so 'Bi.Robinson'
+         can take 'Bijan Robinson' but never 'Brian Robinson Jr.'.
+    ``game_teams`` ({game_id: {teams}}) confines each row to the two teams of
+    its own game when the candidates carry ``team``. Ambiguity at any step is
+    final: it is never resolved by falling through to a weaker rule.
     """
-    lookup: Dict[str, set] = {}
-    for r in candidates[["player_id", "name"]].drop_duplicates().itertuples(index=False):
-        lookup.setdefault(normalize_name(r.name), set()).add(r.player_id)
-    # candidate names are abbreviated ("A.St. Brown"); book names are full
-    # ("Amon-Ra St. Brown") -- also index by "first-initial lastname"
-    fi_lookup: Dict[str, set] = {}
-    for key, pids in lookup.items():
+    has_team = "team" in candidates.columns
+    cols = ["player_id", "name"] + (["team"] if has_team else [])
+    pool = []
+    for r in candidates[cols].drop_duplicates().itertuples(index=False):
+        key = normalize_name(r.name)
         parts = key.split()
-        if len(parts) >= 2:
-            fi_lookup.setdefault(f"{parts[0][0]} {' '.join(parts[1:])}", set()).update(pids)
+        pool.append((r.player_id, key, parts[0] if parts else "", parts[1:],
+                     getattr(r, "team", None) if has_team else None))
+    full: Dict[str, str] = {}
+    for rr in roster_rows or []:
+        if rr.get("player_id") and rr.get("name"):
+            full[str(rr["player_id"])] = normalize_name(rr["name"])
+
+    def unique(pids):
+        pids = set(pids)
+        return (next(iter(pids)) if len(pids) == 1 else None), len(pids)
 
     for row in rows:
         key = normalize_name(row["player_name"])
-        pids = lookup.get(key, set())
-        if not pids:
-            parts = key.split()
-            if len(parts) >= 2:
-                pids = fi_lookup.get(f"{parts[0][0]} {' '.join(parts[1:])}", set())
-        row["player_id"] = pids.copy().pop() if len(pids) == 1 else None
+        parts = key.split()
+        teams = (game_teams or {}).get(row.get("game_id")) if has_team else None
+        cands = [c for c in pool if teams is None or c[4] in teams]
+        pid, n = unique(c[0] for c in cands if c[1] == key)
+        if n == 0 and full:
+            pid, n = unique(c[0] for c in cands if full.get(str(c[0])) == key)
+        if n == 0 and len(parts) >= 2:
+            pid, n = unique(c[0] for c in cands
+                            if c[2] and c[3] == parts[1:] and parts[0].startswith(c[2]))
+        row["player_id"] = pid
     return rows
 
 
@@ -488,7 +552,8 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                     ts: Optional[str] = None,
                     kickoffs: Optional[Dict[str, dt.datetime]] = None,
                     now: Optional[dt.datetime] = None,
-                    reserve_close: bool = False) -> Dict:
+                    reserve_close: bool = False,
+                    quota_fetch: Optional[Callable] = None) -> Dict:
     """Pull props for the week's games, kickoff-ordered and budget-capped.
 
     ``event_map``: {nflverse game_id -> odds-api event id} (built by the
@@ -511,7 +576,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
          "skipped_started": [...], "rows_written": int, "credits_spent": float,
          "budget_remaining": float, "plan": {...}}
     """
-    fetch = fetch or get_json
+    fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
     ob = cfg.get("odds_budget") or {}
     budget = budget or CreditBudget(conn, int(ob.get("monthly_credits", 500)),
@@ -525,6 +590,21 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
 
     ordered = rotation_order(conn, list(event_map), kickoffs=kickoffs, now=now)
     started = set(started_games(list(event_map), kickoffs, now=now))
+    # Provider quota BEFORE the plan. Required on the real network path; an
+    # injected ``fetch`` (offline tests, captured-payload replay) touches no
+    # meter and preflights only when handed a ``quota_fetch``.
+    preflight = None
+    if fetch is get_json_with_headers or quota_fetch is not None:
+        preflight = quota_preflight(cfg, budget, quota_fetch=quota_fetch)
+        print(f"[oddsapi] quota preflight: {preflight}")
+        if not preflight["ok"]:
+            live = [g for g in ordered if g not in started]
+            return {"pulled": [], "skipped_budget": live, "skipped_cap": [],
+                    "skipped_started": [g for g in ordered if g in started],
+                    "skipped_error": [], "rows_written": 0, "credits_spent": 0.0,
+                    "close_reserved": 0.0, "budget_remaining": 0.0, "ts": ts,
+                    "plan": None, "book_coverage": book_coverage(cfg, {}),
+                    "quota_preflight": preflight}
     # The arithmetic, before the first metered call, in the log and the result.
     plan = credit_plan(budget, cost_per_event, [g for g in ordered if g not in started],
                        kickoffs=kickoffs, reserve_close=reserve_close, cap=cap)
@@ -604,16 +684,17 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             "rows_written": written, "credits_spent": spent,
             "close_reserved": reserved,
             "budget_remaining": budget.remaining, "ts": ts,
-            "book_coverage": coverage, "plan": plan}
+            "book_coverage": coverage, "plan": plan, "quota_preflight": preflight}
 
 
 def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
-                 fetch: Optional[Callable] = None, ts: Optional[str] = None) -> Dict:
+                 fetch: Optional[Callable] = None, ts: Optional[str] = None,
+                 quota_fetch: Optional[Callable] = None) -> Dict:
     """Second snapshot for SPECIFIC games (no rotation, no per-run cap — the
     caller passes exactly the games that already have entry lines and kick
     soon). This is what makes CLV resolvable: entry = Wednesday snapshot,
     close = this pre-kickoff snapshot. Budget hard-stop still applies."""
-    fetch = fetch or get_json
+    fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
     ob = cfg.get("odds_budget") or {}
     budget = CreditBudget(conn, int(ob.get("monthly_credits", 500)),
@@ -623,6 +704,13 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     regions = str(cfg.get("regions", "us"))
     cost = float(len(markets) * len(regions.split(",")))
     ts = ts or stamp_now()
+    if fetch is get_json_with_headers or quota_fetch is not None:
+        preflight = quota_preflight(cfg, budget, quota_fetch=quota_fetch)
+        print(f"[oddsapi] resnap quota preflight: {preflight}")
+        if not preflight["ok"]:
+            return {"pulled": [], "skipped_budget": sorted(event_map), "rows_written": 0,
+                    "ts": ts, "budget_remaining": 0.0,
+                    "book_coverage": book_coverage(cfg, {}), "quota_preflight": preflight}
     pulled, skipped, rows = [], [], []
     books_by_game: Dict[str, List[str]] = {}
     for game_id, event_id in sorted(event_map.items()):
