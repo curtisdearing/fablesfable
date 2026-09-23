@@ -89,7 +89,7 @@ ORDERING_ONLY_LABEL = "Enters the ordering score only; does not change the proje
 NOT_ISOLATED = "Used in projection; contribution not isolated"
 
 CATEGORY_LABELS = {
-    "qb_news": "Quarterback news", "team_news": "Team news", "ol_injury": "Offensive line",
+    "availability": "Player availability", "qb_news": "Quarterback news", "team_news": "Team news", "ol_injury": "Offensive line",
     "def_absence": "Defensive absences", "role_usage": "Snaps, touches and targets",
     "matchup": "Matchup", "venue": "Stadium", "home_away": "Home / away",
     "primetime": "Primetime", "schedule": "Schedule", "season_form": "Current season",
@@ -426,9 +426,11 @@ _STAGE_COLUMNS = (
     ("realloc_efficiency", "realloc_eff_mult", "availability_adjustment",
      "efficiency from a teammate ruled OUT (candidates.apply_reallocation)"),
     ("backup_qb", "backup_qb_adj", "qb_news",
-     "backup-QB passing efficiency (candidates.apply_backup_qb_adjustment)"),
+     "backup-QB passing efficiency on receiving yards, receptions and passing yards "
+     "(candidates.apply_backup_qb_adjustment)"),
     ("absence_qb", "absence_qb_mult", "availability_adjustment",
-     "skill-leader absence on QB markets (candidates.apply_absence_qb_adjustment)"),
+     "skill-leader absence on QB passing yards and pass attempts "
+     "(candidates.apply_absence_qb_adjustment)"),
 )
 
 
@@ -663,8 +665,13 @@ def public_label(r: Dict) -> Dict:
     }
 
 
-def check_copy(text: str) -> None:
+def check_copy(text: str, names: Iterable[str] = ()) -> None:
+    """Raise on imperative/certainty terms.  ``names``: person names the record declares it
+    mentions (``mentions``); only those exact names are masked first, so a player called
+    e.g. "Drew Lock" does not trip "lock" while the same word elsewhere still does."""
     low = text.lower()
+    for n in sorted({str(x).lower() for x in names if x and len(str(x)) > 3}, key=len, reverse=True):
+        low = low.replace(n, " ")
     hits = [t for t in BANNED_TERMS + _CERTAINTY if re.search(rf"(?<!\w){re.escape(t)}(?!\w)", low)]
     if hits:
         raise UnsafeCopy(f"public copy contains unsupported certainty/imperative terms: {hits}")
@@ -687,9 +694,11 @@ def select_for_card(records: Iterable[Dict], card: Dict) -> List[Dict]:
 def build_panel(records: Iterable[Dict], as_of) -> Dict:
     """Structured evidence panel grouped by category.  Raises UnsafeCopy on banned copy."""
     as_of_t = _as_of(as_of)
+    records = list(records)
     labels = [public_label(r) for r in records]
-    for lab in labels:
-        check_copy(" ".join(str(v) for k, v in lab.items() if isinstance(v, str)))
+    for r, lab in zip(records, labels):
+        check_copy(" ".join(str(v) for k, v in lab.items() if isinstance(v, str)),
+                   names=r.get("mentions") or ())
     groups = []
     for cat in CATEGORY_ORDER + tuple(sorted({l["category"] for l in labels} - set(CATEGORY_ORDER))):
         items = [l for l in labels if l["category"] == cat]

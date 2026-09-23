@@ -16,7 +16,9 @@ def _row(**kw):
          "quote_book": "draftkings", "quote_ts": "2026-09-24T18:30:00Z", "as_of": "2026-09-24T18:35:00Z",
          "mean": 52.0, "sd": 26.0, "p_side": 0.58, "composite": 70.0, "status": "active",
          "run_id": "gha:1-1", "code_sha": "abc", "forecast_version": "ff-football-only-v1",
-         "selection_source": "ml_gbdt", "_quote_verified": True}
+         "selection_source": "ml_gbdt", "_quote_verified": True,
+         "stage_json": '{"availability": {"status": "OK", "eligibility": "eligible", '
+                       '"availability_state": "not_listed"}}'}
     r.update(kw)
     return r
 

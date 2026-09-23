@@ -77,3 +77,9 @@ jobs:
           tests/test_weekly_report_latest.py
           tests/test_http_user_agent.py
           tests/test_feed_warnings_visible.py
+          tests/test_stage_scope_parity.py
+          tests/test_qb_provenance.py
+          tests/test_qb_readiness.py
+          tests/test_availability_integration.py
+          tests/test_live_factor_context.py
+          tests/test_participation_evidence.py

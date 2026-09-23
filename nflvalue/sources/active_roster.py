@@ -117,8 +117,18 @@ def rows_from_frame(df: pd.DataFrame, week: Optional[int] = None) -> List[Dict]:
             "status": (str(d["status"]).upper() if d.get("status") is not None
                        and not pd.isna(d.get("status")) else None),
             "week": int(week),
+            # external ids (identity linking for context feeds only; never a match key here)
+            "espn_id": _ext_id(d.get("espn_id")),
+            "pfr_id": _ext_id(d.get("pfr_id")),
         })
     return out
+
+
+def _ext_id(x) -> Optional[str]:
+    if x is None or (isinstance(x, float) and pd.isna(x)) or str(x).strip() in ("", "nan", "None"):
+        return None
+    s = str(x).strip()
+    return s[:-2] if s.endswith(".0") and s[:-2].isdigit() else s
 
 
 def fetch_active_roster(season: int, week: Optional[int] = None,

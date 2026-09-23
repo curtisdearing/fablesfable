@@ -177,7 +177,8 @@ def render_markdown(season: int, week: int, games: List[Dict],
 # --------------------------------------------------------------------------- #
 def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
                   as_of: str, status: str = "active",
-                  game_ids: Optional[List[str]] = None) -> int:
+                  game_ids: Optional[List[str]] = None,
+                  run_id: Optional[str] = None) -> int:
     """Replace-the-run semantics: the forward log for a (season, week, clock)
     is whatever the LATEST run published. The whole slice is deleted first so
     a rerun after a ranking change can't leave orphan leans behind (found
@@ -188,7 +189,10 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
     ``game_ids`` scopes the replace to those games: a T-90 run covers ONE
     game, and an unscoped delete here wiped every other game's T-90 leans for
     the week (found in review: only the last T-90 game of a week survived
-    into grading/CLV)."""
+    into grading/CLV).
+
+    ``run_id`` overrides the process run id with the issuing run's id (a T-90 refresh is
+    its own issuing run per game; ``factor_integration.issuing_run_id``)."""
     if game_ids:
         marks = ",".join("?" for _ in game_ids)
         conn.execute(f"DELETE FROM leans WHERE season=? AND week=? AND clock=? "
@@ -201,6 +205,8 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     from .provenance import run_provenance
     prov = run_provenance()
+    if run_id:
+        prov = {**prov, "run_id": run_id}
     for g in games:
         for l in g["leans"]:
             prices = l.get("prices") or {}

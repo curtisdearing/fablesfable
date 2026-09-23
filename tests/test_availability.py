@@ -56,7 +56,8 @@ def test_normalize_status_mapping():
     assert av.normalize_status("Doubtful") == "OUT"
     assert av.normalize_status("Questionable") == "RISK"
     assert av.normalize_status("Active") == "OK"
-    assert av.normalize_status(None) == "OK"
+    assert av.normalize_status(None) == "UNKNOWN"      # no designation is not a health claim
+    assert av.normalize_status("Some New Label") == "UNKNOWN"
 
 
 def test_parse_event_roster_recorded_schema(roster_fixture):
@@ -71,7 +72,7 @@ def test_resolve_wed_matches_by_name_and_team(injuries_fixture):
     risk_row = next((r for r in inj_rows if r["status"] == "RISK"), None)
     players = pd.DataFrame([
         {"player_id": "00-TEST0001", "player_name": out_row["name"], "team": out_row["team"]},
-        {"player_id": "00-TEST0002", "player_name": "Nonexistent Player", "team": "DET"},
+        {"player_id": "00-TEST0002", "player_name": "Nonexistent Player", "team": out_row["team"]},
     ] + ([{"player_id": "00-TEST0003", "player_name": risk_row["name"], "team": risk_row["team"]}]
          if risk_row else []))
     res = av.resolve_statuses(players, inj_rows, clock="wed",
@@ -81,7 +82,9 @@ def test_resolve_wed_matches_by_name_and_team(injuries_fixture):
     assert s1["source"] == "espn_team_injuries"
     assert s1["matched_by"] in ("name+team", "name_only")
     assert s1["timestamp"] == "2026-07-01T12:00:00Z"
-    assert res["statuses"]["00-TEST0002"]["status"] == "OK"           # no listing -> OK
+    # unlisted on a RECEIVED team report -> OK/not_listed (eligible, not medically cleared)
+    assert res["statuses"]["00-TEST0002"]["status"] == "OK"
+    assert res["statuses"]["00-TEST0002"]["availability_state"] == "not_listed"
     assert res["statuses"]["00-TEST0002"]["matched_by"] == "unmatched"
     if risk_row:
         assert res["statuses"]["00-TEST0003"]["status"] == "RISK"

@@ -12,7 +12,9 @@ conditions and a status:
   can be actionable.  ``publish=True`` elsewhere is software permission, not
   validated edge.
 * ``watch``    -- one verified quote, fresh, with a coherent forecast.
-* ``research`` -- no offered price (synthetic line).
+* ``research`` -- no offered price (synthetic line), or the player's availability was not
+  established by the issuing run (unknown is neither healthy nor ruled out, so the
+  forecast stays visible but the quote is not treated as executable).
 * ``pass``     -- voided, stale/future/unrecorded quote, quote not found in
   the captured lines, or an invalid forecast/price/side/line.
 
@@ -69,6 +71,22 @@ def _s(x) -> Optional[str]:
     return x or None
 
 
+def _availability_hold(row: Dict) -> Optional[str]:
+    """Why this pick's own availability blocks execution, from what its run persisted."""
+    import json
+    try:
+        stamps = json.loads(row.get("stage_json") or "null") or {}
+    except (TypeError, ValueError):
+        stamps = {}
+    a = stamps.get("availability")
+    if not a:
+        return "player availability not recorded by the issuing run (missing, not healthy)"
+    if a.get("eligibility") == "degraded":
+        return (f"player availability not established ({a.get('availability_state')}): "
+                "neither confirmed healthy nor ruled out")
+    return None
+
+
 def build_card(row: Dict, now: dt.datetime) -> Dict:
     side = (_s(row.get("side")) or "").lower()
     line, price = _f(row.get("line")), _f(row.get("price"))
@@ -122,6 +140,9 @@ def build_card(row: Dict, now: dt.datetime) -> Dict:
     elif age_h > STALE_QUOTE_HOURS:
         status = "pass"
         reasons.append(f"quote is {age_h:.1f} h old (> {STALE_QUOTE_HOURS:.0f} h)")
+    elif _availability_hold(row):
+        status = "research"
+        reasons.append(_availability_hold(row))
     elif row.get("market") in VALIDATED_MARKETS:
         status = "actionable"
     else:

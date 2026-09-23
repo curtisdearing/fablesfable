@@ -118,7 +118,7 @@ def test_shadow_is_labelled_shadow_with_its_support_and_prior_source():
     assert sh["status_label"] == fe.STATUS_LABELS["shadow_only"]
     assert "31.4" in sh["observation"] and "previous-season history" in sh["observation"]
     assert "weight on this season 0.47" in sh["observation"] and sh["support"] == "2 games this season"
-    assert lab["participation:snaps_routes"]["status"] == "unavailable_unverified"
+    assert lab["participation:routes"]["status"] == "unavailable_unverified"
     # no shadow persisted -> shown as missing, with the run's reason
     lab = _labels(fimod.card_panel(_lean(_stamps()), {"r1": RECEIPT}, {}))
     assert lab["shadow:role_opportunity"]["status"] == "unavailable_unverified"
@@ -185,7 +185,7 @@ def test_run_week_persists_receipt_stamps_and_cards_render_panels(env):
         lab = _labels(c["factor_panel"])
         assert f"context_not_collected:{GAME_ID}" in lab
         assert "model_stages" not in lab                                # stamps were found
-        assert "participation:snaps_routes" in lab
+        assert "participation:routes" in lab
     html = pc.render_cards_html(payload["cards"])
     assert html.count('class="fe-panel"') == len(payload["cards"])
     assert res["factor_receipt"]["run_id"] == receipt["run_id"]
