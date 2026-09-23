@@ -71,6 +71,15 @@ def _s(x) -> Optional[str]:
     return x or None
 
 
+def _run_hold_reason(row: Dict) -> str:
+    """Why the pick's own issuing run did not permit publication (e.g. a T-90 refresh held
+    because the inactives feed could not be fetched)."""
+    if row.get("_run_publish") is None:
+        return "issuing run's publication decision not recorded (not treated as permitted)"
+    why = "; ".join(str(r) for r in (row.get("_run_publish_reasons") or []))[:300]
+    return f"issuing run held publication ({why or 'no reason recorded'})"
+
+
 def _availability_hold(row: Dict) -> Optional[str]:
     """Why this pick's own availability blocks execution, from what its run persisted."""
     import json
@@ -140,6 +149,9 @@ def build_card(row: Dict, now: dt.datetime) -> Dict:
     elif age_h > STALE_QUOTE_HOURS:
         status = "pass"
         reasons.append(f"quote is {age_h:.1f} h old (> {STALE_QUOTE_HOURS:.0f} h)")
+    elif "_run_publish" in row and row["_run_publish"] is not True:
+        status = "research"
+        reasons.append(_run_hold_reason(row))
     elif _availability_hold(row):
         status = "research"
         reasons.append(_availability_hold(row))
@@ -239,6 +251,9 @@ def week_cards(conn, season: int, week: int, now: Optional[dt.datetime] = None) 
         context = fimod.load_context_records(conn, season, week)
         for r in rows:
             r["_factor_panel"] = fimod.card_panel(r, receipts, context)
+            rc = receipts.get(r.get("run_id")) or {}
+            r["_run_publish"] = rc.get("publish")          # None: not recorded -> not executable
+            r["_run_publish_reasons"] = rc.get("publish_reasons")
     cards = build_cards(rows, now=now)
     return {"season": season, "week": week, "generated_at": now.isoformat(timespec="seconds"),
             "validated_markets": sorted(VALIDATED_MARKETS),

@@ -16,7 +16,8 @@ on:
         required: true
         default: wed
         type: choice
-        options: [deploy, wed, t90, tuesday]
+        # wed-early: the one-time 2026-09-23 early Wednesday run (see the gate job)
+        options: [deploy, wed, t90, tuesday, wed-early]
   # GitHub Actions evaluates cron in UTC and `on.schedule` has no timezone
   # field, so Eastern kickoffs are expressed twice: EDT months (Sep-Oct,
   # UTC-4) and EST months (Nov-Jan, UTC-5; DST ends 2026-11-01). The T-90
@@ -43,6 +44,23 @@ on:
     - cron: "20 20 * 11,12,1 0,4,5"  # Sun/Thu/Fri 15:20 ET (16:05 / 16:25 / 16:30)
     - cron: "50 20 * 11,12,1 6"      # Sat 15:50 ET  (17:00)
     - cron: "15 0 * 11,12,1 *"       # every day 19:15 ET previous evening (night games)
+    # -- ONE-TIME early Wednesday run, 2026-09-23 only ------------------------
+    # Owner request: the Week-3 fresh run inside 05:00-07:00 ET (09:00-11:00Z).
+    # Scheduled runs here have started 2-4 h after their cron time, so these are
+    # BACKUP triggers spread across the night; the primary trigger is a
+    # workflow_dispatch job=wed-early at ~09:03Z. The gate job accepts only
+    # 09:00-10:25Z (sleeping from 08:10Z to 09:00Z if early), and at most ONE run
+    # claims the day via the atomic tag early-wed-2026-09-23. Any other date: skip.
+    - cron: "5 5 23 9 *"
+    - cron: "35 5 23 9 *"
+    - cron: "5 6 23 9 *"
+    - cron: "35 6 23 9 *"
+    - cron: "5 7 23 9 *"
+    - cron: "35 7 23 9 *"
+    - cron: "5 8 23 9 *"
+    - cron: "35 8 23 9 *"
+    - cron: "5 9 23 9 *"
+    - cron: "35 9 23 9 *"
 
 permissions:
   contents: write
@@ -56,7 +74,61 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Decides the job before any state, feed or odds work.  Normal events map exactly as
+  # before.  The one-time early Wednesday run (2026-09-23) is admitted only inside
+  # 09:00-10:25Z and only by the run that atomically creates tag early-wed-2026-09-23;
+  # once that tag exists, the regular Wednesday schedule on 2026-09-23 is skipped so the
+  # day's odds acquisition and publication happen once.  If no early run ever claimed
+  # the day, the regular Wednesday run proceeds as usual.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    outputs:
+      job: ${{ steps.g.outputs.job }}
+    steps:
+      - id: g
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          SCHED: ${{ github.event.schedule }}
+          INPUT_JOB: ${{ github.event.inputs.job }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          CLAIM="early-wed-2026-09-23"; DAY="2026-09-23"
+          claimed() { gh api "repos/$REPO/git/ref/tags/$CLAIM" >/dev/null 2>&1; }
+          if [[ "$EVENT" == "push" ]]; then job=deploy
+          elif [[ "$EVENT" == "workflow_dispatch" ]]; then job="$INPUT_JOB"
+          elif [[ "$SCHED" == *" 23 9 *" ]]; then job=wed-early
+          elif [[ "$SCHED" == "23 14 * 9,10 2" || "$SCHED" == "23 15 * 11,12,1 2" ]]; then job=tuesday
+          elif [[ "$SCHED" == "17 14 * 9,10 3" || "$SCHED" == "17 15 * 11,12,1 3" ]]; then job=wed
+          else job=t90; fi
+          if [[ "$job" == "wed-early" ]]; then
+            start=$(date -u -d "${DAY}T09:00:00Z" +%s); last=$(date -u -d "${DAY}T10:25:00Z" +%s)
+            now=$(date -u +%s)
+            if [[ "$(date -u +%F)" != "$DAY" ]]; then echo "early run is for $DAY only"; job=skip
+            elif (( now < start - 3000 )); then echo "fired before 08:10Z; not waiting"; job=skip
+            elif claimed; then echo "the day is already claimed"; job=skip
+            else
+              if (( now < start )); then echo "waiting $(( start - now ))s for 09:00Z"; sleep $(( start - now )); fi
+              if (( $(date -u +%s) >= last )); then echo "past 10:25Z; not starting"; job=skip
+              elif gh api -X POST "repos/$REPO/git/refs" -f ref="refs/tags/$CLAIM" -f sha="$SHA" >/dev/null; then
+                echo "claimed $CLAIM at $(date -u +%FT%TZ)"; job=wed
+              else echo "claim lost to another run"; job=skip; fi
+            fi
+          elif [[ "$job" == "wed" && "$EVENT" == "schedule" && "$(date -u +%F)" == "$DAY" ]] && claimed; then
+            echo "early Wednesday run already claimed $DAY; regular run skipped (no duplicate odds/publication)"
+            job=skip
+          fi
+          echo "job=$job" | tee -a "$GITHUB_OUTPUT"
+
   run:
+    needs: gate
+    if: needs.gate.outputs.job != 'skip'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -120,18 +192,8 @@ jobs:
       - name: Select scheduled job
         id: select
         shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "job=deploy" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "job=${{ github.event.inputs.job }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event.schedule }}" == "23 14 * 9,10 2" || "${{ github.event.schedule }}" == "23 15 * 11,12,1 2" ]]; then
-            echo "job=tuesday" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event.schedule }}" == "17 14 * 9,10 3" || "${{ github.event.schedule }}" == "17 15 * 11,12,1 3" ]]; then
-            echo "job=wed" >> "$GITHUB_OUTPUT"
-          else
-            echo "job=t90" >> "$GITHUB_OUTPUT"
-          fi
+        # decided once, before any state/feed/odds work, by the gate job
+        run: echo "job=${{ needs.gate.outputs.job }}" >> "$GITHUB_OUTPUT"
 
       - name: Run weekly job
         run: python scripts/auto_weekly.py --job "${{ steps.select.outputs.job }}"

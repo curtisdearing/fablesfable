@@ -929,6 +929,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         as_of=result["as_of"], game_ids=list(slate["game_id"]), ran=stage_ran, reasons=stage_why,
         ordering_component=ordering, ordering_features=ml_feats, shadow=shadow,
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
+               # the run's own publication decision: cards from a held run are never executable
+               "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
@@ -1193,7 +1195,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
                "inactives_state": inactives_state,
                "inactives_reason": live.get("inactives_reason") or None,
-               "publish": bool(g["publish"]),
+               "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "
