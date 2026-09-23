@@ -212,6 +212,19 @@ def reported_detail(report: dict, detail: str) -> str:
     return detail
 
 
+def write_pick_cards(season: int, week: int) -> None:
+    """Evidence cards into reports/ (run evidence). Never fails the job."""
+    try:
+        from nflvalue import db as dbmod
+        from nflvalue.pick_cards import write_week_cards
+        conn = dbmod.connect()
+        out = write_week_cards(conn, season, week, out_dir=str(Path(__file__).resolve().parents[1] / "reports"))
+        conn.close()
+        print(f"[auto] pick cards {season} wk{week}: {out['counts']}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[auto] pick cards not written: {exc}")
+
+
 def job_wed() -> int:
     from nflvalue import config as cfgmod
     import pipeline_weekly as pw
@@ -237,6 +250,7 @@ def job_wed() -> int:
     print(f"[auto] wed run {season} wk{week}: {len(res['games'])} games, "
           f"publish={res['publish']}, odds={'live' if live_odds else 'no key -> no_market'}, "
           f"discord={res['discord']}")
+    write_pick_cards(season, week)
     write_pipeline_heartbeat(
         reported_status(report, "active"),
         reported_detail(
@@ -302,6 +316,8 @@ def job_t90() -> int:
         except Exception as exc:  # noqa: BLE001 -- one bad game must not skip the rest
             print(f"[auto] t90 {g.game_id} FAILED: {exc}")
             failures.append(g.game_id)
+    for season_week in sorted({(int(g.season), int(g.week)) for g in soon.itertuples(index=False)}):
+        write_pick_cards(*season_week)
     if failures:
         print(f"[auto] T-90 failed for {len(failures)} game(s): {', '.join(failures)}")
         return 1
