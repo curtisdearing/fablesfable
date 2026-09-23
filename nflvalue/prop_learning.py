@@ -161,6 +161,9 @@ def grade_week(conn, season: int, week: int, pw: pd.DataFrame,
         arow = actual_rows.get(l["player_id"])
         if l["market"] == "anytime_td":
             actual = (arow["rush_tds"] + arow["rec_tds"]) if arow else None
+        elif l["market"] == "pass_attempts":
+            # official attempts exclude sacks; the sack-inclusive pbp count never settles
+            actual = arow.get(st.OFFICIAL_PASS_ATTEMPTS_COL) if arow else None
         else:
             actual = arow[ACTUAL_COL[l["market"]]] if arow else None
         # Settlement contract (nflvalue/settlement.py): push at an integer
@@ -381,7 +384,15 @@ def grade_and_learn(conn, season: int, week: int, inputs, clock: str = "wed",
     if not leans.empty:
         leans["proj_components"] = [comp_lookup.get((p, m))
                                     for p, m in zip(leans["player_id"], leans["market"])]
-    outcomes = grade_week(conn, season, week, inputs.pw, leans=leans,
+    pw = inputs.pw
+    if st.OFFICIAL_PASS_ATTEMPTS_COL not in pw.columns:
+        try:
+            from . import ingest
+            pbp = pd.read_parquet(ingest._season_pbp_path(season))
+            pw = st.with_official_pass_attempts(pw, pbp)
+        except Exception as exc:  # noqa: BLE001 -- pass_attempts leans stay UNRESOLVED
+            print(f"[grade] official pass attempts unavailable ({exc}); pass_attempts unresolved")
+    outcomes = grade_week(conn, season, week, pw, leans=leans,
                           schedules=inputs.schedules, clock=clock)
     record_candidate_aggregates(conn, season, week, cands, inputs.pw)
 

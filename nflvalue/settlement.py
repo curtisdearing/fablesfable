@@ -14,6 +14,16 @@ Documented participation and settlement rules (US books, player props):
   absence of a row -- resolution needs a participation source.
 * A lean whose status is not ``active`` was never a live decision -> VOID.
 * A non-finite or missing actual with a stat row present -> UNRESOLVED.
+* ``pass_attempts`` settles on the OFFICIAL attempts stat, which excludes sacks.
+  nflverse play-by-play sets ``pass_attempt=1`` on every sack, so the
+  player-week ``pass_attempts`` column is sack-inclusive (a model feature, left
+  as is). Settlement reads ``OFFICIAL_PASS_ATTEMPTS_COL`` (sack-excluded, from
+  ``official_pass_attempts``); a table without it leaves the lean UNRESOLVED.
+  Checked row by row against ESPN official final boxes, 2026 week 2: sack-
+  excluded counts matched 40/40 passers, sack-inclusive 10/40.
+
+Book-specific rules NOT verified in this repository (quoted, not guessed):
+``BOOK_RULES_UNVERIFIED`` below. The grader reports them with every grade.
 
 ``hit`` is 1/0 only for WIN/LOSS; None otherwise, so every consumer that
 averages ``hit`` (learning reliability, why-report, calibration grade) is
@@ -36,6 +46,18 @@ UNRESOLVED = "unresolved"
 SETTLED = (WIN, LOSS)
 SETTLEMENTS = (WIN, LOSS, PUSH, VOID, UNRESOLVED)
 YES_ONLY_MARKETS = ("anytime_td",)
+OFFICIAL_PASS_ATTEMPTS_COL = "pass_attempts_official"
+BOOK_RULES_UNVERIFIED = (
+    "player did not play / inactive: void vs. settled (and whether one snap counts as action) is "
+    "book-specific and not verified here; no-row players are graded UNRESOLVED, never void or zero",
+    "official stat corrections after the game: whether a book resettles is book-specific and not "
+    "verified here; grades name their actuals source and capture clock, and a later capture that "
+    "differs is reported as a correction beside the original, never silently replaced",
+    "push at an integer line (stake returned) is the documented two-sided convention; a book's "
+    "own rule for a given market is not verified here",
+    "pass attempts: official attempts exclude sacks and two-point tries; whether a book counts "
+    "spikes or uses a different stat provider is not verified here",
+)
 
 
 @dataclass(frozen=True)
@@ -77,3 +99,30 @@ def settle(market: str, side: str, line, actual, has_stat_row: bool,
     won = over_won if side == "over" else (not over_won)
     detail = "actual landed on the projected side" if won else "actual landed on the other side"
     return Verdict(WIN if won else LOSS, int(won), a, detail)
+
+
+def official_pass_attempts(pbp):
+    """Per (season, week, passer) official pass attempts: pass plays excluding sacks.
+
+    Needs the play-by-play ``sack`` column; refuses rather than returning the
+    sack-inclusive count."""
+    import pandas as pd
+    if "sack" not in pbp.columns:
+        raise ValueError("play-by-play lacks 'sack': official pass attempts cannot be derived")
+    p = pbp[(pbp["pass_attempt"] == 1) & (pbp["sack"].fillna(0) != 1)].dropna(subset=["passer_player_id"])
+    if "two_point_attempt" in p.columns:
+        p = p[p["two_point_attempt"].fillna(0) != 1]
+    out = (p.groupby(["season", "week", "passer_player_id"])["pass_attempt"].sum()
+           .rename(OFFICIAL_PASS_ATTEMPTS_COL).reset_index()
+           .rename(columns={"passer_player_id": "player_id"}))
+    return out.astype({OFFICIAL_PASS_ATTEMPTS_COL: float}) if len(out) else pd.DataFrame(
+        columns=["season", "week", "player_id", OFFICIAL_PASS_ATTEMPTS_COL])
+
+
+def with_official_pass_attempts(pw, pbp):
+    """``pw`` plus the official (sack-excluded) attempts column; 0 for players with no attempt."""
+    off = official_pass_attempts(pbp)
+    out = pw.drop(columns=[OFFICIAL_PASS_ATTEMPTS_COL], errors="ignore").merge(
+        off, on=["season", "week", "player_id"], how="left")
+    out[OFFICIAL_PASS_ATTEMPTS_COL] = out[OFFICIAL_PASS_ATTEMPTS_COL].fillna(0.0)
+    return out
