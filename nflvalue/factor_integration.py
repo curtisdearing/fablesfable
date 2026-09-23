@@ -589,9 +589,11 @@ def qb_record(lean: Dict, stamps: Optional[Dict], as_of) -> Dict:
     """Starting-QB context for the pick's team, as the issuing run established it."""
     from . import qb_readiness as qr
     team = (stamps or {}).get("team")
-    base = dict(factor_id=f"qb_starter_readiness:{team}", category="qb_news", entity_type="team",
-                entity_id=team, team=team, game_id=lean.get("game_id"), as_of=as_of)
     q = (stamps or {}).get("qb_context")
+    base = dict(factor_id=f"qb_starter_readiness:{team}", category="qb_news", entity_type="team",
+                entity_id=team, team=team, game_id=lean.get("game_id"), as_of=as_of,
+                mentions=[x for x in ((q or {}).get("qb_name"),
+                                      ((q or {}).get("prior") or {}).get("name")) if x])
     block = ("context only: the numeric backup-QB rule is blocked (the 2024+ schedule carries "
              "no QB ids, and the x0.92 rule is not validated on pregame starter data)")
     if not q:

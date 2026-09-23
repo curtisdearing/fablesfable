@@ -131,3 +131,19 @@ def test_card_availability_record_labels_follow_the_evidence():
                               "availability_state": "report_missing"}
     rec = fimod.availability_record(lean, stamps, AS_OF)
     assert rec["status"] == "unavailable_unverified" and "no injury report" in rec["observation"]
+
+
+def test_a_player_named_lock_does_not_withhold_the_panel_but_the_word_still_does():
+    from nflvalue import factor_evidence as fe
+    lean = {"player_id": "Q1", "game_id": "2026_03_SEA_WAS"}
+    stamps = {"team": "SEA", "qb_context": {"state": "starter_unconfirmed", "qb_id": None,
+                                            "prior": {"qb_id": "Q1", "name": "Drew Lock",
+                                                      "game_id": "g2", "basis": "first_pass_attempt_by_roster_qb"},
+                                            "rejected": []}}
+    rec = fimod.qb_record(lean, stamps, AS_OF)
+    assert "Drew Lock" in rec["observation"]
+    fe.build_panel([rec], AS_OF)                                  # no UnsafeCopy
+    bad = fe.normalize_record({**rec, "observation": "Drew Lock is a lock"})
+    import pytest
+    with pytest.raises(fe.UnsafeCopy):
+        fe.build_panel([bad], AS_OF)
