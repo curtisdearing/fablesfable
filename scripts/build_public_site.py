@@ -104,7 +104,9 @@ def collect(db_path, season, week, now):
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     try:
         payload["factor_receipts"] = list(fimod.load_receipts(conn, season, week).values())
-        ctx = [r for rs in fimod.load_context_records(conn, season, week).values() for r in rs]
+        on_board = {r["run_id"] for r in runs}
+        ctx = [r for (run, _g), rs in fimod.load_context_records(conn, season, week).items()
+               if run in on_board for r in rs]
     finally:
         conn.close()
     clocks = sorted(r["fetched_at"] for r in ctx if r.get("fetched_at"))
@@ -140,7 +142,10 @@ def header(payload, label, generated_at):
             f"projection (as executed), stages checked with no change, ordering-only inputs, a SHADOW "
             f"role/opportunity forecast (experimental learned weights; failed its bias gate; never changes "
             f"the pick), sourced context that is not a model input, and missing data (never treated as "
-            f"healthy). Context was captured by {e(ctx)}; the odds quote clocks above are unchanged.</div>")
+            f"healthy in this context layer; the primary pipeline's older availability step still treats a "
+            f"player with no matched injury row as available). Context was captured by {e(ctx)}; each card "
+            f"shows only the context recorded by the run that made it. The odds quote clocks above are "
+            f"unchanged.</div>")
 
 
 def build(payload, label, archive, out, generated_at):

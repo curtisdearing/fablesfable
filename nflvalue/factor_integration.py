@@ -238,21 +238,19 @@ def run_receipt(prov: Dict, *, as_of: str, ran: Dict[str, bool], reasons: Dict[s
 
 def persist_run(conn, season: int, week: int, clock: str, receipt: Dict,
                 context_records: List[Dict], game_ids: Optional[List[str]] = None) -> None:
+    """Store this run's receipt and the context it knew, keyed by run_id.  Only this run's own
+    rows are replaced (same-run rerun is idempotent); other runs' context is never touched."""
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    run_id = receipt["run_id"]
     conn.execute("INSERT OR REPLACE INTO run_receipts (run_id, season, week, clock, as_of, "
                  "receipt_json, created_at) VALUES (?,?,?,?,?,?,?)",
-                 (receipt["run_id"], season, week, clock, receipt["as_of"],
+                 (run_id, season, week, clock, receipt["as_of"],
                   json.dumps(receipt, default=str), now))
-    if game_ids:
-        marks = ",".join("?" for _ in game_ids)
-        conn.execute(f"DELETE FROM factor_context WHERE season=? AND week=? AND game_id IN ({marks})",
-                     (season, week, *game_ids))
-    else:
-        conn.execute("DELETE FROM factor_context WHERE season=? AND week=?", (season, week))
+    conn.execute("DELETE FROM factor_context WHERE run_id=?", (run_id,))
     conn.executemany(
-        "INSERT OR REPLACE INTO factor_context (season, week, game_id, factor_id, run_id, "
+        "INSERT OR REPLACE INTO factor_context (run_id, season, week, game_id, factor_id, "
         "record_json, created_at) VALUES (?,?,?,?,?,?,?)",
-        [(season, week, r.get("game_id"), r["factor_id"], receipt["run_id"],
+        [(run_id, season, week, r.get("game_id"), r["factor_id"],
           json.dumps(r, default=str), now) for r in context_records])
     conn.commit()
 
@@ -383,15 +381,32 @@ def load_receipts(conn, season: int, week: int) -> Dict[str, Dict]:
     return {r[0]: json.loads(r[1]) for r in rows}
 
 
-def load_context_records(conn, season: int, week: int) -> Dict[str, List[Dict]]:
+def load_context_records(conn, season: int, week: int) -> Dict[tuple, List[Dict]]:
+    """(issuing run_id, game_id) -> the context that run recorded."""
     try:
-        rows = conn.execute("SELECT game_id, record_json FROM factor_context WHERE season=? AND week=?",
-                            (season, week)).fetchall()
+        rows = conn.execute("SELECT run_id, game_id, record_json FROM factor_context "
+                            "WHERE season=? AND week=?", (season, week)).fetchall()
     except Exception:
         return {}
-    out: Dict[str, List[Dict]] = {}
-    for g, j in rows:
-        out.setdefault(g, []).append(json.loads(j))
+    out: Dict[tuple, List[Dict]] = {}
+    for run, g, j in rows:
+        out.setdefault((run, g), []).append(json.loads(j))
+    return out
+
+
+def _as_known_at(records: List[Dict], as_of) -> List[Dict]:
+    """Defense in depth: a record whose published/observed/fetched clock is after the pick's
+    decision time cannot be shown as known then, whatever its stored status says."""
+    t = fe._as_of(as_of)
+    out = []
+    for r in records:
+        late = [k for k in ("published_at", "observed_at", "fetched_at")
+                if fe._ts(r.get(k)) and fe._ts(r.get(k)) > t]
+        if late:
+            r = {**r, "status": "unavailable_unverified", "verified": False, "cutoff_ok": False,
+                 "numerical_effect": None,
+                 "reason_not_applied": "captured or published after this pick's decision time"}
+        out.append(r)
     return out
 
 
@@ -400,7 +415,15 @@ def card_panel(lean: Dict, receipts: Dict[str, Dict], context_by_game: Dict[str,
     receipt = receipts.get(lean.get("run_id"))
     as_of = (receipt or {}).get("as_of") or lean.get("as_of")
     try:
-        recs = card_records(lean, receipt, context_by_game.get(lean.get("game_id"), []), as_of)
+        ctx = context_by_game.get((lean.get("run_id"), lean.get("game_id")))
+        if ctx is None:     # never borrow another run's context
+            ctx = [fe.normalize_record(dict(
+                factor_id=f"context_not_recorded:{lean.get('game_id')}", category="team_news",
+                entity_type="game", entity_id=lean.get("game_id"), game_id=lean.get("game_id"),
+                as_of=as_of, measurement_kind="unavailable", verified=False,
+                observation="No context was recorded by the run that made this pick",
+                reason_not_applied="missing for this pick's run (not borrowed from a later run)"))]
+        recs = card_records(lean, receipt, _as_known_at(ctx, as_of), as_of)
         panel = fe.build_panel(recs, as_of)
     except fe.UnsafeCopy as exc:
         return {"withheld": f"panel withheld: {exc}"}

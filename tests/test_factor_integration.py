@@ -245,3 +245,83 @@ def test_shadow_runs_on_real_enumerated_candidates(pbp_fast, schedules_fast):
     pd.testing.assert_frame_equal(cands, before)                      # shadow never mutates the pick frame
     stamps = fimod.build_stamps(cands, RAN, {})
     assert all(s["position"] in ("QB", "RB", "WR", "TE") for s in stamps.values())
+
+
+# ---------------------------------------------------------------- run isolation (parent blocker)
+
+def _ctx(clock, text, game="G1", fid="test:context"):
+    return fe.normalize_record(dict(
+        factor_id=fid, category="team_news", entity_type="game", entity_id=game, game_id=game,
+        as_of=clock, published_at=clock, fetched_at=clock, observed_at=clock,
+        source_url="https://www.packers.com/test-synthetic-fixture", verified=True,
+        measurement_kind="observed", observation=text))
+
+
+def _mem():
+    import sqlite3
+    conn = sqlite3.connect(":memory:")
+    conn.execute(dbmod.SCHEMA["run_receipts"])
+    conn.execute(dbmod.SCHEMA["factor_context"])
+    return conn
+
+
+def _panel(conn, run="r1", game="G1", as_of="2026-09-23T03:00:00Z"):
+    lean = {"run_id": run, "as_of": as_of, "player_id": "P1", "game_id": game, "market": "passing_yards"}
+    return fimod.card_panel(lean, fimod.load_receipts(conn, 2026, 3), fimod.load_context_records(conn, 2026, 3))
+
+
+R1 = {"run_id": "r1", "as_of": "2026-09-23T03:00:00Z"}
+R2 = {"run_id": "r2", "as_of": "2026-09-23T04:00:00Z"}
+
+
+def test_later_run_same_game_never_changes_an_older_card():
+    conn = _mem()
+    fimod.persist_run(conn, 2026, 3, "wed", R1, [_ctx(R1["as_of"], "Original synthetic context")])
+    before = _panel(conn)
+    fimod.persist_run(conn, 2026, 3, "t90", R2, [_ctx(R2["as_of"], "Later synthetic update")])
+    assert _panel(conn) == before
+    assert "Later synthetic update" in json.dumps(_panel(conn, run="r2", as_of=R2["as_of"]))
+    assert sorted(conn.execute("SELECT run_id FROM factor_context").fetchall()) == [("r1",), ("r2",)]
+
+
+def test_subset_second_run_keeps_other_games_context_and_rerun_is_idempotent():
+    conn = _mem()
+    fimod.persist_run(conn, 2026, 3, "wed", R1, [_ctx(R1["as_of"], "g1"), _ctx(R1["as_of"], "g2", game="G2")])
+    g2_before = _panel(conn, game="G2")
+    fimod.persist_run(conn, 2026, 3, "t90", R2, [_ctx(R2["as_of"], "g1 later")], game_ids=["G1"])
+    assert _panel(conn, game="G2") == g2_before
+    n = conn.execute("SELECT COUNT(*) FROM factor_context").fetchone()[0]
+    fimod.persist_run(conn, 2026, 3, "t90", R2, [_ctx(R2["as_of"], "g1 later")], game_ids=["G1"])
+    assert conn.execute("SELECT COUNT(*) FROM factor_context").fetchone()[0] == n
+
+
+def test_unmatched_run_fails_closed_and_late_clocks_are_not_known_early():
+    conn = _mem()
+    fimod.persist_run(conn, 2026, 3, "t90", R2, [_ctx(R2["as_of"], "Later synthetic update")])
+    lab = _labels(_panel(conn, run="r0"))                     # legacy pick with no context of its own
+    assert lab["context_not_recorded:G1"]["status"] == "unavailable_unverified"
+    assert "Later synthetic update" not in json.dumps(lab)
+    # a record stored under r1 but clocked after r1's decision time is downgraded
+    fimod.persist_run(conn, 2026, 3, "wed", R1, [_ctx(R2["as_of"], "leaked")])
+    it = _labels(_panel(conn))["test:context"]
+    assert it["status"] == "unavailable_unverified" and "after this pick's decision time" in it["detail"]
+
+
+def test_v5_database_migrates_context_under_its_own_run(tmp_path):
+    import sqlite3
+    path = str(tmp_path / "v5.db")
+    raw = sqlite3.connect(path)
+    raw.execute("""CREATE TABLE factor_context (season INTEGER, week INTEGER, game_id TEXT,
+                   factor_id TEXT, run_id TEXT, record_json TEXT, created_at TEXT,
+                   PRIMARY KEY (season, week, game_id, factor_id))""")
+    raw.execute("INSERT INTO factor_context VALUES (2026,3,'G1','test:context','r1',?, 'x')",
+                (json.dumps(_ctx(R1["as_of"], "v5 row")),))
+    raw.execute("PRAGMA user_version=5")
+    raw.commit()
+    raw.close()
+    conn = dbmod.connect(path)
+    assert dbmod.user_version(conn) == dbmod.SCHEMA_VERSION == 6
+    assert conn.execute("SELECT COUNT(*) FROM factor_context_legacy_v5").fetchone()[0] == 1
+    assert set(fimod.load_context_records(conn, 2026, 3)) == {("r1", "G1")}
+    dbmod.migrate(conn)                                       # idempotent
+    assert conn.execute("SELECT COUNT(*) FROM factor_context").fetchone()[0] == 1
