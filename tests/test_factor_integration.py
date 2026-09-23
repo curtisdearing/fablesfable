@@ -225,3 +225,23 @@ def test_stamps_and_shadow_targets_are_invariant_to_price_spread_total_and_conse
     assert not a["total_line"].equals(b["total_line"])                  # the market really moved
     sa, sb = fimod.build_stamps(a, RAN, {}), fimod.build_stamps(b, RAN, {})
     assert sa and sa == sb
+
+
+def test_shadow_runs_on_real_enumerated_candidates(pbp_fast, schedules_fast):
+    """Regression (found in the final replay): candidates carry position as ``pos``; the
+    shadow silently produced zero players. It must forecast real candidate players."""
+    from tests import test_football_only_forecast as t
+    pbp = pbp_fast[(pbp_fast["season"] < t.SEASON)
+                   | ((pbp_fast["season"] == t.SEASON) & (pbp_fast["week"] < t.WEEK))]
+    pwk = t.build_player_week(pbp)
+    inputs = t.WeekInputs(pw=pwk, opd=t.build_opp_pos_def(pbp), tw=t.build_team_week(pbp),
+                          schedules=schedules_fast.copy())
+    cands = t._run(inputs).reset_index()
+    as_of = dt.datetime(t.SEASON, 1, 1, tzinfo=UTC)
+    far = {g: dt.datetime(t.SEASON + 1, 1, 1, tzinfo=UTC) for g in cands["game_id"].unique()}
+    before = cands.copy()
+    res = fimod.shadow_opportunity(pwk, cands, season=t.SEASON, week=t.WEEK, as_of=as_of, kickoffs=far)
+    assert res["status"] == "ok" and len(res["players"]) > 0
+    pd.testing.assert_frame_equal(cands, before)                      # shadow never mutates the pick frame
+    stamps = fimod.build_stamps(cands, RAN, {})
+    assert all(s["position"] in ("QB", "RB", "WR", "TE") for s in stamps.values())

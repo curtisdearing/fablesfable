@@ -70,6 +70,15 @@ def _num(x) -> Optional[float]:
     return None if math.isnan(v) or math.isinf(v) else v
 
 
+def _position(row: Dict) -> Optional[str]:
+    """Candidates carry the position as ``pos`` (``projection.project``)."""
+    for k in ("pos", "position", "role"):
+        v = row.get(k)
+        if isinstance(v, str) and v:
+            return v
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # run time: stamps, receipt, shadow
 # --------------------------------------------------------------------------- #
@@ -106,7 +115,7 @@ def build_stamps(cands, ran: Dict[str, bool], reasons: Dict[str, str],
     for row in cands.to_dict("records"):
         comps = row.get("components") if isinstance(row.get("components"), dict) else {}
         out[(row.get("player_id"), row.get("market"))] = {
-            "team": row.get("team"), "position": row.get("position") or row.get("role"),
+            "team": row.get("team"), "position": _position(row),
             "stages": row_stage_stamps(row, ran, reasons),
             "margin_source": row.get("margin_source"),
             "dispersion_role": row.get("dispersion_role"),
@@ -130,9 +139,8 @@ def shadow_opportunity(pw, cands, *, season: int, week: int, as_of: dt.datetime,
             res["status"] = "no candidates"
             return res
         c = cands.drop_duplicates("player_id")
-        pos = (c["position"] if "position" in c.columns else c.get("role"))
         t = pd.DataFrame({"player_id": c["player_id"].values, "team": c["team"].values,
-                          "position": pos.values if pos is not None else None,
+                          "position": [_position(r) for r in c.to_dict("records")],
                           "game_id": c["game_id"].values})
         t = t[t["position"].isin(["QB", "RB", "WR", "TE"])]
         t["game_start"] = t["game_id"].map(lambda g: kickoffs.get(g))
