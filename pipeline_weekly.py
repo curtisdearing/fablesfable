@@ -150,6 +150,8 @@ def _prior_kickoffs(schedules: pd.DataFrame, season: int, week: int) -> Dict[str
 
 
 _CURATED_RECORD_EXCLUDE = ("coverage:", "qb_depth:")
+# Club-report items are live captures: a later run re-fetches them, never inherits them.
+_LIVE_CLUB_STORIES = ("club_status:", "club_practice:")
 
 
 def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
@@ -170,24 +172,30 @@ def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
         return None, None, {"refresh": "not attempted (offline, injected or disabled run); "
                                        "committed context file used"}
     path = fimod.context_path(season, week)
-    curated = None
+    curated, filed = None, None
     try:
         if os.path.isfile(path):
             with open(path) as f:
                 filed = json.load(f)
             curated = {"season": filed.get("season"), "week": filed.get("week"),
                        "news": [i for i in filed.get("news", [])
-                                if i.get("source_tier") == "team_official"],
+                                if i.get("source_tier") == "team_official"
+                                and not str(i.get("story_id", "")).startswith(_LIVE_CLUB_STORIES)],
                        "records": [r for r in filed.get("records", [])
                                    if not str(r.get("factor_id", "")).startswith(_CURATED_RECORD_EXCLUDE)]}
     except Exception as exc:  # noqa: BLE001 -- the refresh still runs without curated items
         print(f"[pipeline] committed context file unreadable ({type(exc).__name__}); "
               f"refreshing without curated items")
+    # Club-site report URLs for this week, registered in the committed file (slugs cannot be
+    # discovered).  Each is re-fetched by THIS run under its own capture clock.
+    club_reports = {g: u for g, u in ((filed or {}).get("club_reports") or {}).items()
+                    if isinstance(g, str) and isinstance(u, str)} if os.path.isfile(path) else {}
     id_map = [{"espn_id": r["espn_id"], "team": r.get("team"), "gsis_id": r["player_id"]}
               for r in (roster or {}).get("rows") or [] if r.get("espn_id")]
     try:
         from nflvalue.sources import live_factor_context as lfc
-        doc = lfc.build_live_context(season, week, curated=curated, id_map=id_map)
+        doc = lfc.build_live_context(season, week, curated=curated, id_map=id_map,
+                                     club_reports=club_reports)
     except Exception as exc:  # noqa: BLE001 -- degrade to the committed file, loudly
         print(f"[pipeline] live context refresh failed ({type(exc).__name__}: {exc}); "
               f"committed context file used")
@@ -196,6 +204,7 @@ def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
     meta = {"refresh": "ok", "captured_at": doc.get("captured_at"), "routes": doc.get("routes"),
             "sources_checked": len(doc.get("sources_checked") or []),
             "curated_games_kept": doc.get("curated_games_kept"), "id_map_rows": len(id_map),
+            "club_reports": sorted(club_reports),
             "coverage_states": _coverage_counts(doc)}
     return doc, f"live refresh captured {doc.get('captured_at')} (curated team items kept)", meta
 

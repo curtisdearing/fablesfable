@@ -449,8 +449,9 @@ def build_live_context(season: int, week: int, *, captured_at=None, http: Option
     ``curated``: an earlier document for this season/week; its items/records are kept
     verbatim for their games (never rewritten), live items are added alongside.
     ``prior_kickoff``: {team: previous kickoff ISO}; when omitted it is read from the
-    previous week's scoreboard (one request).  ``club_reports``: {game_id: team-official
-    injury-report URL} fetched once each and parsed by :func:`parse_club_report`.  Raises ``IdentityMismatch`` only when the
+    previous week's scoreboard (one request).  ``club_reports``: {game_id: club-site
+    injury-report URL}; a URL not on either team's :data:`CLUB_DOMAINS` site is rejected
+    unfetched, the rest are fetched once each and parsed by :func:`parse_club_report`.  Raises ``IdentityMismatch`` only when the
     slate itself cannot be established; every later failure degrades to coverage rows.
     """
     cap = _iso(_ts(captured_at) or dt.datetime.now(dt.timezone.utc))
@@ -485,6 +486,7 @@ def build_live_context(season: int, week: int, *, captured_at=None, http: Option
         try:
             if g is None:
                 raise IdentityMismatch(f"{gid} is not on the Week {week} slate")
+            club_publisher(url, g["home"], g["away"])  # before any fetch
             items += club_items(parse_club_report(b.get(url, "text"), season, week, g["home"], g["away"]),
                                 g, url, cap)
             route[f"club_report:{gid}"] = "ok"
@@ -550,6 +552,31 @@ def build_live_context(season: int, week: int, *, captured_at=None, http: Option
 # report (datePublished 20:00Z) with game statuses for BOTH teams.  Club article URLs
 # are slugs, so the caller supplies the URL; this parser checks the page is about the
 # requested game and never guesses a team.
+#: Each club's own official site.  A club report is ``team_official`` only when its URL is
+#: https on the home or away team's domain here; anything else is rejected before any fetch.
+CLUB_DOMAINS = {
+    "ARI": "azcardinals.com", "ATL": "atlantafalcons.com", "BAL": "baltimoreravens.com",
+    "BUF": "buffalobills.com", "CAR": "panthers.com", "CHI": "chicagobears.com",
+    "CIN": "bengals.com", "CLE": "clevelandbrowns.com", "DAL": "dallascowboys.com",
+    "DEN": "denverbroncos.com", "DET": "detroitlions.com", "GB": "packers.com",
+    "HOU": "houstontexans.com", "IND": "colts.com", "JAX": "jaguars.com", "KC": "chiefs.com",
+    "LV": "raiders.com", "LAC": "chargers.com", "LA": "therams.com", "MIA": "miamidolphins.com",
+    "MIN": "vikings.com", "NE": "patriots.com", "NO": "neworleanssaints.com", "NYG": "giants.com",
+    "NYJ": "newyorkjets.com", "PHI": "philadelphiaeagles.com", "PIT": "steelers.com",
+    "SF": "49ers.com", "SEA": "seahawks.com", "TB": "buccaneers.com", "TEN": "tennesseetitans.com",
+    "WAS": "commanders.com"}
+
+
+def club_publisher(url: str, home: str, away: str) -> str:
+    """The team whose official site ``url`` is on (home or away), else ``IdentityMismatch``."""
+    m = re.fullmatch(r"https://(?:www\.)?([a-z0-9.-]+)(/[^\s]*)?", str(url or "").strip().lower())
+    host = m.group(1) if m else None
+    for team in (home, away):
+        if host and host == CLUB_DOMAINS.get(team):
+            return team
+    raise IdentityMismatch(f"club report URL is not on the official site of {away} or {home}: {url!r}")
+
+
 _CLUB_TABLE = re.compile(r"<table.*?</table>", re.S)
 _CLUB_CELL = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.S)
 _PUBLISHED = re.compile(r'"datePublished"\s*:\s*"([^"]+)"')
@@ -563,16 +590,18 @@ def _text(fragment: str) -> str:
 
 
 def parse_club_report(page: str, season: int, week: int, home: str, away: str) -> Dict:
-    """Club-site injury report -> {published_at, title, rows}.
+    """Club-site injury report for BOTH teams of one game -> {published_at, title, teams, rows}.
 
     Row: {team, name, pos, injury, practice: [{day, status, estimated}], game_status}.
     ``estimated`` is True for a column whose header is starred (the club's footnote:
     walkthrough / no practice, "participation reports are an estimation").  A blank or
     "--" game status is None: no designation on this report, NOT a health claim.
 
-    Raises ``IdentityMismatch`` when the page is not a Week-``week`` report naming both
-    teams, a table's team cannot be read from the heading just before it, a table
-    belongs to neither team, or the page carries no publication clock."""
+    Raises ``IdentityMismatch`` when the title does not name Week ``week``, the page has no
+    ``datePublished`` in ``season``, a table has no exact team-name heading before it or an
+    unrecognized header, a table belongs to neither team, or the tables do not cover
+    exactly both teams (a one-team page would leave the other team's coverage looking
+    complete).  A table-free page fails the both-teams check."""
     page = page or ""
     tm = _OG_TITLE.search(page)
     title = _text(tm.group(1)) if tm else ""
@@ -608,8 +637,9 @@ def parse_club_report(page: str, season: int, week: int, home: str, away: str) -
             gs = cells[-1] if cells[-1] not in ("", "--") else None
             rows.append({"team": team, "name": name.strip() or cells[0], "pos": pos.strip(),
                          "injury": cells[1], "practice": practice, "game_status": gs})
-    if not rows:
-        raise IdentityMismatch("club report has no rows for this game")
+    if seen != {home, away}:
+        missing = sorted({home, away} - seen)
+        raise IdentityMismatch(f"club report does not cover both teams (missing {', '.join(missing)})")
     return {"published_at": _iso(pub), "title": title, "teams": sorted(seen), "rows": rows}
 
 
