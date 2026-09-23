@@ -60,6 +60,16 @@ _OUT_STATUSES = {
     "reserve", "practice squad injured",
 }
 _RISK_STATUSES = {"questionable", "day-to-day"}
+_OK_STATUSES = {"active", "probable"}
+
+# Per-player availability_state (machine-readable). Only "listed" carries a
+# designation; "not_listed" means a report was received for the team and the
+# player is not on it -- eligible to project, NOT medically cleared.
+LISTED, NOT_LISTED = "listed", "not_listed"
+REPORT_MISSING, TEAM_NOT_IN_REPORT = "report_missing", "team_not_in_report"
+IDENTITY_AMBIGUOUS, IDENTITY_OTHER_TEAM = "identity_ambiguous", "identity_other_team_only"
+ACTIVE_T90, INACTIVE_T90 = "active_t90", "inactive_t90"
+DEGRADED_STATES = {REPORT_MISSING, TEAM_NOT_IN_REPORT, IDENTITY_AMBIGUOUS, IDENTITY_OTHER_TEAM}
 
 
 class EspnSchemaError(RuntimeError):
@@ -98,7 +108,10 @@ def normalize_status(status_raw: Optional[str]) -> str:
         return "OUT"
     if s in _RISK_STATUSES:
         return "RISK"
-    return "OK"
+    if s in _OK_STATUSES:
+        return "OK"
+    # an empty or unrecognized designation is not a health claim
+    return "UNKNOWN"
 
 
 def parse_team_injuries(raw: Dict) -> List[Dict]:
@@ -306,6 +319,11 @@ def fetch_event_rosters(event_id: str) -> Dict:
 # Resolution: our players x ESPN feeds -> OK | RISK | OUT (with provenance)
 # --------------------------------------------------------------------------- #
 def _abbrev_match(pname: str, team: str, rows: List[Dict]) -> Optional[Dict]:
+    hits = _abbrev_hits(pname, team, rows)
+    return hits[0] if len(hits) == 1 else None
+
+
+def _abbrev_hits(pname: str, team: str, rows: List[Dict]) -> List[Dict]:
     """Unique ESPN row for an nflverse-abbreviated candidate name.
 
     Candidates carry 'D.London' / 'Bi.Robinson' (normalized 'd london' /
@@ -315,7 +333,7 @@ def _abbrev_match(pname: str, team: str, rows: List[Dict]) -> Optional[Dict]:
     Ambiguity is never guessed."""
     parts = pname.split()
     if len(parts) != 2 or len(parts[0]) > 2:
-        return None
+        return []
     prefix, last = parts
     hits = []
     for r in rows:
@@ -325,7 +343,7 @@ def _abbrev_match(pname: str, team: str, rows: List[Dict]) -> Optional[Dict]:
         if r.get("team") and team and r.get("team") != team:
             continue
         hits.append(r)
-    return hits[0] if len(hits) == 1 else None
+    return hits
 
 
 def resolve_statuses(
@@ -335,24 +353,38 @@ def resolve_statuses(
     clock: str = "wed",
     injuries_fetched_at: Optional[str] = None,
     inactives_fetched_at: Optional[str] = None,
+    reported_teams: Optional[Iterable[str]] = None,
 ) -> Dict:
     """Resolve availability for each projected player.
 
     ``players``: DataFrame with columns [player_id, player_name, team]
-    (nflverse gsis ids + abbrs -- e.g. a slice of ``player_week``).
+    (nflverse gsis ids + abbrs -- e.g. a slice of ``player_week``); an
+    optional ``espn_id`` column is matched first when present.
 
     Returns::
 
         {"statuses": {player_id: {status, status_raw, source, timestamp,
-                                   matched_by, comment}},
-         "unmatched_espn_rows": [...]}   # ESPN said something about a player
+                                   matched_by, comment, availability_state,
+                                   eligibility, report_state}},
+         "unmatched_espn_rows": [...],   # ESPN said something about a player
                                          # we couldn't match -- kept visible
+         "report_state": "received" | "missing" | "empty",
+         "summary": {...}}
+
+    ``status`` is OUT | RISK | OK | UNKNOWN. UNKNOWN (eligibility
+    "degraded") is returned -- never OK -- when the injuries report is missing
+    (no fetch clock) or empty, when the player's team has no rows in it, or when
+    identity is ambiguous / only matches another team. A player absent from a
+    received team report is OK with availability_state "not_listed": eligible
+    to project, not a medical clearance. Only OUT is "ineligible".
+    ``reported_teams`` overrides the team coverage inferred from the rows.
 
     clock="wed": statuses from the league injuries feed only.
     clock="t90": additionally require ``inactive_rows``; a player present in
     the event roster with active=False is OUT regardless of the Wednesday
-    read; active=True upgrades a Wednesday OUT/RISK back to OK only if the
-    injury status wasn't OUT-final (IR/suspension stays OUT).
+    read; active=True upgrades a Wednesday OUT/RISK/UNKNOWN to OK only if the
+    injury status wasn't OUT-final (IR/suspension stays OUT). Inactive rows
+    are matched by (name, team); a name-only fallback must be unique.
     """
     if clock not in ("wed", "t90"):
         raise ValueError(f"clock must be 'wed' or 't90', got {clock!r}")
@@ -360,26 +392,41 @@ def resolve_statuses(
         raise ValueError("clock='t90' requires inactive_rows (per-event actives); "
                          "refusing to silently fall back to the stale Wednesday read")
 
-    inj_ts = injuries_fetched_at or stamp_now()
-    ina_ts = inactives_fetched_at or stamp_now()
-
     injury_rows = list(injury_rows)
     inactive_rows = None if inactive_rows is None else list(inactive_rows)
+    # a missing fetch clock means the report was never received: do not
+    # invent one, and do not read an empty/missing feed as "nobody injured"
+    if injuries_fetched_at is None:
+        report_state = "missing"
+    elif not injury_rows:
+        report_state = "empty"
+    else:
+        report_state = "received"
+    inj_ts = injuries_fetched_at
+    ina_ts = inactives_fetched_at or stamp_now()
+    teams_in_report = (set(reported_teams) if reported_teams is not None
+                       else {r.get("team") for r in injury_rows if r.get("team")})
+
     # index ESPN injury rows by (normalized name, team) and by name alone
-    by_name_team: Dict[Tuple[str, str], Dict] = {}
+    by_name_team: Dict[Tuple[str, str], List[Dict]] = {}
     by_name: Dict[str, List[Dict]] = {}
+    by_espn_id: Dict[str, List[Dict]] = {}
     for r in injury_rows:
         key = normalize_name(r.get("name"))
         if not key:
             continue
-        by_name_team[(key, r.get("team") or "")] = r
+        by_name_team.setdefault((key, r.get("team") or ""), []).append(r)
         by_name.setdefault(key, []).append(r)
+        if r.get("espn_id"):
+            by_espn_id.setdefault(str(r["espn_id"]), []).append(r)
 
-    ina_by_name: Dict[str, Dict] = {}
+    ina_by_name_team: Dict[Tuple[str, str], List[Dict]] = {}
+    ina_by_name: Dict[str, List[Dict]] = {}
     for r in inactive_rows or []:
         key = normalize_name(r.get("name"))
         if key:
-            ina_by_name[key] = r
+            ina_by_name_team.setdefault((key, r.get("team") or ""), []).append(r)
+            ina_by_name.setdefault(key, []).append(r)
 
     statuses: Dict[str, Dict] = {}
     matched_keys: Set[str] = set()
@@ -387,43 +434,101 @@ def resolve_statuses(
         pid = getattr(p, "player_id")
         pname = normalize_name(getattr(p, "player_name", ""))
         pteam = getattr(p, "team", "") or ""
+        pespn = getattr(p, "espn_id", None)
 
-        row = by_name_team.get((pname, pteam))
-        matched_by = "name+team" if row is not None else None
+        row, matched_by, ident = None, None, None
+        hits = by_espn_id.get(str(pespn), []) if pespn else []
+        if len(hits) == 1 and (not hits[0].get("team") or hits[0].get("team") == pteam):
+            row, matched_by = hits[0], "espn_id"
         if row is None:
-            cands = by_name.get(pname, [])
-            if len(cands) == 1:  # unambiguous name-only match (team moved/renamed)
-                row, matched_by = cands[0], "name_only"
-        if row is None:
-            row = _abbrev_match(pname, pteam, injury_rows)
-            matched_by = "abbrev+team" if row is not None else None
+            hits = by_name_team.get((pname, pteam), [])
+            if len(hits) == 1:
+                row, matched_by = hits[0], "name+team"
+            elif len(hits) > 1:
+                ident = IDENTITY_AMBIGUOUS
+        if row is None and ident is None:
+            hits = by_name.get(pname, [])
+            # a team-less row (unrecognized display name) may link by a unique
+            # name; a row on ANOTHER team is a different person or a stale
+            # team -- never evidence about this player
+            if len(hits) == 1 and not hits[0].get("team"):
+                row, matched_by = hits[0], "name_only(teamless_row)"
+            elif hits and all(h.get("team") and h.get("team") != pteam for h in hits):
+                ident = IDENTITY_OTHER_TEAM
+            elif len(hits) > 1:
+                ident = IDENTITY_AMBIGUOUS
+        if row is None and ident is None:
+            hits = _abbrev_hits(pname, pteam, injury_rows)
+            if len(hits) == 1:
+                row, matched_by = hits[0], "abbrev+team"
+            elif len(hits) > 1:
+                ident = IDENTITY_AMBIGUOUS
 
-        status, status_raw, source, ts, comment = "OK", "", "none(no injury listed)", inj_ts, ""
+        comment = ""
         if row is not None:
             matched_keys.add(pname)
             matched_keys.add(normalize_name(row.get("name")))
             status, status_raw = row["status"], row["status_raw"]
             source, ts, comment = "espn_team_injuries", inj_ts, row.get("comment", "")
+            state = LISTED
+        elif report_state != "received":
+            status, status_raw, source, ts = "UNKNOWN", "", f"none(injury report {report_state})", None
+            state = REPORT_MISSING
+        elif ident is not None:
+            status, status_raw, source, ts = "UNKNOWN", "", f"none({ident})", inj_ts
+            state = ident
+        elif pteam not in teams_in_report:
+            status, status_raw, source, ts = "UNKNOWN", "", "none(team absent from injury report)", inj_ts
+            state = TEAM_NOT_IN_REPORT
+        else:
+            status, status_raw, source, ts = "OK", "", "none(not listed on received report)", inj_ts
+            state = NOT_LISTED
 
         if clock == "t90":
-            ina = ina_by_name.get(pname) or _abbrev_match(pname, pteam, inactive_rows or [])
+            ina = None
+            ih = ina_by_name_team.get((pname, pteam), [])
+            if len(ih) == 1:
+                ina = ih[0]
+            elif not ih:
+                ih = [r for r in ina_by_name.get(pname, []) if not r.get("team")]
+                ina = ih[0] if len(ih) == 1 else _abbrev_match(pname, pteam, inactive_rows or [])
             if ina is not None:
                 if not ina.get("active", False):
                     status, status_raw = "OUT", (status_raw or "") + "|inactive_t90"
-                    source, ts = "espn_event_roster", ina_ts
+                    source, ts, state = "espn_event_roster", ina_ts, INACTIVE_T90
                 elif status != "OUT" or "reserve" not in (status_raw or "").lower():
                     # confirmed active pre-kick clears a Wed Questionable/Out
                     # (but never un-OUTs an IR/suspension designation)
-                    if status in ("RISK", "OUT"):
+                    if status in ("RISK", "OUT", "UNKNOWN"):
                         status, status_raw = "OK", (status_raw or "") + "|active_t90"
-                        source, ts = "espn_event_roster", ina_ts
+                        source, ts, state = "espn_event_roster", ina_ts, ACTIVE_T90
 
         statuses[pid] = {"status": status, "status_raw": status_raw, "source": source,
                          "timestamp": ts, "matched_by": matched_by or "unmatched",
-                         "comment": comment}
+                         "comment": comment, "availability_state": state,
+                         "eligibility": ("ineligible" if status == "OUT" else
+                                         "degraded" if status == "UNKNOWN" else "eligible"),
+                         "report_state": report_state}
 
     unmatched = [r for k, rows_ in by_name.items() if k not in matched_keys for r in rows_]
-    return {"statuses": statuses, "unmatched_espn_rows": unmatched}
+    return {"statuses": statuses, "unmatched_espn_rows": unmatched,
+            "report_state": report_state, "summary": summarize(statuses)}
+
+
+def summarize(statuses: Dict[str, Dict]) -> Dict:
+    """Per-run counts by status / availability_state / eligibility."""
+    out: Dict[str, Dict[str, int]] = {"status": {}, "availability_state": {}, "eligibility": {}}
+    for st in statuses.values():
+        for k in out:
+            v = str(st.get(k))
+            out[k][v] = out[k].get(v, 0) + 1
+    return out
+
+
+def report_evaluated(resolved: Dict) -> bool:
+    """True only when an injuries report was actually received. A missing or
+    empty report must not mark availability stages as neutrally evaluated."""
+    return resolved.get("report_state") == "received"
 
 
 # --------------------------------------------------------------------------- #

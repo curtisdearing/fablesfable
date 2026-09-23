@@ -46,9 +46,10 @@ def test_two_letter_prefix_disambiguates_and_ambiguity_never_matches():
                               [_row("Jonnu Smith", "GB", "OUT", "Out"),
                                _row("Jaire Smith", "GB", "OK", "Active")],
                               clock="wed", injuries_fetched_at=TS)
-    assert amb["statuses"]["j"]["status"] == "OK"          # ambiguous: no guess
+    assert amb["statuses"]["j"]["status"] == "UNKNOWN"     # ambiguous: no guess, no OK
+    assert amb["statuses"]["j"]["availability_state"] == "identity_ambiguous"
     assert av.resolve_statuses(_players(("x", "D.London", "GB")),
-                               [_row("Drake London", "ATL", "OUT", "Out")],
+                               [_row("Drake London", "ATL", "OUT", "Out")], reported_teams={"ATL", "GB"},
                                clock="wed", injuries_fetched_at=TS)["statuses"]["x"]["status"] == "OK"
 
 
