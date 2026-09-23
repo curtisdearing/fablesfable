@@ -29,6 +29,10 @@ def _db(tmp_path, leans, provenance=True):
     cols = LEAN_COLS if provenance else LEAN_COLS[:20]
     conn.execute(f"CREATE TABLE leans ({', '.join(cols)})")
     conn.execute("CREATE TABLE lines (ts, game_id, book, market, player_id, player_name, side, point, price)")
+    conn.execute("CREATE TABLE run_receipts (run_id, season, week, clock, as_of, receipt_json, created_at)")
+    conn.execute("INSERT INTO run_receipts VALUES ('local:replay', 2026, 3, 'wed', '2026-09-22T22:35:00Z', "
+                 "'{\"run_id\": \"local:replay\", \"publish\": true, \"publish_reasons\": []}', "
+                 "'2026-09-22T22:35:05Z')")
     for r in leans:
         conn.execute(f"INSERT INTO leans VALUES ({','.join('?' * len(cols))})", [r.get(c) for c in cols])
     conn.execute("INSERT INTO lines VALUES ('2026-09-22T22:19:33Z','2026_03_ATL_GB','draftkings',"

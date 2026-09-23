@@ -93,13 +93,17 @@ def _cron_matches(cron: str, t_utc: dt.datetime) -> bool:
 
 
 def _job_for(cron: str) -> str:
-    """Mirror the workflow's 'Select scheduled job' step."""
+    """Mirror the workflow's gate step (the job is decided there, before the run job)."""
     text = WORKFLOW.read_text()
-    sel = text[text.index("Select scheduled job"):text.index("Run weekly job")]
+    sel = text[text.index("\n  gate:\n"):text.index("\n  run:\n")]
+    if cron.endswith(" 23 9 *") and '[[ "$SCHED" == *" 23 9 *" ]]; then job=wed-early' in sel:
+        return "wed-early"          # the one-time 2026-09-23 early run (date-guarded)
     for line in sel.splitlines():
+        if f'"{cron}"' in line and "job=" in line:
+            return re.search(r"job=([\w-]+)", line).group(1)
         if f'"{cron}"' in line and "job=" not in line:
             nxt = sel.splitlines()[sel.splitlines().index(line) + 1]
-            return re.search(r"job=(\w+)", nxt).group(1)
+            return re.search(r"job=([\w-]+)", nxt).group(1)
     return "t90"
 
 
