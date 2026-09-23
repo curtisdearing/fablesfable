@@ -554,7 +554,14 @@ def plan_text(plan: Dict) -> str:
                if plan['close_reserve'] else "")
             + f" = {plan['needed']:.0f} needed; {plan['spendable']:.0f} spendable "
             f"({plan['used']:.0f} used of {plan['ceiling']:.0f}) -> "
-            f"{plan['affordable_games']} affordable, {plan['rationed_games']} rationed")
+            f"{plan['affordable_games']} affordable, {plan['rationed_games']} rationed "
+            f"at full per-event billing (the provider bills per market returned, so a "
+            f"thin slate can afford more; every call still re-checks the hard stop)")
+
+
+def billing_text(spent: float, planned: float) -> str:
+    """Billed vs planned credits, for the run log and the board's line note."""
+    return f"provider billed {spent:.0f} credit(s) (upper bound planned {planned:.0f})"
 
 
 def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
@@ -583,9 +590,18 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     before the first call and returned as ``plan`` (:func:`credit_plan`).
     Returns::
 
-        {"pulled": [game_ids], "skipped_budget": [...], "skipped_cap": [...],
-         "skipped_started": [...], "rows_written": int, "credits_spent": float,
+        {"pulled": [game_ids], "priced": [...], "empty": [...],
+         "skipped_budget": [...], "skipped_cap": [...], "skipped_started": [...],
+         "rows_written": int, "credits_spent": float, "credits_planned": float,
          "budget_remaining": float, "plan": {...}}
+
+    ``pulled`` is every game whose call was answered; ``priced`` the ones
+    that returned at least one quote and ``empty`` the ones that returned
+    none (books not posted yet). ``credits_spent`` is what the ledger moved
+    by -- the provider's own x-requests-used when it reports it, which bills
+    per market RETURNED (an empty event costs nothing) -- and
+    ``credits_planned`` the per-event upper bound the budget gate charged
+    (2026-09-23: 34 billed, 70 planned, 4 of 14 answered games empty).
     """
     fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
@@ -613,6 +629,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             return {"pulled": [], "skipped_budget": live, "skipped_cap": [],
                     "skipped_started": [g for g in ordered if g in started],
                     "skipped_error": [], "rows_written": 0, "credits_spent": 0.0,
+                    "credits_planned": 0.0, "priced": [], "empty": [],
                     "close_reserved": 0.0, "budget_remaining": 0.0, "ts": ts,
                     "plan": None, "book_coverage": book_coverage(cfg, {}),
                     "quota_preflight": preflight}
@@ -624,7 +641,9 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     skipped_started: List[str] = []
     skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
-    spent = 0.0
+    spent = 0.0             # what the ledger moved by (provider-billed when reported)
+    planned = 0.0           # the per-event upper bound the gate charged
+    empty: List[str] = []   # answered with no quote (books not posted yet)
     reserved = 0.0          # closes held for games pulled in THIS call
     books_by_game: Dict[str, List[str]] = {}
 
@@ -668,14 +687,18 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             print(f"[oddsapi] pull failed for {game_id}: {type(exc).__name__}: {exc}")
             continue
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
+        before = budget.used
         budget.spend(cost_per_event, headers=headers)
-        spent += cost_per_event
+        spent += budget.used - before
+        planned += cost_per_event
         reserved += hold
         rows = parse_event_props(payload, ts)
         for r in rows:
             r["game_id"] = game_id
         all_rows.extend(rows)
         pulled.append(game_id)
+        if not rows:
+            empty.append(game_id)
         books_by_game[game_id] = books_in_payload(payload)
 
     written = 0
@@ -686,13 +709,17 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     if coverage["absent_from_provider_response"]:
         print(f"[oddsapi] books requested but absent from the provider response: "
               f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
-    print(f"[oddsapi] pulled {len(pulled)} game(s), {spent:.0f} credits spent, "
+    priced = [g for g in pulled if g not in empty]
+    print(f"[oddsapi] requested {len(pulled)} game(s): {len(priced)} priced, "
+          f"{len(empty)} no quotes: {', '.join(empty) or 'none'}; "
+          f"{billing_text(spent, planned)}; "
           f"{reserved:.0f} held for closes, {budget.remaining:.0f} left in {budget.month}; "
           f"skipped: budget={len(skipped_budget)} cap={len(skipped_cap)} "
           f"started={len(skipped_started)} error={len(skipped_error)}")
-    return {"pulled": pulled, "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
+    return {"pulled": pulled, "priced": priced, "empty": empty,
+            "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "skipped_started": skipped_started, "skipped_error": skipped_error,
-            "rows_written": written, "credits_spent": spent,
+            "rows_written": written, "credits_spent": spent, "credits_planned": planned,
             "close_reserved": reserved,
             "budget_remaining": budget.remaining, "ts": ts,
             "book_coverage": coverage, "plan": plan, "quota_preflight": preflight}
@@ -719,10 +746,13 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
         preflight = quota_preflight(cfg, budget, quota_fetch=quota_fetch)
         print(f"[oddsapi] resnap quota preflight: {preflight}")
         if not preflight["ok"]:
-            return {"pulled": [], "skipped_budget": sorted(event_map), "rows_written": 0,
+            return {"pulled": [], "priced": [], "empty": [],
+                    "skipped_budget": sorted(event_map), "rows_written": 0,
+                    "credits_spent": 0.0, "credits_planned": 0.0,
                     "ts": ts, "budget_remaining": 0.0,
                     "book_coverage": book_coverage(cfg, {}), "quota_preflight": preflight}
-    pulled, skipped, rows = [], [], []
+    pulled, skipped, rows, empty = [], [], [], []
+    spent = planned = 0.0
     books_by_game: Dict[str, List[str]] = {}
     for game_id, event_id in sorted(event_map.items()):
         if not budget.can_spend(cost):
@@ -736,11 +766,17 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
             params["regions"] = regions
         payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_id}/odds", params)
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
+        before = budget.used
         budget.spend(cost, headers=headers)
-        for r in parse_event_props(payload, ts):
+        spent += budget.used - before
+        planned += cost
+        game_rows = parse_event_props(payload, ts)
+        for r in game_rows:
             r["game_id"] = game_id
             rows.append(r)
         pulled.append(game_id)
+        if not game_rows:
+            empty.append(game_id)
         books_by_game[game_id] = books_in_payload(payload)
     written = dbmod.upsert(conn, "lines", rows,
                            ["ts", "game_id", "book", "market", "player_name", "side"]) if rows else 0
@@ -748,5 +784,9 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     if coverage["absent_from_provider_response"]:
         print(f"[oddsapi] resnap: books requested but absent from the provider response: "
               f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
-    return {"pulled": pulled, "skipped_budget": skipped, "rows_written": written,
+    print(f"[oddsapi] resnap: {len(pulled)} game(s) answered, {len(empty)} no quotes: "
+          f"{', '.join(empty) or 'none'}; {billing_text(spent, planned)}")
+    return {"pulled": pulled, "priced": [g for g in pulled if g not in empty], "empty": empty,
+            "skipped_budget": skipped, "rows_written": written,
+            "credits_spent": spent, "credits_planned": planned,
             "ts": ts, "budget_remaining": budget.remaining, "book_coverage": coverage}

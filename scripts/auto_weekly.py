@@ -295,7 +295,9 @@ def job_t90() -> int:
                 emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
                 res = oap.resnap_lines(cfg, emap, conn=conn)
                 print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
-                      f"{res['rows_written']} rows, {res['budget_remaining']:.0f} credits left")
+                      f"{len(res.get('empty') or [])} with no quotes, "
+                      f"{res['rows_written']} rows, {res.get('credits_spent', 0.0):.0f} billed, "
+                      f"{res['budget_remaining']:.0f} credits left")
         except Exception as exc:  # noqa: BLE001
             print(f"[auto] closing resnap failed (CLV close may be stale): {exc}")
     conn.close()
