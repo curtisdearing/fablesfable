@@ -267,3 +267,63 @@ def test_curated_items_kept_verbatim_and_other_weeks_ignored():
     assert doc["curated_games_kept"] == ["2026_03_ATL_GB"]
     doc2 = build(FakeHTTP(routes()), curated={**cur, "week": 2})
     assert doc2["curated_games_kept"] == []
+
+
+# --------------------------------------------------------------------------- #
+# Team-official (club-site) report: game status vs practice ESTIMATE, identity
+# checks.  Shape-only fixture modelled on the club CMS layout; not real rows.
+# --------------------------------------------------------------------------- #
+CLUB_URL = "https://www.packers.com/news/club-report-w3"
+
+
+def club_page(week=3, published="2026-09-23T02:00:00Z", second_team="Atlanta Falcons"):
+    def table(team, head, rows):
+        th = "".join(f"<th>{h}</th>" for h in head)
+        trs = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
+        return f"<h3>{team}</h3><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>"
+    pub = f'<script type="application/ld+json">{{"datePublished": "{published}"}}</script>' if published else ""
+    return (f"<title>Packers list two questionable vs. Falcons | Week {week} Injury Report</title>{pub}"
+            + table("Green Bay Packers", ["Player", "Injury", "*Monday", "*Tuesday", "Game Status"], [
+                ["Wide Out, WR", "Neck", "Did Not Participate", "Did Not Participate", "Out"],
+                ["Big Guard, G", "Hand", "Did Not Participate", "Limited Participation", "--"]])
+            + "<p>* The Packers held a walkthrough; participation reports are an estimation.</p>"
+            + table(second_team, ["Player", "Injury", "*Monday", "Tuesday", "Game Status"], [
+                ["Nickel Back, CB", "Achilles", "Full Participation", "Full Participation", "Questionable"]]))
+
+
+def test_club_report_separates_game_status_from_estimated_practice():
+    got = lfc.parse_club_report(club_page(), 2026, 3, home="GB", away="ATL")
+    assert got["published_at"] == "2026-09-23T02:00:00Z" and got["teams"] == ["ATL", "GB"]
+    rows = {r["name"]: r for r in got["rows"]}
+    assert rows["Wide Out"]["team"] == "GB" and rows["Wide Out"]["game_status"] == "Out"
+    assert rows["Big Guard"]["game_status"] is None, "'--' is no designation, not healthy"
+    assert rows["Big Guard"]["practice"][-1] == {"day": "tuesday", "status": "LP", "estimated": True}
+    assert rows["Nickel Back"]["team"] == "ATL"
+    assert rows["Nickel Back"]["practice"][-1]["estimated"] is False
+
+
+@pytest.mark.parametrize("page, why", [
+    (club_page(week=2), "Week 3"),
+    (club_page(published=None), "datePublished"),
+    (club_page(second_team="Chicago Bears"), "not ATL@GB"),
+])
+def test_club_report_identity_is_strict(page, why):
+    with pytest.raises(lfc.IdentityMismatch, match=why):
+        lfc.parse_club_report(page, 2026, 3, home="GB", away="ATL")
+
+
+def test_club_report_route_feeds_official_items_and_stays_context():
+    doc = build(FakeHTTP(routes(**{"club-report-w3": club_page()})),
+                club_reports={"2026_03_ATL_GB": CLUB_URL, "2026_03_KC_DEN": CLUB_URL})
+    assert doc["routes"]["club_report:2026_03_ATL_GB"] == "ok"
+    assert doc["routes"]["club_report:2026_03_KC_DEN"].startswith("failed: 2026_03_KC_DEN is not on")
+    news = {i["story_id"]: i for i in doc["news"] if i["story_id"].startswith("club_")}
+    out = news["club_status:2026_03_ATL_GB:GB:wide_out"]
+    assert (out["source_tier"], out["claim_kind"], out["claim_value"]) == ("team_official", "confirmed", "Out")
+    assert out["published_at"] == "2026-09-23T02:00:00Z" and out["fetched_at"] == CAP
+    est = news["club_practice:2026_03_ATL_GB:GB:big_guard"]
+    assert est["claim_kind"] == "report" and "estimated" in est["claim"]
+    assert "club_status:2026_03_ATL_GB:GB:big_guard" not in news, "no designation -> no status claim"
+    assert doc["coverage"]["2026_03_ATL_GB"]["ol_injury"]["state"] == "official"
+    recs = fe.assess_news(list(news.values()), CAP)
+    assert recs and all(r["status"] != "numeric_applied" for r in recs), "news never self-promotes"
