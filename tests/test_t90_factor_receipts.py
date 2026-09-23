@@ -207,7 +207,12 @@ def test_reused_quotes_keep_their_capture_clock_and_stamps_ignore_prices(env, mo
                                                "FROM leans WHERE clock='t90' ORDER BY player_id, market")
     common = stamps_a.merge(stamps_b, on=["player_id", "market"])
     assert len(common)
-    assert (common["stage_json_x"] == common["stage_json_y"]).all()
+
+    def price_free(j):   # each run's own feed-fetch clock legitimately differs; prices must not
+        d = json.loads(j)
+        (d.get("availability") or {}).pop("timestamp", None)
+        return json.dumps(d, sort_keys=True)
+    assert (common["stage_json_x"].map(price_free) == common["stage_json_y"].map(price_free)).all()
     assert (common["shadow_json_x"].fillna("") == common["shadow_json_y"].fillna("")).all()
 
 
