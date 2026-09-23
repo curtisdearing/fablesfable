@@ -14,7 +14,9 @@ Documented participation and settlement rules (US books, player props):
   absence of a row -- resolution needs a participation source.
 * A lean whose status is not ``active`` was never a live decision -> VOID.
 * A non-finite or missing actual with a stat row present -> UNRESOLVED.
-* ``pass_attempts`` settles on the OFFICIAL attempts stat, which excludes sacks.
+* A side that is not ``over``/``under`` (``over``/``yes`` for yes-only markets) -> UNRESOLVED.
+* ``pass_attempts`` settles on the OFFICIAL attempts stat, which excludes sacks
+  and two-point tries.
   nflverse play-by-play sets ``pass_attempt=1`` on every sack, so the
   player-week ``pass_attempts`` column is sack-inclusive (a model feature, left
   as is). Settlement reads ``OFFICIAL_PASS_ATTEMPTS_COL`` (sack-excluded, from
@@ -86,6 +88,9 @@ def settle(market: str, side: str, line, actual, has_stat_row: bool,
     a = _finite(actual)
     if a is None:
         return Verdict(UNRESOLVED, None, None, "actual missing or non-finite")
+    valid_sides = ("over", "yes") if market in YES_ONLY_MARKETS else ("over", "under")
+    if side not in valid_sides:
+        return Verdict(UNRESOLVED, None, a, f"invalid side {side!r} for {market}")
     if market in YES_ONLY_MARKETS:
         won = a >= 1.0
         detail = "yes-only market: scored" if won else "yes-only market: did not score"
@@ -101,28 +106,39 @@ def settle(market: str, side: str, line, actual, has_stat_row: bool,
     return Verdict(WIN if won else LOSS, int(won), a, detail)
 
 
-def official_pass_attempts(pbp):
-    """Per (season, week, passer) official pass attempts: pass plays excluding sacks.
 
-    Needs the play-by-play ``sack`` column; refuses rather than returning the
-    sack-inclusive count."""
+def official_pass_attempts(pbp):
+    """Per (season, week, passer) official pass attempts, with explicit coverage.
+
+    Official attempts = nflverse ``pass_attempt`` plays minus sacks minus two-point tries.
+    Two-point tries are identified by ``two_point_attempt == 1`` when that column exists,
+    otherwise by a missing ``down`` on the play (nflverse leaves ``down`` empty on
+    conversion tries; 2026 wk1 has 4 such pass plays). Without ``sack`` or a way to find
+    two-point tries this refuses rather than return a non-official count.
+
+    Only passers who appear on a pass play (including sacks and two-point tries) in the
+    given play-by-play are COVERED; a covered passer with no official attempt gets 0.
+    Anyone else is absent from the result -- coverage is not inferred."""
     import pandas as pd
     if "sack" not in pbp.columns:
         raise ValueError("play-by-play lacks 'sack': official pass attempts cannot be derived")
-    p = pbp[(pbp["pass_attempt"] == 1) & (pbp["sack"].fillna(0) != 1)].dropna(subset=["passer_player_id"])
-    if "two_point_attempt" in p.columns:
-        p = p[p["two_point_attempt"].fillna(0) != 1]
-    out = (p.groupby(["season", "week", "passer_player_id"])["pass_attempt"].sum()
+    if "two_point_attempt" not in pbp.columns and "down" not in pbp.columns:
+        raise ValueError("play-by-play lacks 'two_point_attempt' and 'down': two-point tries "
+                         "cannot be excluded")
+    plays = pbp[pbp["pass_attempt"] == 1].dropna(subset=["passer_player_id"])
+    two_pt = (plays["two_point_attempt"].fillna(0) == 1 if "two_point_attempt" in plays.columns
+              else plays["down"].isna())
+    counted = (plays["sack"].fillna(0) != 1) & ~two_pt
+    out = (plays.assign(_n=counted.astype(float))
+           .groupby(["season", "week", "passer_player_id"])["_n"].sum()
            .rename(OFFICIAL_PASS_ATTEMPTS_COL).reset_index()
            .rename(columns={"passer_player_id": "player_id"}))
-    return out.astype({OFFICIAL_PASS_ATTEMPTS_COL: float}) if len(out) else pd.DataFrame(
-        columns=["season", "week", "player_id", OFFICIAL_PASS_ATTEMPTS_COL])
+    return out if len(out) else pd.DataFrame(columns=["season", "week", "player_id", OFFICIAL_PASS_ATTEMPTS_COL])
 
 
 def with_official_pass_attempts(pw, pbp):
-    """``pw`` plus the official (sack-excluded) attempts column; 0 for players with no attempt."""
+    """``pw`` plus the official attempts column: covered passers get their count (0 is a
+    verified 0); everyone else NaN, which settles as UNRESOLVED -- never an invented 0."""
     off = official_pass_attempts(pbp)
-    out = pw.drop(columns=[OFFICIAL_PASS_ATTEMPTS_COL], errors="ignore").merge(
+    return pw.drop(columns=[OFFICIAL_PASS_ATTEMPTS_COL], errors="ignore").merge(
         off, on=["season", "week", "player_id"], how="left")
-    out[OFFICIAL_PASS_ATTEMPTS_COL] = out[OFFICIAL_PASS_ATTEMPTS_COL].fillna(0.0)
-    return out

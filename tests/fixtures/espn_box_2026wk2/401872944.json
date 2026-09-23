@@ -1,5 +1,5 @@
 {
-"_fixture_note": "Trimmed from ESPN summary event 401872944 (2026 wk2 DAL@WSH final), fetched 2026-09-22T01:20Z; source sha256 5cc21566fb4a9e0c0f459828e2dd08b816c23bc736de03e1b3c0b4c77b8e6f51",
+"_fixture_note": "Trimmed from ESPN summary event 401872944 (2026 wk2 WSH@DAL final), fetched 2026-09-22T01:20Z; source sha256 5cc21566fb4a9e0c0f459828e2dd08b816c23bc736de03e1b3c0b4c77b8e6f51",
 "gamepackageJSON": {
 "boxscore": {
 "players": [
@@ -592,7 +592,13 @@
 }
 }
 ],
-"id": "401872944"
+"id": "401872944",
+"season": {
+"current": true,
+"type": 2,
+"year": 2026
+},
+"week": 2
 }
 }
 }

@@ -2,16 +2,18 @@
 
     python scripts/grade_issued_picks.py --db data/nfl_props.db --season 2026 --week 3 \
         --box-dir <dir of ESPN box JSON> --box-captured-at 2026-09-25T04:00:00Z --out <dir>
-    python scripts/grade_issued_picks.py --export reports/issued_picks_2026_wk3.json ...  # a run's export
-    python scripts/grade_issued_picks.py --hub published-site/api/hub.json ...        # a published page
+    python scripts/grade_issued_picks.py --export reports/issued_picks_2026_wk3.json ...   # a ledger export
+    python scripts/grade_issued_picks.py --hub site/api/hub.json --publication site/publication.json ...
 
-Reads the ledger read-only (``issued_picks`` table or an export), writes
-``issued_grades.json`` (row-level grades, exclusions, grouped summaries) and
-``issued_grades_rows.csv`` to --out. ``--hub`` rebuilds ledger-form records from the
-cards a published site displayed (same record ids as the run's ledger; recorded at
-the page's generation clock). Output is deterministic for identical
-inputs. ``--prior`` compares with an earlier grades file and reports stat
-corrections beside the original values. Exit 3 when the ledger holds no records.
+Reads the ledger read-only and writes ``issued_grades.json`` (sections, row-level grades,
+rejected box files, summaries) and ``issued_grades_rows.csv`` to --out; output is
+deterministic for identical inputs. The default section is ``recommendations_given``
+(published or delivered before kickoff); watch-list, generated-only, retrospective and
+the latest-snapshot analysis are separate sections. ``--hub`` needs the page's own
+``publication.json`` (sha256 of hub.json must match) and is always retrospective: a page
+rebuilt at grading time is evidence of what was shown, not of when. ``--prior`` reports
+stat corrections beside the original values. Exit 3 when there are no records, 4 when
+--box-captured-at is not a zoned clock, 5 when a page fails publication verification.
 """
 
 from __future__ import annotations
@@ -33,19 +35,16 @@ from nflvalue import issued_ledger as il  # noqa: E402
 
 def load_records(a):
     if a.hub:
-        recs = []
-        for p in a.hub:
-            h = json.load(open(p))
-            recs.extend(il.publication_records(h["cards"], h["season"], h["week"], h["label"],
-                                               h["generated_at"]))
-        # one record per displayed content; revisions ordered by the pages' generation clocks
-        uniq = {}
-        for r in sorted(recs, key=lambda r: str(r["recorded_at"])):
-            uniq.setdefault(r["record_id"], r)
-        seen = {}
-        for r in uniq.values():
-            seen[r["pick_key"]] = r["revision"] = seen.get(r["pick_key"], 0) + 1
-        recs = list(uniq.values())
+        if len(a.publication or []) != len(a.hub):
+            raise ValueError("--hub needs one --publication manifest per page")
+        recs = {}
+        for h, m in zip(a.hub, a.publication):
+            for r in il.publication_records(h, m):
+                if r["record_id"] in recs:
+                    recs[r["record_id"]]["events"].extend(r["events"])
+                else:
+                    recs[r["record_id"]] = r
+        recs = list(recs.values())
     elif a.export:
         recs = []
         for p in a.export:
@@ -53,7 +52,7 @@ def load_records(a):
     else:
         conn = sqlite3.connect(f"file:{a.db}?mode=ro", uri=True)
         try:
-            if not conn.execute("SELECT name FROM sqlite_master WHERE name='issued_picks'").fetchone():
+            if not conn.execute("SELECT name FROM sqlite_master WHERE name='issued_pick_events'").fetchone():
                 return []
             recs = il.load(conn, a.season, a.week)
         finally:
@@ -68,33 +67,44 @@ def main(argv=None) -> int:
     src.add_argument("--db")
     src.add_argument("--export", nargs="+")
     src.add_argument("--hub", nargs="+")
+    ap.add_argument("--publication", nargs="+", help="publication.json for each --hub page")
     ap.add_argument("--season", type=int)
     ap.add_argument("--week", type=int)
     ap.add_argument("--box-dir", required=True)
-    ap.add_argument("--box-captured-at", required=True, help="UTC clock the box files were fetched")
+    ap.add_argument("--box-captured-at", required=True, help="zoned UTC clock the box files were fetched")
     ap.add_argument("--id-map", help="JSON {ledger player_id: ESPN athlete id}")
     ap.add_argument("--prior", help="an earlier issued_grades.json for stat-correction comparison")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
-    records = load_records(a)
+    if ig._ts(a.box_captured_at) is None:
+        print("[grade] --box-captured-at must be a zoned ISO clock (e.g. 2026-09-22T01:20:00Z)")
+        return 4
+    try:
+        records = load_records(a)
+    except ValueError as exc:
+        print(f"[grade] publication not verified: {exc}")
+        return 5
     if not records:
         print("[grade] no issued-pick records in the ledger for this selection: nothing to grade")
         return 3
-    games = ig.load_boxes(glob.glob(os.path.join(a.box_dir, "*.json")), a.box_captured_at)
+    boxes = ig.load_boxes(glob.glob(os.path.join(a.box_dir, "*.json")), a.box_captured_at)
     id_map = json.load(open(a.id_map)) if a.id_map else None
-    prior = json.load(open(a.prior))["rows"] if a.prior else None
-    res = ig.grade(records, games, id_map=id_map, prior_rows=prior)
+    prior = None
+    if a.prior:
+        prior = [r for s in json.load(open(a.prior))["sections"].values() for r in s["rows"]]
+    res = ig.grade(records, boxes, id_map=id_map, prior_rows=prior)
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "issued_grades.json"), "w") as f:
         json.dump(res, f, indent=1, sort_keys=True, default=str)
         f.write("\n")
-    cols = sorted({k for r in res["rows"] for k in r})
+    rows = [r for s in res["sections"].values() for r in s["rows"]]
+    cols = sorted({k for r in rows for k in r})
     with open(os.path.join(a.out, "issued_grades_rows.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
-        w.writerows(res["rows"])
-    print(f"[grade] {len(res['rows'])} decisions graded, {len(res['excluded'])} excluded; "
-          f"groups: {sorted(res['groups'])}")
+        w.writerows({k: (json.dumps(v, default=str) if isinstance(v, (list, dict)) else v)
+                     for k, v in r.items()} for r in rows)
+    print(f"[grade] counts {res['counts']}; box files rejected: {len(res['boxes']['rejected'])}")
     return 0
 
 
