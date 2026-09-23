@@ -1,0 +1,22 @@
+{
+  "protocol": "football-only-forecast-v1",
+  "frozen_at": "2026-09-22, before any 2025 test-window metric was computed by this study",
+  "question": "Replace the sportsbook-spread game-script tilt with a football-only margin, and replace the pooled per-market SD with a mean-conditional SD, without using any market input in the player forecast.",
+  "data": "walk-forward as-played player-week rows (features strictly prior-week), eligible_for_shortlist, actual observed; markets receiving_yards, receptions, rushing_yards, passing_yards, pass_attempts, rush_attempts (anytime_td: margin arms only)",
+  "windows": {"calibration": [2023, 2024], "test": [2025]},
+  "margin_arms": {
+    "A0_spread": "sportsbook spread_line (incumbent live; market-derived; comparator only, never eligible)",
+    "A1_neutral": "no tilt (what prop_backtest.py historically validated)",
+    "A2_football": "nflvalue.football_forecast.football_margins (scores only; window 17, shrink 8 games; pre-declared)"
+  },
+  "margin_rule": "A2 becomes the primary margin source iff on the test window the pooled paired dMAE(A2-A1) 95% game-cluster bootstrap CI upper bound < 0 AND no market's dMAE CI lower bound > 0. Otherwise A1 is primary and A2 runs in shadow. A0 is reported and never selected.",
+  "dispersion_arms": {
+    "D0_pooled": "incumbent: pooled residual SD of A1 means over all rows before 2025 week 1 (market_residual_sd at the 2025 cutoff)",
+    "D1_conditional": "sd = a*mean^b fitted on calibration window mean deciles (log-log least squares), floored at the smallest bin SD"
+  },
+  "dispersion_metrics": ["cov80 (mid-PIT in [0.1,0.9])", "cov50", "Brier and log loss at the synthetic trailing-mean line", "mean |p-0.5|"],
+  "dispersion_rule": "Per market, D1 becomes primary iff on the test window |cov80-0.80| is smaller than D0's AND the paired dBrier(D1-D0) 95% game-cluster bootstrap CI upper bound <= 0. Otherwise D0 stays primary and D1 runs in shadow.",
+  "bootstrap": {"cluster": "game_id", "reps": 1000, "seed": 20260922},
+  "real_line_discovery": "2026 weeks 1-2 settled exact-line rows (latest clock, one row per unique event), D0 vs D1 p_over at the offered point: Brier, log loss, AUC; market no-vig consensus as comparator. DISCOVERY ONLY, not used by any rule.",
+  "exclusions": "No market price, consensus, spread or total enters any arm eligible for primary. No threshold or parameter is changed after the test window is opened."
+}
