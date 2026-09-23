@@ -164,6 +164,9 @@ def build_card(row: Dict, now: dt.datetime) -> Dict:
         "countercase": VALIDATION_NOTE,
         "invalidation": invalidation,
         "status": status, "status_reasons": reasons,
+        # built from what this lean's run persisted (stage stamps, receipt, shadow, context);
+        # absent when the caller did not load them -- never a synthetic "no change"
+        "factor_panel": row.get("_factor_panel"),
     }
 
 
@@ -210,11 +213,25 @@ def week_cards(conn, season: int, week: int, now: Optional[dt.datetime] = None) 
                  .drop_duplicates(["game_id", "player_id", "market"], keep="last"))
         rows = leans.to_dict("records")
         verify_quotes(conn, rows)
+        from . import factor_integration as fimod
+        receipts = fimod.load_receipts(conn, season, week)
+        context = fimod.load_context_records(conn, season, week)
+        for r in rows:
+            r["_factor_panel"] = fimod.card_panel(r, receipts, context)
     cards = build_cards(rows, now=now)
     return {"season": season, "week": week, "generated_at": now.isoformat(timespec="seconds"),
             "validated_markets": sorted(VALIDATED_MARKETS),
             "counts": {s: sum(c["status"] == s for c in cards) for s in _ORDER},
             "cards": cards}
+
+
+def _panel_html(panel: Optional[Dict]) -> str:
+    if not panel:
+        return "<div class=muted>Factor evidence: not loaded for this card.</div>"
+    if panel.get("withheld"):
+        return f"<div class=muted>Factor evidence: {html.escape(panel['withheld'])}</div>"
+    from . import factor_evidence as fe
+    return fe.render_panel_html(panel)
 
 
 def render_cards_html(cards: List[Dict]) -> str:
@@ -234,7 +251,8 @@ def render_cards_html(cards: List[Dict]) -> str:
             f"<div>Why: {e(c['rationale'])}</div><div>Against: {e(c['countercase'])}</div>"
             f"<div class=muted>Invalid if: {e('; '.join(c['invalidation']))}</div>"
             f"<div class=muted>Status reasons: {e('; '.join(c['status_reasons']) or 'none')}. "
-            f"Selected by {e(pv['selection_source'])}; run {e(pv['run_id'])}; code {e(pv['code_sha'])}</div></div>")
+            f"Selected by {e(pv['selection_source'])}; run {e(pv['run_id'])}; code {e(pv['code_sha'])}</div>"
+            f"{_panel_html(c.get('factor_panel'))}</div>")
     return "\n".join(parts)
 
 

@@ -1,0 +1,62 @@
+{
+  "protocol_id": "role-opportunity-pooling-v1",
+  "frozen_at_utc": "2026-09-23T01:30:00Z",
+  "frozen_before": "any challenger number was computed; no evaluation code existed when this file was written",
+  "base_commit": "d3bd27e5498b5b9430244ca942384f4ddbccc9bd",
+  "question": "How much current-season information should replace the pre-season (historical) expectation for a player's opportunity (share of team volume, team volume) versus his per-opportunity efficiency?",
+  "evidence_status": "DISCOVERY. Every season scored here (2021-2025) and 2026 W1-2 has already been studied by earlier work; none is an untouched holdout. A pass here makes the candidate eligible for deployed SHADOW plus a prospective test on 2026 W3+, never 'validated'.",
+  "distinct_from_rejected": "The rejected agentB lever (prereg 20615eb2) changed the rolling WINDOW (exponential recency half-life + prior-team row weight) of the incumbent feature builder. This protocol does not reweight a window. It keeps a historical prior (season S-1 only) separate from season-S evidence and combines them by a precision rule whose prior strength k is estimated by method of moments on earlier seasons, per quantity x position x regime, with games as the dependence unit.",
+  "data": {
+    "pbp": "pinned fullpipe-20260922 replay-run-54d1ec7 historical_pbp.parquet (2019-2023) + pbp_2024 + pbp_2025 + pbp_2026 (W1-2), REG only",
+    "rosters": "pinned rosters_weekly.parquet (position only; no active/inactive status)",
+    "unavailable": ["snaps", "routes run", "route participation", "active/inactive game status"],
+    "proxy_policy": "Routes are NOT observed; targets are never relabelled as routes. No proxy is consumed for snaps or routes."
+  },
+  "sampling_unit": "A player-game row exists only when the player recorded a pass attempt, target or carry (the incumbent player_week definition). Games with no recorded opportunity are MISSING, not zero, in every arm (recorded zeros such as an RB with carries and 0 targets are real zeros). This is a known selection limitation shared by all arms and by the evaluation universe.",
+  "quantities": {
+    "opportunity": {
+      "target_share": "targets / team pass attempts (WR, TE, RB)",
+      "carry_share": "carries / team rush attempts (RB)",
+      "pass_share": "pass attempts / team pass attempts (QB)",
+      "team_pass_att": "team pass attempts per game",
+      "team_rush_att": "team rush attempts per game"
+    },
+    "efficiency": {
+      "ypt": "receiving yards / target",
+      "catch_rate": "receptions / target",
+      "ypc": "rushing yards / carry",
+      "ypa": "passing yards / pass attempt"
+    }
+  },
+  "estimator": {
+    "historical_prior": "Season S-1 ratio estimate for the player (all S-1 games, any team), shrunk toward the S-1 position population mean with k0 (between-player method of moments). No S-1 games -> prior = position mean of first-appearance player-seasons in training ('no_prior'). Team volume prior = S-1 team per-game mean shrunk toward league mean. Labelled historical prior, never 'pre-season projection'.",
+    "current": "Season-S ratio estimate from games on the CURRENT team strictly before the target week (sum numerator / sum denominator). Same-season games for another team are counted and reported but not used.",
+    "posterior": "post = (D_cur * r_cur + k * prior) / (D_cur + k); weight on current w = D_cur / (D_cur + k), D_cur = current-season denominator (team attempts for shares, player opportunities for efficiency, games for team volume).",
+    "k_estimation": "k = phi / rho. phi = game-cluster-robust sampling dispersion: sum_g (y_g - r*d_g)^2 / sum_g d_g / g(r) pooled over training player-seasons (games are the independent unit; plays inside a game are not). rho = mean over training player-seasons of [(r_season - prior)^2 - phi*g(prior)/D_season] / g(prior), floored at 1e-6. g(p) = p(1-p) for proportions (shares, catch rate), p^2 for positive rates (ypt, ypc, ypa), 1 for team volume. Estimated per quantity x position x regime, regime in {same_team, team_changed, no_prior}; cells with < 30 player-seasons pool across regimes. k clipped to [1e-3, 1e5].",
+    "fit_seasons": "For target season S, k/phi/rho/k0 use only season pairs (S'-1 -> S') with S' < S. Nothing from season S or later is read.",
+    "conservation": "Per team and target week, if the sum of posterior shares over supplied players exceeds 1, shares are scaled proportionally to sum 1 and the factor recorded; otherwise the unallocated remainder is reported. Absent-player reallocation stays with nflvalue.availability.reallocate_usage (not duplicated here)."
+  },
+  "arms": {
+    "INC": "deployed incumbent: projection.project on player_week roll_* (flat 8-game window across seasons/teams, efficiency shrunk k=6 games) and team_week roll volume, opponent factor for yards markets",
+    "PRIOR": "opportunity = historical prior only (no season-S games); efficiency = INC efficiency",
+    "CURR": "opportunity = current-season estimate only (prior used only when no season-S game exists); efficiency = INC efficiency",
+    "C": "PRIMARY CHALLENGER. opportunity = adaptive posterior; efficiency = INC efficiency (opportunity-first)",
+    "C2": "secondary: opportunity = adaptive posterior; efficiency = adaptive posterior with its own learned k",
+    "EP": "descriptive: C opportunity, efficiency = historical prior only",
+    "EC": "descriptive: C opportunity, efficiency = current-season only"
+  },
+  "shared_components": "Every arm uses the incumbent opponent factor (same row lookup), the same market distribution family and the deployed dispersion_v1 conditional SD a*mean^b (fitted 2023-2024 on incumbent residuals, used unchanged as a shared nuisance). No sportsbook line, spread, total or price enters any arm or any shrinkage target.",
+  "universe": "player_week rows 2021-2025 REG with finite INC mean for the market: receiving_yards/receptions/targets WR+TE, rushing_yards/rush_attempts RB, passing_yards/pass_attempts QB. Same rows for every arm (rows where any arm is non-finite are dropped from all arms and counted). 2026 W1-2 reported descriptively only.",
+  "metrics": ["MAE", "bias = mean(actual - forecast)", "CRPS (closed-form normal / sampled for gamma, negbinom with seed 20260922, 400 draws, identical draws across arms)", "cov80 central interval", "n rows, n games, n players"],
+  "uncertainty": "95% percentile bootstrap resampling whole games (game_id), 1000 reps, seed 20260922.",
+  "gate_C_vs_INC": {
+    "opportunity_endpoints": ["targets (WR/TE)", "rush_attempts (RB)", "pass_attempts (QB)"],
+    "G1": "pooled 2021-2025 delta MAE (C - INC) 95% CI upper bound < 0 on all three opportunity endpoints",
+    "G2": "|bias_C| <= |bias_INC| + 0.01 * mean(actual) on every one of the 6 markets and targets",
+    "G3": "delta CRPS point estimate <= 0 on >= 4 of 6 markets and no market with delta CRPS 95% CI lower bound > 0",
+    "G4": "cov80_C >= cov80_INC - 0.01 on every market",
+    "decision": "All of G1-G4 -> 'discovery pass: recommend deployed shadow + prospective 2026 W3+ test'. Any failure -> 'deployed shadow / display-only diagnostic'. No outcome here promotes to primary. Gates are not changed after results."
+  },
+  "descriptive_only": ["C vs PRIOR, C vs CURR, C2 vs C, EP, EC", "by number of current-season games before target week {0,1,2,3-4,5-8,9+}", "by regime {same_team, team_changed, no_prior}", "per season", "2026 W1-2"],
+  "subgroup_rule": "No subgroup, week bucket or regime is promoted from these results. They answer 'how much weight' descriptively; any subgroup rule needs a new protocol and prospective data."
+}

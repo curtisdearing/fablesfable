@@ -31,6 +31,21 @@ DEFAULT_DB_PATH = os.path.join(ROOT, "data", "nfl_props.db")
 # Schema
 # --------------------------------------------------------------------------- #
 SCHEMA = {
+    # -- factor evidence: what each run executed + sourced game context (v5) ---- #
+    "run_receipts": """
+        CREATE TABLE IF NOT EXISTS run_receipts (
+            run_id TEXT PRIMARY KEY, season INTEGER, week INTEGER, clock TEXT,
+            as_of TEXT, receipt_json TEXT, created_at TEXT
+        );
+    """,
+    # keyed by the ISSUING run: a later run never replaces what an earlier pick's run knew (v6)
+    "factor_context": """
+        CREATE TABLE IF NOT EXISTS factor_context (
+            run_id TEXT, season INTEGER, week INTEGER, game_id TEXT, factor_id TEXT,
+            record_json TEXT, created_at TEXT,
+            PRIMARY KEY (run_id, game_id, factor_id)
+        );
+    """,
     "player_week": """
         CREATE TABLE IF NOT EXISTS player_week (
             season INTEGER, week INTEGER,
@@ -211,7 +226,7 @@ SCHEMA = {
 #   * Every statement must be idempotent or guarded, because a migration may
 #     be re-attempted after a partial failure.
 #   * Bump SCHEMA_VERSION to match the highest key.
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 6
 
 #: {version: (description, [sql statements])}. Version 1 is the baseline that
 #: SCHEMA itself creates, so it carries no statements: it exists to stamp
@@ -243,7 +258,28 @@ MIGRATIONS: "dict[int, tuple]" = {
         lambda conn: add_column_if_missing(conn, "leans", "ranker_sha256", "TEXT"),
         lambda conn: add_column_if_missing(conn, "leans", "selection_source", "TEXT"),
     ]),
+    5: ("leans: per-pick executed stage stamps + shadow output (factor evidence, 2026-09-23)", [
+        lambda conn: add_column_if_missing(conn, "leans", "stage_json", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "shadow_json", "TEXT"),
+    ]),
+    6: ("factor_context keyed by issuing run (run_id, game_id, factor_id); v5 rows kept", [
+        lambda conn: _rekey_factor_context(conn),
+    ]),
 }
+
+
+def _rekey_factor_context(conn: sqlite3.Connection) -> None:
+    """v5 keyed context by (season, week, game_id, factor_id), so a later run replaced an
+    earlier run's context. Rename that table to ``factor_context_legacy_v5`` (kept, not
+    deleted) and copy each row under the run_id that wrote it. No row is re-attributed."""
+    pk = [r[1] for r in conn.execute("PRAGMA table_info(factor_context)").fetchall() if r[5]]
+    if not pk or pk[0] == "run_id":
+        return                                  # fresh DB: SCHEMA already created the v6 shape
+    conn.execute("ALTER TABLE factor_context RENAME TO factor_context_legacy_v5")
+    conn.execute(SCHEMA["factor_context"])
+    conn.execute("INSERT OR IGNORE INTO factor_context (run_id, season, week, game_id, factor_id, "
+                 "record_json, created_at) SELECT run_id, season, week, game_id, factor_id, "
+                 "record_json, created_at FROM factor_context_legacy_v5 WHERE run_id IS NOT NULL")
 
 
 def _column_names(conn: sqlite3.Connection, table: str) -> List[str]:
