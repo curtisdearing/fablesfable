@@ -20,7 +20,7 @@ spec.loader.exec_module(bps)
 LEAN_COLS = ("season", "week", "clock", "game_id", "player_id", "name", "market", "side", "line",
              "line_source", "price", "book", "mean", "sd", "p_side", "composite", "status", "void_reason",
              "as_of", "created_at", "quote_book", "quote_ts", "run_id", "code_sha", "forecast_version",
-             "ranker_sha256", "selection_source")
+             "ranker_sha256", "selection_source", "stage_json")
 
 
 def _db(tmp_path, leans, provenance=True):
@@ -44,7 +44,9 @@ def _lean(**kw):
              book="draftkings/fanduel", mean=6.1, sd=2.4, p_side=0.55, composite=61.0, status="active",
              as_of="2026-09-22T22:35:00Z", created_at="2026-09-22T22:35:05Z", quote_book="draftkings",
              quote_ts="2026-09-22T22:19:33Z", run_id="local:replay", code_sha="c0de" * 10,
-             forecast_version="ff-football-only-v1", ranker_sha256="f" * 64, selection_source="ml_gbdt")
+             forecast_version="ff-football-only-v1", ranker_sha256="f" * 64, selection_source="ml_gbdt",
+             stage_json='{"team": "ATL", "stages": {}, "availability": {"status": "OK", '
+                        '"eligibility": "eligible", "availability_state": "not_listed"}}')
     r.update(kw)
     return r
 

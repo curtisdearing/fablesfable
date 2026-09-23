@@ -30,20 +30,21 @@ import math
 import os
 from typing import Dict, Iterable, List, Optional
 
+from . import candidates as _cand
 from . import factor_evidence as fe
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONTEXT_DIR = os.path.join(ROOT, "data", "factor_context")
 
-_PASS_FAMILY = {"passing_yards", "pass_attempts", "completions", "passing_tds"}
-_QB_MARKETS = {"passing_yards", "pass_attempts", "completions", "passing_tds"}
-
-#: stage -> (row column, markets it can touch or None for all)
+#: stage -> (row column, markets it can touch or None for all).  The market scopes are the
+#: executing functions' own constants: a disclosure scope that differs from the consumer's
+#: (as it did before 2026-09-23: a QB-only set on the backup-QB stage, which actually
+#: touches receiving_yards/receptions/passing_yards) mislabels every row in the gap.
 STAGES = {
     "realloc_volume": ("realloc_mult", None),
     "realloc_efficiency": ("realloc_eff_mult", None),
-    "backup_qb": ("backup_qb_adj", _PASS_FAMILY),
-    "absence_qb": ("absence_qb_mult", _QB_MARKETS),
+    "backup_qb": ("backup_qb_adj", frozenset(_cand.BACKUP_QB_MARKETS)),
+    "absence_qb": ("absence_qb_mult", frozenset(_cand.ABSENCE_QB_MARKETS)),
 }
 #: ordering-model inputs worth showing by value (all populated ones are listed in the receipt)
 ORDERING_SHOWN = ("qb_continuity", "oline_outs", "temp", "wind", "player_depth_rank")
@@ -83,9 +84,18 @@ def _position(row: Dict) -> Optional[str]:
 # run time: stamps, receipt, shadow
 # --------------------------------------------------------------------------- #
 
-def row_stage_stamps(row: Dict, ran: Dict[str, bool], reasons: Dict[str, str]) -> Dict:
+#: stages whose "no change" depends on every teammate's availability being established
+TEAM_AVAILABILITY_STAGES = ("realloc_volume", "realloc_efficiency", "absence_qb")
+
+
+def row_stage_stamps(row: Dict, ran: Dict[str, bool], reasons: Dict[str, str],
+                     unknown_teammates: int = 0) -> Dict:
     """Per-row state of every primary stage.  ``ran[stage]`` is whether the stage was
-    evaluated in this run; ``reasons[stage]`` explains a run-level non-evaluation."""
+    evaluated in this run; ``reasons[stage]`` explains a run-level non-evaluation.
+    ``unknown_teammates``: teammates on this board whose availability this run could not
+    establish.  A run-level "report received" does not make those players' absence
+    evaluated, so a teammate-absence stage that left this row unchanged is
+    ``not_evaluated`` for it, not ``no_change``."""
     market = row.get("market")
     out = {}
     for stage, (col, scope) in STAGES.items():
@@ -95,9 +105,17 @@ def row_stage_stamps(row: Dict, ran: Dict[str, bool], reasons: Dict[str, str]) -
         elif not ran.get(stage):
             out[stage] = {"state": "not_evaluated", "value": None,
                           "reason": reasons.get(stage) or "stage did not run in this run"}
+        elif (stage in TEAM_AVAILABILITY_STAGES and unknown_teammates
+              and (v is None or v == 1.0)):
+            out[stage] = {"state": "not_evaluated", "value": None,
+                          "reason": f"availability not established for {unknown_teammates} "
+                                    f"teammate(s) on this board; a teammate absence could not "
+                                    f"be ruled in or out"}
         elif stage == "backup_qb" and _num(row.get("qb_continuity")) is None:
             out[stage] = {"state": "not_evaluated", "value": None,
-                          "reason": "qb_continuity missing for this row (missing, not zero)"}
+                          "reason": "qb_continuity missing for this row (missing, not zero): "
+                                    "the 2024+ schedule carries no QB ids, and the x0.92 rule "
+                                    "is not validated on pregame starter data"}
         elif v is not None and v != 1.0:
             out[stage] = {"state": "applied", "value": v, "reason": None}
         else:
@@ -105,22 +123,97 @@ def row_stage_stamps(row: Dict, ran: Dict[str, bool], reasons: Dict[str, str]) -
     return out
 
 
+_AVAIL_KEYS = ("status", "status_raw", "availability_state", "eligibility", "evidence_kind",
+               "report_state", "source", "timestamp", "matched_by", "designation_date",
+               "designation_predates_previous_game")
+
+
+def availability_stamp(st: Optional[Dict]) -> Dict:
+    """The per-player availability this run resolved, as persisted with the pick.  A player
+    the resolver never returned is UNKNOWN/degraded -- never healthy by omission."""
+    if not st:
+        return {"status": "UNKNOWN", "availability_state": "not_resolved",
+                "eligibility": "degraded", "evidence_kind": "unknown:not_resolved"}
+    return {k: st.get(k) for k in _AVAIL_KEYS}
+
+
 def build_stamps(cands, ran: Dict[str, bool], reasons: Dict[str, str],
-                 ordering_features: Iterable[str] = ()) -> Dict[tuple, Dict]:
-    """(player_id, market) -> persisted stamp dict for every candidate row."""
+                 ordering_features: Iterable[str] = (),
+                 availability: Optional[Dict[str, Dict]] = None,
+                 qb_context: Optional[Dict[str, Dict]] = None) -> Dict[tuple, Dict]:
+    """(player_id, market) -> persisted stamp dict for every candidate row.
+
+    ``availability``: the run's ``resolve_statuses`` map (None = not a live run, nothing
+    recorded).  ``qb_context``: {team: starting-QB context record} (see
+    ``qb_context_records``)."""
     shown = [f for f in ORDERING_SHOWN if f in set(ordering_features)]
     out = {}
     if cands is None or len(cands) == 0:
         return out
-    for row in cands.to_dict("records"):
+    rows = cands.to_dict("records")
+    degraded: Dict[str, set] = {}
+    if availability is not None:
+        for row in rows:
+            if availability_stamp(availability.get(row.get("player_id")))["eligibility"] == "degraded":
+                degraded.setdefault(row.get("team"), set()).add(row.get("player_id"))
+    for row in rows:
         comps = row.get("components") if isinstance(row.get("components"), dict) else {}
-        out[(row.get("player_id"), row.get("market"))] = {
-            "team": row.get("team"), "position": _position(row),
-            "stages": row_stage_stamps(row, ran, reasons),
+        pid, team = row.get("player_id"), row.get("team")
+        others = len(degraded.get(team, set()) - {pid})
+        stamp = {
+            "team": team, "position": _position(row),
+            "stages": row_stage_stamps(row, ran, reasons, unknown_teammates=others),
             "margin_source": row.get("margin_source"),
             "dispersion_role": row.get("dispersion_role"),
             "incumbent_volume": _num(comps.get("volume")),
             "ordering": {f: _num(row.get(f)) for f in shown},
+        }
+        if availability is not None:
+            stamp["availability"] = availability_stamp(availability.get(pid))
+        if qb_context is not None:
+            stamp["qb_context"] = qb_context.get(team)
+        out[(pid, row.get("market"))] = stamp
+    return out
+
+
+def qb_context_records(teams: Iterable[str], *, doc: Optional[Dict], pbp, roster_rows,
+                       season: int, week: int, as_of, kickoffs: Dict[str, str]) -> Dict[str, Dict]:
+    """{team: compact starting-QB context} for this run: sourced starter claims from the
+    context document THIS run used (explicitly confirmed, clocked, captured by the run before
+    its decision clock, linked to a unique roster QB), compared with a previous-game proxy.
+    Context only: the numeric backup-QB rule stays blocked (``qb_readiness.NUMERIC_BLOCK``)."""
+    import pandas as pd
+    from . import qb_readiness as qr
+    roster = pd.DataFrame([{"player_id": r.get("player_id"), "full_name": r.get("name"),
+                            "team": r.get("team"), "position": r.get("position")}
+                           for r in (roster_rows or [])],
+                          columns=["player_id", "full_name", "team", "position"])
+    names = dict(zip(roster["player_id"], roster["full_name"]))
+    positions = {p: pos for p, pos in zip(roster["player_id"], roster["position"]) if pos}
+    prior = {}
+    if pbp is not None and len(pbp):
+        prior = qr.prior_realized_starters(pbp, season, week, positions=positions or None)
+    claims = qr.starter_claims_from_factor_context(doc or {})
+    out = {}
+    for team in sorted(set(t for t in teams if t)):
+        linked = [qr.link_claim_identity(c, roster) for c in claims if c.get("team") == team]
+        rec = qr.resolve_team(team, prior.get(team), linked, as_of,
+                              kickoffs.get(team))
+        p = rec.get("prior") or {}
+        src = next((c for c in rec["usable_claims"] if c["qb_id"] == rec["qb_id"]), {}) \
+            if rec.get("qb_id") else {}
+        out[team] = {
+            "state": rec["state"], "qb_id": rec.get("qb_id"),
+            "qb_name": names.get(rec.get("qb_id")) or src.get("claim_value"),
+            "source": rec.get("source"), "source_tier": src.get("source_tier"),
+            "published_at": rec.get("published_at"), "fetched_at": src.get("fetched_at"),
+            "prior": ({"qb_id": p.get("qb_id"), "name": names.get(p.get("qb_id")),
+                       "game_id": p.get("game_id"), "basis": p.get("basis")} if p else None),
+            "rejected": [{"rejected": c.get("rejected"), "source": c.get("source"),
+                          "published_before_as_of": c.get("published_before_as_of")}
+                         for c in rec["rejected_claims"]],
+            "numeric_blocked": qr.NUMERIC_BLOCK["backup_qb_adj"],
+            "pbp_available": bool(pbp is not None and len(pbp)),
         }
     return out
 
@@ -181,7 +274,9 @@ def context_path(season: int, week: int) -> str:
 
 
 def load_context(season: int, week: int, game_ids: Iterable[str], as_of,
-                 path: Optional[str] = None) -> Dict:
+                 path: Optional[str] = None, doc: Optional[Dict] = None,
+                 source_label: Optional[str] = None,
+                 extra_records: Optional[List[Dict]] = None) -> Dict:
     """Sourced context for this run's games.  Only records dated at or before ``as_of``
     survive (``factor_evidence`` re-derives status and cutoff).  Games with no entry get an
     explicit unavailable record, never silence.  A context file that exists but cannot be read
@@ -189,11 +284,14 @@ def load_context(season: int, week: int, game_ids: Iterable[str], as_of,
     as_of_t = fe._as_of(as_of)
     path = path or context_path(season, week)
     games = sorted(set(g for g in game_ids if g))
-    doc, status = None, "not collected"
+    given, status = doc, "not collected"
+    doc = None
     recs: List[Dict] = []
     covered = set()
     try:
-        if os.path.isfile(path):
+        if given is not None:
+            doc = given
+        elif os.path.isfile(path):
             with open(path) as f:
                 doc = json.load(f)
             if doc.get("season") != season or doc.get("week") != week:
@@ -201,7 +299,7 @@ def load_context(season: int, week: int, game_ids: Iterable[str], as_of,
         if doc:
             items = [i for i in doc.get("news", []) if i.get("game_id") in games]
             recs.extend(fe.assess_news(items, as_of_t))
-            for raw in doc.get("records", []):
+            for raw in list(doc.get("records", [])) + list(extra_records or []):
                 if raw.get("game_id") not in games:
                     continue
                 recs.append(fe.normalize_record({**raw, "as_of": as_of_t}))
@@ -228,7 +326,9 @@ def load_context(season: int, week: int, game_ids: Iterable[str], as_of,
             verified=False, observation="No sourced team news, injury report or starter "
                                         "context was collected for this game in this run",
             reason_not_applied="not collected (missing, not 'nothing to report')")))
-    return {"path": os.path.relpath(path, ROOT) if doc else None, "status": status,
+    label = (source_label or "context document supplied by the run") if given is not None \
+        else os.path.relpath(path, ROOT)
+    return {"path": label if doc else None, "status": status,
             "games_with_context": sorted(covered), "records": recs}
 
 
@@ -262,10 +362,15 @@ def record_issuing_run(conn, prov: Dict, *, season: int, week: int, clock: str, 
                        as_of: str, game_ids: List[str], ran: Dict[str, bool],
                        reasons: Dict[str, str], ordering_component: Optional[str],
                        ordering_features: Iterable[str], shadow: Dict,
-                       extra: Optional[Dict] = None) -> Dict:
+                       extra: Optional[Dict] = None, context_doc: Optional[Dict] = None,
+                       context_label: Optional[str] = None,
+                       extra_records: Optional[List[Dict]] = None) -> Dict:
     """Shared by the Wednesday run and the T-90 refresh: load the context this run could know,
-    build its receipt and persist both under ``run_id``.  Returns the receipt."""
-    ctx = load_context(season, week, game_ids, as_of)
+    build its receipt and persist both under ``run_id``.  Returns the receipt.
+    ``context_doc``: the document this run refreshed (else the committed file is read);
+    ``extra_records``: run-built context records (e.g. observed snaps)."""
+    ctx = load_context(season, week, game_ids, as_of, doc=context_doc, source_label=context_label,
+                       extra_records=extra_records)
     receipt = run_receipt({**prov, "run_id": run_id}, as_of=as_of, ran=ran, reasons=reasons,
                           ordering_component=ordering_component,
                           ordering_features=ordering_features, shadow=shadow, context=ctx)
@@ -378,10 +483,12 @@ def shadow_records(lean: Dict, shadow: Optional[Dict], receipt: Optional[Dict],
     base = dict(entity_id=lean.get("player_id"), entity_type="player", game_id=lean.get("game_id"),
                 as_of=as_of)
     out = [fe.normalize_record(dict(
-        base, factor_id="participation:snaps_routes", category="role_usage",
+        base, factor_id="participation:routes", category="role_usage",
         measurement_kind="unavailable", verified=False,
-        observation="Snap and route counts are not ingested",
-        reason_not_applied="no snap/route feed; targets are not a route proxy"))]
+        observation="Routes run are not available",
+        reason_not_applied="no free per-player route source (nflverse participation 'route' is "
+                           "the targeted receiver's route only; no 2026 file); targets and snaps "
+                           "are not a route proxy"))]
     comp = ((receipt or {}).get("shadow") or {}).get("component")
     if not shadow:
         why = ((receipt or {}).get("shadow") or {}).get("status") or "shadow not recorded"
@@ -420,14 +527,156 @@ def shadow_records(lean: Dict, shadow: Optional[Dict], receipt: Optional[Dict],
     return out
 
 
+_UNKNOWN_WHY = {
+    "report_missing": "no injury report was received by this run",
+    "team_not_in_report": "this team had no rows in the injury feed this run received (a team "
+                          "with nobody listed cannot be told apart from a missing team)",
+    "identity_ambiguous": "the injury feed rows could not be matched to this player uniquely",
+    "identity_other_team_only": "the only injury feed row with this name is on another team",
+    "not_resolved": "the availability resolver returned nothing for this player",
+}
+ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
+
+
+def availability_record(lean: Dict, stamps: Optional[Dict], as_of) -> Dict:
+    """This player's own availability as the issuing run resolved it (never inferred later)."""
+    pid, gid = lean.get("player_id"), lean.get("game_id")
+    base = dict(factor_id=f"availability:{pid}", category="availability", entity_type="player",
+                entity_id=pid, game_id=gid, team=(stamps or {}).get("team"), as_of=as_of)
+    a = (stamps or {}).get("availability")
+    if not a:
+        return fe.normalize_record(dict(
+            base, measurement_kind="unavailable", verified=False,
+            observation="Player availability was not recorded by the run that made this pick",
+            reason_not_applied="missing, not 'healthy'; the card is not executable"))
+    state, kind = a.get("availability_state"), a.get("evidence_kind") or ""
+    raw = str(a.get("status_raw") or "").split("|")[0]
+    if a.get("eligibility") == "degraded":
+        why = _UNKNOWN_WHY.get(state) or (f"unrecognized feed status '{raw}'" if raw
+                                          else f"availability state {state}")
+        return fe.normalize_record(dict(
+            base, measurement_kind="unavailable", verified=False, fetched_at=a.get("timestamp"),
+            observation=f"Availability not established: {why}",
+            reason_not_applied="unknown is neither confirmed healthy nor ruled out; the card "
+                               "is not executable"))
+    rec = dict(base, consumed=True, evaluated_neutral=True, verified=True,
+               measurement_kind="observed", fetched_at=a.get("timestamp"),
+               source_title="ESPN NFL injuries feed", source_url=ESPN_INJURIES_URL,
+               rationale="Availability gate: OUT players are removed before ranking and their "
+                         "usage is reallocated; this player was not OUT.")
+    if kind == "not_listed_on_received_feed":
+        obs = ("Not listed on the ESPN injuries feed this run received (a data feed, not the "
+               "official NFL report); kept on the board. Not a medical clearance")
+    elif kind == "feed_active_status":
+        obs = ("Listed 'Active' on the ESPN injuries feed this run received (a feed status, not "
+               "the official report); kept on the board. Not a medical clearance")
+    elif kind == "confirmed_active_event_roster":
+        obs = "Listed active on the ESPN game roster at the T-90 check"
+        rec.update(source_title="ESPN game roster (T-90)", source_url=None)
+    else:
+        obs = (f"{raw or a.get('status')} on the ESPN injuries feed"
+               + (f" (entry dated {a['designation_date']})" if a.get("designation_date") else "")
+               + "; a feed status, not the official game-status report or practice "
+                 "participation")
+        if a.get("designation_predates_previous_game"):
+            obs += ("; the entry predates this team's previous game, so it may be that game's "
+                    "status, not this week's")
+    rec["observation"] = obs
+    return fe.normalize_record(rec)
+
+
+def qb_record(lean: Dict, stamps: Optional[Dict], as_of) -> Dict:
+    """Starting-QB context for the pick's team, as the issuing run established it."""
+    from . import qb_readiness as qr
+    team = (stamps or {}).get("team")
+    base = dict(factor_id=f"qb_starter_readiness:{team}", category="qb_news", entity_type="team",
+                entity_id=team, team=team, game_id=lean.get("game_id"), as_of=as_of)
+    q = (stamps or {}).get("qb_context")
+    block = ("context only: the numeric backup-QB rule is blocked (the 2024+ schedule carries "
+             "no QB ids, and the x0.92 rule is not validated on pregame starter data)")
+    if not q:
+        return fe.normalize_record(dict(
+            base, measurement_kind="unavailable", verified=False,
+            observation="Starting-QB context was not recorded by the run that made this pick",
+            reason_not_applied="missing (not recorded), not 'no change'"))
+    p = q.get("prior") or {}
+    proxy = ("first pass attempt by a roster QB" if p.get("basis") == qr.PRIOR_BASIS_ROSTER_QB
+             else "first passer, position unverified")
+    prior_txt = (f"previous game's QB by proxy ({proxy}, {p.get('game_id')}): "
+                 f"{p.get('name') or p.get('qb_id')}") if p.get("qb_id") else         "no previous-game QB proxy available"
+    late = [r for r in q.get("rejected") or [] if r.get("rejected") == qr.REJ_CAPTURED_LATE]
+    late_txt = (f"; {len(late)} starter claim(s) published before this run's clock were "
+                f"captured later and not used" if late else "")
+    state = q.get("state")
+    if state in (qr.SOURCED_SAME, qr.SOURCED_CHANGED, qr.NO_PRIOR):
+        rel = {qr.SOURCED_SAME: "same player as", qr.SOURCED_CHANGED: "a different player from",
+               qr.NO_PRIOR: "no comparison with"}[state]
+        return fe.normalize_record(dict(
+            base, measurement_kind="observed", verified=True, source_url=q.get("source"),
+            published_at=q.get("published_at"), fetched_at=q.get("fetched_at"),
+            observation=(f"Confirmed starter per team source: {q.get('qb_name') or q.get('qb_id')} "
+                         f"({rel} the {prior_txt})" + late_txt),
+            reason_not_applied=block))
+    if state == qr.UNCONFIRMED:
+        return fe.normalize_record(dict(
+            base, measurement_kind="proxy", proxy_name=f"previous game's QB ({proxy})",
+            verified=True, observation=("No confirmed starter announcement captured by this run; "
+                                        + prior_txt + late_txt),
+            reason_not_applied=block))
+    why = "conflicting confirmed starter claims" if state == qr.CONFLICT else         "no starter claim and no previous-game QB found"
+    return fe.normalize_record(dict(base, measurement_kind="unavailable", verified=False,
+                                    observation=f"Starting QB not established: {why}" + late_txt,
+                                    reason_not_applied=block))
+
+
+def _opponent(game_id: Optional[str], team: Optional[str]) -> Optional[str]:
+    parts = str(game_id or "").split("_")
+    if len(parts) == 4 and team in parts[2:]:
+        return parts[3] if team == parts[2] else parts[2]
+    return None
+
+
+def matchup_summary_records(lean: Dict, team: Optional[str], context: List[Dict],
+                            as_of) -> List[Dict]:
+    """Player-level context the card would otherwise never show: the opposing defense's and
+    this team's offensive-line entries known to this run.  Context only; no matchup effect
+    is modeled."""
+    gid, opp = lean.get("game_id"), _opponent(lean.get("game_id"), team)
+    out = []
+    for cat, side, label in (("def_absence", opp, "Opposing defense"),
+                             ("ol_injury", team, "Offensive line")):
+        if not side:
+            continue
+        items = [r for r in context if r.get("category") == cat and r.get("entity_type") == "player"
+                 and r.get("team") == side and r.get("game_id") == gid
+                 and r.get("status") != "unavailable_unverified"]
+        if not items:
+            continue
+        clocks = sorted(str(r.get("fetched_at")) for r in items if r.get("fetched_at"))
+        obs = f"{label} ({side}) entries known to this run: " + "; ".join(
+            sorted({str(r.get("observation") or "")[:90] for r in items})[:8])
+        out.append(fe.normalize_record(dict(
+            factor_id=f"{cat}_summary:{side}:{gid}", category=cat, entity_type="game",
+            entity_id=gid, game_id=gid, team=side, as_of=as_of, measurement_kind="observed",
+            verified=False, source_status="attributed_report", observation=obs[:400],
+            fetched_at=clocks[-1] if clocks else None,
+            source_title="ESPN injuries feed / team reports (per-entry sources on the player cards)",
+            reason_not_applied="context only: no validated matchup effect; not an input to the "
+                               "projection")))
+    return out
+
+
 def card_records(lean: Dict, receipt: Optional[Dict], context: List[Dict], as_of) -> List[Dict]:
     stamps = _loads(lean.get("stage_json"))
     shadow = _loads(lean.get("shadow_json"))
     team = (stamps or {}).get("team")
     recs = stage_records(lean, stamps, receipt, as_of)
+    recs.append(availability_record(lean, stamps, as_of))
+    recs.append(qb_record(lean, stamps, as_of))
     recs += shadow_records(lean, shadow, receipt, stamps, as_of)
     recs += fe.select_for_card(context, {"player_id": lean.get("player_id"),
                                          "game_id": lean.get("game_id"), "team": team})
+    recs += matchup_summary_records(lean, team, context, as_of)
     return recs
 
 

@@ -21,7 +21,8 @@ Safety architecture (H6/H7 -- the guardrails live OUTSIDE the model):
     - stale/missing injuries or lines (per ``thresholds.staleness_hours``)
       force ``publish=false`` regardless of what the client said
     - schema-validated output only; enum violations raise
-    - ``status=RISK`` caps confidence at medium; stale feeds cap it at low
+    - ``status=RISK`` caps confidence at medium; ``status=UNKNOWN`` (availability not
+      established) and stale feeds cap it at low
 * News text is DATA, never instructions (H7): the rule-based client only
   keyword-classifies it; the contract test feeds an "ignore previous
   instructions" payload through and asserts nothing changes.
@@ -69,7 +70,7 @@ HARD RULES
 8. Output ONLY valid JSON matching OUTPUT SCHEMA. No text outside the JSON.
 """
 
-VALID_STATUS = {"OK", "RISK", "EXCLUDED"}
+VALID_STATUS = {"OK", "RISK", "EXCLUDED", "UNKNOWN"}
 VALID_CONFIDENCE = {"high", "medium", "low"}
 _CONF_RANK = {"low": 0, "medium": 1, "high": 2}
 _NEWS_LABELS = ("availability", "role_change", "personal_context", "noise")
@@ -141,8 +142,12 @@ class RuleBasedMockLLM:
                 status = "EXCLUDED"
             elif report in ("RISK", "QUESTIONABLE"):
                 status = "RISK"
-            else:
+            elif report == "OK":
                 status = "OK"
+            else:
+                # UNKNOWN, missing or unrecognized: availability was not established.
+                # Never OK by default, never EXCLUDED by assumption.
+                status = "UNKNOWN"
             gated.append((p, status))
             if status == "EXCLUDED":
                 key = (p.get("team"), _family(p.get("pos")))
@@ -253,6 +258,8 @@ class RuleBasedMockLLM:
             rank -= 1
         if status == "RISK":
             rank = min(rank, _CONF_RANK["medium"])
+        if status == "UNKNOWN":
+            rank = min(rank, _CONF_RANK["low"])
         if stale_feeds:
             rank = min(rank, _CONF_RANK["low"])
         if status == "EXCLUDED":
@@ -271,6 +278,9 @@ class RuleBasedMockLLM:
             return f"Confidence capped: stale feed(s) {', '.join(stale_feeds)}."
         if status == "RISK":
             return f"{name} is Questionable -- lean carries injury risk on {market}."
+        if status == "UNKNOWN":
+            return (f"{name}: availability not established this run (not confirmed healthy, "
+                    f"not ruled out) -- {market} lean held to low confidence.")
         if divergence_flag:
             return f"Model and fantasy cross-check disagree materially on {market} -- treat with caution."
         if needs_reallocation:
@@ -398,6 +408,8 @@ def synthesize(input_payload: Dict, client: Optional[LLMClient] = None) -> Dict:
     for p in out.get("players", []):
         if p.get("status") == "RISK" and _CONF_RANK.get(p.get("confidence"), 0) > 1:
             p["confidence"] = "medium"
+        if p.get("status") == "UNKNOWN" and _CONF_RANK.get(p.get("confidence"), 0) > 0:
+            p["confidence"] = "low"
         if stale and _CONF_RANK.get(p.get("confidence"), 0) > 0:
             p["confidence"] = "low"
     return out

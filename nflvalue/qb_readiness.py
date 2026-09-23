@@ -16,19 +16,24 @@ EVERY 2024-2026 row -- in the ranker's training frame (2024-2026: 100% NaN,
 
 Restoring the column verbatim is NOT restoring the measured stage:
 
-* the 2019-2023 schedule ids are the REALIZED starter (published after the
-  game), not a pregame projection -- agreement with the realized passer says
-  nothing about publication timing;
+* the 2019-2023 schedule ids match the REALIZED starter; their pregame
+  publication lineage is unverified (no source establishes when each id was
+  published), so they cannot stand in for what a pregame run knew;
 * the trailing window is the last 60 (week, passer) rows, ~3 seasons, so a
   second-year starter reads < 0.5: 44% of 2019-2023 team-weeks (56% in 2023)
   fall under the 0.5 threshold, while the x0.92 was measured on 162 backup
   team-weeks. Feeding it would cut roughly half the pass-family board.
 
-So this module exposes the useful, verifiable input -- the last realized
-starter (pbp, strictly before the target week) and any sourced intended
-starter claim linked to a unique official roster id with an explicit clock --
-as CONTEXT, and keeps the numeric consumers blocked with a machine-readable
-cause. It never writes ``qb_continuity`` or ``backup_qb_adj``.
+So this module exposes the useful, checkable input -- a PROXY for the last
+starter (pbp, strictly before the target week: the first pass attempt by a
+roster QB when positions are supplied, else the first passer, labelled
+unverified -- a trick-play passer is not a starter) and any sourced intended
+starter claim that is explicitly confirmed, linked to a unique official roster
+id, published before the decision clock AND captured by the issuing run before
+that clock -- as CONTEXT, and keeps the numeric consumers blocked with a
+machine-readable cause. A claim that was public before the clock but captured
+later is kept as a historical-availability note, never as what the run knew.
+It never writes ``qb_continuity`` or ``backup_qb_adj``.
 """
 
 from __future__ import annotations
@@ -41,13 +46,15 @@ import numpy as np
 import pandas as pd
 
 # Per-team resolution states (machine-readable; stable strings).
-VERIFIED_SAME = "verified_same_starter"        # sourced claim == last realized starter
-VERIFIED_CHANGED = "verified_changed_starter"  # sourced claim != last realized starter
+# A sourced claim is compared with a PROXY for last week's starter, so neither
+# outcome is a verified starter change/continuity.
+SOURCED_SAME = "sourced_starter_matches_prior_proxy"     # claim == prior-starter proxy
+SOURCED_CHANGED = "sourced_starter_differs_from_prior_proxy"  # claim != prior-starter proxy
 UNCONFIRMED = "starter_unconfirmed"            # no usable claim; prior starter only
 CONFLICT = "starter_conflict"                  # >1 distinct usable claimed starters
 NO_PRIOR = "no_prior_realized_starter"         # usable claim but no realized history
 UNKNOWN = "unknown"                            # neither claim nor history
-STATES = (VERIFIED_SAME, VERIFIED_CHANGED, UNCONFIRMED, CONFLICT, NO_PRIOR, UNKNOWN)
+STATES = (SOURCED_SAME, SOURCED_CHANGED, UNCONFIRMED, CONFLICT, NO_PRIOR, UNKNOWN)
 
 # Claim rejection reasons.
 REJ_TEAM = "team_mismatch"
@@ -56,7 +63,13 @@ REJ_FUTURE = "published_after_as_of"
 REJ_POSTGAME = "published_at_or_after_kickoff"
 REJ_IDENTITY_NONE = "identity_no_roster_match"
 REJ_IDENTITY_AMBIG = "identity_ambiguous"
-REJ_NOT_CONFIRMED = "claim_not_confirmed"
+REJ_NOT_CONFIRMED = "claim_not_confirmed"          # claim_kind must be exactly "confirmed"
+REJ_NO_CAPTURE = "no_capture_clock"               # no record of when this run retrieved it
+REJ_CAPTURED_LATE = "captured_after_as_of"        # retrieved after the decision clock
+
+# How the prior-starter proxy was chosen.
+PRIOR_BASIS_ROSTER_QB = "first_pass_attempt_by_roster_qb"
+PRIOR_BASIS_FIRST_PASSER = "first_passer_position_unverified"
 
 # Why the numeric consumers stay blocked even for a verified row.
 BLOCK_SOURCE = "schedule_qb_ids_absent_2024plus"
@@ -97,12 +110,22 @@ def schedule_qb_coverage(schedules: pd.DataFrame) -> Dict[int, float]:
     return out
 
 
-def prior_realized_starters(pbp: pd.DataFrame, season: int, week: int) -> Dict[str, Dict]:
-    """{team: {qb_id, game_id, season, week}} -- the passer on each team's
-    FIRST pass attempt of its most recent game strictly before (season, week).
-    A realized, completed-game fact; never a claim about this week."""
+def prior_realized_starters(pbp: pd.DataFrame, season: int, week: int,
+                            positions: Optional[Dict[str, str]] = None) -> Dict[str, Dict]:
+    """{team: {qb_id, game_id, season, week, basis}} -- a PROXY for the starter of
+    each team's most recent game strictly before (season, week).
+
+    With ``positions`` ({player_id: position}, e.g. the official roster) it is the
+    first pass attempt by a player listed as QB (basis ``PRIOR_BASIS_ROSTER_QB``);
+    without them it is the first passer, which can be a trick-play WR/RB (basis
+    ``PRIOR_BASIS_FIRST_PASSER``). Either way it is a completed-game proxy, not a
+    sourced starter designation and never a claim about this week."""
     d = pbp[(pbp["pass_attempt"] == 1) & pbp["passer_player_id"].notna()]
     d = d[(d["season"] < season) | ((d["season"] == season) & (d["week"] < week))]
+    basis = PRIOR_BASIS_FIRST_PASSER
+    if positions:
+        d = d[d["passer_player_id"].map(lambda p: positions.get(p) == "QB")]
+        basis = PRIOR_BASIS_ROSTER_QB
     if d.empty:
         return {}
     sort = [c for c in ("season", "week", "game_id", "play_id") if c in d.columns]
@@ -110,7 +133,7 @@ def prior_realized_starters(pbp: pd.DataFrame, season: int, week: int) -> Dict[s
     first = d.groupby(["posteam", "season", "week"], sort=True).head(1)
     last = first.groupby("posteam").tail(1)
     return {r.posteam: {"qb_id": r.passer_player_id, "game_id": getattr(r, "game_id", None),
-                        "season": int(r.season), "week": int(r.week)}
+                        "season": int(r.season), "week": int(r.week), "basis": basis}
             for r in last.itertuples(index=False)}
 
 
@@ -166,17 +189,23 @@ def starter_claims_from_factor_context(ctx: Dict, game_id: Optional[str] = None)
 
 def resolve_team(team: str, prior: Optional[Dict], claims: Iterable[Dict], as_of,
                  kickoff=None) -> Dict:
-    """One team's readiness record. Claims must already be identity-linked."""
+    """One team's readiness record. Claims must already be identity-linked.
+
+    A claim is usable only if it is explicitly ``confirmed``, for this team, published
+    before ``as_of`` (and before kickoff), CAPTURED by the issuing run at or before
+    ``as_of`` (``fetched_at``), and linked to a unique roster id. A claim that was
+    public before ``as_of`` but captured later is rejected with
+    ``published_before_as_of=True``: historical availability, not what this run knew."""
     as_of_t, ko = _ts(as_of), _ts(kickoff)
     if as_of_t is None:
         raise ValueError("resolve_team requires an explicit as_of")
     usable, rejected = [], []
     for c in claims:
-        pub = _ts(c.get("published_at"))
+        pub, got = _ts(c.get("published_at")), _ts(c.get("fetched_at"))
         why = None
         if c.get("team") != team:
             why = REJ_TEAM
-        elif c.get("claim_kind") not in (None, "confirmed"):
+        elif c.get("claim_kind") != "confirmed":
             why = REJ_NOT_CONFIRMED
         elif pub is None:
             why = REJ_NO_CLOCK
@@ -184,16 +213,24 @@ def resolve_team(team: str, prior: Optional[Dict], claims: Iterable[Dict], as_of
             why = REJ_FUTURE
         elif ko is not None and pub >= ko:
             why = REJ_POSTGAME
+        elif got is None:
+            why = REJ_NO_CAPTURE
+        elif got > as_of_t:
+            why = REJ_CAPTURED_LATE
         elif not c.get("qb_id"):
             why = c.get("identity") or REJ_IDENTITY_NONE
-        (rejected if why else usable).append({**c, "rejected": why} if why else c)
+        if why:
+            rejected.append({**c, "rejected": why,
+                             "published_before_as_of": bool(pub is not None and pub <= as_of_t)})
+        else:
+            usable.append(c)
     ids = sorted({c["qb_id"] for c in usable})
     prior_id = (prior or {}).get("qb_id")
     if len(ids) > 1:
         state, qb = CONFLICT, None
     elif len(ids) == 1:
         qb = ids[0]
-        state = NO_PRIOR if not prior_id else (VERIFIED_SAME if qb == prior_id else VERIFIED_CHANGED)
+        state = NO_PRIOR if not prior_id else (SOURCED_SAME if qb == prior_id else SOURCED_CHANGED)
     else:
         qb = None
         state = UNCONFIRMED if prior_id else UNKNOWN

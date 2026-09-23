@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 from typing import Callable, Dict, List, Optional
 from zoneinfo import ZoneInfo
@@ -124,6 +125,177 @@ def _players_frame(cands: pd.DataFrame) -> pd.DataFrame:
             .rename(columns={"name": "player_name"}))
 
 
+def _team_kickoffs(slate: pd.DataFrame) -> Dict[str, str]:
+    """{team: aware ISO kickoff} for the games on ``slate``."""
+    ko = slate_kickoffs(slate)
+    out: Dict[str, str] = {}
+    for g in slate.itertuples(index=False):
+        if g.game_id in ko:
+            out[g.home_team] = out[g.away_team] = ko[g.game_id].isoformat()
+    return out
+
+
+def _prior_kickoffs(schedules: pd.DataFrame, season: int, week: int) -> Dict[str, str]:
+    """{team: kickoff of its most recent game before ``week``} -- a feed designation dated
+    before it belonged to that game, not this week's."""
+    prev = schedules[(schedules["season"] == season) & (schedules["week"] < week)]
+    if "game_type" in prev.columns:
+        prev = prev[prev["game_type"] == "REG"]
+    out: Dict[str, str] = {}
+    for g in prev.sort_values("week").itertuples(index=False):
+        k = slate_kickoffs(pd.DataFrame([g._asdict()])).get(g.game_id)
+        if k is not None:
+            out[g.home_team] = out[g.away_team] = k.isoformat()
+    return out
+
+
+_CURATED_RECORD_EXCLUDE = ("coverage:", "qb_depth:")
+
+
+def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
+                     inject: Optional[Dict], roster: Optional[Dict]):
+    """The factor-context document THIS run uses, fetched before its decision clock.
+
+    Live runs that fetch their own feeds refresh the whole slate from free structured
+    sources (``live_factor_context``), keeping the committed file's hand-curated
+    team/league items verbatim (earlier live captures in the file are replaced by this
+    capture, never merged as current).  Offline/injected runs and a failed refresh use the
+    committed file, and the receipt says which.  Returns ``(doc, label, meta)``; ``doc``
+    None means "read the committed file"."""
+    inject = inject or {}
+    if "factor_context_doc" in inject:
+        return inject["factor_context_doc"], "context document injected by the caller", \
+            {"refresh": "injected"}
+    if mode != "live" or inject or not (cfg.get("factor_context") or {}).get("live_refresh", True):
+        return None, None, {"refresh": "not attempted (offline, injected or disabled run); "
+                                       "committed context file used"}
+    path = fimod.context_path(season, week)
+    curated = None
+    try:
+        if os.path.isfile(path):
+            with open(path) as f:
+                filed = json.load(f)
+            curated = {"season": filed.get("season"), "week": filed.get("week"),
+                       "news": [i for i in filed.get("news", [])
+                                if i.get("source_tier") == "team_official"],
+                       "records": [r for r in filed.get("records", [])
+                                   if not str(r.get("factor_id", "")).startswith(_CURATED_RECORD_EXCLUDE)]}
+    except Exception as exc:  # noqa: BLE001 -- the refresh still runs without curated items
+        print(f"[pipeline] committed context file unreadable ({type(exc).__name__}); "
+              f"refreshing without curated items")
+    id_map = [{"espn_id": r["espn_id"], "team": r.get("team"), "gsis_id": r["player_id"]}
+              for r in (roster or {}).get("rows") or [] if r.get("espn_id")]
+    try:
+        from nflvalue.sources import live_factor_context as lfc
+        doc = lfc.build_live_context(season, week, curated=curated, id_map=id_map)
+    except Exception as exc:  # noqa: BLE001 -- degrade to the committed file, loudly
+        print(f"[pipeline] live context refresh failed ({type(exc).__name__}: {exc}); "
+              f"committed context file used")
+        return None, None, {"refresh": f"failed ({type(exc).__name__}); committed file used"}
+    doc.pop("request_log", None)
+    meta = {"refresh": "ok", "captured_at": doc.get("captured_at"), "routes": doc.get("routes"),
+            "sources_checked": len(doc.get("sources_checked") or []),
+            "curated_games_kept": doc.get("curated_games_kept"), "id_map_rows": len(id_map),
+            "coverage_states": _coverage_counts(doc)}
+    return doc, f"live refresh captured {doc.get('captured_at')} (curated team items kept)", meta
+
+
+def _coverage_counts(doc: Dict) -> Dict[str, int]:
+    out: Dict[str, int] = {}
+    for row in (doc.get("coverage") or {}).values():
+        for cell in row.values():
+            st = cell.get("state") if isinstance(cell, dict) else None
+            if st:
+                out[st] = out.get(st, 0) + 1
+    return out
+
+
+def _fetch_snaps(season: int, mode: str, inject: Optional[Dict]):
+    """(frame, source, status) for nflverse snap counts, fetched BEFORE the decision clock."""
+    from nflvalue.sources import participation_evidence as pe
+    inject = inject or {}
+    if "snap_counts" in inject:
+        return inject["snap_counts"], inject.get("snap_counts_source") or {}, "injected"
+    if mode != "live" or inject:
+        return None, None, "not attempted (offline or injected run)"
+    import io
+    import urllib.request
+    url = pe.SNAP_URL.format(season=season)
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Python-urllib/3"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            body, lm = r.read(), r.headers.get("Last-Modified")
+        frame = pd.read_parquet(io.BytesIO(body))
+        from email.utils import parsedate_to_datetime
+        source = {"url": url, "fetched_at": stamp_now(),
+                  "last_modified": (parsedate_to_datetime(lm).astimezone(dt.timezone.utc)
+                                    .strftime("%Y-%m-%dT%H:%M:%SZ") if lm else None)}
+        return frame, source, "fetched"
+    except Exception as exc:  # noqa: BLE001 -- context only; say so, never zero-fill
+        return None, None, f"fetch failed ({type(exc).__name__}); snaps unavailable"
+
+
+def _participation_records(season: int, week: int, cands: pd.DataFrame, schedules: pd.DataFrame,
+                           roster: Optional[Dict], as_of: str, snaps):
+    """Observed offensive snaps (nflverse/PFR) for this run's candidate players, as CONTEXT
+    records.  ``snaps`` is ``_fetch_snaps``'s result.  Returns ``(records, receipt)``.  Never
+    a forecast input; a player/week with no row is "no row", never zero."""
+    from nflvalue.sources import participation_evidence as pe
+    frame, source, fetch_status = snaps
+    if frame is None:
+        return [], {"status": fetch_status}
+    try:
+        frame = frame[pd.to_numeric(frame["week"], errors="coerce") < week]
+        rows = (roster or {}).get("rows") or []
+        players = pd.DataFrame([{"pfr_id": r["pfr_id"], "gsis_id": r["player_id"]}
+                                for r in rows if r.get("pfr_id")], columns=["pfr_id", "gsis_id"])
+        sched = schedules[(schedules["season"] == season) & (schedules["week"] < week)]
+        games = {int(w): list(g["game_id"]) for w, g in sched.groupby("week")}
+        loaded = pe.load_snap_counts(frame, season=season, target_week=week, players=players,
+                                     source=source, schedule_games=games)
+        recs: List[Dict] = []
+        for r in cands[["player_id", "team", "game_id"]].drop_duplicates().itertuples(index=False):
+            recs += pe.snap_records(loaded, player_id=r.player_id, team=r.team,
+                                    game_id=r.game_id, as_of=as_of)
+        return recs, {**loaded["receipt"], "status": f"ok ({fetch_status})", "players": len(recs)}
+    except Exception as exc:  # noqa: BLE001
+        return [], {"status": f"ingest failed ({type(exc).__name__}: {str(exc)[:160]})"}
+
+
+def _committed_context(season: int, week: int) -> Optional[Dict]:
+    try:
+        with open(fimod.context_path(season, week)) as f:
+            return json.load(f)
+    except Exception:  # noqa: BLE001 -- load_context reports the file's own failure
+        return None
+
+
+def _availability_receipt(live: Dict, qb_ctx: Optional[Dict], ctx_meta: Dict,
+                          snap_receipt: Dict) -> Dict:
+    """Run-receipt fields: what this run established about availability, starting QBs,
+    context refresh and participation -- per run, with counts, not a single 'evaluated'."""
+    ts = (live or {}).get("ts") or {}
+    return {
+        "availability": {"report_state": (live or {}).get("report_state"),
+                         "injuries_fetched_at": ts.get("injuries"),
+                         "summary": (live or {}).get("availability_summary")},
+        "qb_context": ({t: {"state": q["state"], "qb_id": q.get("qb_id"),
+                            "prior_basis": (q.get("prior") or {}).get("basis"),
+                            "rejected": [r["rejected"] for r in q.get("rejected") or []]}
+                        for t, q in qb_ctx.items()} if qb_ctx is not None else None),
+        "context_refresh": ctx_meta,
+        "participation": {k: snap_receipt.get(k) for k in
+                          ("status", "source", "weeks", "per_week", "n_rows", "identity",
+                           "sha256", "players", "definition") if k in snap_receipt},
+        "routes": "unavailable: no free per-player route source",
+    }
+
+
+def _qb_pbp(inputs: candmod.WeekInputs):
+    key = tuple(sorted(int(s) for s in inputs.pw["season"].unique()))
+    return _PBP_EXT.get(key)
+
+
 def _apply_forecast_weather(adv, slate: pd.DataFrame) -> None:
     """Override the pack's (post-game, NaN-for-future) schedule weather with
     live Open-Meteo forecasts for this slate's outdoor games (evaluation
@@ -154,6 +326,7 @@ def _apply_forecast_weather(adv, slate: pd.DataFrame) -> None:
 
 
 _PACK_CACHE: Dict = {}
+_PBP_EXT: Dict = {}  # play-by-play the advanced pack loaded (QB prior-starter proxy; context only)
 
 
 def _feature_packs(inputs: candmod.WeekInputs):
@@ -173,6 +346,7 @@ def _feature_packs(inputs: candmod.WeekInputs):
     try:
         from nflvalue.advanced_features import AdvancedPack, load_pbp_ext
         _pbp_ext = load_pbp_ext()
+        _PBP_EXT[key] = _pbp_ext
         adv = AdvancedPack(pbp=_pbp_ext, schedules=inputs.schedules)
     except Exception as exc:  # noqa: BLE001
         print(f"[pipeline] advanced features unavailable ({exc}); using neutral values")
@@ -276,7 +450,8 @@ def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
                                      "p_over": l.get("p_over"), "p_under": l.get("p_under")},
                 "recent_usage": {"games_sample": l.get("roll_games")},
                 "opponent_context": {},
-                "availability": {"report_status": st.get("status", "OK"),
+                # a player the resolver returned nothing for is UNKNOWN, never OK
+                "availability": {"report_status": st.get("status", "UNKNOWN"),
                                  "practice_status": None,
                                  "active_flag": None,
                                  "source": st.get("source", "none"),
@@ -304,7 +479,8 @@ def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
 # --------------------------------------------------------------------------- #
 def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
                       clock: str = "wed", game_event_ids: Optional[List[str]] = None,
-                      inject: Optional[Dict] = None) -> Dict:
+                      inject: Optional[Dict] = None,
+                      prior_kickoff: Optional[Dict[str, str]] = None) -> Dict:
     """Fetch injuries (+ inactives at t90) and Sleeper projections; stamp
     everything for the freshness gate. ``inject`` overrides any feed for
     tests/offline runs: {injury_rows, injuries_fetched_at, inactive_rows,
@@ -419,7 +595,7 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
 
     resolved = avmod.resolve_statuses(players, injury_rows, inactive_rows=inactive_rows,
                                       clock=clock, injuries_fetched_at=inj_ts,
-                                      inactives_fetched_at=ina_ts)
+                                      inactives_fetched_at=ina_ts, prior_kickoff=prior_kickoff)
     from nflvalue.sources.espn_news import news_by_player as _nbp
     news_map = _nbp(news_items or [], players) if news_items else {}
     # T-90: names the event roster lists as ACTIVE (a practice-squad elevation
@@ -435,6 +611,10 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
             "active_roster": roster, "t90_active_names": t90_active_names,
             "inactives_state": inactives_state, "inactives_reason": inactives_reason,
             "unmatched": resolved["unmatched_espn_rows"], "sleeper_df": sleeper_df,
+            # per-run availability evidence: a received report is not per-player evidence
+            "report_state": resolved.get("report_state"),
+            "report_evaluated": avmod.report_evaluated(resolved),
+            "availability_summary": resolved.get("summary"),
             "news_by_player": news_map,
             "ts": {"injuries": inj_ts, "inactives": ina_ts, "fantasy": slp_ts,
                    "rosters": roster_ts, "news": news_ts, "lines": None}}
@@ -511,11 +691,18 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # which primary stages were evaluated this run (per-row states are stamped later)
     stage_ran = {s: False for s in fimod.STAGES}
     stage_why = {s: "not a live run" for s in fimod.STAGES}
+    live: Dict = {}
+    ctx_doc, ctx_label, ctx_meta = None, None, {"refresh": "not a live run"}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
-                                 clock="wed", inject=inject_feeds)
+                                 clock="wed", inject=inject_feeds,
+                                 prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
         statuses, sleeper_df, feeds_ts = live["statuses"], live["sleeper_df"], live["ts"]
         news_by_player = live.get("news_by_player") or {}
+        # slate-wide sourced context, fetched BEFORE the decision clock is stamped
+        ctx_doc, ctx_label, ctx_meta = _run_context_doc(cfg, season, week, mode, inject_feeds,
+                                                        live.get("active_roster"))
+        snaps = _fetch_snaps(season, mode, inject_feeds)
         # as_of is the moment the decision is made, and the decision rests on
         # feeds that were fetched just now.  Stamping it BEFORE candidate
         # enumeration and the fetches made every feed whose fetch outlived
@@ -542,10 +729,16 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
             cands = cands.iloc[0:0].copy()
         else:
             cands, roster_diag = pdmod.apply_roster_eligibility(cands, live["active_roster"])
-        avail_evaluated = bool(statuses) and roster_gate["publish"]
+        # a RECEIVED report (not just a non-empty status map) is required before any
+        # teammate-absence stage may be read as evaluated; per-player unknowns are then
+        # stamped per row (fimod.build_stamps), never neutral by run-level flag
+        avail_evaluated = bool(live.get("report_evaluated")) and roster_gate["publish"]
         for s_ in ("realloc_volume", "realloc_efficiency", "absence_qb"):
             stage_ran[s_] = avail_evaluated
-            stage_why[s_] = None if avail_evaluated else "availability statuses not evaluated this run"
+            stage_why[s_] = None if avail_evaluated else (
+                f"injury report {live.get('report_state') or 'not received'} this run; "
+                f"availability not evaluated" if roster_gate["publish"]
+                else "availability statuses not evaluated this run")
         # OUT players never reach the ranker (availability gate) -- and their
         # vacated usage is PRICED into teammates' projections (bounded; H8)
         out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
@@ -671,7 +864,18 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     ml_feats = cands.attrs.get("ml_features_populated") or []
     ordering = (str(cands["rank_source"].iloc[0]) if "rank_source" in cands.columns
                 and len(cands) else None)
-    stamps = fimod.build_stamps(cands, stage_ran, stage_why, ordering_features=ml_feats)
+    qb_ctx, snap_recs, snap_receipt = None, [], {"status": "not a live run"}
+    if mode == "live":
+        qb_ctx = fimod.qb_context_records(
+            set(slate["home_team"]) | set(slate["away_team"]),
+            doc=ctx_doc if ctx_doc is not None else _committed_context(season, week),
+            pbp=_qb_pbp(inputs), roster_rows=(live.get("active_roster") or {}).get("rows"),
+            season=season, week=week, as_of=as_of, kickoffs=_team_kickoffs(slate))
+        snap_recs, snap_receipt = _participation_records(
+            season, week, cands, inputs.schedules, live.get("active_roster"), as_of, snaps)
+    stamps = fimod.build_stamps(cands, stage_ran, stage_why, ordering_features=ml_feats,
+                                availability=statuses if mode == "live" else None,
+                                qb_context=qb_ctx)
     # SHADOW role/opportunity forecast: stored beside the pick, never read by mean/SD/side/order
     shadow = (fimod.shadow_opportunity(inputs.pw, cands, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate))
@@ -724,7 +928,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         conn, prov, season=season, week=week, clock=clock, run_id=prov["run_id"],
         as_of=result["as_of"], game_ids=list(slate["game_id"]), ran=stage_ran, reasons=stage_why,
         ordering_component=ordering, ordering_features=ml_feats, shadow=shadow,
-        extra={"lines": fimod.lines_provenance(line_rows, pulled_games)})
+        extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
+               **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
+        context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
     print(f"[pipeline] factor receipt: stages {receipt['stages_executed']}; shadow "
           f"{receipt['shadow']['status']} ({receipt['shadow']['players']} players); context "
@@ -857,8 +1063,13 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         except Exception as exc:  # noqa: BLE001 -- missing feed, not a dead run
             print(f"[t90] event id lookup failed for {game_id}: {exc}")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
-                             game_event_ids=event_ids, inject=inject_feeds)
+                             game_event_ids=event_ids, inject=inject_feeds,
+                             prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
     statuses = live["statuses"]
+    # this refresh's own context and participation, fetched before its decision clock
+    ctx_doc, ctx_label, ctx_meta = _run_context_doc(cfg, season, week, mode, inject_feeds,
+                                                    live.get("active_roster"))
+    snaps = _fetch_snaps(season, mode, inject_feeds)
     as_of = stamp_now()  # the decision follows the fetch; see run_week
     g = gate(live["feeds"], as_of=as_of,
              staleness_hours=(cfg.get("freshness") or {}).get("staleness_hours"))
@@ -935,7 +1146,15 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     ml_feats = cands2.attrs.get("ml_features_populated") or cands.attrs.get("ml_features_populated") or []
     ordering = (str(cands2["rank_source"].iloc[0]) if "rank_source" in cands2.columns
                 and len(cands2) else None)
-    stamps = fimod.build_stamps(cands2, stage_ran, stage_why, ordering_features=ml_feats)
+    qb_ctx = fimod.qb_context_records(
+        set(slate_t["home_team"]) | set(slate_t["away_team"]),
+        doc=ctx_doc if ctx_doc is not None else _committed_context(season, week),
+        pbp=_qb_pbp(inputs), roster_rows=(live.get("active_roster") or {}).get("rows"),
+        season=season, week=week, as_of=as_of, kickoffs=_team_kickoffs(slate_t))
+    snap_recs, snap_receipt = _participation_records(
+        season, week, cands2, inputs.schedules, live.get("active_roster"), as_of, snaps)
+    stamps = fimod.build_stamps(cands2, stage_ran, stage_why, ordering_features=ml_feats,
+                                availability=statuses, qb_context=qb_ctx)
     # SHADOW at the refresh's own clock (never read by mean/SD/side/order)
     shadow = (fimod.shadow_opportunity(inputs.pw, cands2, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate_t))
@@ -972,7 +1191,11 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         game_ids=[game_id], ran=stage_ran, reasons=stage_why, ordering_component=ordering,
         ordering_features=ml_feats, shadow=shadow,
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
-               "inactives_state": inactives_state, "publish": bool(g["publish"])})
+               "inactives_state": inactives_state,
+               "inactives_reason": live.get("inactives_reason") or None,
+               "publish": bool(g["publish"]),
+               **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
+        context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "
           f"shadow {receipt['shadow']['status']}; context {receipt['context']['status']}")
 

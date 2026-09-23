@@ -34,7 +34,8 @@ ROSTER = pd.DataFrame([
 
 def _claim(team, name, pub=AS_OF.replace("02:00", "01:00"), **kw):
     return qr.link_claim_identity({"team": team, "claim_value": name, "claim_kind": "confirmed",
-                                   "source": "https://team.example/news", "published_at": pub, **kw}, ROSTER)
+                                   "source": "https://team.example/news", "published_at": pub,
+                                   "fetched_at": pub, **kw}, ROSTER)
 
 
 def test_prior_realized_starter_is_strictly_before_week():
@@ -43,17 +44,17 @@ def test_prior_realized_starter_is_strictly_before_week():
     assert qr.prior_realized_starters(_pbp(), 2026, 2)["ATL"]["qb_id"] == "Q-PENIX"
 
 
-def test_verified_changed_starter():
+def test_sourced_changed_starter():
     pr = qr.prior_realized_starters(_pbp(), 2026, 3)
     rec = qr.resolve_team("ATL", pr["ATL"], [_claim("ATL", "Michael Penix Jr.")], AS_OF, KO)
-    assert (rec["state"], rec["qb_id"]) == (qr.VERIFIED_CHANGED, "Q-PENIX")
+    assert (rec["state"], rec["qb_id"]) == (qr.SOURCED_CHANGED, "Q-PENIX")
     assert rec["numeric_blocked"]["backup_qb_adj"] == [qr.BLOCK_SOURCE, qr.BLOCK_SEMANTICS]
 
 
-def test_verified_same_starter():
+def test_sourced_same_starter():
     pr = qr.prior_realized_starters(_pbp(), 2026, 3)
     rec = qr.resolve_team("GB", pr["GB"], [_claim("GB", "Jordan Love")], AS_OF, KO)
-    assert (rec["state"], rec["qb_id"]) == (qr.VERIFIED_SAME, "Q-LOVE")
+    assert (rec["state"], rec["qb_id"]) == (qr.SOURCED_SAME, "Q-LOVE")
 
 
 def test_unconfirmed_starter_keeps_prior_as_history_only():
@@ -74,7 +75,8 @@ def test_ambiguous_or_unknown_identity_is_rejected():
     dup = pd.concat([ROSTER, pd.DataFrame([{"player_id": "Q-PENIX2", "full_name": "Michael Penix",
                                              "team": "ATL", "position": "QB"}])])
     c = qr.link_claim_identity({"team": "ATL", "claim_value": "Michael Penix Jr.", "claim_kind": "confirmed",
-                                "published_at": "2026-09-22T00:00:00Z"}, dup)
+                                "published_at": "2026-09-22T00:00:00Z",
+                                "fetched_at": "2026-09-22T00:00:00Z"}, dup)
     assert c["qb_id"] is None and c["identity"] == qr.REJ_IDENTITY_AMBIG
     none = _claim("ATL", "Kirk Cousins")
     rec = qr.resolve_team("ATL", None, [c, none], AS_OF, KO)
@@ -120,7 +122,7 @@ def test_context_frame_is_market_blind_and_never_touches_primary_inputs():
     ctx = qr.context_frame(cands, recs, _pbp(), 2026, 3)
     moved = cands.assign(line=[70.5, 260.5], price=[+150, -300], p_over=[0.1, 0.9], mean=[1.0, 999.0])
     pd.testing.assert_frame_equal(ctx, qr.context_frame(moved, recs, _pbp(), 2026, 3))
-    assert list(ctx["qb_ready_state"]) == [qr.VERIFIED_CHANGED, qr.UNCONFIRMED]
+    assert list(ctx["qb_ready_state"]) == [qr.SOURCED_CHANGED, qr.UNCONFIRMED]
     assert ctx["qb_ready_trailing_share"].iloc[0] == 0.5 and pd.isna(ctx["qb_ready_trailing_share"].iloc[1])
     assert "qb_continuity" not in ctx.columns and "backup_qb_adj" not in ctx.columns
     # joining the context must not arm the x0.92 stage

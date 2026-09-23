@@ -373,7 +373,10 @@ REALLOC_EFF_FLOOR = 0.85
 # in EFFICIENCY, not handoff counts. Applied to pass-family markets when the
 # projected starter threw <50% of trailing attempts.
 BACKUP_QB_PASS_EFF_MULT = 0.92
-_PASS_FAMILY = ("receiving_yards", "receptions", "passing_yards")
+#: Markets apply_backup_qb_adjustment can change. factor_integration labels the
+#: stage from THIS constant, so the disclosure scope is the executed scope.
+BACKUP_QB_MARKETS = ("receiving_yards", "receptions", "passing_yards")
+_PASS_FAMILY = BACKUP_QB_MARKETS
 
 # Cross-position absence matrix (data/absence_matrix.json; pooled 2019-2025,
 # n=1,146-1,514 absent team-weeks per cause). The same-position volume shifts
@@ -381,7 +384,9 @@ _PASS_FAMILY = ("receiving_yards", "receptions", "passing_yards")
 # encodes is the cross-market effect nothing else prices: the QB's passing
 # output when his skill-position leader sits (attempts x efficiency, pooled).
 ABSENCE_QB_MULT = {"WR": 0.921, "TE": 0.947, "RB": 0.971}
-_QB_MARKETS = ("passing_yards", "pass_attempts")
+#: Markets apply_absence_qb_adjustment can change (shared with factor_integration).
+ABSENCE_QB_MARKETS = ("passing_yards", "pass_attempts")
+_QB_MARKETS = ABSENCE_QB_MARKETS
 
 
 def team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:

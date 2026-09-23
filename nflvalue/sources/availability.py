@@ -28,6 +28,7 @@ Recorded fixtures for offline tests: tests/fixtures/espn_*.json.
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
@@ -70,6 +71,36 @@ REPORT_MISSING, TEAM_NOT_IN_REPORT = "report_missing", "team_not_in_report"
 IDENTITY_AMBIGUOUS, IDENTITY_OTHER_TEAM = "identity_ambiguous", "identity_other_team_only"
 ACTIVE_T90, INACTIVE_T90 = "active_t90", "inactive_t90"
 DEGRADED_STATES = {REPORT_MISSING, TEAM_NOT_IN_REPORT, IDENTITY_AMBIGUOUS, IDENTITY_OTHER_TEAM}
+
+# What KIND of evidence a status rests on. The ESPN league injuries feed is a data
+# feed, not the official NFL report: a Q/D/O there is a feed game-status entry, an
+# IR/PUP/suspension is a roster-reserve designation, and neither is practice
+# participation (practice reports arrive through the context layer). Only the T-90
+# event roster confirms active/inactive for the game.
+_RESERVE_RAW = {"injured reserve", "ir", "physically unable to perform", "pup", "suspension",
+                "reserve/suspended", "non football injury", "reserve", "practice squad injured"}
+_GAME_DESIGNATION_RAW = {"out", "doubtful", "questionable", "probable"}
+
+
+def evidence_kind(state: str, status_raw: str = "") -> str:
+    raw = str(status_raw or "").split("|")[0].strip().lower()
+    if state == INACTIVE_T90:
+        return "confirmed_inactive_event_roster"
+    if state == ACTIVE_T90:
+        return "confirmed_active_event_roster"
+    if state == NOT_LISTED:
+        return "not_listed_on_received_feed"
+    if state == LISTED:
+        if raw in _RESERVE_RAW:
+            return "roster_reserve_designation_feed"
+        if raw in _GAME_DESIGNATION_RAW:
+            return "game_status_feed"
+        if raw == "day-to-day":
+            return "feed_note"
+        if raw == "active":
+            return "feed_active_status"
+        return "unrecognized_feed_status"
+    return f"unknown:{state}"
 
 
 class EspnSchemaError(RuntimeError):
@@ -354,6 +385,7 @@ def resolve_statuses(
     injuries_fetched_at: Optional[str] = None,
     inactives_fetched_at: Optional[str] = None,
     reported_teams: Optional[Iterable[str]] = None,
+    prior_kickoff: Optional[Dict[str, str]] = None,
 ) -> Dict:
     """Resolve availability for each projected player.
 
@@ -407,6 +439,11 @@ def resolve_statuses(
     teams_in_report = (set(reported_teams) if reported_teams is not None
                        else {r.get("team") for r in injury_rows if r.get("team")})
 
+    all_rows = injury_rows
+    if report_state == "missing":
+        # rows without a fetch clock are not evidence of anything this run received
+        # (still returned below as unmatched, so they stay visible)
+        injury_rows = []
     # index ESPN injury rows by (normalized name, team) and by name alone
     by_name_team: Dict[Tuple[str, str], List[Dict]] = {}
     by_name: Dict[str, List[Dict]] = {}
@@ -464,8 +501,9 @@ def resolve_statuses(
             elif len(hits) > 1:
                 ident = IDENTITY_AMBIGUOUS
 
-        comment = ""
+        comment, row_date = "", None
         if row is not None:
+            row_date = row.get("date") or None
             matched_keys.add(pname)
             matched_keys.add(normalize_name(row.get("name")))
             status, status_raw = row["status"], row["status_raw"]
@@ -503,21 +541,40 @@ def resolve_statuses(
                         status, status_raw = "OK", (status_raw or "") + "|active_t90"
                         source, ts, state = "espn_event_roster", ina_ts, ACTIVE_T90
 
+        predates = None
+        if row_date and state == LISTED and (prior_kickoff or {}).get(pteam):
+            d, k = _parse_iso(row_date), _parse_iso(prior_kickoff[pteam])
+            predates = bool(d and k and d < k)
         statuses[pid] = {"status": status, "status_raw": status_raw, "source": source,
                          "timestamp": ts, "matched_by": matched_by or "unmatched",
                          "comment": comment, "availability_state": state,
+                         "evidence_kind": evidence_kind(state, status_raw),
+                         "designation_date": row_date,
+                         # a feed entry dated before the team's previous kickoff was that
+                         # game's status: disclosed, not silently read as this week's
+                         "designation_predates_previous_game": predates,
                          "eligibility": ("ineligible" if status == "OUT" else
                                          "degraded" if status == "UNKNOWN" else "eligible"),
                          "report_state": report_state}
 
-    unmatched = [r for k, rows_ in by_name.items() if k not in matched_keys for r in rows_]
+    unmatched = [r for r in all_rows
+                 if normalize_name(r.get("name")) and normalize_name(r.get("name")) not in matched_keys]
     return {"statuses": statuses, "unmatched_espn_rows": unmatched,
             "report_state": report_state, "summary": summarize(statuses)}
 
 
+def _parse_iso(x) -> Optional[dt.datetime]:
+    try:
+        t = dt.datetime.fromisoformat(str(x).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+
+
 def summarize(statuses: Dict[str, Dict]) -> Dict:
     """Per-run counts by status / availability_state / eligibility."""
-    out: Dict[str, Dict[str, int]] = {"status": {}, "availability_state": {}, "eligibility": {}}
+    out: Dict[str, Dict[str, int]] = {"status": {}, "availability_state": {}, "eligibility": {},
+                                      "evidence_kind": {}}
     for st in statuses.values():
         for k in out:
             v = str(st.get(k))

@@ -89,7 +89,7 @@ ORDERING_ONLY_LABEL = "Enters the ordering score only; does not change the proje
 NOT_ISOLATED = "Used in projection; contribution not isolated"
 
 CATEGORY_LABELS = {
-    "qb_news": "Quarterback news", "team_news": "Team news", "ol_injury": "Offensive line",
+    "availability": "Player availability", "qb_news": "Quarterback news", "team_news": "Team news", "ol_injury": "Offensive line",
     "def_absence": "Defensive absences", "role_usage": "Snaps, touches and targets",
     "matchup": "Matchup", "venue": "Stadium", "home_away": "Home / away",
     "primetime": "Primetime", "schedule": "Schedule", "season_form": "Current season",
@@ -426,9 +426,11 @@ _STAGE_COLUMNS = (
     ("realloc_efficiency", "realloc_eff_mult", "availability_adjustment",
      "efficiency from a teammate ruled OUT (candidates.apply_reallocation)"),
     ("backup_qb", "backup_qb_adj", "qb_news",
-     "backup-QB passing efficiency (candidates.apply_backup_qb_adjustment)"),
+     "backup-QB passing efficiency on receiving yards, receptions and passing yards "
+     "(candidates.apply_backup_qb_adjustment)"),
     ("absence_qb", "absence_qb_mult", "availability_adjustment",
-     "skill-leader absence on QB markets (candidates.apply_absence_qb_adjustment)"),
+     "skill-leader absence on QB passing yards and pass attempts "
+     "(candidates.apply_absence_qb_adjustment)"),
 )
 
 

@@ -137,7 +137,7 @@ def route_availability(season: int, participation: Optional[pd.DataFrame] = None
     reasons = []
     name = f"pbp_participation_{season}.parquet"
     if published_assets and name not in set(published_assets):
-        reasons.append(f"nflverse has not published {name}")
+        reasons.append(f"{name} is not in the nflverse release asset listing checked")
     if participation is not None:
         if "route" not in participation.columns:
             reasons.append("participation file has no 'route' column")

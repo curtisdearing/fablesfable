@@ -145,10 +145,10 @@ def test_unknown_future_stage_and_missing_qb_input_are_missing_not_neutral(env, 
     assert stamps
     for (_pid, market), s in stamps.items():
         assert s["stages"]["future_stage"]["state"] == "not_evaluated"
-        if market in fimod._PASS_FAMILY:
+        if market in fimod.STAGES["backup_qb"][1]:
             assert s["stages"]["backup_qb"]["state"] == "not_evaluated"
             assert "qb_continuity missing" in s["stages"]["backup_qb"]["reason"]
-    assert any(m in fimod._PASS_FAMILY for _p, m in stamps)
+    assert any(m in fimod.STAGES["backup_qb"][1] for _p, m in stamps)
 
 
 def test_context_source_failure_is_reported_not_healthy(env, monkeypatch, tmp_path):
