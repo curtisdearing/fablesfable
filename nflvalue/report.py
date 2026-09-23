@@ -199,6 +199,8 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
     conn.commit()
     rows = []
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    from .provenance import run_provenance
+    prov = run_provenance()
     for g in games:
         for l in g["leans"]:
             prices = l.get("prices") or {}
@@ -218,6 +220,10 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
                 "confidence_comp": l.get("confidence"), "matchup_comp": l.get("matchup"),
                 "screened_n": g.get("screened_n"), "reason": _one_line_reason(l),
                 "status": status, "void_reason": None, "as_of": as_of, "created_at": now,
+                "quote_book": prices.get(f"{l.get('side')}_book"),
+                "quote_ts": prices.get(f"{l.get('side')}_ts"),
+                "selection_source": l.get("rank_source") or "football_selection_score",
+                **prov,
             })
     if not rows:
         return 0

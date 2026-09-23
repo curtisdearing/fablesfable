@@ -40,8 +40,10 @@ def rank_game(cands: List[Dict], weights: Optional[Dict] = None,
         {"game_id", "matchup", "screened": "5 of N", "screened_n": N,
          "leans": [candidate + score fields, ...]}   # len <= top_n
 
-    Deterministic: composite desc, then (player_id, market) as an absolute
-    tie-break so equal scores can never reorder between runs.
+    Deterministic: ML side score (if every candidate carries one) else the
+    market-free ``selection_score`` desc, then (player_id, market) as an
+    absolute tie-break. No price, consensus, spread or total orders or selects
+    a lean; the price edge is computed afterwards for display and EV only.
     """
     if not cands:
         return {"game_id": None, "matchup": None, "screened": "0 of 0",
@@ -83,7 +85,7 @@ def rank_game(cands: List[Dict], weights: Optional[Dict] = None,
         r["ml_score"] = round(100.0 * (mlp if r.get("side") == "over" else 1.0 - mlp), 2)
     use_ml = all(r.get("ml_score") is not None for r in scored) and bool(scored)
     rank_key = (lambda r: (-r["ml_score"], str(r["player_id"]), r["market"])) if use_ml \
-        else (lambda r: (-r["composite"], str(r["player_id"]), r["market"]))
+        else (lambda r: (-r["selection_score"], str(r["player_id"]), r["market"]))
     scored.sort(key=rank_key)
 
     leans, per_player = [], {}

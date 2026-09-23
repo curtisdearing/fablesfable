@@ -154,10 +154,12 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
         else:
             edge_raw, market_prob = None, None
     elif fair is not None and p_over_c is not None:
-        edge_over = float(p_over_c) - fair["over"]
-        edge_under = float(p_under_c) - fair["under"]
-        side = "over" if edge_over >= edge_under else "under"
-        edge_raw = max(edge_over, edge_under)
+        # The SIDE is the football distribution's, decided before any price is
+        # read; the market is consulted only afterwards, for that side's edge.
+        # (Until 2026-09-23 the side was argmax(edge vs de-vigged consensus),
+        # so the book chose which side was published.)
+        side = "over" if float(p_over_c) >= float(p_under_c) else "under"
+        edge_raw = (float(p_over_c) if side == "over" else float(p_under_c)) - fair[side]
         market_prob = fair[side]
     elif p_over_c is not None:
         side = "over" if float(p_over_c) >= 0.5 else "under"
@@ -217,8 +219,15 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
         composite = 100.0 * (w["edge"] * edge_comp + w["confidence"] * conf_comp
                              + w["matchup"] * matchup_comp) / total
 
+    # Market-free selection score: the same confidence + matchup blend the
+    # no-market branch uses, whether or not a price exists. It orders the
+    # shortlist when no ML score is present; ``composite`` (which includes the
+    # price edge) is displayed but never selects.
+    selection_score = 100.0 * (w["confidence"] * conf_comp + w["matchup"] * matchup_comp) / (
+        w["confidence"] + w["matchup"])
     if cand.get("low_confidence"):
         composite *= float(prm["low_confidence_mult"])
+        selection_score *= float(prm["low_confidence_mult"])
 
     # -- learning-loop multipliers (both absent/1.0 unless the pipeline set
     # them from walk-forward evidence; context_mult additionally requires the
@@ -226,9 +235,11 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     reliability_mult = cand.get("reliability_mult")
     if reliability_mult is not None:
         composite *= float(reliability_mult)
+        selection_score *= float(reliability_mult)
     context_mult = cand.get("context_mult")
     if context_mult is not None:
         composite *= float(context_mult)
+        selection_score *= float(context_mult)
 
     if not no_market:
         market_state = "REAL_MARKET"
@@ -258,6 +269,7 @@ def score_candidate(cand: Dict, weights: Optional[Dict[str, float]] = None,
     edge_survives = prop_decision.edge_survives_sd_uncertainty(edge_raw, sd_swing)
     return {
         "composite": round(composite, 2),
+        "selection_score": round(selection_score, 2),
         "side": side,
         "no_market": no_market,
         "market_state": market_state,

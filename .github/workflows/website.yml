@@ -6,10 +6,17 @@ on:
     paths:
       - 'published-site/**'
       - '.github/workflows/website.yml'
+  # A successful wed/t90 production run uploads a `public-site` artifact built
+  # by scripts/build_public_site.py; this workflow is still the ONLY Pages
+  # deployer (live-weekly's deploy job stays disabled).
+  workflow_run:
+    workflows: ["Live weekly model loop"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -19,7 +26,9 @@ concurrency:
 
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -27,7 +36,46 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
+      - id: pages
+        uses: actions/configure-pages@v5
+      # Candidate: the run's generated artifact (workflow_run) or the committed
+      # seed (push/dispatch). Never replace a newer live publication with an
+      # older one, so a stale seed push cannot overwrite a production week.
+      - name: Select the publication candidate
+        id: pick
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          LIVE: ${{ steps.pages.outputs.base_url }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            if ! gh run download "$RUN_ID" --repo "${{ github.repository }}" -n public-site -D "$RUNNER_TEMP/candidate"; then
+              echo "Run $RUN_ID produced no public-site artifact; live site unchanged"
+              echo "publish=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            rm -rf published-site && mv "$RUNNER_TEMP/candidate" published-site
+          fi
+          curl -fsS "${LIVE%/}/publication.json" -o "$RUNNER_TEMP/live.json" || echo '{}' > "$RUNNER_TEMP/live.json"
+          python3 - "$RUNNER_TEMP/live.json" <<'PY' >> "$GITHUB_OUTPUT"
+          import datetime as dt, json, sys
+          def t(x):
+              try:
+                  v = dt.datetime.fromisoformat(str(x).replace('Z', '+00:00'))
+                  return v if v.tzinfo else v.replace(tzinfo=dt.timezone.utc)
+              except ValueError:
+                  return None
+          try:
+              live = t(json.load(open(sys.argv[1])).get('published_at'))
+          except Exception:
+              live = None
+          cand = t(json.load(open('published-site/publication.json')).get('published_at'))
+          ok = cand is not None and (live is None or cand > live)
+          print(f"publish={'true' if ok else 'false'}")
+          print(f"candidate {cand} vs live {live}: {'publish' if ok else 'keep live'}", file=sys.stderr)
+          PY
       - name: Check the public artifact
+        if: steps.pick.outputs.publish == 'true'
         run: |
           python3 - <<'PY'
           import hashlib, json, re
@@ -77,10 +125,11 @@ jobs:
           assert actual == set(manifest['files']) | {'publication.json'}
           print('Verified static football reading artifact; source dates retained.')
           PY
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
+        if: steps.pick.outputs.publish == 'true'
         with:
           path: published-site
       - name: Publish the reading experience
+        if: steps.pick.outputs.publish == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

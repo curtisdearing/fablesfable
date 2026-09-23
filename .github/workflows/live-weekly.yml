@@ -194,6 +194,34 @@ jobs:
             dashboard.html
             data/*.json
 
+      # The public site for the current week, built from THIS run's database.
+      # Only wed/t90 runs produce one, and only after the production state was
+      # saved above (success-only step semantics). Exit 3 = nothing stored for
+      # the current week -> no artifact, the live site stays as it is; any
+      # other non-zero fails the run, and website.yml (the single Pages
+      # deployer) publishes only artifacts from successful runs.
+      - name: Build public site from this run
+        id: site
+        if: contains(fromJSON('["wed","t90"]'), steps.select.outputs.job)
+        shell: bash
+        run: |
+          set +e
+          python scripts/build_public_site.py --current --db data/nfl_props.db \
+            --archive published-site --out "$RUNNER_TEMP/public-site" --label fresh
+          rc=$?
+          set -e
+          if [[ $rc -eq 0 ]]; then echo "built=true" >> "$GITHUB_OUTPUT"
+          elif [[ $rc -eq 3 ]]; then echo "built=false" >> "$GITHUB_OUTPUT"
+          else exit "$rc"; fi
+      - name: Upload public site for the website publisher
+        if: steps.site.outputs.built == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: public-site
+          path: ${{ runner.temp }}/public-site
+          if-no-files-found: error
+          retention-days: 30
+
       # Everything the published site contains is assembled by one script so
       # it can be built and asserted on offline (tests/test_pages_workflow_
       # contract.py): the dashboard as index.html, the slim hub feed for

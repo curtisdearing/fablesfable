@@ -211,7 +211,7 @@ SCHEMA = {
 #   * Every statement must be idempotent or guarded, because a migration may
 #     be re-attempted after a partial failure.
 #   * Bump SCHEMA_VERSION to match the highest key.
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 #: {version: (description, [sql statements])}. Version 1 is the baseline that
 #: SCHEMA itself creates, so it carries no statements: it exists to stamp
@@ -230,6 +230,18 @@ MIGRATIONS: "dict[int, tuple]" = {
     # legacy binary rows, never regraded in place.
     3: ("lean_outcomes: settlement (settlement contract, 2026-09-08)", [
         lambda conn: add_column_if_missing(conn, "lean_outcomes", "settlement", "TEXT"),
+    ]),
+    # One executable quote per lean (the side's book + that row's capture
+    # clock) and the run that produced it. NULL on older rows: their version
+    # and quote identity stay unknown, never inferred from timestamps.
+    4: ("leans: quote identity + run provenance (release closure, 2026-09-23)", [
+        lambda conn: add_column_if_missing(conn, "leans", "quote_book", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "quote_ts", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "run_id", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "code_sha", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "forecast_version", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "ranker_sha256", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "selection_source", "TEXT"),
     ]),
 }
 
