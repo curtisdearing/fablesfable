@@ -560,6 +560,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     # (Evaluation catch: the old order re-enumerated AFTER stamping, silently
     # dropping ML/learning/context exactly when real lines existed.)
     prop_lines, line_note = None, None
+    line_rows, pulled_games = [], []
     if live_odds and cfg.get("odds_api_key"):
         event_map = build_event_map(cfg, slate, list_events_fn=list_events_fn)
         kickoffs = slate_kickoffs(slate)
@@ -577,6 +578,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # run; reading only `ts = pull["ts"]` threw away every earlier pull and
         # published NO_MARKET for games whose real lines were already stored.
         snap_rows = oapmod.load_recent_lines(conn, game_ids=list(slate["game_id"]))
+        line_rows, pulled_games = snap_rows, list(pull["pulled"])
         rows = oapmod.match_player_ids(
             snap_rows, _players_frame(cands).rename(columns={"player_name": "name"}),
             roster_rows=(live.get("active_roster") or {}).get("rows") if mode == "live" else None,
@@ -717,11 +719,12 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     fimod.attach_to_leans(result["games"], stamps, shadow)
     rptmod.persist_leans(conn, season, week, clock, result["games"], result["as_of"])
     from nflvalue.provenance import run_provenance
-    ctx = fimod.load_context(season, week, list(slate["game_id"]), result["as_of"])
-    receipt = fimod.run_receipt(run_provenance(), as_of=result["as_of"], ran=stage_ran,
-                                reasons=stage_why, ordering_component=ordering,
-                                ordering_features=ml_feats, shadow=shadow, context=ctx)
-    fimod.persist_run(conn, season, week, clock, receipt, ctx["records"])
+    prov = run_provenance()
+    receipt = fimod.record_issuing_run(
+        conn, prov, season=season, week=week, clock=clock, run_id=prov["run_id"],
+        as_of=result["as_of"], game_ids=list(slate["game_id"]), ran=stage_ran, reasons=stage_why,
+        ordering_component=ordering, ordering_features=ml_feats, shadow=shadow,
+        extra={"lines": fimod.lines_provenance(line_rows, pulled_games)})
     result["factor_receipt"] = receipt
     print(f"[pipeline] factor receipt: stages {receipt['stages_executed']}; shadow "
           f"{receipt['shadow']['status']} ({receipt['shadow']['players']} players); context "
@@ -770,6 +773,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     # pulled BEFORE feature/ML stamping so the re-enumerated frame keeps every
     # layer (the same ordering catch run_week documents).
     t90_line_note = None
+    line_rows, pulled_games = [], []
     if mode == "live" and cfg.get("odds_api_key"):
         slate_all = candmod.games_for_week(season, week, inputs.schedules)
         one = slate_all[slate_all["game_id"] == game_id]
@@ -790,6 +794,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                 if event_map:
                     pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
                                                   kickoffs=slate_kickoffs(one))
+                    pulled_games = list(pull["pulled"])
                     t90_line_note = (f"T-90 odds pull: {len(pull['pulled'])} game(s); "
                                      f"{pull['budget_remaining']:.0f} credits left this month.")
             except oapmod.BudgetExceeded:
@@ -797,9 +802,9 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             except Exception as exc:  # noqa: BLE001 -- degrade, don't abort
                 t90_line_note = f"T-90 odds pull failed ({type(exc).__name__}: {exc})"
                 print(f"[t90] odds pull failed for {game_id}: {exc}")
+        line_rows = oapmod.load_recent_lines(conn, game_ids=[game_id])
         rows = oapmod.match_player_ids(
-            oapmod.load_recent_lines(conn, game_ids=[game_id]),
-            _players_frame(cands).rename(columns={"player_name": "name"}),
+            line_rows, _players_frame(cands).rename(columns={"player_name": "name"}),
             game_teams=_game_teams(one))
         prop_lines = oapmod.to_prop_lines_frame(rows)
         if not prop_lines.empty:
@@ -808,6 +813,14 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
                 prop_lines=prop_lines, roster_mode=roster_mode)
             cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
+
+    # Stages THIS refresh evaluates. Every stage starts not-evaluated with the
+    # T-90 reason; only what actually runs below is marked. The Wednesday
+    # run's stages are never assumed, and a stage added later is missing here
+    # until the refresh really executes it.
+    stage_ran = {s: False for s in fimod.STAGES}
+    stage_why = {s: ("not executed by the T-90 refresh" if mode == "live" else "not a live run")
+                 for s in fimod.STAGES}
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -827,6 +840,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         from nflvalue.depth_features import attach_neutral as depth_neutral
         cands = depthp.attach(cands) if depthp is not None else depth_neutral(cands)
         cands = candmod.apply_backup_qb_adjustment(cands)
+        stage_ran["backup_qb"], stage_why["backup_qb"] = True, None
     cands = _maybe_stamp_ml(cfg, cands, inputs)
     # The ESPN event id for THIS game. Without it `gather_live_feeds` iterates
     # an empty list and the inactives feed -- the entire reason T-90 exists --
@@ -915,6 +929,17 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     # 2. re-rank without OUT players; downgrade note for RISK
     out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
     cands2 = cands[~cands["player_id"].isin(out_ids)].reset_index(drop=True)
+    if cands2.empty:
+        for s_ in stage_ran:
+            stage_ran[s_], stage_why[s_] = False, "no candidates reached the adjustment stages"
+    ml_feats = cands2.attrs.get("ml_features_populated") or cands.attrs.get("ml_features_populated") or []
+    ordering = (str(cands2["rank_source"].iloc[0]) if "rank_source" in cands2.columns
+                and len(cands2) else None)
+    stamps = fimod.build_stamps(cands2, stage_ran, stage_why, ordering_features=ml_feats)
+    # SHADOW at the refresh's own clock (never read by mean/SD/side/order)
+    shadow = (fimod.shadow_opportunity(inputs.pw, cands2, season=season, week=week,
+                                       as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate_t))
+              if mode == "live" else {"status": "not a live run", "players": {}})
     games = slmod.shortlist_week(cands2,
                                  weights=(cfg.get("composite") or {}).get("weights"),
                                  params=(cfg.get("composite") or {}).get("params"),
@@ -936,7 +961,20 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     md_path = os.path.join(rptmod.REPORTS_DIR, f"props_week_{season}_{week}_t90_{game_id}.md")
     with open(md_path, "w") as f:
         f.write(md)
-    rptmod.persist_leans(conn, season, week, "t90", games, as_of, game_ids=[game_id])
+    from nflvalue.provenance import run_provenance
+    prov = run_provenance()
+    run_id = fimod.issuing_run_id(prov["run_id"], "t90", game_id)
+    fimod.attach_to_leans(games, stamps, shadow)
+    rptmod.persist_leans(conn, season, week, "t90", games, as_of, game_ids=[game_id],
+                         run_id=run_id)
+    receipt = fimod.record_issuing_run(
+        conn, prov, season=season, week=week, clock="t90", run_id=run_id, as_of=as_of,
+        game_ids=[game_id], ran=stage_ran, reasons=stage_why, ordering_component=ordering,
+        ordering_features=ml_feats, shadow=shadow,
+        extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
+               "inactives_state": inactives_state, "publish": bool(g["publish"])})
+    print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "
+          f"shadow {receipt['shadow']['status']}; context {receipt['context']['status']}")
 
     payload = {"season": season, "week": week, "clock": "t90", "as_of": as_of,
                "publish": g["publish"], "publish_reasons": g["reasons"],
@@ -945,7 +983,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag,
                "line_note": t90_line_note,
                "inactives_state": inactives_state,
-               "inactives_banner": inactives_banner}
+               "inactives_banner": inactives_banner, "factor_receipt": receipt}
     from nflvalue.document import write_drop
     payload["drop_path"] = write_drop(payload, contexts)
     dash = update_dashboard(payload, conn)

@@ -184,36 +184,95 @@ def load_context(season: int, week: int, game_ids: Iterable[str], as_of,
                  path: Optional[str] = None) -> Dict:
     """Sourced context for this run's games.  Only records dated at or before ``as_of``
     survive (``factor_evidence`` re-derives status and cutoff).  Games with no entry get an
-    explicit unavailable record, never silence."""
+    explicit unavailable record, never silence.  A context file that exists but cannot be read
+    is a source failure (``status`` "error: ..."), reported per game, never a healthy empty."""
     as_of_t = fe._as_of(as_of)
     path = path or context_path(season, week)
     games = sorted(set(g for g in game_ids if g))
-    doc = None
-    if os.path.isfile(path):
-        with open(path) as f:
-            doc = json.load(f)
-        if doc.get("season") != season or doc.get("week") != week:
-            doc = None
+    doc, status = None, "not collected"
     recs: List[Dict] = []
     covered = set()
-    if doc:
-        items = [i for i in doc.get("news", []) if i.get("game_id") in games]
-        recs.extend(fe.assess_news(items, as_of_t))
-        for raw in doc.get("records", []):
-            if raw.get("game_id") not in games:
-                continue
-            recs.append(fe.normalize_record({**raw, "as_of": as_of_t}))
-        covered = {r.get("game_id") for r in recs}
+    try:
+        if os.path.isfile(path):
+            with open(path) as f:
+                doc = json.load(f)
+            if doc.get("season") != season or doc.get("week") != week:
+                doc, status = None, "not collected (file is for another season/week)"
+        if doc:
+            items = [i for i in doc.get("news", []) if i.get("game_id") in games]
+            recs.extend(fe.assess_news(items, as_of_t))
+            for raw in doc.get("records", []):
+                if raw.get("game_id") not in games:
+                    continue
+                recs.append(fe.normalize_record({**raw, "as_of": as_of_t}))
+            covered = {r.get("game_id") for r in recs}
+            status = "ok"
+    except Exception as exc:  # the context layer must never block the primary, nor look healthy
+        doc, recs, covered = None, [], set()
+        status = f"error: {type(exc).__name__}"
     for g in games:
-        if g not in covered:
+        if g in covered:
+            continue
+        if status.startswith("error"):
             recs.append(fe.normalize_record(dict(
-                factor_id=f"context_not_collected:{g}", category="team_news", entity_type="game",
+                factor_id=f"context_source_failed:{g}", category="team_news", entity_type="game",
                 entity_id=g, game_id=g, as_of=as_of_t, measurement_kind="unavailable",
-                verified=False, observation="No sourced team news, injury report or starter "
-                                            "context was collected for this game in this run",
-                reason_not_applied="not collected (missing, not 'nothing to report')")))
-    return {"path": os.path.relpath(path, ROOT) if doc else None,
+                verified=False, observation="The context source for this game failed to load "
+                                            "in this run",
+                reason_not_applied=f"context source failed ({status}); missing, not 'nothing "
+                                   f"to report'")))
+            continue
+        recs.append(fe.normalize_record(dict(
+            factor_id=f"context_not_collected:{g}", category="team_news", entity_type="game",
+            entity_id=g, game_id=g, as_of=as_of_t, measurement_kind="unavailable",
+            verified=False, observation="No sourced team news, injury report or starter "
+                                        "context was collected for this game in this run",
+            reason_not_applied="not collected (missing, not 'nothing to report')")))
+    return {"path": os.path.relpath(path, ROOT) if doc else None, "status": status,
             "games_with_context": sorted(covered), "records": recs}
+
+
+def issuing_run_id(base_run_id: str, clock: str, game_id: Optional[str] = None) -> str:
+    """The id a run's picks, receipt and context are stored under.  A T-90 refresh is its own
+    issuing run per game: the scheduled job refreshes several games in one process (one
+    ``run_provenance`` id), and a Wednesday run in the same process shares that id too.
+    Reusing it would let a T-90 pick borrow the Wednesday receipt (reloaded data shown as a new
+    execution) and let one game's T-90 rewrite another's context."""
+    return f"{base_run_id}:t90:{game_id}" if clock == "t90" else base_run_id
+
+
+def lines_provenance(rows: Optional[List[Dict]], pulled: Iterable[str] = ()) -> Dict:
+    """What the prices on this run's picks were, and when they were captured.  Reusing stored
+    quotes keeps each quote's own capture clock; the run's clock is never substituted."""
+    rows = rows or []
+    ts = sorted(str(r.get("ts")) for r in rows if r.get("ts"))
+    pulled = sorted(set(pulled or ()))
+    if not rows:
+        source = "none"
+    elif pulled:
+        source = "pulled this run" if all(r.get("game_id") in pulled for r in rows) \
+            else "pulled this run + stored quotes"
+    else:
+        source = "stored quotes (captured before this run; no quote acquired)"
+    return {"rows": len(rows), "source": source, "games_pulled_this_run": pulled,
+            "quote_clock_min": ts[0] if ts else None, "quote_clock_max": ts[-1] if ts else None}
+
+
+def record_issuing_run(conn, prov: Dict, *, season: int, week: int, clock: str, run_id: str,
+                       as_of: str, game_ids: List[str], ran: Dict[str, bool],
+                       reasons: Dict[str, str], ordering_component: Optional[str],
+                       ordering_features: Iterable[str], shadow: Dict,
+                       extra: Optional[Dict] = None) -> Dict:
+    """Shared by the Wednesday run and the T-90 refresh: load the context this run could know,
+    build its receipt and persist both under ``run_id``.  Returns the receipt."""
+    ctx = load_context(season, week, game_ids, as_of)
+    receipt = run_receipt({**prov, "run_id": run_id}, as_of=as_of, ran=ran, reasons=reasons,
+                          ordering_component=ordering_component,
+                          ordering_features=ordering_features, shadow=shadow, context=ctx)
+    receipt.update({"clock": clock, "game_ids": sorted(game_ids),
+                    "base_run_id": prov.get("run_id")}, **(extra or {}))
+    persist_run(conn, season, week, clock, receipt, ctx["records"])
+    return receipt
 
 
 def run_receipt(prov: Dict, *, as_of: str, ran: Dict[str, bool], reasons: Dict[str, str],
@@ -231,7 +290,7 @@ def run_receipt(prov: Dict, *, as_of: str, ran: Dict[str, bool], reasons: Dict[s
         "shadow": {k: shadow.get(k) for k in ("component", "status", "consumption", "conserved",
                                               "hyper_fit_seasons")}
                   | {"players": len(shadow.get("players") or {})},
-        "context": {"path": context.get("path"),
+        "context": {"path": context.get("path"), "status": context.get("status"),
                     "games_with_context": context.get("games_with_context")},
     }
 
