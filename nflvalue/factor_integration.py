@@ -162,7 +162,9 @@ def shadow_opportunity(pw, cands, *, season: int, week: int, as_of: dt.datetime,
                 "share": share}
         res["status"] = "ok"
     except Exception as exc:  # the shadow must never block the primary
-        res["status"] = f"error: {type(exc).__name__}: {exc}"[:300]
+        import re
+        msg = re.sub(r"(?:[A-Za-z]:)?[/\\][^\s'\"]+", "<path>", str(exc))  # public receipt: no paths
+        res["status"] = f"error: {type(exc).__name__}: {msg}"[:300]
     return res
 
 
