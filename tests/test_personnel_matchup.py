@@ -336,3 +336,72 @@ def test_multi_game_generality_no_team_hardcoding():
     cov = _rec(out, "def_coverage:DDD:vs:CCC")
     assert cov["value"]["documented_absent"] == 1
     assert _rec(out, "def_coverage:BBB")["value"]["documented_absent"] == 0
+
+
+def test_newer_publication_supersedes_older_status():
+    kw = _base()
+    kw["availability"] = [_row("dt1", "BBB", "Questionable", pub="2026-10-01T20:00:00Z"),
+                          _row("dt1", "BBB", "Out", pub="2026-10-02T20:00:00Z")]
+    inter = _rec(pm.build_personnel_evidence(**kw), "def_pass_rush_interior:BBB")
+    assert inter["value"]["documented_absent"] == 1 and inter["value"]["conflict"] == []
+    kw["availability"][0].pop("published_at")        # unclocked -> cannot order them
+    inter2 = _rec(pm.build_personnel_evidence(**kw), "def_pass_rush_interior:BBB")
+    assert [c["player_id"] for c in inter2["value"]["conflict"]] == ["dt1"]
+
+
+def test_captured_at_bounds_live_use_but_not_later_captures():
+    kw = _base()
+    for d in kw["depth"]:
+        d.pop("published_at")
+        d["captured_at"] = "2026-10-03T12:00:00Z"
+    qb = _rec(pm.build_personnel_evidence(**kw), "qb_starter:AAA")
+    assert qb["cutoff_ok"] is True and qb["value"]["expected_starter"] == "qa1"
+    for d in kw["depth"]:
+        d["captured_at"] = "2026-10-03T19:00:00Z"     # captured after as_of
+    out = pm.build_personnel_evidence(**kw)
+    assert _rec(out, "qb_starter:AAA")["value"]["state"] == "unknown"
+    assert any(e["reason"] == "captured_after_as_of" for e in out["excluded_rows"])
+
+
+# Adapter extraction on a verbatim text excerpt of the retained NFL.com page
+# (2026 Week 2, Packers section) -- the original parser gave Cisse Hargrave's
+# "Doubtful" and dropped Hargrave.
+NFLCOM_GB_EXCERPT = (
+    "<div>Packers Player Position Injuries Practice Status Game Status Aaron Banks G Knee "
+    "Limited Participation in Practice Questionable Warren Brinson DT Calf Did Not Participate "
+    "In Practice Out Brandon Cisse CB Full Participation in Practice Javon Hargrave DT Knee, "
+    "Concussion Did Not Participate In Practice Doubtful Ty'Ron Hopper LB Limited Participation "
+    "in Practice Will McDonald IV DE Ankle Limited Participation in Practice Questionable "
+    "Jets Player Position Injuries Practice Status Game Status Omar Cooper Jr. WR Ankle Did Not "
+    "Participate In Practice Out</div>")
+
+
+def _adapter():
+    import importlib.util
+    import os
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "analysis", "personnel_matchup_example.py")
+    spec = importlib.util.spec_from_file_location("pm_adapter", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_adapter_nflcom_rows_do_not_bleed_into_next_player(tmp_path):
+    f = tmp_path / "nflcom.raw"
+    f.write_text(NFLCOM_GB_EXCERPT)
+    rows, meta = _adapter().parse_nflcom_report(str(f), "Packers")
+    got = {r["name"]: r["report_status"] for r in rows}
+    assert got == {"Aaron Banks": "Questionable", "Warren Brinson": "Out",
+                   "Brandon Cisse": "(-)", "Javon Hargrave": "Doubtful",
+                   "Ty'Ron Hopper": "(-)", "Will McDonald IV": "Questionable"}
+    assert meta["complete"] is True
+
+
+def test_adapter_flags_incomplete_team_table(tmp_path):
+    f = tmp_path / "team.raw"
+    f.write_text("<p>Player Position Injury Wed Thu Fri Game Status Warren Brinson DT Calf DNP "
+                 "DNP DNP OUT Will McDonald IV DE Ankle LP LP QUESTIONABLE Other Team Table - "
+                 "Injury report</p>")
+    rows, meta = _adapter().parse_team_report(str(f))
+    assert meta["complete"] is False and meta["unparsed"]

@@ -26,8 +26,10 @@ What it deliberately does NOT do:
 * No CB-shadows-WR statement without a verified, attributed source row, and a
   defensive absence is linked to the offensive roles it plausibly touches
   with ``direction="not_estimated"`` -- it does not improve every prop.
-* Rows published after ``as_of`` or after kickoff are excluded (and counted);
-  rows without a publication clock cannot pass the cutoff check.
+* Rows published (or, lacking a publication stamp, captured) after ``as_of``
+  or at/after kickoff are excluded and counted; rows with neither clock cannot
+  pass the cutoff check.  Differing statuses are ordered only by publication
+  clocks; otherwise they stay ``conflict_unresolved``.
 
 Entrypoint: :func:`build_personnel_evidence`.  Inputs are plain lists of
 dicts (see its docstring); nothing is fetched and inputs are not mutated.
@@ -163,20 +165,29 @@ def _record(**kw: Any) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 def _screen(rows: Iterable[Dict], as_of: dt.datetime, kickoff: Optional[dt.datetime],
             excluded: List[Dict], kind: str) -> List[Dict]:
-    """Keep rows published at/before as_of (and before kickoff).  Rows with
-    no/naive publication clock are kept but marked ``cutoff_ok=False``."""
+    """Keep rows known at/before as_of (and before kickoff).
+
+    The clock is ``published_at`` when the source states one, else
+    ``captured_at`` (when this copy was actually retrieved): a document captured
+    before a live decision was demonstrably available to it, even without a
+    publication stamp.  A capture clock only bounds THAT capture -- in a
+    historical replay a later capture is excluded, never backdated.  Rows with
+    neither clock are kept but marked ``cutoff_ok=False``."""
     kept = []
     for r in rows:
         pub = _ts(r.get("published_at"))
-        if pub is not None and pub > as_of:
-            excluded.append({"kind": kind, "reason": "published_after_as_of",
+        cap = _ts(r.get("captured_at"))
+        clock = pub or cap
+        basis = "published_at" if pub else ("captured_at" if cap else None)
+        tag = "published" if pub else "captured"
+        if clock is not None and clock > as_of:
+            excluded.append({"kind": kind, "reason": f"{tag}_after_as_of", "row": _brief(r)})
+            continue
+        if clock is not None and kickoff is not None and clock >= kickoff:
+            excluded.append({"kind": kind, "reason": f"{tag}_at_or_after_kickoff",
                              "row": _brief(r)})
             continue
-        if pub is not None and kickoff is not None and pub >= kickoff:
-            excluded.append({"kind": kind, "reason": "published_at_or_after_kickoff",
-                             "row": _brief(r)})
-            continue
-        kept.append(dict(r, _pub=pub, _cutoff_ok=pub is not None))
+        kept.append(dict(r, _pub=pub, _clock_basis=basis, _cutoff_ok=clock is not None))
     return kept
 
 
@@ -214,6 +225,18 @@ def _availability(pid: str, team: str, game_id: str, current: Dict[str, List[Dic
     rows = current.get(pid, [])
     statuses = sorted({_status(r.get("report_status")) for r in rows})
     sources = [_src(r) for r in rows]
+    superseded: List[Dict] = []
+    status_basis = "single_status" if len(statuses) <= 1 else "conflict"
+    if len(statuses) > 1 and all(r.get("_pub") is not None for r in rows):
+        # a strictly newer PUBLICATION is an update, not a contradiction;
+        # same-time or capture-only-clocked disagreements stay unresolved
+        newest = max(r["_pub"] for r in rows)
+        top = {_status(r.get("report_status")) for r in rows if r["_pub"] == newest}
+        if len(top) == 1:
+            superseded = [dict(_src(r), report_status=r.get("report_status"))
+                          for r in rows if r["_pub"] < newest]
+            statuses = sorted(top)
+            status_basis = "latest_publication"
     prior_rows = prior.get(pid, [])
     prior_absent = any(_status(r.get("report_status")) in ABSENT_STATUSES
                        or r.get("did_not_play") for r in prior_rows)
@@ -244,6 +267,7 @@ def _availability(pid: str, team: str, game_id: str, current: Dict[str, List[Dic
     practice = [p for r in rows for p in (r.get("practice") or [])]
     return {"player_id": pid, "state": state, "statuses": statuses,
             "practice": practice, "returning": returning,
+            "status_basis": status_basis, "superseded": superseded,
             "prior_absent": prior_absent, "sources": sources,
             "cutoff_ok": bool(rows) and all(r["_cutoff_ok"] for r in rows),
             "report_sources": [_src(r) for r in reports]}
@@ -252,7 +276,8 @@ def _availability(pid: str, team: str, game_id: str, current: Dict[str, List[Dic
 def _src(r: Dict) -> Dict:
     return {"source_id": r.get("source_id"), "source_url": r.get("source_url"),
             "published_at": _iso(r.get("_pub")) if r.get("_pub") else r.get("published_at"),
-            "fetched_at": r.get("fetched_at"), "cutoff_ok": bool(r.get("_cutoff_ok"))}
+            "captured_at": r.get("captured_at"), "fetched_at": r.get("fetched_at"),
+            "clock_basis": r.get("_clock_basis"), "cutoff_ok": bool(r.get("_cutoff_ok"))}
 
 
 def _is_absent(av: Dict) -> Optional[bool]:
