@@ -70,6 +70,55 @@ ABBR = {
 DEFAULT_DRIVE_OUTCOMES = {"td": 0.221, "fg": 0.145, "def_td": 0.023, "safety": 0.0026}
 
 
+#: Declaration order of ``ABBR``; the *current* identifier of each franchise is
+#: listed before its retired aliases (LV before OAK, LAC before SD, ...), so a
+#: lower index means "more likely to be the live code". Only a tie-breaker --
+#: observed recency decides first.
+_ALIAS_ORDER = {abbr: i for i, abbr in enumerate(ABBR)}
+
+
+def current_ratings(teams, off, deff, season, last_seen=None):
+    """Latest rating per franchise, keyed by full team name.
+
+    ``ABBR`` is many-to-one (LV/OAK -> Las Vegas Raiders, and likewise LAC/SD,
+    LA/LAR/STL, JAX/JAC, WAS/WSH), so several raw identifiers collapse onto one
+    export key. Writing them in sorted order let whichever alias sorted last
+    win: OAK overwrote LV, exporting the franchise with the retired code's
+    stale rating. Pick one winner per name instead, preferring the identifier
+    seen most recently in the data (``last_seen``: identifier -> position in
+    schedule order), then ``ABBR`` declaration order, then the raw id so the
+    result is fully determined by the inputs and not by dict ordering.
+
+    A franchise seen only under a retired alias still exports under that alias;
+    identifiers absent from ``ABBR`` export under their raw id.
+    """
+    last_seen = last_seen or {}
+
+    def rank(t):  # lower wins
+        seen = last_seen.get(t)
+        return (-(seen if seen is not None else -1),
+                _ALIAS_ORDER.get(t, len(_ALIAS_ORDER)), t)
+
+    groups = {}
+    for t in teams:
+        groups.setdefault(ABBR.get(t, t), []).append(t)
+
+    current = {}
+    for name in sorted(groups):
+        aliases = sorted(groups[name], key=rank)
+        t = aliases[0]
+        if len(aliases) > 1:
+            print(f"  alias collision: {name} <- {'/'.join(sorted(groups[name]))}; "
+                  f"kept {t} (most recent), dropped {', '.join(aliases[1:])}")
+        if t not in ABBR:
+            print(f"  unmapped team identifier {t!r}; exported under its raw id")
+        current[name] = {
+            "abbr": t, "off": round(off[t], 3), "def": round(deff[t], 3),
+            "net": round(off[t] + deff[t], 3), "season": season,
+        }
+    return current
+
+
 def league_priors(pbp: pd.DataFrame, sched: pd.DataFrame,
                   drive_outcomes: dict = None) -> dict:
     # Drives per team-game from the drive id alone (outcome column is gone).
@@ -153,10 +202,11 @@ def build():
     off = {t: 0.0 for t in teams}
     deff = {t: 0.0 for t in teams}
     games_played = {t: 0 for t in teams}
+    last_seen = {}       # identifier -> position of its last game (alias recency)
     backtest = []
     cur_season = None
 
-    for _, g in sched.iterrows():
+    for pos, (_, g) in enumerate(sched.iterrows()):
         season = int(g["season"])
         h, a = g["home_team"], g["away_team"]
         if season != cur_season:
@@ -195,15 +245,10 @@ def build():
         deff[h] += -K * ea
         games_played[h] += 1
         games_played[a] += 1
+        last_seen[h] = last_seen[a] = pos
 
     # ---- current ratings (latest state), keyed by full team name ---------- #
-    current = {}
-    for t in teams:
-        name = ABBR.get(t, t)
-        current[name] = {
-            "abbr": t, "off": round(off[t], 3), "def": round(deff[t], 3),
-            "net": round(off[t] + deff[t], 3), "season": cur_season,
-        }
+    current = current_ratings(teams, off, deff, cur_season, last_seen=last_seen)
 
     with open(os.path.join(DATA, "league_priors.json"), "w") as f:
         json.dump(priors, f, indent=2)
