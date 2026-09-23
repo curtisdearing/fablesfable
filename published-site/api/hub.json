@@ -1,145 +1,3167 @@
 {
-  "schema_version": 1,
-  "project": "fablesfable",
-  "generated_at": "2026-09-11T07:00:38Z",
-  "mode": "research",
-  "disclaimer": "Saved model analysis, not live odds or approved wagers. Verify current price and availability.",
-  "summary": {
-    "n_games": 16,
-    "n_value_bets": 0,
-    "n_value_props": 0,
-    "n_model_candidates": 70,
-    "best_ev": null,
-    "mc_on": false
+  "season": 2026,
+  "week": 3,
+  "generated_at": "2026-09-23T01:25:05+00:00",
+  "counts": {
+    "actionable": 0,
+    "watch": 3,
+    "research": 77,
+    "pass": 0
   },
-  "metrics": {
-    "available": false,
-    "reason": "Legacy demo metrics are not carried forward; see native prop history.",
-    "graded_total": null,
-    "settled_total": null,
-    "win_rate": null,
-    "roi_all": null,
-    "brier": null
+  "validated_markets": [],
+  "runs": [
+    {
+      "run_id": "local:closure2-replay-20260923T012417Z",
+      "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "wed",
+      "as_of": "2026-09-23T01:24:40Z",
+      "created_at": "2026-09-23T01:24:40Z"
+    }
+  ],
+  "quote_clocks": {
+    "earliest": "2026-09-22T22:19:33Z",
+    "latest": "2026-09-22T22:19:33Z",
+    "leans_with_quote": 3
   },
-  "value_bets": [],
-  "value_props": [],
-  "week": {
-    "label": "2026 Week 1",
-    "season": 2026,
-    "week": 1,
-    "record_to_date": null,
-    "games": []
-  },
-  "top_bets": {
-    "label": "2026 Week 1",
-    "meta": {
-      "status": "analysis_only"
+  "label": "replay",
+  "label_text": "REPLAY: the full production pipeline re-run on final code against quotes captured earlier (clocks below). Prices may have moved since capture.",
+  "cards": [
+    {
+      "player": "J.Love",
+      "player_id": "00-0036264",
+      "game_id": "2026_03_ATL_GB",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 228.5,
+      "quote": {
+        "book": "betmgm",
+        "price_decimal": 1.87,
+        "price_american": "-115",
+        "captured_at": "2026-09-22T22:19:33Z"
+      },
+      "quote_age_hours": 3.09,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 200.578,
+      "sd": 97.23,
+      "model_p_side": 0.613,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": 0.5348,
+      "ev_per_unit_unvalidated": 0.1463,
+      "value_composite_display_only": 62.66,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 200.6 (sd 97.2) sits 27.9 below the 228.5 line. Model drivers: proj 200.578 vs line 228.5 (z=-0.29); model p 0.613 vs mkt 0.5",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (200.6)",
+        "price shortens so breakeven exceeds the model's 61%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "watch",
+      "status_reasons": [
+        "market has not passed an offered-line calibration gate"
+      ]
     },
-    "games": []
-  },
-  "model_analysis": {
-    "url": "https://curtisdearing.github.io/fablesfable/",
-    "source_as_of": "2026-09-11T07:00:38Z",
-    "n_candidates": 70,
-    "approval_status": "HOLD",
-    "approved_bets": 0,
-    "games": [
-      {
-        "game_id": "2026_01_ARI_LAC",
-        "matchup": "ARI @ LAC",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_ARI_LAC.html",
-        "n_candidates": 5
+    {
+      "player": "M.Golden",
+      "player_id": "00-0040667",
+      "game_id": "2026_03_ATL_GB",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 51.5,
+      "quote": {
+        "book": "betmgm",
+        "price_decimal": 1.95,
+        "price_american": "-105",
+        "captured_at": "2026-09-22T22:19:33Z"
       },
-      {
-        "game_id": "2026_01_ATL_PIT",
-        "matchup": "ATL @ PIT",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_ATL_PIT.html",
-        "n_candidates": 5
+      "quote_age_hours": 3.09,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_BAL_IND",
-        "matchup": "BAL @ IND",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_BAL_IND.html",
-        "n_candidates": 5
+      "mean": 27.72,
+      "sd": 25.77,
+      "model_p_side": 0.8509,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": 0.5128,
+      "ev_per_unit_unvalidated": 0.6593,
+      "value_composite_display_only": 79.61,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 27.7 (sd 25.8) sits 23.8 below the 51.5 line. Model drivers: proj 27.72 vs line 51.5 (z=-0.92); model p 0.8509 vs mkt 0.4887",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (27.7)",
+        "price shortens so breakeven exceeds the model's 85%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "watch",
+      "status_reasons": [
+        "market has not passed an offered-line calibration gate"
+      ]
+    },
+    {
+      "player": "M.Golden",
+      "player_id": "00-0040667",
+      "game_id": "2026_03_ATL_GB",
+      "market": "receptions",
+      "side": "under",
+      "line": 4.5,
+      "quote": {
+        "book": "betmgm",
+        "price_decimal": 1.69,
+        "price_american": "-145",
+        "captured_at": "2026-09-22T22:19:33Z"
       },
-      {
-        "game_id": "2026_01_BUF_HOU",
-        "matchup": "BUF @ HOU",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_BUF_HOU.html",
-        "n_candidates": 5
+      "quote_age_hours": 3.09,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_CHI_CAR",
-        "matchup": "CHI @ CAR",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_CHI_CAR.html",
-        "n_candidates": 5
+      "mean": 1.978,
+      "sd": 1.56,
+      "model_p_side": 0.931,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": 0.5917,
+      "ev_per_unit_unvalidated": 0.5734,
+      "value_composite_display_only": 95.0,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.0 (sd 1.6) sits 2.5 below the 4.5 line. Model drivers: proj 1.978 vs line 4.5 (z=-1.62); model p 0.931 vs mkt 0.5583",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.0)",
+        "price shortens so breakeven exceeds the model's 93%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "watch",
+      "status_reasons": [
+        "market has not passed an offered-line calibration gate"
+      ]
+    },
+    {
+      "player": "J.Brissett",
+      "player_id": "00-0033119",
+      "game_id": "2026_03_ARI_SF",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 38.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_CLE_JAX",
-        "matchup": "CLE @ JAX",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_CLE_JAX.html",
-        "n_candidates": 5
+      "mean": 38.875,
+      "sd": 13.05,
+      "model_p_side": 0.5282,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 11.53,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 38.9 (sd 13.1) sits 0.4 above the 38.5 line. Model drivers: proj 38.875 vs line 38.5 (z=+0.03)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (38.9)",
+        "price shortens so breakeven exceeds the model's 53%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Bourne",
+      "player_id": "00-0033307",
+      "game_id": "2026_03_ARI_SF",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_DAL_NYG",
-        "matchup": "DAL @ NYG",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_DAL_NYG.html",
-        "n_candidates": 5
+      "mean": 2.009,
+      "sd": 1.616,
+      "model_p_side": 0.6761,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 26.2,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.0 (sd 1.6) sits 0.5 below the 2.5 line. Model drivers: proj 2.009 vs line 2.5 (z=-0.30)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.0)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Hodge",
+      "player_id": "00-0034854",
+      "game_id": "2026_03_ARI_SF",
+      "market": "receptions",
+      "side": "under",
+      "line": 1.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_DEN_KC",
-        "matchup": "DEN @ KC",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_DEN_KC.html",
-        "n_candidates": 5
+      "mean": 1.323,
+      "sd": 1.306,
+      "model_p_side": 0.6339,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.23,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.3 (sd 1.3) sits 0.2 below the 1.5 line. Model drivers: proj 1.323 vs line 1.5 (z=-0.14)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.3)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Allgeier",
+      "player_id": "00-0037263",
+      "game_id": "2026_03_ARI_SF",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 9.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_GB_MIN",
-        "matchup": "GB @ MIN",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_GB_MIN.html",
-        "n_candidates": 5
+      "mean": 6.117,
+      "sd": 4.559,
+      "model_p_side": 0.8041,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 49.58,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 6.1 (sd 4.6) sits 3.4 below the 9.5 line. Model drivers: proj 6.117 vs line 9.5 (z=-0.74)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (6.1)",
+        "price shortens so breakeven exceeds the model's 80%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "Z.Knight",
+      "player_id": "00-0037157",
+      "game_id": "2026_03_ARI_SF",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 7.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_MIA_LV",
-        "matchup": "MIA @ LV",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_MIA_LV.html",
-        "n_candidates": 5
+      "mean": 7.043,
+      "sd": 4.793,
+      "model_p_side": 0.6129,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.09,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 7.0 (sd 4.8) sits 0.5 below the 7.5 line. Model drivers: proj 7.043 vs line 7.5 (z=-0.10)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (7.0)",
+        "price shortens so breakeven exceeds the model's 61%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "Bi.Robinson",
+      "player_id": "00-0038542",
+      "game_id": "2026_03_ATL_GB",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 19.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_NE_SEA",
-        "matchup": "NE @ SEA \u2014 FINAL (historical; no prospective lean)",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NE_SEA.html",
-        "n_candidates": 0
+      "mean": 19.455,
+      "sd": 6.869,
+      "model_p_side": 0.54,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.35,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 19.5 (sd 6.9) sits 0.0 below the 19.5 line. Model drivers: proj 19.455 vs line 19.5 (z=-0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (19.5)",
+        "price shortens so breakeven exceeds the model's 54%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "C.Rush",
+      "player_id": "00-0033662",
+      "game_id": "2026_03_ATL_GB",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 20.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_NO_DET",
-        "matchup": "NO @ DET",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NO_DET.html",
-        "n_candidates": 5
+      "mean": 20.25,
+      "sd": 13.05,
+      "model_p_side": 0.5881,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 11.02,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 20.2 (sd 13.1) sits 0.2 below the 20.5 line. Model drivers: proj 20.25 vs line 20.5 (z=-0.02)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (20.2)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "C.Moore",
+      "player_id": "00-0032398",
+      "game_id": "2026_03_BAL_DAL",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 25.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_NYJ_TEN",
-        "matchup": "NYJ @ TEN",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_NYJ_TEN.html",
-        "n_candidates": 5
+      "mean": 22.515,
+      "sd": 23.922,
+      "model_p_side": 0.6826,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.65,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 22.5 (sd 23.9) sits 3.0 below the 25.5 line. Model drivers: proj 22.515 vs line 25.5 (z=-0.12)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (22.5)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "C.Moore",
+      "player_id": "00-0032398",
+      "game_id": "2026_03_BAL_DAL",
+      "market": "receptions",
+      "side": "under",
+      "line": 1.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_SF_LA",
-        "matchup": "SF @ LA \u2014 FINAL (historical; no prospective lean)",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_SF_LA.html",
-        "n_candidates": 0
+      "mean": 1.337,
+      "sd": 1.313,
+      "model_p_side": 0.6295,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.62,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.3 (sd 1.3) sits 0.2 below the 1.5 line. Model drivers: proj 1.337 vs line 1.5 (z=-0.12)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.3)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Henry",
+      "player_id": "00-0032764",
+      "game_id": "2026_03_BAL_DAL",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 20.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_TB_CIN",
-        "matchup": "TB @ CIN",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_TB_CIN.html",
-        "n_candidates": 5
+      "mean": 19.669,
+      "sd": 6.896,
+      "model_p_side": 0.5839,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.43,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 19.7 (sd 6.9) sits 0.8 below the 20.5 line. Model drivers: proj 19.669 vs line 20.5 (z=-0.12)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (19.7)",
+        "price shortens so breakeven exceeds the model's 58%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Henry",
+      "player_id": "00-0032764",
+      "game_id": "2026_03_BAL_DAL",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 117.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
       },
-      {
-        "game_id": "2026_01_WAS_PHI",
-        "matchup": "WAS @ PHI",
-        "url": "https://curtisdearing.github.io/fablesfable/games/2026_01_WAS_PHI.html",
-        "n_candidates": 5
-      }
-    ]
-  }
+      "mean": 102.271,
+      "sd": 46.152,
+      "model_p_side": 0.6788,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 27.6,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 102.3 (sd 46.2) sits 15.2 below the 117.5 line. Model drivers: proj 102.271 vs line 117.5 (z=-0.33)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (102.3)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Prescott",
+      "player_id": "00-0033077",
+      "game_id": "2026_03_BAL_DAL",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 258.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 245.726,
+      "sd": 97.23,
+      "model_p_side": 0.5523,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.01,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 245.7 (sd 97.2) sits 12.8 below the 258.5 line. Model drivers: proj 245.726 vs line 258.5 (z=-0.13)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (245.7)",
+        "price shortens so breakeven exceeds the model's 55%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Watson",
+      "player_id": "00-0033537",
+      "game_id": "2026_03_CAR_CLE",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 32.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 30.541,
+      "sd": 13.05,
+      "model_p_side": 0.609,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 18.01,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 30.5 (sd 13.1) sits 2.0 below the 32.5 line. Model drivers: proj 30.541 vs line 32.5 (z=-0.15)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (30.5)",
+        "price shortens so breakeven exceeds the model's 61%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Coker",
+      "player_id": "00-0039491",
+      "game_id": "2026_03_CAR_CLE",
+      "market": "receptions",
+      "side": "under",
+      "line": 4.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 4.24,
+      "sd": 2.364,
+      "model_p_side": 0.5892,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.87,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 4.2 (sd 2.4) sits 0.3 below the 4.5 line. Model drivers: proj 4.24 vs line 4.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (4.2)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Sanders",
+      "player_id": "00-0039356",
+      "game_id": "2026_03_CAR_CLE",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.993,
+      "sd": 1.609,
+      "model_p_side": 0.6799,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 26.81,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.0 (sd 1.6) sits 0.5 below the 2.5 line. Model drivers: proj 1.993 vs line 2.5 (z=-0.32)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.0)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "S.Sanders",
+      "player_id": "00-0040668",
+      "game_id": "2026_03_CAR_CLE",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 29.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 27.818,
+      "sd": 13.05,
+      "model_p_side": 0.6065,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.87,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 27.8 (sd 13.1) sits 1.7 below the 29.5 line. Model drivers: proj 27.818 vs line 29.5 (z=-0.13)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (27.8)",
+        "price shortens so breakeven exceeds the model's 61%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "S.Sanders",
+      "player_id": "00-0040668",
+      "game_id": "2026_03_CAR_CLE",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 175.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 171.275,
+      "sd": 97.23,
+      "model_p_side": 0.5173,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 12.32,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 171.3 (sd 97.2) sits 4.2 below the 175.5 line. Model drivers: proj 171.275 vs line 175.5 (z=-0.04)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (171.3)",
+        "price shortens so breakeven exceeds the model's 52%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Washington",
+      "player_id": "00-0038558",
+      "game_id": "2026_03_CIN_PIT",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.273,
+      "sd": 1.721,
+      "model_p_side": 0.6136,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.03,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.3 (sd 1.7) sits 0.2 below the 2.5 line. Model drivers: proj 2.273 vs line 2.5 (z=-0.13)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.3)",
+        "price shortens so breakeven exceeds the model's 61%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "E.All",
+      "player_id": "00-0039814",
+      "game_id": "2026_03_CIN_PIT",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.179,
+      "sd": 1.684,
+      "model_p_side": 0.6357,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 20.17,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.2 (sd 1.7) sits 0.3 below the 2.5 line. Model drivers: proj 2.179 vs line 2.5 (z=-0.19)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.2)",
+        "price shortens so breakeven exceeds the model's 64%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Burrow",
+      "player_id": "00-0036442",
+      "game_id": "2026_03_CIN_PIT",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 38.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 38.625,
+      "sd": 13.05,
+      "model_p_side": 0.5361,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 38.6 (sd 13.1) sits 0.1 above the 38.5 line. Model drivers: proj 38.625 vs line 38.5 (z=+0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (38.6)",
+        "price shortens so breakeven exceeds the model's 54%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Burrow",
+      "player_id": "00-0036442",
+      "game_id": "2026_03_CIN_PIT",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 260.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 259.377,
+      "sd": 97.23,
+      "model_p_side": 0.5046,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.62,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 259.4 (sd 97.2) sits 1.1 below the 260.5 line. Model drivers: proj 259.377 vs line 260.5 (z=-0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (259.4)",
+        "price shortens so breakeven exceeds the model's 50%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "R.Wilson",
+      "player_id": "00-0039739",
+      "game_id": "2026_03_CIN_PIT",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.908,
+      "sd": 1.574,
+      "model_p_side": 0.7001,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 30.06,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.9 (sd 1.6) sits 0.6 below the 2.5 line. Model drivers: proj 1.908 vs line 2.5 (z=-0.38)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.9)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Schultz",
+      "player_id": "00-0034383",
+      "game_id": "2026_03_HOU_IND",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 56.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 52.554,
+      "sd": 35.919,
+      "model_p_side": 0.6315,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.86,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 52.6 (sd 35.9) sits 3.9 below the 56.5 line. Model drivers: proj 52.554 vs line 56.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (52.6)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Allen",
+      "player_id": "00-0030279",
+      "game_id": "2026_03_HOU_IND",
+      "market": "receptions",
+      "side": "under",
+      "line": 4.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 3.797,
+      "sd": 2.235,
+      "model_p_side": 0.6647,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 26.78,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.8 (sd 2.2) sits 0.7 below the 4.5 line. Model drivers: proj 3.797 vs line 4.5 (z=-0.32)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.8)",
+        "price shortens so breakeven exceeds the model's 66%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "L.Treadwell",
+      "player_id": "00-0032951",
+      "game_id": "2026_03_HOU_IND",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 28.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 25.592,
+      "sd": 25.438,
+      "model_p_side": 0.6711,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.1,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 25.6 (sd 25.4) sits 2.9 below the 28.5 line. Model drivers: proj 25.592 vs line 28.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (25.6)",
+        "price shortens so breakeven exceeds the model's 67%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "L.Treadwell",
+      "player_id": "00-0032951",
+      "game_id": "2026_03_HOU_IND",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.23,
+      "sd": 1.704,
+      "model_p_side": 0.6237,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 18.45,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.2 (sd 1.7) sits 0.3 below the 2.5 line. Model drivers: proj 2.23 vs line 2.5 (z=-0.16)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.2)",
+        "price shortens so breakeven exceeds the model's 62%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "X.Hutchinson",
+      "player_id": "00-0038618",
+      "game_id": "2026_03_HOU_IND",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.387,
+      "sd": 1.764,
+      "model_p_side": 0.5871,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 13.42,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.4 (sd 1.8) sits 0.1 below the 2.5 line. Model drivers: proj 2.387 vs line 2.5 (z=-0.06)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.4)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Wright",
+      "player_id": "00-0039874",
+      "game_id": "2026_03_KC_MIA",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 7.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 6.413,
+      "sd": 4.636,
+      "model_p_side": 0.666,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 22.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 6.4 (sd 4.6) sits 1.1 below the 7.5 line. Model drivers: proj 6.413 vs line 7.5 (z=-0.23)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (6.4)",
+        "price shortens so breakeven exceeds the model's 67%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Wright",
+      "player_id": "00-0039874",
+      "game_id": "2026_03_KC_MIA",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 31.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 26.309,
+      "sd": 25.999,
+      "model_p_side": 0.6974,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 20.65,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 26.3 (sd 26.0) sits 5.2 below the 31.5 line. Model drivers: proj 26.309 vs line 31.5 (z=-0.20)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (26.3)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Walker",
+      "player_id": "00-0038134",
+      "game_id": "2026_03_KC_MIA",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 15.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 12.778,
+      "sd": 5.78,
+      "model_p_side": 0.7147,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 35.12,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 12.8 (sd 5.8) sits 2.7 below the 15.5 line. Model drivers: proj 12.778 vs line 15.5 (z=-0.47)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (12.8)",
+        "price shortens so breakeven exceeds the model's 71%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Walker",
+      "player_id": "00-0038134",
+      "game_id": "2026_03_KC_MIA",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 80.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 58.711,
+      "sd": 35.485,
+      "model_p_side": 0.773,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 42.75,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 58.7 (sd 35.5) sits 21.8 below the 80.5 line. Model drivers: proj 58.711 vs line 80.5 (z=-0.61)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (58.7)",
+        "price shortens so breakeven exceeds the model's 77%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "P.Mahomes",
+      "player_id": "00-0033873",
+      "game_id": "2026_03_KC_MIA",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 40.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 40.0,
+      "sd": 13.05,
+      "model_p_side": 0.5534,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 12.04,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 40.0 (sd 13.1) sits 0.5 below the 40.5 line. Model drivers: proj 40.0 vs line 40.5 (z=-0.04)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (40.0)",
+        "price shortens so breakeven exceeds the model's 55%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Kincaid",
+      "player_id": "00-0038933",
+      "game_id": "2026_03_LAC_BUF",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 60.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 42.58,
+      "sd": 32.471,
+      "model_p_side": 0.7699,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 39.43,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 42.6 (sd 32.5) sits 17.9 below the 60.5 line. Model drivers: proj 42.58 vs line 60.5 (z=-0.55)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (42.6)",
+        "price shortens so breakeven exceeds the model's 77%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Knox",
+      "player_id": "00-0035689",
+      "game_id": "2026_03_LAC_BUF",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 29.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 25.954,
+      "sd": 25.609,
+      "model_p_side": 0.6781,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.38,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 26.0 (sd 25.6) sits 3.5 below the 29.5 line. Model drivers: proj 25.954 vs line 29.5 (z=-0.14)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (26.0)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Moore",
+      "player_id": "00-0034827",
+      "game_id": "2026_03_LAC_BUF",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 36.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 27.648,
+      "sd": 26.398,
+      "model_p_side": 0.7325,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 27.88,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 27.6 (sd 26.4) sits 8.9 below the 36.5 line. Model drivers: proj 27.648 vs line 36.5 (z=-0.34)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (27.6)",
+        "price shortens so breakeven exceeds the model's 73%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Moore",
+      "player_id": "00-0034827",
+      "game_id": "2026_03_LAC_BUF",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.109,
+      "sd": 1.656,
+      "model_p_side": 0.6523,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 22.59,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.1 (sd 1.7) sits 0.4 below the 2.5 line. Model drivers: proj 2.109 vs line 2.5 (z=-0.24)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.1)",
+        "price shortens so breakeven exceeds the model's 65%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Vidal",
+      "player_id": "00-0039391",
+      "game_id": "2026_03_LAC_BUF",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 12.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 11.864,
+      "sd": 5.765,
+      "model_p_side": 0.5957,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.88,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 11.9 (sd 5.8) sits 0.6 below the 12.5 line. Model drivers: proj 11.864 vs line 12.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (11.9)",
+        "price shortens so breakeven exceeds the model's 60%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Mumpfield",
+      "player_id": "00-0040590",
+      "game_id": "2026_03_LA_DEN",
+      "market": "receptions",
+      "side": "under",
+      "line": 1.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.188,
+      "sd": 1.236,
+      "model_p_side": 0.6767,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 23.46,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.2 (sd 1.2) sits 0.3 below the 1.5 line. Model drivers: proj 1.188 vs line 1.5 (z=-0.25)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.2)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "M.Stafford",
+      "player_id": "00-0026498",
+      "game_id": "2026_03_LA_DEN",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 294.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 268.703,
+      "sd": 97.23,
+      "model_p_side": 0.6046,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 24.15,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 268.7 (sd 97.2) sits 25.8 below the 294.5 line. Model drivers: proj 268.703 vs line 294.5 (z=-0.27)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (268.7)",
+        "price shortens so breakeven exceeds the model's 60%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "P.Bryant",
+      "player_id": "00-0040134",
+      "game_id": "2026_03_LA_DEN",
+      "market": "receptions",
+      "side": "under",
+      "line": 3.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.962,
+      "sd": 1.969,
+      "model_p_side": 0.656,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 24.57,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.0 (sd 2.0) sits 0.5 below the 3.5 line. Model drivers: proj 2.962 vs line 3.5 (z=-0.27)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.0)",
+        "price shortens so breakeven exceeds the model's 66%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Franklin",
+      "player_id": "00-0039868",
+      "game_id": "2026_03_LA_DEN",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 28.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 23.019,
+      "sd": 24.177,
+      "model_p_side": 0.7122,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 22.09,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 23.0 (sd 24.2) sits 5.5 below the 28.5 line. Model drivers: proj 23.019 vs line 28.5 (z=-0.23)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (23.0)",
+        "price shortens so breakeven exceeds the model's 71%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Franklin",
+      "player_id": "00-0039868",
+      "game_id": "2026_03_LA_DEN",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.906,
+      "sd": 1.573,
+      "model_p_side": 0.7006,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 30.14,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.9 (sd 1.6) sits 0.6 below the 2.5 line. Model drivers: proj 1.906 vs line 2.5 (z=-0.38)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.9)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "A.O'Connell",
+      "player_id": "00-0038579",
+      "game_id": "2026_03_LV_NO",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 30.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 30.5,
+      "sd": 13.05,
+      "model_p_side": 0.5519,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.0,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 30.5 (sd 13.1) sits 0.0 below the 30.5 line. Model drivers: proj 30.5 vs line 30.5 (z=+0.00)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (30.5)",
+        "price shortens so breakeven exceeds the model's 55%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "A.O'Connell",
+      "player_id": "00-0038579",
+      "game_id": "2026_03_LV_NO",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 192.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 190.881,
+      "sd": 97.23,
+      "model_p_side": 0.5066,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.89,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 190.9 (sd 97.2) sits 1.6 below the 192.5 line. Model drivers: proj 190.881 vs line 192.5 (z=-0.02)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (190.9)",
+        "price shortens so breakeven exceeds the model's 51%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Miller",
+      "player_id": "00-0038551",
+      "game_id": "2026_03_LV_NO",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 7.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 6.848,
+      "sd": 4.745,
+      "model_p_side": 0.6295,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.33,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 6.8 (sd 4.7) sits 0.7 below the 7.5 line. Model drivers: proj 6.848 vs line 7.5 (z=-0.14)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (6.8)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Etienne",
+      "player_id": "00-0036973",
+      "game_id": "2026_03_LV_NO",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 13.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 13.056,
+      "sd": 5.964,
+      "model_p_side": 0.5787,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 13.97,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 13.1 (sd 6.0) sits 0.4 below the 13.5 line. Model drivers: proj 13.056 vs line 13.5 (z=-0.07)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (13.1)",
+        "price shortens so breakeven exceeds the model's 58%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Shough",
+      "player_id": "00-0040743",
+      "game_id": "2026_03_LV_NO",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 277.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 275.388,
+      "sd": 97.23,
+      "model_p_side": 0.5087,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 11.16,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 275.4 (sd 97.2) sits 2.1 below the 277.5 line. Model drivers: proj 275.388 vs line 277.5 (z=-0.02)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (275.4)",
+        "price shortens so breakeven exceeds the model's 51%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Jennings",
+      "player_id": "00-0036259",
+      "game_id": "2026_03_MIN_TB",
+      "market": "receptions",
+      "side": "under",
+      "line": 3.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 3.271,
+      "sd": 1.877,
+      "model_p_side": 0.589,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 16.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.3 (sd 1.9) sits 0.2 below the 3.5 line. Model drivers: proj 3.271 vs line 3.5 (z=-0.12)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.3)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.McMillan",
+      "player_id": "00-0039855",
+      "game_id": "2026_03_MIN_TB",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 54.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 44.659,
+      "sd": 33.222,
+      "model_p_side": 0.6996,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 25.8,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 44.7 (sd 33.2) sits 9.8 below the 54.5 line. Model drivers: proj 44.659 vs line 54.5 (z=-0.30)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (44.7)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.McMillan",
+      "player_id": "00-0039855",
+      "game_id": "2026_03_MIN_TB",
+      "market": "receptions",
+      "side": "under",
+      "line": 4.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 3.416,
+      "sd": 2.118,
+      "model_p_side": 0.7286,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 37.3,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.4 (sd 2.1) sits 1.1 below the 4.5 line. Model drivers: proj 3.416 vs line 4.5 (z=-0.51)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.4)",
+        "price shortens so breakeven exceeds the model's 73%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Gainwell",
+      "player_id": "00-0036919",
+      "game_id": "2026_03_MIN_TB",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 6.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 7.289,
+      "sd": 4.851,
+      "model_p_side": 0.5093,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 18.67,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 7.3 (sd 4.9) sits 0.8 above the 6.5 line. Model drivers: proj 7.289 vs line 6.5 (z=+0.16)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (7.3)",
+        "price shortens so breakeven exceeds the model's 51%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Murray",
+      "player_id": "00-0035228",
+      "game_id": "2026_03_MIN_TB",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 33.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 33.625,
+      "sd": 13.05,
+      "model_p_side": 0.5428,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 33.6 (sd 13.1) sits 0.1 above the 33.5 line. Model drivers: proj 33.625 vs line 33.5 (z=+0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (33.6)",
+        "price shortens so breakeven exceeds the model's 54%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "Bri.Thomas",
+      "player_id": "00-0039893",
+      "game_id": "2026_03_NE_JAX",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 45.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 45.468,
+      "sd": 33.509,
+      "model_p_side": 0.5983,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.05,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 45.5 (sd 33.5) sits 0.0 below the 45.5 line. Model drivers: proj 45.468 vs line 45.5 (z=-0.00)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (45.5)",
+        "price shortens so breakeven exceeds the model's 60%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "Bri.Thomas",
+      "player_id": "00-0039893",
+      "game_id": "2026_03_NE_JAX",
+      "market": "receptions",
+      "side": "under",
+      "line": 3.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 3.286,
+      "sd": 2.076,
+      "model_p_side": 0.5927,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.5,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.3 (sd 2.1) sits 0.2 below the 3.5 line. Model drivers: proj 3.286 vs line 3.5 (z=-0.10)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.3)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "C.Rodriguez",
+      "player_id": "00-0038611",
+      "game_id": "2026_03_NE_JAX",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 44.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 38.889,
+      "sd": 30.668,
+      "model_p_side": 0.6692,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 19.76,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 38.9 (sd 30.7) sits 5.6 below the 44.5 line. Model drivers: proj 38.889 vs line 44.5 (z=-0.18)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (38.9)",
+        "price shortens so breakeven exceeds the model's 67%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "R.Stevenson",
+      "player_id": "00-0036875",
+      "game_id": "2026_03_NE_JAX",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 52.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 49.728,
+      "sd": 34.027,
+      "model_p_side": 0.6214,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 14.34,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 49.7 (sd 34.0) sits 2.8 below the 52.5 line. Model drivers: proj 49.728 vs line 52.5 (z=-0.08)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (49.7)",
+        "price shortens so breakeven exceeds the model's 62%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Hunter",
+      "player_id": "00-0040718",
+      "game_id": "2026_03_NE_JAX",
+      "market": "receptions",
+      "side": "under",
+      "line": 3.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 3.094,
+      "sd": 2.013,
+      "model_p_side": 0.6302,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 20.76,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 3.1 (sd 2.0) sits 0.4 below the 3.5 line. Model drivers: proj 3.094 vs line 3.5 (z=-0.20)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (3.1)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Goff",
+      "player_id": "00-0033106",
+      "game_id": "2026_03_NYJ_DET",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 40.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 40.375,
+      "sd": 13.05,
+      "model_p_side": 0.5417,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 40.4 (sd 13.1) sits 0.1 below the 40.5 line. Model drivers: proj 40.375 vs line 40.5 (z=-0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (40.4)",
+        "price shortens so breakeven exceeds the model's 54%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Goff",
+      "player_id": "00-0033106",
+      "game_id": "2026_03_NYJ_DET",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 291.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 281.15,
+      "sd": 97.23,
+      "model_p_side": 0.5424,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.68,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 281.1 (sd 97.2) sits 10.4 below the 291.5 line. Model drivers: proj 281.15 vs line 291.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (281.1)",
+        "price shortens so breakeven exceeds the model's 54%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Ruckert",
+      "player_id": "00-0037805",
+      "game_id": "2026_03_NYJ_DET",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.016,
+      "sd": 1.619,
+      "model_p_side": 0.6744,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 25.94,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.0 (sd 1.6) sits 0.5 below the 2.5 line. Model drivers: proj 2.016 vs line 2.5 (z=-0.30)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.0)",
+        "price shortens so breakeven exceeds the model's 67%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Williams",
+      "player_id": "00-0037240",
+      "game_id": "2026_03_NYJ_DET",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 78.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 72.664,
+      "sd": 41.957,
+      "model_p_side": 0.6286,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.42,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 72.7 (sd 42.0) sits 5.8 below the 78.5 line. Model drivers: proj 72.664 vs line 78.5 (z=-0.14)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (72.7)",
+        "price shortens so breakeven exceeds the model's 63%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Woods",
+      "player_id": "00-0037755",
+      "game_id": "2026_03_NYJ_DET",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.391,
+      "sd": 1.766,
+      "model_p_side": 0.5862,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 13.29,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.4 (sd 1.8) sits 0.1 below the 2.5 line. Model drivers: proj 2.391 vs line 2.5 (z=-0.06)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.4)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "B.Covey",
+      "player_id": "00-0037132",
+      "game_id": "2026_03_PHI_CHI",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.914,
+      "sd": 1.539,
+      "model_p_side": 0.6987,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 30.31,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.9 (sd 1.5) sits 0.6 below the 2.5 line. Model drivers: proj 1.914 vs line 2.5 (z=-0.38)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.9)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Hurts",
+      "player_id": "00-0036389",
+      "game_id": "2026_03_PHI_CHI",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 32.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 30.778,
+      "sd": 13.05,
+      "model_p_side": 0.6019,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 17.04,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 30.8 (sd 13.1) sits 1.7 below the 32.5 line. Model drivers: proj 30.778 vs line 32.5 (z=-0.13)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (30.8)",
+        "price shortens so breakeven exceeds the model's 60%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Monangai",
+      "player_id": "00-0040236",
+      "game_id": "2026_03_PHI_CHI",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 58.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 52.017,
+      "sd": 34.681,
+      "model_p_side": 0.656,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 19.97,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 52.0 (sd 34.7) sits 6.5 below the 58.5 line. Model drivers: proj 52.017 vs line 58.5 (z=-0.19)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (52.0)",
+        "price shortens so breakeven exceeds the model's 66%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "K.Raymond",
+      "player_id": "00-0032464",
+      "game_id": "2026_03_PHI_CHI",
+      "market": "receptions",
+      "side": "under",
+      "line": 3.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.837,
+      "sd": 1.926,
+      "model_p_side": 0.6805,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 28.36,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.8 (sd 1.9) sits 0.7 below the 3.5 line. Model drivers: proj 2.837 vs line 3.5 (z=-0.34)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.8)",
+        "price shortens so breakeven exceeds the model's 68%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "M.Brown",
+      "player_id": "00-0035662",
+      "game_id": "2026_03_PHI_CHI",
+      "market": "receiving_yards",
+      "side": "under",
+      "line": 24.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 22.404,
+      "sd": 23.865,
+      "model_p_side": 0.6709,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 14.68,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 22.4 (sd 23.9) sits 2.1 below the 24.5 line. Model drivers: proj 22.404 vs line 24.5 (z=-0.09)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (22.4)",
+        "price shortens so breakeven exceeds the model's 67%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Brown",
+      "player_id": "00-0036626",
+      "game_id": "2026_03_SEA_WAS",
+      "market": "receptions",
+      "side": "under",
+      "line": 1.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 1.105,
+      "sd": 1.191,
+      "model_p_side": 0.7035,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 27.69,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 1.1 (sd 1.2) sits 0.4 below the 1.5 line. Model drivers: proj 1.105 vs line 1.5 (z=-0.33)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (1.1)",
+        "price shortens so breakeven exceeds the model's 70%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Lock",
+      "player_id": "00-0035704",
+      "game_id": "2026_03_SEA_WAS",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 18.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 18.375,
+      "sd": 13.05,
+      "model_p_side": 0.5931,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.51,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 18.4 (sd 13.1) sits 0.1 below the 18.5 line. Model drivers: proj 18.375 vs line 18.5 (z=-0.01)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (18.4)",
+        "price shortens so breakeven exceeds the model's 59%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Lock",
+      "player_id": "00-0035704",
+      "game_id": "2026_03_SEA_WAS",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 136.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 130.177,
+      "sd": 97.23,
+      "model_p_side": 0.5259,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 13.47,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 130.2 (sd 97.2) sits 6.3 below the 136.5 line. Model drivers: proj 130.177 vs line 136.5 (z=-0.07)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (130.2)",
+        "price shortens so breakeven exceeds the model's 53%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "M.Mariota",
+      "player_id": "00-0032268",
+      "game_id": "2026_03_SEA_WAS",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 172.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 169.818,
+      "sd": 97.23,
+      "model_p_side": 0.511,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 11.47,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 169.8 (sd 97.2) sits 2.7 below the 172.5 line. Model drivers: proj 169.818 vs line 172.5 (z=-0.03)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (169.8)",
+        "price shortens so breakeven exceeds the model's 51%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "R.Shaheed",
+      "player_id": "00-0037545",
+      "game_id": "2026_03_SEA_WAS",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.057,
+      "sd": 1.635,
+      "model_p_side": 0.6647,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 24.45,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.1 (sd 1.6) sits 0.4 below the 2.5 line. Model drivers: proj 2.057 vs line 2.5 (z=-0.27)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.1)",
+        "price shortens so breakeven exceeds the model's 66%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Mooney",
+      "player_id": "00-0036309",
+      "game_id": "2026_03_TEN_NYG",
+      "market": "receptions",
+      "side": "under",
+      "line": 2.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 2.35,
+      "sd": 1.75,
+      "model_p_side": 0.5957,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 14.57,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 2.4 (sd 1.8) sits 0.1 below the 2.5 line. Model drivers: proj 2.35 vs line 2.5 (z=-0.09)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (2.4)",
+        "price shortens so breakeven exceeds the model's 60%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "D.Singletary",
+      "player_id": "00-0035250",
+      "game_id": "2026_03_TEN_NYG",
+      "market": "rush_attempts",
+      "side": "under",
+      "line": 8.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 8.406,
+      "sd": 5.103,
+      "model_p_side": 0.5752,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 10.98,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 8.4 (sd 5.1) sits 0.1 below the 8.5 line. Model drivers: proj 8.406 vs line 8.5 (z=-0.02)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (8.4)",
+        "price shortens so breakeven exceeds the model's 58%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Winston",
+      "player_id": "00-0031503",
+      "game_id": "2026_03_TEN_NYG",
+      "market": "pass_attempts",
+      "side": "under",
+      "line": 33.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 33.0,
+      "sd": 13.05,
+      "model_p_side": 0.5626,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 12.04,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 33.0 (sd 13.1) sits 0.5 below the 33.5 line. Model drivers: proj 33.0 vs line 33.5 (z=-0.04)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (33.0)",
+        "price shortens so breakeven exceeds the model's 56%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "J.Winston",
+      "player_id": "00-0031503",
+      "game_id": "2026_03_TEN_NYG",
+      "market": "passing_yards",
+      "side": "under",
+      "line": 219.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 198.826,
+      "sd": 97.23,
+      "model_p_side": 0.5842,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 21.34,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 198.8 (sd 97.2) sits 20.7 below the 219.5 line. Model drivers: proj 198.826 vs line 219.5 (z=-0.21)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (198.8)",
+        "price shortens so breakeven exceeds the model's 58%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    },
+    {
+      "player": "T.Tracy",
+      "player_id": "00-0039384",
+      "game_id": "2026_03_TEN_NYG",
+      "market": "rushing_yards",
+      "side": "under",
+      "line": 63.5,
+      "quote": null,
+      "quote_age_hours": null,
+      "run_as_of": "2026-09-23T01:24:40Z",
+      "clock": "wed",
+      "provenance": {
+        "run_id": "local:closure2-replay-20260923T012417Z",
+        "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+        "forecast_version": "ff-football-only-v1",
+        "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+        "selection_source": "ml_gbdt"
+      },
+      "mean": 59.483,
+      "sd": 36.703,
+      "model_p_side": 0.6229,
+      "model_p_status": "unvalidated_at_offered_lines",
+      "breakeven": null,
+      "ev_per_unit_unvalidated": null,
+      "value_composite_display_only": 15.84,
+      "value_composite_note": "includes the price edge; computed after selection; never selects",
+      "rationale": "Football-only projection 59.5 (sd 36.7) sits 4.0 below the 63.5 line. Model drivers: proj 59.483 vs line 63.5 (z=-0.11)",
+      "countercase": "Model probability is NOT validated as calibrated at offered lines: on 2026 weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 vs coin 0.250 and market consensus 0.248.",
+      "invalidation": [
+        "any injury designation or inactive listing after the quote clock (no matched injury row is NOT verified health)",
+        "line moves to the other side of the projection (59.5)",
+        "price shortens so breakeven exceeds the model's 62%",
+        "quote older than 6 h at decision time"
+      ],
+      "status": "research",
+      "status_reasons": [
+        "no offered price: synthetic line, not a wager"
+      ]
+    }
+  ]
 }

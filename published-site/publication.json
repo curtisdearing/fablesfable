@@ -1,17 +1,63 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "saved-model-analysis",
+  "generator": "scripts/build_public_site.py",
+  "label": "replay",
   "season": 2026,
-  "week": 1,
-  "published_at": "2026-09-11T19:34:47.271708+00:00",
-  "source_as_of": "2026-09-11T07:00:38Z",
+  "week": 3,
+  "published_at": "2026-09-23T01:25:05+00:00",
+  "source_as_of": "2026-09-22T22:19:33Z",
+  "quote_clocks": {
+    "earliest": "2026-09-22T22:19:33Z",
+    "latest": "2026-09-22T22:19:33Z",
+    "leans_with_quote": 3
+  },
+  "runs": [
+    {
+      "run_id": "local:closure2-replay-20260923T012417Z",
+      "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "wed",
+      "as_of": "2026-09-23T01:24:40Z",
+      "created_at": "2026-09-23T01:24:40Z"
+    }
+  ],
+  "counts": {
+    "actionable": 0,
+    "watch": 3,
+    "research": 77,
+    "pass": 0
+  },
   "approved_bets": 0,
-  "model_candidates": 70,
-  "games": 16,
+  "model_candidates": 80,
+  "archived_files": [
+    "dashboard.html",
+    "games/2026_01_ARI_LAC.html",
+    "games/2026_01_ATL_PIT.html",
+    "games/2026_01_BAL_IND.html",
+    "games/2026_01_BUF_HOU.html",
+    "games/2026_01_CHI_CAR.html",
+    "games/2026_01_CLE_JAX.html",
+    "games/2026_01_DAL_NYG.html",
+    "games/2026_01_DEN_KC.html",
+    "games/2026_01_GB_MIN.html",
+    "games/2026_01_MIA_LV.html",
+    "games/2026_01_NE_SEA.html",
+    "games/2026_01_NO_DET.html",
+    "games/2026_01_NYJ_TEN.html",
+    "games/2026_01_SF_LA.html",
+    "games/2026_01_TB_CIN.html",
+    "games/2026_01_WAS_PHI.html",
+    "games/index.json",
+    "games/pages.json",
+    "history.html",
+    "reports/2026/week-1.html"
+  ],
   "files": {
-    "README.txt": "344c9a5f1091d5bb4e8e44db5ff9501d7dc119f139af7bd251f6ac8974985b5f",
-    "api/hub.json": "ef9db2419fa2267a0291cc31d2f0a9a803514778ccfa66635eb02e0dc1b77f43",
-    "best-bets.html": "08b8b85743c44bf8eb97ec9f2d1003314e56fe077b2f3a47e849015c93f13305",
+    "README.txt": "513e9f8eeae20a04f6744b7ca48270d6e4afa5238cf45aec071b28723a641069",
+    "api/hub.json": "4bf1fae0e3b69ddb9b5b673e8592daf0861c1609395f56777292f8595a856b70",
+    "best-bets.html": "f7f99530ce0b65d62f22ad1e28b663b62bc0547190e7db85c63038b8491366e9",
     "dashboard.html": "4860d129ecf1894b6105d83f3588220ba3abc970e622abf292335642b77e576e",
     "games/2026_01_ARI_LAC.html": "259e0949e9b14095b766504e9a3360ce4aca00c3694174c154d2f45c16358200",
     "games/2026_01_ATL_PIT.html": "e25859c748140488ead1f13955a3ac0a688a3848b2bb1b704c9c432efe4fed60",
@@ -32,10 +78,10 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "aa4df5c7f6b0d6948938d8c9606cd335d5ecf83464ff336eb082526bff05bd64",
-    "index.html": "0aee3ae17f7e2e1730d32b13f4d302bfa75b8d094ce56e9000dc00a922d57977",
+    "index.html": "df7373e4b6e80cff61c7432647c1423257fe14e7ed9cebc8ddc2e832b1729112",
     "reports/2026/week-1.html": "e9b8f253828668e71ed218ceb3c07bc2b81e8604774486329cb21194c8b042ec",
-    "reports/index.json": "cf9385395f09438f31c663cf71f1fb52ee6250e27943497403fe3aa89d9a63ea",
-    "reports/latest.html": "d92243a9db0afffed3a03c29929afb628c9412362fd4794588867d0121d16039"
-  },
-  "notice": "Week 1 snapshot marked stale on 2026-09-23; no current-week board is published here yet."
+    "reports/2026/week-3.html": "6e07d3b440d89e852e51fff59f5c4ed88cea8750609a48f5ccd5c68b725ff9ce",
+    "reports/index.json": "ac2b850639220d9f01ed530900c40ff3a02811bc3f42b0282de93c5f3f12565a",
+    "reports/latest.html": "6e07d3b440d89e852e51fff59f5c4ed88cea8750609a48f5ccd5c68b725ff9ce"
+  }
 }
