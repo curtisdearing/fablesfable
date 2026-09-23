@@ -29,7 +29,9 @@ Recorded fixtures for offline tests: tests/fixtures/espn_*.json.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import re
+import urllib.error
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import pandas as pd
@@ -303,6 +305,27 @@ def fetch_team_injuries() -> Dict:
             "n_teams": len(raw.get("injuries", []))}
 
 
+def _roster_not_created(exc: "urllib.error.HTTPError", event_id: str, team_id) -> Optional[str]:
+    """ESPN's pregame answer for a roster it has not created yet, else None.
+
+    Before kickoff the core API 404s the competitor roster with the body
+    ``{"error": {"message": "No roster found for team <id> and competition
+    <event>", "code": 404}}`` (and the competitor object carries no ``roster``
+    link).  That is the source saying "not published", the same state as a
+    scaffolded roster -- it says nothing about who is active.  Only that exact
+    message for THIS team and THIS event qualifies; any other 404 or error is a
+    fetch failure and must keep failing closed."""
+    if exc.code != 404:
+        return None
+    try:
+        body = json.loads(exc.read().decode("utf-8"))
+        msg = str(((body or {}).get("error") or {}).get("message") or "")
+    except Exception:  # noqa: BLE001 -- unparseable body is not the known answer
+        return None
+    want = f"No roster found for team {team_id} and competition {event_id}"
+    return msg if msg.strip() == want else None
+
+
 def fetch_event_rosters(event_id: str) -> Dict:
     """T-90 actives for one event.
 
@@ -328,8 +351,17 @@ def fetch_event_rosters(event_id: str) -> Dict:
         team_id = (c.get("team") or {}).get("id") or c.get("id")
         if not team_id:
             raise EspnSchemaError(f"event {event_id}: competitor without a team id")
-        raw = get_json(f"{CORE}/events/{event_id}/competitions/{event_id}/competitors/{team_id}/roster")
         abbr = (c.get("team") or {}).get("abbreviation", "")
+        url = f"{CORE}/events/{event_id}/competitions/{event_id}/competitors/{team_id}/roster"
+        try:
+            raw = get_json(url)
+        except urllib.error.HTTPError as exc:
+            absent = _roster_not_created(exc, event_id, team_id)
+            if absent is None:
+                raise
+            unpopulated.append(f"{abbr or team_id}: ESPN answered 404 '{absent}' "
+                               f"(roster resource not created yet)")
+            continue
         ok, why = event_roster_populated(raw)
         if not ok:
             unpopulated.append(f"{abbr or team_id}: {why}")
