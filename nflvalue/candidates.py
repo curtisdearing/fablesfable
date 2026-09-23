@@ -317,7 +317,9 @@ def enumerate_candidates(
                 prices = {"over": real.get("over_price"), "under": real.get("under_price"),
                           "book": real.get("book"),
                           "consensus_p_over": real.get("consensus_p_over"),
-                          "n_books": real.get("n_books")}
+                          "n_books": real.get("n_books"),
+                          "over_book": real.get("over_book"), "under_book": real.get("under_book"),
+                          "over_ts": real.get("over_ts"), "under_ts": real.get("under_ts")}
             else:
                 sl = synth[market].get(idx) if roster_mode == "as_played" else None
                 if sl is None or (isinstance(sl, float) and math.isnan(sl)):

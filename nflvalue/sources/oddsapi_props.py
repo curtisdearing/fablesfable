@@ -272,7 +272,8 @@ def match_player_ids(rows: List[Dict], candidates: pd.DataFrame,
 
 
 PROP_LINE_COLS = ["game_id", "market", "player_id", "point", "over_price",
-                  "under_price", "book", "consensus_p_over", "n_books"]
+                  "under_price", "book", "consensus_p_over", "n_books",
+                  "over_book", "under_book", "over_ts", "under_ts"]
 
 #: How old a stored quote may be and still price a board. Long enough to span
 #: the gap between two scheduled runs (a game pulled Tuesday still prices
@@ -340,6 +341,11 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
         # books quoting BOTH sides, keyed by point
         two_sided: Dict[float, Dict[str, tuple]] = {}
         yes_only: Dict[str, float] = {}
+        # (book, side, point) -> capture clock of THAT quote row, so a lean can
+        # carry one exact executable quote identity (book, side, point, price, ts)
+        clock: Dict[tuple, Optional[str]] = {}
+        for r in grp.itertuples(index=False):
+            clock[(r.book, r.side, float(r.point))] = getattr(r, "ts", None)
         for book, b in grp.groupby("book"):
             overs = b[b["side"] == "over"]
             unders = b[b["side"] == "under"]
@@ -369,6 +375,9 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                 "book": f"{cons['best_a_book']}/{cons['best_b_book']}",
                 "consensus_p_over": round(cons["p_a"], 4),
                 "n_books": len(two_sided[point]),
+                "over_book": cons["best_a_book"], "under_book": cons["best_b_book"],
+                "over_ts": clock.get((cons["best_a_book"], "over", point)),
+                "under_ts": clock.get((cons["best_b_book"], "under", point)),
             })
         elif yes_only:
             best_book = max(yes_only, key=lambda b: (yes_only[b], b))
@@ -379,6 +388,8 @@ def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
                 "consensus_p_over": round(float(sum(
                     oddsmath.implied_prob(v) for v in yes_only.values()) / len(yes_only)), 4),
                 "n_books": len(yes_only),
+                "over_book": best_book, "under_book": None,
+                "over_ts": clock.get((best_book, "over", 0.5)), "under_ts": None,
             })
     return pd.DataFrame(out, columns=PROP_LINE_COLS)
 
