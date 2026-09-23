@@ -89,8 +89,11 @@ def _publish(tmp_path, conn, cards, published, recorded, label="fresh", name="si
                                                     "published_at": Z(published),
                                                     "files": {"api/hub.json": hashlib.sha256(raw).hexdigest()}}))
     if conn is not None:
+        receipt = {"kind": "pages_readback", "run_id": f"9{name}-1", "page_url": "https://example.test/",
+                   "verified_at": Z(published), "attempts": 1, "hub_sha256": hashlib.sha256(raw).hexdigest(),
+                   "manifest_sha256": hashlib.sha256((d / "publication.json").read_bytes()).hexdigest()}
         il.record_publication(conn, str(d / "api" / "hub.json"), str(d / "publication.json"),
-                              recorded_at=Z(recorded))
+                              attestation=receipt, recorded_at=Z(recorded))
     return d
 
 

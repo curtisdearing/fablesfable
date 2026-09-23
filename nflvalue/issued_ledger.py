@@ -8,10 +8,10 @@ record is a separate append-only EVENT:
 
 * ``generated`` -- a run rendered the card (``pick_cards.write_week_cards``).
   Proof the system produced it, NOT proof anyone saw it.
-* ``published`` -- the card was on a public page. Recorded only from a saved
-  page payload (``api/hub.json``) whose sha256 matches the page's own
-  ``publication.json`` manifest; the manifest's ``published_at`` is that
-  manifest's self-reported clock and is labelled as such.
+* ``published`` -- the LIVE site served the card. Recorded only with a pages
+  readback receipt (``scripts/publication_receipt.py``, run by website.yml after
+  deployment) whose sha256s match the saved page; the event clock is the
+  readback clock. A generated or uploaded artifact is never ``published``.
 * ``delivered`` -- the assistant gave the pick to the user. There is NO automatic
   chat capture: it is recorded explicitly (``record_delivered`` /
   ``scripts/record_issued_pick.py delivered``) with the exact text and the
@@ -208,20 +208,38 @@ def publication_records(hub_path: str, manifest_path: str) -> List[Dict]:
     return out
 
 
-def record_publication(conn, hub_path: str, manifest_path: str, recorded_at: Optional[str] = None) -> int:
-    """Stage ``published`` for every card on a verified saved page; returns new events.
+def record_publication(conn, hub_path: str, manifest_path: str, attestation: Dict,
+                       recorded_at: Optional[str] = None) -> int:
+    """Stage ``published`` for every card on a page the LIVE site was verified to serve.
 
-    ``recorded_at`` is the ledger clock (now): recording an archived page after kickoff is
-    retrospective evidence, which graders keep out of the prospective grade."""
+    ``attestation`` is a pages readback receipt (``scripts/publication_receipt.py``): its
+    hub/manifest sha256 must equal this saved page's, and its ``verified_at`` (when the live
+    site served these bytes) is the event clock. Without it nothing is recorded -- building
+    or uploading a page is not publishing it. ``recorded_at`` is the ledger clock (now): a
+    receipt recorded after kickoff is retrospective evidence, never a prospective pick."""
     pub = verify_publication(hub_path, manifest_path)
     hub, ev = pub["hub"], pub["evidence"]
+    att = attestation or {}
+    if att.get("kind") != "pages_readback" or not att.get("run_id") or not att.get("page_url"):
+        raise ValueError("no pages readback attestation: publication not recorded")
+    if (att.get("hub_sha256"), att.get("manifest_sha256")) != (ev["hub_sha256"], ev["manifest_sha256"]):
+        raise ValueError("readback attestation is for different bytes than this page")
+    verified = att.get("verified_at")
+    try:
+        ok = dt.datetime.fromisoformat(str(verified).replace("Z", "+00:00")).tzinfo is not None
+    except ValueError:
+        ok = False
+    if not ok:
+        raise ValueError("readback attestation has no zoned verified_at clock")
+    ev = {**ev, "clock_basis": "live pages readback verified_at", "deploy_run_id": att["run_id"],
+          "page_url": att["page_url"], "readback_attempts": att.get("attempts")}
     recorded_at = recorded_at or _now()
     n = 0
     for card in hub["cards"]:
         rec = build_record(card, hub["season"], hub["week"], tier="primary",
                            surface=f"public_site:{ev['label']}")
         _append(conn, rec, hub["season"], hub["week"], card, "primary", recorded_at)
-        n += _event(conn, rec["record_id"], "published", rec["surface"], ev["published_at"], ev, recorded_at)
+        n += _event(conn, rec["record_id"], "published", rec["surface"], verified, ev, recorded_at)
     conn.commit()
     return n
 

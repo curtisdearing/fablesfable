@@ -4,9 +4,9 @@
     python scripts/record_issued_pick.py --db data/nfl_props.db delivered --season 2026 --week 3 \
         --card card.json --text-file message.txt --message-id <id> --channel chat \
         --delivered-at 2026-09-24T21:05:00Z [--watch]
-    # a page was published: its saved hub.json verified against its publication.json
+    # a page was published: only with the live-readback receipt website.yml wrote after deploying it
     python scripts/record_issued_pick.py --db data/nfl_props.db published \
-        --hub site/api/hub.json --publication site/publication.json
+        --hub r/hub.json --publication r/publication.json --receipt r/publication_receipt.json
 
 ``card.json`` holds the pick as given: game_id, player_id, player, market, side, line,
 run_as_of (decision clock), quote {book, price_decimal, captured_at}, model_p_side,
@@ -46,6 +46,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("published")
     p.add_argument("--hub", required=True)
     p.add_argument("--publication", required=True)
+    p.add_argument("--receipt", required=True, help="pages readback receipt (scripts/publication_receipt.py)")
     a = ap.parse_args(argv)
     conn = dbmod.connect(os.path.abspath(a.db))
     try:
@@ -60,7 +61,7 @@ def main(argv=None) -> int:
             print(f"[record] delivered {rec['record_id']} ({rec['pick_class']})")
         else:
             try:
-                n = il.record_publication(conn, a.hub, a.publication)
+                n = il.record_publication(conn, a.hub, a.publication, json.load(open(a.receipt)))
             except ValueError as exc:
                 print(f"[record] publication not verified: {exc}")
                 return 5
