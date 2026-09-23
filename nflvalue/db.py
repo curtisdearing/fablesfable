@@ -31,6 +31,20 @@ DEFAULT_DB_PATH = os.path.join(ROOT, "data", "nfl_props.db")
 # Schema
 # --------------------------------------------------------------------------- #
 SCHEMA = {
+    # -- factor evidence: what each run executed + sourced game context (v5) ---- #
+    "run_receipts": """
+        CREATE TABLE IF NOT EXISTS run_receipts (
+            run_id TEXT PRIMARY KEY, season INTEGER, week INTEGER, clock TEXT,
+            as_of TEXT, receipt_json TEXT, created_at TEXT
+        );
+    """,
+    "factor_context": """
+        CREATE TABLE IF NOT EXISTS factor_context (
+            season INTEGER, week INTEGER, game_id TEXT, factor_id TEXT, run_id TEXT,
+            record_json TEXT, created_at TEXT,
+            PRIMARY KEY (season, week, game_id, factor_id)
+        );
+    """,
     "player_week": """
         CREATE TABLE IF NOT EXISTS player_week (
             season INTEGER, week INTEGER,
@@ -211,7 +225,7 @@ SCHEMA = {
 #   * Every statement must be idempotent or guarded, because a migration may
 #     be re-attempted after a partial failure.
 #   * Bump SCHEMA_VERSION to match the highest key.
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 #: {version: (description, [sql statements])}. Version 1 is the baseline that
 #: SCHEMA itself creates, so it carries no statements: it exists to stamp
@@ -242,6 +256,10 @@ MIGRATIONS: "dict[int, tuple]" = {
         lambda conn: add_column_if_missing(conn, "leans", "forecast_version", "TEXT"),
         lambda conn: add_column_if_missing(conn, "leans", "ranker_sha256", "TEXT"),
         lambda conn: add_column_if_missing(conn, "leans", "selection_source", "TEXT"),
+    ]),
+    5: ("leans: per-pick executed stage stamps + shadow output (factor evidence, 2026-09-23)", [
+        lambda conn: add_column_if_missing(conn, "leans", "stage_json", "TEXT"),
+        lambda conn: add_column_if_missing(conn, "leans", "shadow_json", "TEXT"),
     ]),
 }
 

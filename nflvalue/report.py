@@ -223,6 +223,9 @@ def persist_leans(conn, season: int, week: int, clock: str, games: List[Dict],
                 "quote_book": prices.get(f"{l.get('side')}_book"),
                 "quote_ts": prices.get(f"{l.get('side')}_ts"),
                 "selection_source": l.get("rank_source") or "football_selection_score",
+                # NULL when the run recorded nothing: cards read that as missing, never neutral
+                "stage_json": json.dumps(l["stage_stamps"], default=str) if l.get("stage_stamps") else None,
+                "shadow_json": json.dumps(l["shadow"], default=str) if l.get("shadow") else None,
                 **prov,
             })
     if not rows:

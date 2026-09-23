@@ -39,6 +39,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from nflvalue import candidates as candmod
+from nflvalue import factor_integration as fimod  # noqa: E402
 from nflvalue import clv as clvmod
 from nflvalue import config as cfgmod
 from nflvalue import db as dbmod
@@ -241,6 +242,10 @@ def _maybe_stamp_ml(cfg: Dict, cands: pd.DataFrame,
     cands["ml_score"] = [round(100 * (x if yo else ps), 2)
                          for x, ps, yo in zip(p, p_side, yes_only)]
     cands["rank_source"] = f"ml_{model.model_name}"
+    # the artifact's own feature list is what inference read (not config, not NUMERIC_FEATURES)
+    used = list(model.features or mlrmod.feature_columns())
+    cands.attrs["ml_features_populated"] = [f for f in used if f in feats.columns
+                                            and feats[f].notna().any()]
     return cands
 
 
@@ -503,6 +508,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     roster_diag: Dict = {}
     statuses: Dict[str, Dict] = {}
     sleeper_df, feeds_ts, news_by_player = None, {}, {}
+    # which primary stages were evaluated this run (per-row states are stamped later)
+    stage_ran = {s: False for s in fimod.STAGES}
+    stage_why = {s: "not a live run" for s in fimod.STAGES}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
                                  clock="wed", inject=inject_feeds)
@@ -534,6 +542,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
             cands = cands.iloc[0:0].copy()
         else:
             cands, roster_diag = pdmod.apply_roster_eligibility(cands, live["active_roster"])
+        avail_evaluated = bool(statuses) and roster_gate["publish"]
+        for s_ in ("realloc_volume", "realloc_efficiency", "absence_qb"):
+            stage_ran[s_] = avail_evaluated
+            stage_why[s_] = None if avail_evaluated else "availability statuses not evaluated this run"
         # OUT players never reach the ranker (availability gate) -- and their
         # vacated usage is PRICED into teammates' projections (bounded; H8)
         out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
@@ -646,10 +658,22 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # measured second-order: backup QB -> pass-family efficiency x0.92;
         # skill-leader absence -> QB passing markets (absence matrix)
         cands = candmod.apply_backup_qb_adjustment(cands)
+        stage_ran["backup_qb"], stage_why["backup_qb"] = True, None
         cands = candmod.apply_absence_qb_adjustment(cands, inputs.pw, season, week, outs_now)
+    elif mode == "live":
+        for s_ in stage_ran:
+            stage_ran[s_], stage_why[s_] = False, "no candidates reached the adjustment stages"
 
     # 4c. flag-gated ML ranking layer (see reports/ml_improvement_test.md)
     cands = _maybe_stamp_ml(cfg, cands, inputs)
+    ml_feats = cands.attrs.get("ml_features_populated") or []
+    ordering = (str(cands["rank_source"].iloc[0]) if "rank_source" in cands.columns
+                and len(cands) else None)
+    stamps = fimod.build_stamps(cands, stage_ran, stage_why, ordering_features=ml_feats)
+    # SHADOW role/opportunity forecast: stored beside the pick, never read by mean/SD/side/order
+    shadow = (fimod.shadow_opportunity(inputs.pw, cands, season=season, week=week,
+                                       as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate))
+              if mode == "live" else {"status": "not a live run", "players": {}})
 
     # 4. rank + report (context panel via synthesis on the ranked leans)
     result = rptmod.generate(
@@ -690,7 +714,18 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     from nflvalue.document import write_drop
     result["drop_path"] = write_drop(result, result.get("contexts"))
     cfgmod.save_json(rptmod.WEEKLY_PROPS_JSON, {k: v for k, v in result.items() if k != "markdown"})
+    fimod.attach_to_leans(result["games"], stamps, shadow)
     rptmod.persist_leans(conn, season, week, clock, result["games"], result["as_of"])
+    from nflvalue.provenance import run_provenance
+    ctx = fimod.load_context(season, week, list(slate["game_id"]), result["as_of"])
+    receipt = fimod.run_receipt(run_provenance(), as_of=result["as_of"], ran=stage_ran,
+                                reasons=stage_why, ordering_component=ordering,
+                                ordering_features=ml_feats, shadow=shadow, context=ctx)
+    fimod.persist_run(conn, season, week, clock, receipt, ctx["records"])
+    result["factor_receipt"] = receipt
+    print(f"[pipeline] factor receipt: stages {receipt['stages_executed']}; shadow "
+          f"{receipt['shadow']['status']} ({receipt['shadow']['players']} players); context "
+          f"{receipt['context']['path'] or 'NOT COLLECTED'} for {receipt['context']['games_with_context']}")
 
     # 6. dashboard + (flag-gated) discord
     dash = update_dashboard(result, conn)
