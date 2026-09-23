@@ -389,6 +389,62 @@ ABSENCE_QB_MARKETS = ("passing_yards", "pass_attempts")
 _QB_MARKETS = ABSENCE_QB_MARKETS
 
 
+#: QB markets whose EXECUTABILITY depends on the team's confirmed starter.  The gate below never
+#: changes a number: it only decides whether a non-starter QB's row may become executable.
+STARTER_GATED_MARKETS = ABSENCE_QB_MARKETS
+
+
+def confirmed_starter(q: Optional[Dict]) -> Optional[str]:
+    """The team's unique confirmed starter id from one ``qb_context_records`` entry, else None."""
+    from . import qb_readiness as qr
+    q = q or {}
+    ok = q.get("state") in (qr.SOURCED_SAME, qr.SOURCED_CHANGED, qr.NO_PRIOR)
+    return q.get("qb_id") if ok and q.get("qb_id") else None
+
+
+def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict]]) -> Dict:
+    """(player_id, market) -> starter eligibility for every QB-market row of this run.
+
+    ``qb_context`` is the run's own ``factor_integration.qb_context_records`` result, so the
+    starter is a team-sourced claim that was explicitly confirmed, published and captured
+    before this run's decision clock and linked to a unique roster QB id (``qb_id``); nothing
+    here reads names or free text.  States:
+
+    * ``confirmed_starter``      -- this row's QB is the confirmed starter (no change).
+    * ``not_confirmed_starter``  -- another QB is the confirmed starter: ``blocks_execution``.
+    * ``starter_not_confirmed``  -- no unique usable confirmed starter (unconfirmed, conflict,
+      claim after the clock, unlinked id, or no context): disclosed, NOT asserted as backup,
+      and not blocked here.
+    """
+    out: Dict = {}
+    for r in rows:
+        market = r.get("market")
+        if market not in STARTER_GATED_MARKETS:
+            continue
+        pid, team = r.get("player_id"), r.get("team")
+        q = (qb_context or {}).get(team) or {}
+        state_t, starter = q.get("state") or "not_resolved", confirmed_starter(q)
+        info = {"team": team, "team_state": state_t, "starter_qb_id": starter,
+                "starter_name": q.get("qb_name"), "source": q.get("source"),
+                "source_tier": q.get("source_tier"), "published_at": q.get("published_at"),
+                "fetched_at": q.get("fetched_at")}
+        if starter:
+            if pid == starter:
+                out[(pid, market)] = {**info, "state": "confirmed_starter",
+                                      "blocks_execution": False, "reason": None}
+            else:
+                out[(pid, market)] = {**info, "state": "not_confirmed_starter", "blocks_execution": True,
+                                      "reason": (f"{team} confirmed starter is {q.get('qb_name') or starter} "
+                                                 f"({starter}; {q.get('source_tier') or 'team'} source "
+                                                 f"published {q.get('published_at')}); not executable "
+                                                 f"for another QB")}
+        else:
+            out[(pid, market)] = {**info, "state": "starter_not_confirmed", "blocks_execution": False,
+                                  "reason": (f"{team} starter not confirmed before this run ({state_t}); "
+                                             f"this QB is not asserted to be the starter or a backup")}
+    return out
+
+
 def team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:
     """{(team, role): player_id} -- trailing-usage leader (>=30 touches)
     strictly before (season, week); the measurement's leader definition."""

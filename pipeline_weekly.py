@@ -279,6 +279,56 @@ def _committed_context(season: int, week: int) -> Optional[Dict]:
         return None
 
 
+def _apply_starter_gate(stamps: Dict[tuple, Dict], gate: Dict[tuple, Dict]) -> None:
+    """Persist each QB-market row's starter eligibility on its stamp.  A row whose team has a
+    different confirmed starter gets its persisted availability eligibility set to degraded
+    (state ``not_confirmed_starter``) -- the hold the card builder already honours -- so it is
+    never executable.  The resolver's own status fields are kept; no number changes."""
+    for key, g in gate.items():
+        st = stamps.get(key)
+        if st is None:
+            continue
+        st["qb_eligibility"] = g
+        if g["blocks_execution"]:
+            a = dict(st.get("availability") or {})
+            a["eligibility_before_starter_gate"] = a.get("eligibility")
+            a.update({"eligibility": "degraded", "availability_state": "not_confirmed_starter",
+                      "evidence_kind": "team_sourced_starter_claim", "starter_gate": g["reason"]})
+            st["availability"] = a
+
+
+def _starter_diagnostics(qb_ctx: Optional[Dict], gate: Dict[tuple, Dict], cands,
+                         games: List[Dict]) -> Optional[Dict]:
+    """Per team: the starter decision this run used, which QB rows it blocked, and -- when the
+    confirmed starter has no published QB-market card -- the exact reason (never a forecast)."""
+    if qb_ctx is None:
+        return None
+    shown = {(l.get("player_id"), l.get("market")) for g in games or [] for l in g.get("leans", [])}
+    rows = cands.to_dict("records") if cands is not None and len(cands) else []
+    out = {}
+    for team, q in sorted(qb_ctx.items()):
+        starter = candmod.confirmed_starter(q)
+        confirmed = starter is not None
+        mine = [r for r in rows if r.get("player_id") == starter
+                and r.get("market") in candmod.STARTER_GATED_MARKETS] if starter else []
+        carded = sorted(m for (p, m) in shown if p == starter and m in candmod.STARTER_GATED_MARKETS)
+        if not confirmed:
+            why = None
+        elif not mine:
+            why = "no candidate row for the confirmed starter in this run (no forecast is invented)"
+        elif not carded:
+            why = ("candidate rows exist but were not shortlisted (ranked below the per-game "
+                   "top_n / max_per_player cut)")
+        else:
+            why = None
+        out[team] = {"state": q.get("state"), "starter_qb_id": starter if confirmed else None,
+                     "confirmed": confirmed, "starter_candidate_markets": sorted(r["market"] for r in mine),
+                     "starter_cards": carded, "starter_no_card_reason": why,
+                     "blocked_rows": sorted([p, m] for (p, m), g in gate.items()
+                                            if g["team"] == team and g["blocks_execution"])}
+    return out
+
+
 def _availability_receipt(live: Dict, qb_ctx: Optional[Dict], ctx_meta: Dict,
                           snap_receipt: Dict) -> Dict:
     """Run-receipt fields: what this run established about availability, starting QBs,
@@ -888,6 +938,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     stamps = fimod.build_stamps(cands, stage_ran, stage_why, ordering_features=ml_feats,
                                 availability=statuses if mode == "live" else None,
                                 qb_context=qb_ctx)
+    starter_gate = (candmod.confirmed_starter_gate(cands.to_dict("records"), qb_ctx)
+                    if qb_ctx is not None and len(cands) else {})
+    _apply_starter_gate(stamps, starter_gate)
     # SHADOW role/opportunity forecast: stored beside the pick, never read by mean/SD/side/order
     shadow = (fimod.shadow_opportunity(inputs.pw, cands, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate))
@@ -943,6 +996,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
                # the run's own publication decision: cards from a held run are never executable
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
+               "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
@@ -1169,6 +1223,9 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         season, week, cands2, inputs.schedules, live.get("active_roster"), as_of, snaps)
     stamps = fimod.build_stamps(cands2, stage_ran, stage_why, ordering_features=ml_feats,
                                 availability=statuses, qb_context=qb_ctx)
+    starter_gate = (candmod.confirmed_starter_gate(cands2.to_dict("records"), qb_ctx)
+                    if len(cands2) else {})
+    _apply_starter_gate(stamps, starter_gate)
     # SHADOW at the refresh's own clock (never read by mean/SD/side/order)
     shadow = (fimod.shadow_opportunity(inputs.pw, cands2, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate_t))
@@ -1208,6 +1265,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "inactives_state": inactives_state,
                "inactives_reason": live.get("inactives_reason") or None,
                "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
+               "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands2, games),
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "
