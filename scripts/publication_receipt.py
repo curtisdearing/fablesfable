@@ -19,6 +19,15 @@
     event's own clock is the receipt's live-readback clock; the ledger ``recorded_at`` is the real
     clock of this write (never backdated), so a receipt recorded after kickoff grades as
     retrospective. Exit 5 on any mismatch; re-recording the same receipt is a no-op.
+
+``trusted-runs`` / ``ingest`` (live-weekly.yml job ``ingest-publication``, and the model run's
+backfill step): ``trusted-runs`` filters a GitHub API listing of website.yml runs down to
+successful, completed runs of THIS repository's ``.github/workflows/website.yml`` on ``main``
+(no forks, other branches or other workflows); only those run ids are downloaded. ``ingest``
+records each downloaded receipt, reports runs without a receipt (legacy runs before receipts
+existed, or runs that kept the live site), and exits 5 if any present receipt fails verification,
+after recording the ones that pass. Every present receipt is re-verified on every pass, so a
+failed or cancelled pass loses nothing while the artifact is retained (90 days).
 """
 
 from __future__ import annotations
@@ -99,6 +108,49 @@ def record(db: str, receipt_dir: Path, expect_run: str, recorded_at=None) -> int
         conn.close()
 
 
+WEBSITE_WORKFLOW = ".github/workflows/website.yml"
+TRUSTED_EVENTS = ("workflow_run", "push", "workflow_dispatch")
+
+
+def untrusted_reason(run: dict, repo: str):
+    """Why a website.yml run listed by the GitHub API is not a trusted receipt source (None if it is)."""
+    checks = (
+        ((run.get("repository") or {}).get("full_name") == repo, "run is not in this repository"),
+        ((run.get("head_repository") or {}).get("full_name") == repo, "head repository is a fork/other repo"),
+        (run.get("head_branch") == "main", "not a main-branch run"),
+        (str(run.get("path", "")).split("@")[0] == WEBSITE_WORKFLOW, "not website.yml"),
+        (run.get("event") in TRUSTED_EVENTS, f"event {run.get('event')!r} not trusted"),
+        (run.get("status") == "completed" and run.get("conclusion") == "success", "not a successful completed run"),
+        (isinstance(run.get("id"), int), "run id missing"),
+    )
+    return next((why for ok, why in checks if not ok), None)
+
+
+def trusted_runs(listing: dict, repo: str):
+    ok, rejected = [], []
+    for run in listing.get("workflow_runs") or []:
+        why = untrusted_reason(run, repo)
+        (rejected.append((run.get("id"), why)) if why else ok.append(run["id"]))
+    return sorted(set(ok)), rejected
+
+
+def ingest(db: str, root: Path, run_ids, recorded_at=None) -> dict:
+    out = {"written": 0, "recorded_runs": [], "no_receipt": [], "failed": []}
+    for rid in run_ids:
+        d = root / str(rid)
+        if not (d / "publication_receipt.json").is_file():
+            out["no_receipt"].append(rid)
+            continue
+        try:
+            n = record(db, d, str(rid), recorded_at=recorded_at)
+        except (ValueError, OSError, KeyError) as exc:
+            out["failed"].append({"run_id": rid, "reason": str(exc)})
+            continue
+        out["written"] += n
+        out["recorded_runs"].append(rid)
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -113,7 +165,34 @@ def main(argv=None) -> int:
     c.add_argument("--db", required=True)
     c.add_argument("--dir", required=True)
     c.add_argument("--expect-run", required=True)
+    t = sub.add_parser("trusted-runs")
+    t.add_argument("--runs-json", required=True, help="GET repos/{repo}/actions/workflows/website.yml/runs")
+    t.add_argument("--repo", required=True)
+    t.add_argument("--require", type=int, help="exit 7 unless this run id is trusted")
+    g = sub.add_parser("ingest")
+    g.add_argument("--db", required=True)
+    g.add_argument("--receipts-root", required=True)
+    g.add_argument("--runs", nargs="*", type=int, default=[])
+    g.add_argument("--summary", help="write the ingest summary JSON here")
     a = ap.parse_args(argv)
+    if a.cmd == "trusted-runs":
+        ok, rejected = trusted_runs(json.loads(Path(a.runs_json).read_text()), a.repo)
+        for rid, why in rejected:
+            print(f"[trusted-runs] skip run {rid}: {why}", file=sys.stderr)
+        if a.require is not None and a.require not in ok:
+            print(f"[trusted-runs] run {a.require} is not a trusted website run", file=sys.stderr)
+            return 7
+        print("\n".join(str(r) for r in ok))
+        return 0
+    if a.cmd == "ingest":
+        if not os.path.isfile(a.db):
+            print(f"[ingest] no production state database at {a.db}: nothing recorded")
+            return 1
+        res = ingest(a.db, Path(a.receipts_root), a.runs)
+        if a.summary:
+            Path(a.summary).write_text(json.dumps(res, sort_keys=True) + "\n")
+        print(f"[ingest] {json.dumps(res, sort_keys=True)}")
+        return 5 if res["failed"] else 0
     if a.cmd == "readback":
         receipt, why = readback(Path(a.site), a.base_url, a.run_id, attempts=a.attempts, sleep_s=a.sleep)
         if receipt is None:

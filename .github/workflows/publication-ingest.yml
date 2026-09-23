@@ -1,0 +1,138 @@
+name: Record website publications
+
+# Records the live-readback receipt of a successful website publication (website.yml) into the
+# issued-pick ledger in production state, as soon as the publication finishes.
+#
+# * Its own workflow: website.yml reacts only to "Live weekly model loop", so a run of this
+#   workflow can never trigger a publication (no workflow_run loop), and the model gate never
+#   sees this event (no model, odds, feed or site work happens here).
+# * Serialized with the model runs by the SAME concurrency group (group names are repository-
+#   wide). GitHub keeps one pending run per group and cancels an older pending one when a newer
+#   one queues, so the precheck runs OUTSIDE the lock and skips when a production run is already
+#   waiting: that run records the receipt itself (live-weekly's backfill step). An ingest that is
+#   cancelled while pending is recovered the same way; receipts are kept 90 days.
+# * The recording clock is the real clock of this job. A publication recorded after kickoff is
+#   retrospective; this job shortens the delay, it cannot guarantee recording before kickoff.
+on:
+  workflow_run:
+    workflows: ["Publish football website"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  precheck:
+    # Only a successful run of THIS repository's website.yml on main, never a fork or branch.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.path == '.github/workflows/website.yml'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      proceed: ${{ steps.q.outputs.proceed }}
+    steps:
+      - id: q
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          waiting=0
+          for s in queued waiting pending requested; do
+            n=$(gh api "repos/$REPO/actions/workflows/live-weekly.yml/runs?status=$s&per_page=50" --jq '.workflow_runs | length')
+            waiting=$((waiting + n))
+          done
+          if (( waiting > 0 )); then
+            echo "A production run is waiting for the state lock; it records this receipt when it starts."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  ingest:
+    needs: precheck
+    if: needs.precheck.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: nfl-live-production
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      STATE_TAG: model-state
+      REPO: ${{ github.repository }}
+    steps:
+      # Default-branch code of this repository (a workflow_run job never checks out the
+      # triggering run's head); the downloaded receipt is data, never executed.
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Restore checksummed production state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/state-download"
+          if ! gh release view "$STATE_TAG" --json body --jq .body > "$RUNNER_TEMP/state-latest.json" 2>/dev/null; then
+            echo "No production state to record into; the next production run records this receipt." >&2
+            exit 1
+          fi
+          asset="$(jq -er .asset "$RUNNER_TEMP/state-latest.json")"
+          sha="$(jq -er .sha256 "$RUNNER_TEMP/state-latest.json")"
+          if [[ ! "$asset" =~ ^state-[0-9]+-[0-9]+\.tar\.gz$ ]] || [[ ! "$sha" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "Invalid model-state release pointer" >&2
+            exit 1
+          fi
+          gh release download "$STATE_TAG" --pattern "$asset" --dir "$RUNNER_TEMP/state-download"
+          python scripts/state_store.py restore --archive "$RUNNER_TEMP/state-download/$asset" --sha "$sha"
+
+      - name: Record verified website publications
+        id: ingest
+        shell: bash
+        env:
+          REQUIRE_RUN: ${{ github.event.workflow_run.id }}
+          WORK: ${{ runner.temp }}/publication-ingest
+        run: |
+          set +e
+          bash scripts/ingest_publication_receipts.sh
+          rc=$?
+          set -e
+          written=0
+          [[ -f "$WORK/summary.json" ]] && written="$(jq -r .written "$WORK/summary.json")"
+          echo "written=$written" >> "$GITHUB_OUTPUT"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # Saved only when something new was recorded; archive first, pointer last (as live-weekly).
+      - name: Save production state with the recorded publications
+        if: steps.ingest.outputs.written != '0' && steps.ingest.outputs.written != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+          archive="$RUNNER_TEMP/$asset"
+          python scripts/state_store.py pack --archive "$archive"
+          gh release upload "$STATE_TAG" "$archive"
+          python scripts/state_store.py pointer --archive "$archive" --asset "$asset" --output "$RUNNER_TEMP/state-latest.json"
+          gh release edit "$STATE_TAG" --notes-file "$RUNNER_TEMP/state-latest.json"
+          gh release view "$STATE_TAG" --json assets --jq '.assets | sort_by(.createdAt) | reverse | map(select(.name | test("^state-[0-9]+-[0-9]+\\.tar\\.gz$"))) | .[8:] | .[].name' |
+          while read -r old_asset; do
+            [[ -z "$old_asset" ]] || gh release delete-asset "$STATE_TAG" "$old_asset" --yes
+          done
+
+      - name: Fail visibly when a receipt was refused or the ingest could not run
+        if: steps.ingest.outputs.rc != '0'
+        run: |
+          echo "::error::publication receipt ingest exited ${{ steps.ingest.outputs.rc }}; see the step log. Valid receipts were saved; the refused/unrecorded ones stay in their artifacts and are retried by every production run."
+          exit 1

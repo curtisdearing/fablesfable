@@ -9,6 +9,7 @@ on:
       - '.github/workflows/website.yml'
       - '.github/workflows/live-weekly.yml'
       - 'tests/test_readonly_website_workflow.py'
+      - '.github/workflows/publication-ingest.yml'
   workflow_dispatch:
     inputs:
       job:
@@ -64,6 +65,7 @@ on:
 
 permissions:
   contents: write
+  actions: read          # read website.yml publication receipts (backfill step)
   pages: write
   id-token: write
 
@@ -187,6 +189,22 @@ jobs:
             python scripts/state_store.py restore --archive "$RUNNER_TEMP/state-download/$asset" --sha "$sha"
           else
             echo "No prior production state; this is a cold start"
+          fi
+
+      # Receipts of verified website publications that no ingest run recorded yet (one was
+      # skipped because this run was waiting, cancelled while pending, or failed). Idempotent;
+      # saved with this run's state. A refused receipt is flagged here but never blocks the
+      # model run; the dedicated publication-ingest workflow fails visibly on it.
+      - name: Record verified website publications (backfill)
+        continue-on-error: true
+        shell: bash
+        env:
+          REPO: ${{ github.repository }}
+          WORK: ${{ runner.temp }}/publication-ingest
+        run: |
+          if ! bash scripts/ingest_publication_receipts.sh; then
+            echo "::error::publication receipt backfill failed; see this step's log"
+            exit 1
           fi
 
       - name: Select scheduled job
