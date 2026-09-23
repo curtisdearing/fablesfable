@@ -55,6 +55,15 @@ def _ts(s) -> Optional[dt.datetime]:
     return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
 
 
+def _name_key(name) -> Optional[str]:
+    """'D.Moore' / 'DJ Moore' / 'Brian Robinson Jr.' -> 'd moore' / 'd moore' / 'b robinson'."""
+    if not isinstance(name, str) or not name.strip():
+        return None
+    parts = [t for t in name.replace(".", " ").lower().split()
+             if t not in ("jr", "sr", "ii", "iii", "iv", "v")]
+    return f"{parts[0][0]} {parts[-1]}" if len(parts) >= 2 else None
+
+
 def build_card(row: Dict, now: dt.datetime, forecast_version: str) -> Dict:
     side = (row.get("side") or "").lower()
     line, price = _f(row.get("line")), _f(row.get("price"))
@@ -108,7 +117,7 @@ def build_card(row: Dict, now: dt.datetime, forecast_version: str) -> Dict:
         "market": row.get("market"), "side": side, "line": line,
         "book": row.get("book") if offered else None,
         "price_decimal": price if offered else None, "price_american": _american(price) if offered else None,
-        "quote_clock": row.get("quote_ts"), "run_as_of": row.get("as_of"), "quote_age_hours": round(age_h, 2) if age_h is not None else None,
+        "quote_clock": row.get("quote_ts") if quote_ts else None, "run_as_of": row.get("as_of"), "quote_age_hours": round(age_h, 2) if age_h is not None else None,
         "forecast_version": forecast_version, "mean": mean, "sd": sd,
         "model_p_side": p, "model_p_status": "unvalidated_at_offered_lines",
         "breakeven": round(breakeven, 4) if breakeven else None,
@@ -167,18 +176,41 @@ def write_week_cards(conn, season: int, week: int, out_dir: str = "reports") -> 
         # the quote clock is the newest captured quote for this exact book/side/point,
         # not the run's as_of; none found -> quote_ts stays empty and the card passes
         lines = dbmod.query_df(
-            conn, "SELECT ts, game_id, book, market, player_id, side, point FROM lines "
+            conn, "SELECT ts, game_id, book, market, player_id, player_name, side, point FROM lines "
                   "WHERE game_id IN (%s)" % ",".join("?" * leans["game_id"].nunique()),
             tuple(leans["game_id"].unique()))
         if not lines.empty:
             lines["side"] = lines["side"].str.lower()
             newest = (lines.sort_values("ts").drop_duplicates(
-                ["game_id", "book", "market", "player_id", "side", "point"], keep="last")
+                ["game_id", "book", "market", "player_id", "player_name", "side", "point"], keep="last")
                 .rename(columns={"ts": "quote_ts", "point": "line"}))
-            leans = leans.assign(side=leans["side"].str.lower()).merge(
-                newest, on=["game_id", "book", "market", "player_id", "side", "line"], how="left")
+            # a lean's book may list several ("draftkings/fanduel"): newest quote across them
+            lk = leans.assign(side=leans["side"].str.lower(), _book=leans["book"].fillna("").str.split("/"))
+            ex = lk.explode("_book")
+            ex["_key"] = ex["name"].map(_name_key)
+            nl = newest.rename(columns={"book": "_book", "player_id": "_qpid"})
+            nl["_key"] = nl["player_name"].map(_name_key)
+            j = ex.merge(nl, on=["game_id", "_book", "market", "side", "line"], how="inner")
+            # identity: same player_id when the quote has one, else same initial+surname
+            # and exactly one quoted player at that key (ambiguous -> no clock)
+            qpid = j["_qpid"].fillna("")
+            same_id = qpid.ne("") & qpid.eq(j["player_id"])
+            by_name = qpid.eq("") & j["_key_x"].notna() & j["_key_x"].eq(j["_key_y"])
+            j = j[same_id | by_name]
+            uniq = j.groupby(["game_id", "player_id", "market"])["player_name"].transform("nunique") == 1
+            qt = j[uniq].groupby(["game_id", "player_id", "market"])["quote_ts"].max().reset_index()
+            leans = lk.drop(columns="_book").merge(qt, on=["game_id", "player_id", "market"], how="left")
     now = dt.datetime.now(dt.timezone.utc)
-    cards = build_cards(leans.to_dict("records"), now=now, forecast_version=FORECAST_VERSION)
+    # only rows this run produced are stamped with the running forecast version;
+    # the leans table does not record the version of earlier runs
+    rows = leans.to_dict("records")
+    for r in rows:
+        made = _ts(r.get("created_at"))
+        r["_fv"] = (FORECAST_VERSION if made and (now - made).total_seconds() < 3 * 3600
+                    else "earlier run (version not recorded)")
+    cards = [build_card(r, now, r["_fv"]) for r in rows]
+    order = {"actionable": 0, "watch": 1, "research": 2, "pass": 3}
+    cards.sort(key=lambda c: (order[c["status"]], -(c["ordering_score"] or 0)))
     os.makedirs(out_dir, exist_ok=True)
     payload = {"season": season, "week": week, "generated_at": now.isoformat(timespec="seconds"),
                "forecast_version": FORECAST_VERSION, "validated_markets": sorted(VALIDATED_MARKETS),

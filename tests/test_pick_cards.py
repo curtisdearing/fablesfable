@@ -41,3 +41,9 @@ def test_card_states_evidence_and_invalidation_and_html_escapes():
     assert any("NOT verified health" in i for i in c["invalidation"])
     html = pc.render_html([c], "t", "g")
     assert "<b>x</b>" not in html and "&lt;b&gt;" in html and "No card is a recommended wager" in html
+
+
+def test_name_key_matches_abbreviations_and_drops_suffixes():
+    assert pc._name_key("D.Moore") == pc._name_key("DJ Moore") == "d moore"
+    assert pc._name_key("B.Robinson") == pc._name_key("Brian Robinson Jr.") == "b robinson"
+    assert pc._name_key("") is None and pc._name_key(None) is None
