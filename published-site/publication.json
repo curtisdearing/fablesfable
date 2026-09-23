@@ -5,7 +5,7 @@
   "label": "replay",
   "season": 2026,
   "week": 3,
-  "published_at": "2026-09-23T01:25:05+00:00",
+  "published_at": "2026-09-23T02:27:53+00:00",
   "source_as_of": "2026-09-22T22:19:33Z",
   "quote_clocks": {
     "earliest": "2026-09-22T22:19:33Z",
@@ -14,13 +14,13 @@
   },
   "runs": [
     {
-      "run_id": "local:closure2-replay-20260923T012417Z",
-      "code_sha": "6c040f49cf4ad99fd877c11d769ce4cfb39d91bd",
+      "run_id": "local:integration-replay-20260923T022716Z",
+      "code_sha": "900db10623950cbd3ff01dee24cc8d84410f4f58",
       "forecast_version": "ff-football-only-v1",
       "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
       "clock": "wed",
-      "as_of": "2026-09-23T01:24:40Z",
-      "created_at": "2026-09-23T01:24:40Z"
+      "as_of": "2026-09-23T02:27:43Z",
+      "created_at": "2026-09-23T02:27:44Z"
     }
   ],
   "counts": {
@@ -56,8 +56,8 @@
   ],
   "files": {
     "README.txt": "513e9f8eeae20a04f6744b7ca48270d6e4afa5238cf45aec071b28723a641069",
-    "api/hub.json": "4bf1fae0e3b69ddb9b5b673e8592daf0861c1609395f56777292f8595a856b70",
-    "best-bets.html": "f7f99530ce0b65d62f22ad1e28b663b62bc0547190e7db85c63038b8491366e9",
+    "api/hub.json": "8d26ab4671342175f5c0110c6ab6744778d3f355ab1d61cdb8221a2ef8f4126f",
+    "best-bets.html": "4324b2c44f51dd3ef2de75f74c16122bb8fc3a5f447f6fd9e49a4ed50c8cc544",
     "dashboard.html": "4860d129ecf1894b6105d83f3588220ba3abc970e622abf292335642b77e576e",
     "games/2026_01_ARI_LAC.html": "259e0949e9b14095b766504e9a3360ce4aca00c3694174c154d2f45c16358200",
     "games/2026_01_ATL_PIT.html": "e25859c748140488ead1f13955a3ac0a688a3848b2bb1b704c9c432efe4fed60",
@@ -78,10 +78,10 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "aa4df5c7f6b0d6948938d8c9606cd335d5ecf83464ff336eb082526bff05bd64",
-    "index.html": "df7373e4b6e80cff61c7432647c1423257fe14e7ed9cebc8ddc2e832b1729112",
+    "index.html": "3b53d1482b6410e0c3cd9dc1cd61acc451a026c038ceb2602ff1f337a67f2705",
     "reports/2026/week-1.html": "e9b8f253828668e71ed218ceb3c07bc2b81e8604774486329cb21194c8b042ec",
-    "reports/2026/week-3.html": "6e07d3b440d89e852e51fff59f5c4ed88cea8750609a48f5ccd5c68b725ff9ce",
+    "reports/2026/week-3.html": "75f7c82c8232f38815e68b90f48b92008e9e64c5ba4d0ccf2408ddcdb8183d11",
     "reports/index.json": "ac2b850639220d9f01ed530900c40ff3a02811bc3f42b0282de93c5f3f12565a",
-    "reports/latest.html": "6e07d3b440d89e852e51fff59f5c4ed88cea8750609a48f5ccd5c68b725ff9ce"
+    "reports/latest.html": "75f7c82c8232f38815e68b90f48b92008e9e64c5ba4d0ccf2408ddcdb8183d11"
   }
 }
