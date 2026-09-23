@@ -49,7 +49,8 @@ def test_wait_until_the_window_opens_only_within_the_bound():
     assert aw.t90_wait_seconds(_slate(), opens - dt.timedelta(minutes=bound + 1)) is None
 
 
-def _patch_job(monkeypatch, clock, slept, processed):
+def _patch_job(monkeypatch, clock, slept, processed, overrun=0, done_after_wait=(),
+               resnaps=None):
     monkeypatch.setattr(aw, "ensure_current_inputs", lambda job: {})
     monkeypatch.setattr(aw, "load_slate", _slate)
     monkeypatch.setattr(aw, "now_et", lambda: clock[0])
@@ -58,15 +59,36 @@ def _patch_job(monkeypatch, clock, slept, processed):
 
     def fake_sleep(seconds):
         slept.append(seconds)
-        clock[0] = clock[0] + dt.timedelta(seconds=seconds)
+        clock[0] = clock[0] + dt.timedelta(seconds=seconds + overrun)
+        # while this run slept, the serialized concurrency group let no other
+        # run publish; a game already processed is visible only via the DB read
+        # that job_t90 makes AFTER the wait
+        state["done"] = list(done_after_wait)
 
     monkeypatch.setattr(aw, "_sleep", fake_sleep)
     from nflvalue import config as cfgmod
     monkeypatch.setattr(cfgmod, "load_config", lambda: {"discord_enabled": False})
     from nflvalue import db as dbmod
-    monkeypatch.setattr(dbmod, "connect", lambda p=None: _MemConn())
-    monkeypatch.setattr(dbmod, "query_df", lambda conn, sql, params=(): pd.DataFrame({"game_id": []}))
     import pipeline_weekly as pw
+    monkeypatch.setattr(dbmod, "connect", lambda p=None: _MemConn())
+    state = {"done": []}
+
+    def query_df(conn, sql, params=()):
+        if "FROM leans" in sql:
+            return pd.DataFrame({"game_id": state["done"]})
+        return pd.DataFrame({"game_id": ["2026_03_ATL_GB"]})     # has stored lines
+
+    monkeypatch.setattr(dbmod, "query_df", query_df)
+    if resnaps is not None:
+        monkeypatch.setattr(cfgmod, "load_config",
+                            lambda: {"discord_enabled": False, "odds_api_key": "k"})
+        from nflvalue.sources import oddsapi_props as oap
+        monkeypatch.setattr(oap, "resnap_lines", lambda cfg, emap, conn=None: resnaps.append(
+            dict(emap)) or {"pulled": list(emap), "empty": [], "rows_written": 0,
+                            "credits_spent": 5.0, "credits_billed_measured": 5.0,
+                            "credits_estimated": 0.0, "credits_planned": 5.0,
+                            "account_usage_delta": 5.0, "budget_remaining": 65.0})
+        monkeypatch.setattr(pw, "build_event_map", lambda cfg, s: {g: f"e_{g}" for g in s.game_id})
     monkeypatch.setattr(pw, "run_t90", lambda *a, **k: processed.append((a[2], clock[0])) or {"voided": []})
     import nflvalue.candidates as cand
     monkeypatch.setattr(cand, "build_week_inputs", lambda: object())
@@ -92,3 +114,33 @@ def test_run_beyond_the_bound_is_still_a_no_op(monkeypatch):
     _patch_job(monkeypatch, clock, slept, processed)
     assert aw.job_t90() == 0
     assert slept == [] and processed == []
+
+
+def test_after_the_wait_the_kickoff_is_rechecked(monkeypatch):
+    """If the sleep overruns past kickoff, the game is no longer due: nothing
+    is processed and no odds are acquired for a game already under way."""
+    opens = KICK - dt.timedelta(minutes=aw.T90_DUE_MINUTES)
+    clock, slept, processed, resnaps = [opens - dt.timedelta(minutes=10)], [], [], []
+    _patch_job(monkeypatch, clock, slept, processed, overrun=95 * 60, resnaps=resnaps)
+    assert aw.job_t90() == 0
+    assert slept == [10 * 60] and processed == [] and resnaps == []
+
+
+def test_wait_then_processed_set_is_read_so_no_duplicate_acquisition(monkeypatch):
+    """The processed-game set is read AFTER the wait: a game processed by the
+    previous serialized run is neither re-snapped (no credit) nor re-run."""
+    opens = KICK - dt.timedelta(minutes=aw.T90_DUE_MINUTES)
+    clock, slept, processed, resnaps = [opens - dt.timedelta(minutes=10)], [], [], []
+    _patch_job(monkeypatch, clock, slept, processed,
+               done_after_wait=["2026_03_ATL_GB"], resnaps=resnaps)
+    assert aw.job_t90() == 0
+    assert slept == [10 * 60] and processed == [] and resnaps == []
+
+
+def test_single_early_run_acquires_once_after_the_wait(monkeypatch):
+    opens = KICK - dt.timedelta(minutes=aw.T90_DUE_MINUTES)
+    clock, slept, processed, resnaps = [opens - dt.timedelta(minutes=10)], [], [], []
+    _patch_job(monkeypatch, clock, slept, processed, resnaps=resnaps)
+    assert aw.job_t90() == 0
+    assert resnaps == [{"2026_03_ATL_GB": "e_2026_03_ATL_GB"}]
+    assert processed == [("2026_03_ATL_GB", opens)]

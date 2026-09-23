@@ -66,6 +66,18 @@ class BudgetExceeded(RuntimeError):
     """Raised only if a caller tries to FORCE a pull past the hard stop."""
 
 
+def _header_float(headers: Optional[Dict], key: str) -> Optional[float]:
+    """A finite float from a provider header (case-insensitive), else None."""
+    for k, v in (headers or {}).items():
+        if str(k).lower() == key and v is not None:
+            try:
+                f = float(v)
+            except (TypeError, ValueError):
+                return None
+            return f if math.isfinite(f) and f >= 0 else None
+    return None
+
+
 class CreditBudget:
     """Persistent monthly credit ledger with a hard stop.
 
@@ -90,16 +102,16 @@ class CreditBudget:
         if not self.can_spend(credits):
             raise BudgetExceeded(
                 f"refusing to spend {credits} credits: {self.used}/{self.ceiling} used in {self.month}")
-        # trust the API's own accounting when it reports it
-        reported = None
-        if headers:
-            for k in ("x-requests-used", "X-Requests-Used"):
-                if headers.get(k) is not None:
-                    try:
-                        reported = float(headers[k])
-                    except (TypeError, ValueError):
-                        reported = None
-        self.used = reported if reported is not None else self.used + credits
+        # trust the API's own accounting when it reports it -- but never let a
+        # LOWER figure (stale header, provider-side reset) loosen the gate
+        # mid-month: then this call is counted on top at its own charge
+        # (x-requests-last) or, unknown, at the per-event bound.
+        reported = _header_float(headers, "x-requests-used")
+        if reported is not None and reported >= self.used:
+            self.used = reported
+        else:
+            last = _header_float(headers, "x-requests-last")
+            self.used += last if last is not None and reported is not None else credits
         dbmod.upsert(self.conn, "api_credits", [{
             "month": self.month, "used": self.used,
             "last_headers": json.dumps(dict(headers or {}))[:500],
@@ -559,9 +571,64 @@ def plan_text(plan: Dict) -> str:
             f"thin slate can afford more; every call still re-checks the hard stop)")
 
 
-def billing_text(spent: float, planned: float) -> str:
-    """Billed vs planned credits, for the run log and the board's line note."""
-    return f"provider billed {spent:.0f} credit(s) (upper bound planned {planned:.0f})"
+class BillingTally:
+    """Per-pull credit accounting, kept apart by how each figure is KNOWN.
+
+    ``measured``  -- sum of the provider's ``x-requests-last`` (what each of
+                     OUR requests was charged; per market returned).
+    ``estimated`` -- calls answered without that header, counted at the
+                     per-event bound (never labelled provider billing).
+    ``account_delta`` -- provider ``x-requests-used`` at the last answered
+                     call minus the figure before the first one. Account-wide:
+                     it includes any other use of the same key and can be
+                     negative after a provider reset or a stale header.
+    ``planned``   -- the per-event upper bound the budget gate charged.
+    """
+
+    def __init__(self, start_used: float):
+        self.start_used = float(start_used)
+        self.measured = self.estimated = self.planned = 0.0
+        self.last_used: Optional[float] = None
+
+    def add(self, cost: float, headers: Optional[Dict]) -> None:
+        self.planned += cost
+        last = _header_float(headers, "x-requests-last")
+        if last is None:
+            self.estimated += cost
+        else:
+            self.measured += last
+        used = _header_float(headers, "x-requests-used")
+        if used is not None:
+            self.last_used = used
+
+    @property
+    def spent(self) -> float:
+        """Request-attributed credits: measured where known, else the bound."""
+        return self.measured + self.estimated
+
+    @property
+    def account_delta(self) -> Optional[float]:
+        return None if self.last_used is None else self.last_used - self.start_used
+
+    def fields(self) -> Dict:
+        return {"credits_spent": self.spent, "credits_billed_measured": self.measured,
+                "credits_estimated": self.estimated, "credits_planned": self.planned,
+                "account_usage_delta": self.account_delta}
+
+
+def billing_text(res: Dict) -> str:
+    """How the credits of one pull are known, for the run log and line note."""
+    parts = []
+    if res.get("credits_billed_measured") or not res.get("credits_estimated"):
+        parts.append(f"provider billed {res.get('credits_billed_measured') or 0:.0f} credit(s) "
+                     f"per x-requests-last")
+    if res.get("credits_estimated"):
+        parts.append(f"{res['credits_estimated']:.0f} credit(s) ESTIMATED at the per-event "
+                     f"bound (no provider billing header)")
+    delta = res.get("account_usage_delta")
+    if delta is not None:
+        parts.append(f"account usage {delta:+.0f} (whole key, any consumer)")
+    return "; ".join(parts) + f" (upper bound planned {res.get('credits_planned') or 0:.0f})"
 
 
 def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
@@ -641,8 +708,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     skipped_started: List[str] = []
     skipped_error: List[Dict] = []
     all_rows: List[Dict] = []
-    spent = 0.0             # what the ledger moved by (provider-billed when reported)
-    planned = 0.0           # the per-event upper bound the gate charged
+    tally = BillingTally(budget.used)   # how each credit is known (BillingTally)
     empty: List[str] = []   # answered with no quote (books not posted yet)
     reserved = 0.0          # closes held for games pulled in THIS call
     books_by_game: Dict[str, List[str]] = {}
@@ -687,10 +753,8 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             print(f"[oddsapi] pull failed for {game_id}: {type(exc).__name__}: {exc}")
             continue
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
-        before = budget.used
         budget.spend(cost_per_event, headers=headers)
-        spent += budget.used - before
-        planned += cost_per_event
+        tally.add(cost_per_event, headers)
         reserved += hold
         rows = parse_event_props(payload, ts)
         for r in rows:
@@ -712,14 +776,14 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     priced = [g for g in pulled if g not in empty]
     print(f"[oddsapi] requested {len(pulled)} game(s): {len(priced)} priced, "
           f"{len(empty)} no quotes: {', '.join(empty) or 'none'}; "
-          f"{billing_text(spent, planned)}; "
+          f"{billing_text(tally.fields())}; "
           f"{reserved:.0f} held for closes, {budget.remaining:.0f} left in {budget.month}; "
           f"skipped: budget={len(skipped_budget)} cap={len(skipped_cap)} "
           f"started={len(skipped_started)} error={len(skipped_error)}")
     return {"pulled": pulled, "priced": priced, "empty": empty,
             "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "skipped_started": skipped_started, "skipped_error": skipped_error,
-            "rows_written": written, "credits_spent": spent, "credits_planned": planned,
+            "rows_written": written, **tally.fields(),
             "close_reserved": reserved,
             "budget_remaining": budget.remaining, "ts": ts,
             "book_coverage": coverage, "plan": plan, "quota_preflight": preflight}
@@ -752,7 +816,7 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
                     "ts": ts, "budget_remaining": 0.0,
                     "book_coverage": book_coverage(cfg, {}), "quota_preflight": preflight}
     pulled, skipped, rows, empty = [], [], [], []
-    spent = planned = 0.0
+    tally = BillingTally(budget.used)
     books_by_game: Dict[str, List[str]] = {}
     for game_id, event_id in sorted(event_map.items()):
         if not budget.can_spend(cost):
@@ -766,10 +830,8 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
             params["regions"] = regions
         payload = fetch(f"{BASE}/sports/{SPORT}/events/{event_id}/odds", params)
         headers = payload.pop("_headers", None) if isinstance(payload, dict) else None
-        before = budget.used
         budget.spend(cost, headers=headers)
-        spent += budget.used - before
-        planned += cost
+        tally.add(cost, headers)
         game_rows = parse_event_props(payload, ts)
         for r in game_rows:
             r["game_id"] = game_id
@@ -785,8 +847,8 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
         print(f"[oddsapi] resnap: books requested but absent from the provider response: "
               f"{coverage['absent_from_provider_response']} (returned: {coverage['returned']})")
     print(f"[oddsapi] resnap: {len(pulled)} game(s) answered, {len(empty)} no quotes: "
-          f"{', '.join(empty) or 'none'}; {billing_text(spent, planned)}")
+          f"{', '.join(empty) or 'none'}; {billing_text(tally.fields())}")
     return {"pulled": pulled, "priced": [g for g in pulled if g not in empty], "empty": empty,
             "skipped_budget": skipped, "rows_written": written,
-            "credits_spent": spent, "credits_planned": planned,
+            **tally.fields(),
             "ts": ts, "budget_remaining": budget.remaining, "book_coverage": coverage}

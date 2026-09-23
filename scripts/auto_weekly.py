@@ -37,10 +37,12 @@ T90_WINDOW_HOURS = 2.75      # legacy outer bound (kept for the heartbeat text)
 T90_DUE_MINUTES = 90
 #: GitHub starts this repo's scheduled runs late and unpredictably (2026-09:
 #: the 23:15Z slot started 01:02-01:35Z, 19:20Z at 21:26-21:35Z, 15:55Z at
-#: 15:58-16:09Z), so backup triggers sit before the window. A run arriving
-#: at most this many minutes before a window opens sleeps until it opens
-#: instead of exiting as a no-op; further out it is still a no-op. Bounded
-#: well inside the run job's 60-minute timeout.
+#: 15:58-16:09Z; 4.6-5.6 h on 2026-09-23), so cron is not a reliable T-90
+#: trigger; the primary trigger is a workflow_dispatch job=t90 inside the
+#: window. A run arriving at most this many minutes before a window opens
+#: sleeps until it opens instead of exiting as a no-op; further out it is
+#: still a no-op. Bounded well inside the run job's 60-minute timeout. The due
+#: set and the processed set are both read AFTER the wait.
 T90_MAX_EARLY_WAIT_MINUTES = 35
 _sleep = time.sleep
 
@@ -326,7 +328,7 @@ def job_t90() -> int:
                 res = oap.resnap_lines(cfg, emap, conn=conn)
                 print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
                       f"{len(res.get('empty') or [])} with no quotes, "
-                      f"{res['rows_written']} rows, {res.get('credits_spent', 0.0):.0f} billed, "
+                      f"{res['rows_written']} rows, {oap.billing_text(res)}, "
                       f"{res['budget_remaining']:.0f} credits left")
         except Exception as exc:  # noqa: BLE001
             print(f"[auto] closing resnap failed (CLV close may be stale): {exc}")

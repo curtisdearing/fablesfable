@@ -798,8 +798,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                      f"{len(pull.get('skipped_started') or [])} already under way; "
                      f"{len(unmatched)} not in the odds events listing; "
                      f"{pull['budget_remaining']:.0f} credits left this month; "
-                     + oapmod.billing_text(pull.get("credits_spent") or 0.0,
-                                           pull.get("credits_planned") or 0.0) + ". "
+                     + oapmod.billing_text(pull) + ". "
                      + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else "")
                      + (f" NO odds pulled: {pull['quota_preflight']['reason']}."
                         if (pull.get("quota_preflight") or {}).get("ok") is False else ""))
