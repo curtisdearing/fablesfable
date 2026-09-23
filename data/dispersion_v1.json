@@ -1,0 +1,61 @@
+{
+  "version": "dispersion_v1",
+  "fit_seasons": [
+    2023,
+    2024
+  ],
+  "protocol_sha256": "097c486d5e6b95bc8c5f63988d537797b67a60be215c104d10f19f85b83823fe",
+  "markets": {
+    "receiving_yards": {
+      "a": 5.373578427206078,
+      "b": 0.4795183572284856,
+      "sd_floor": 15.088297011137833,
+      "n_rows": 6110,
+      "n_bins": 10
+    },
+    "receptions": {
+      "a": 1.1322863229118265,
+      "b": 0.5096320804936748,
+      "sd_floor": 1.051953325510072,
+      "n_rows": 6110,
+      "n_bins": 10
+    },
+    "rushing_yards": {
+      "a": 6.5263898190903,
+      "b": 0.4226987153698684,
+      "sd_floor": 8.420244407774328,
+      "n_rows": 2665,
+      "n_bins": 10
+    },
+    "passing_yards": {
+      "a": 125.28306273384653,
+      "b": -0.06841869163536947,
+      "sd_floor": 74.79639361260219,
+      "n_rows": 1274,
+      "n_bins": 10
+    },
+    "pass_attempts": {
+      "a": 36.34481503400157,
+      "b": -0.3561372167841303,
+      "sd_floor": 7.4299091122528935,
+      "n_rows": 1274,
+      "n_bins": 10
+    },
+    "rush_attempts": {
+      "a": 2.400186329362332,
+      "b": 0.3542776923123528,
+      "sd_floor": 2.008395812918298,
+      "n_rows": 2667,
+      "n_bins": 10
+    }
+  },
+  "decisions": {
+    "receiving_yards": "D1_primary",
+    "receptions": "D1_primary",
+    "rushing_yards": "D1_primary",
+    "passing_yards": "D0_primary_D1_shadow",
+    "pass_attempts": "D0_primary_D1_shadow",
+    "rush_attempts": "D1_primary"
+  },
+  "note": "Fitted on 2023-2024 only; decisions from the frozen protocol rule on 2025. Primary where D1_primary; shadow otherwise. Not validated as calibrated at offered lines."
+}

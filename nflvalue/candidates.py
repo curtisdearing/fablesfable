@@ -44,6 +44,7 @@ import pandas as pd
 from . import projection
 from . import features as featuresmod
 from .features import build_opp_pos_def, build_player_week, build_team_week, load_pbp
+from . import football_forecast as ffmod
 from .projection import MARKETS, MIN_GAMES_ELIGIBLE, game_script_multipliers
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -189,6 +190,7 @@ def enumerate_candidates(
     roster_mode: str = "as_played",
     sd_by_market: Optional[Dict[str, Optional[float]]] = None,
     synth_by_market: Optional[Dict[str, pd.Series]] = None,
+    margin_source: Optional[str] = None,
 ) -> pd.DataFrame:
     """All eligible (player, market) candidates for every game of (season, week).
 
@@ -212,17 +214,35 @@ def enumerate_candidates(
     slate = games_for_week(season, week, inputs.schedules)
     if slate.empty:
         raise ValueError(f"no REG games found for season={season} week={week}")
+    # The margin that tilts pass/rush volume. The primary forecast uses only
+    # football data (football_forecast.football_margins, scores strictly before
+    # the game) or no tilt; "spread" (the sportsbook line) survives only so the
+    # evaluator can score it as a comparator. spread_line/total_line are still
+    # carried on each row for the ranker and the card, never for the forecast.
+    margin_source = margin_source or ffmod.PRIMARY_MARGIN_SOURCE
+    if margin_source not in ffmod.MARGIN_SOURCES:
+        raise ValueError(f"unknown margin_source {margin_source!r}")
+    football = (ffmod.football_margins(inputs.schedules, season, week)
+                if margin_source == "football" else {})
+
+    def _margin(team, spread_home, home):
+        if margin_source == "football":
+            return football.get(team)
+        if margin_source == "spread" and pd.notna(spread_home):
+            return float(spread_home) if home else -float(spread_home)
+        return None
+
     team_to_game: Dict[str, Dict] = {}
     for g in slate.itertuples(index=False):
-        # spread_line = home margin; away margin is its negation
         team_to_game[g.home_team] = {"game_id": g.game_id, "opp": g.away_team,
-                                     "margin": float(g.spread_line) if pd.notna(g.spread_line) else None,
+                                     "margin": _margin(g.home_team, g.spread_line, True),
                                      "home": True, "spread_line": g.spread_line,
                                      "total_line": g.total_line, "gameday": g.gameday}
         team_to_game[g.away_team] = {"game_id": g.game_id, "opp": g.home_team,
-                                     "margin": -float(g.spread_line) if pd.notna(g.spread_line) else None,
+                                     "margin": _margin(g.away_team, g.spread_line, False),
                                      "home": False, "spread_line": g.spread_line,
                                      "total_line": g.total_line, "gameday": g.gameday}
+    dispersion = ffmod.load_dispersion()
 
     pw = inputs.pw
     if roster_mode == "as_played":
@@ -322,7 +342,10 @@ def enumerate_candidates(
                 "spread_line": ginfo["spread_line"], "total_line": ginfo["total_line"],
                 "gameday": ginfo.get("gameday"),
                 "sd_source": ("walk_forward_residuals" if sd_by_market.get(market) else "default_fraction"),
+                "forecast_version": ffmod.FORECAST_VERSION,
+                "margin_source": margin_source, "forecast_margin": ginfo["margin"],
             })
+            proj.update(ffmod.dispersion_fields(market, proj, dispersion))
             out.append(proj)
 
     df = pd.DataFrame(out)
