@@ -20,7 +20,7 @@
     clock of this write (never backdated), so a receipt recorded after kickoff grades as
     retrospective. Exit 5 on any mismatch; re-recording the same receipt is a no-op.
 
-``trusted-runs`` / ``ingest`` (live-weekly.yml job ``ingest-publication``, and the model run's
+``trusted-runs`` / ``ingest`` (publication-ingest.yml, and live-weekly.yml's
 backfill step): ``trusted-runs`` filters a GitHub API listing of website.yml runs down to
 successful, completed runs of THIS repository's ``.github/workflows/website.yml`` on ``main``
 (no forks, other branches or other workflows); only those run ids are downloaded. ``ingest``

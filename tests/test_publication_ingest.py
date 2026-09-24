@@ -146,26 +146,42 @@ def _text(name):
     return (WF / name).read_text()
 
 
-def test_ingest_workflow_only_follows_website_and_holds_the_production_lock():
+def _concurrency(text):
+    head = text.split("\njobs:", 1)[0]
+    return head[head.index("\nconcurrency:"):]
+
+
+def test_every_entrant_to_the_production_lock_queues_instead_of_replacing():
+    """GitHub's default queue: single cancels a pending run when another queues in the group;
+    queue: max keeps them all (docs: control-workflow-concurrency). Mixed settings within one group
+    are undocumented, so every workflow using the group must set it, at workflow level."""
+    users = [p.name for p in WF.glob("*.yml") if "nfl-live-production" in p.read_text()]
+    assert sorted(users) == ["live-weekly.yml", "publication-ingest.yml"]
+    for name in users:
+        text = _text(name)
+        assert text.count("group: nfl-live-production") == 1
+        conc = _concurrency(text)
+        assert re.search(r"\n  group: nfl-live-production\n  cancel-in-progress: false\n(  #.*\n)*  queue: max\n", conc), name
+        assert "cancel-in-progress: true" not in text                # invalid together with queue: max
+
+
+def test_ingest_workflow_only_follows_website_and_has_no_precheck_race():
     wf = _text("publication-ingest.yml")
     on = wf[wf.index("\non:"):wf.index("\npermissions:")]
     assert 'workflows: ["Publish football website"]' in on and "types: [completed]" in on
     for trig in ("schedule", "push", "workflow_dispatch", "pull_request"):
         assert f"  {trig}:" not in on
-    pre = wf[wf.index("  precheck:"):wf.index("  ingest:")]
-    assert "concurrency" not in pre                               # outside the lock
+    assert "precheck" not in wf.split("\njobs:", 1)[1] and "proceed" not in wf
+    job = wf[wf.index("  ingest:"):]
     for guard in ("conclusion == 'success'", "head_branch == 'main'",
                   "head_repository.full_name == github.repository", "path == '.github/workflows/website.yml'"):
-        assert guard in pre
-    job = wf[wf.index("  ingest:"):]
-    assert re.search(r"concurrency:\n      group: nfl-live-production\n      cancel-in-progress: false", job)
-    assert "needs.precheck.outputs.proceed == 'true'" in job
+        assert guard in job
     assert "scripts/ingest_publication_receipts.sh" in job and 'REQUIRE_RUN: ${{ github.event.workflow_run.id }}' in job
     assert "steps.ingest.outputs.written != '0'" in job and "steps.ingest.outputs.rc != '0'" in job
     assert "exit 1" in job.split("Fail visibly", 1)[1]
     assert "continue-on-error" not in wf and "always()" not in wf
     assert job.index("Restore checksummed production state") < job.index("Record verified website publications") \
-        < job.index("Save production state")
+        < job.index("Save production state") < job.index("Keep the eight newest publication-ingest archives")
 
 
 def test_ingest_runs_no_model_odds_site_or_dispatch_and_cannot_loop():
