@@ -110,16 +110,16 @@ def test_walk_forward_residual_target_is_official():
     assert projection.MARKETS["passing_yards"].get("volume_col") is None
 
 
-@pytest.mark.xfail(strict=True, reason="KNOWN DEFECT (report): features.asof_player_week carries a team "
-                   "changer on his LAST PLAYED team; enumerate_candidates(carry_forward) then puts him "
-                   "in that team's game. Needs a pregame-clocked current-team source to fix.")
 def test_asof_team_matches_team_actually_played_for_transfers():
+    # was a strict xfail: the as-of team came from the LAST PLAYED row (NE).
+    # Repaired by as-of roster evidence; see tests/test_asof_transfer_identity.py
     df = pd.read_parquet(FIXTURE)
     df = df[(df["season_type"] == "REG")].copy()
     pw = F.build_player_week(df, rosters=NO_ROSTERS)
     brady = "00-0019596"
     played = pw[(pw["player_id"] == brady) & (pw["season"] == 2020) & (pw["week"] == 1)]["team"].iloc[0]
-    asof = F.asof_player_week(pw, 2020, 1)
+    rosters = pd.read_parquet(FIXTURE.parent / "rosters_weekly_2019_2020_skill.parquet")
+    asof = F.asof_player_week(pw, 2020, 1, rosters=rosters[rosters["season"] <= 2020])
     assert played == "TB"
     assert asof[asof["player_id"] == brady]["team"].iloc[0] == played
 

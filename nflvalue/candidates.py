@@ -99,8 +99,11 @@ class WeekInputs:
     """All walk-forward tables needed to project one week, built once."""
 
     def __init__(self, pw: pd.DataFrame, opd: pd.DataFrame, tw: pd.DataFrame,
-                 schedules: pd.DataFrame):
+                 schedules: pd.DataFrame, rosters: Optional[pd.DataFrame] = None):
         self.pw = pw
+        # weekly rosters (season, week, player_id, team): seats carry_forward
+        # players on their AS-OF team (features.asof_team_identity)
+        self.rosters = rosters
         self.opd = opd
         self.tw = tw
         self.schedules = schedules
@@ -123,11 +126,14 @@ def build_week_inputs(pbp: Optional[pd.DataFrame] = None,
             pbp = ingest.load_all_pbp()
         else:
             pbp = load_pbp()
+    from .sources import rosters as rostersmod
+    rosters = rostersmod.fetch_rosters_weekly(sorted(pbp["season"].unique().tolist()))
     return WeekInputs(
-        pw=build_player_week(pbp),
+        pw=build_player_week(pbp, rosters=rosters),
         opd=build_opp_pos_def(pbp),
         tw=build_team_week(pbp),
         schedules=schedules if schedules is not None else load_schedules(),
+        rosters=rosters,
     )
 
 
@@ -261,7 +267,16 @@ def enumerate_candidates(
         # that row's features excluded its own game, so the live board was one
         # game staler than anything the backtest scored: the 2026 Week 2 board
         # carried no 2026 Week 1 information for 73 of its 80 leans.
-        week_rows = featuresmod.asof_player_week(pw, season, week)
+        #
+        # Seat = AS-OF roster team when rosters are supplied, so a player who
+        # changed teams is placed in his NEW team's game (features.asof_team_identity).
+        week_rows = featuresmod.asof_player_week(pw, season, week,
+                                                 rosters=getattr(inputs, "rosters", None))
+        if "team_source" in week_rows.columns:
+            unseated = week_rows[week_rows["team_source"] == featuresmod.TEAM_SOURCE_AMBIGUOUS]
+            if len(unseated):
+                print(f"[candidates] {season} W{week}: {len(unseated)} player(s) with ambiguous "
+                      f"as-of roster team, not seated: {sorted(unseated['player_id'])[:10]}")
         week_rows = week_rows[week_rows["team"].isin(team_to_game)].copy()
     else:
         raise ValueError(f"unknown roster_mode {roster_mode!r}")

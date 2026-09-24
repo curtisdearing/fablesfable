@@ -587,18 +587,108 @@ def _prior_rows(df: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
     return df[(df["season"] < season) | ((df["season"] == season) & (df["week"] < week))]
 
 
-def asof_player_week(pw: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
+#: nflverse roster statuses whose row sits on the DEPARTING team
+#: (``sources.active_roster.STATUS_CLASS``): never evidence FOR that team.
+_DEPARTED_STATUSES = {"TRD", "TRC"}
+
+#: ``team_source`` values stamped by ``asof_team_identity``.
+TEAM_SOURCE_ROSTER = "asof_roster"                  # roster evidence newer than the last game
+TEAM_SOURCE_LAST_PLAYED = "last_played"             # last game at least as recent as any roster row
+TEAM_SOURCE_NO_ROSTER = "last_played_no_roster"     # no roster row for the player at all
+TEAM_SOURCE_AMBIGUOUS = "ambiguous_roster"          # newest roster week lists >1 team: team unknown
+
+
+def asof_team_identity(pw: pd.DataFrame, rosters: Optional[pd.DataFrame],
+                       season: int, week: int) -> pd.DataFrame:
+    """Each player's team as of the START of (season, week), one row per player.
+
+    A player's last PLAYED team is only his team until he moves: a QB who
+    changed teams in the offseason would otherwise be seated in his old
+    team's game (Brady 2020 W1: last played NE, played TB). Roster evidence
+    fixes that, subject to the same clock as every other feature:
+
+    * only roster rows dated at or before (season, week) are read. A weekly
+      roster lists who the club carries INTO that week's game, which is
+      known before kickoff; later weeks are never read (no future leakage).
+    * whichever is newer wins: the roster row, or the last game played.
+      Ties go to the game. A stale roster cache therefore can never undo
+      a move the play-by-play has already shown.
+    * ``TRD``/``TRC`` status rows (row on the departing club) are ignored.
+      If the newest roster week still lists two teams, the team is unknown
+      (NaN, ``ambiguous_roster``); the row is kept, never guessed.
+
+    The team placement is the only thing that changes. Stat history stays
+    keyed by ``player_id``, so rolling features carry across the move.
+
+    Columns: player_id, last_played_team, last_played_season,
+    last_played_week, roster_team, roster_season, roster_week, team,
+    team_source.
+    """
+    cols = ["player_id", "last_played_team", "last_played_season", "last_played_week",
+            "roster_team", "roster_season", "roster_week", "team", "team_source"]
+    hist = _prior_rows(pw, season, week)
+    if hist.empty:
+        return pd.DataFrame(columns=cols)
+    last = (hist.sort_values(["player_id", "season", "week"]).groupby("player_id").tail(1)
+            [["player_id", "team", "season", "week"]]
+            .rename(columns={"team": "last_played_team", "season": "last_played_season",
+                             "week": "last_played_week"}))
+
+    ev = pd.DataFrame(columns=["player_id", "roster_team", "roster_season", "roster_week",
+                               "n_teams"])
+    if rosters is not None and len(rosters) and "team" in rosters.columns:
+        r = rosters.dropna(subset=["player_id", "team"])
+        r = r[(r["season"] < season) | ((r["season"] == season) & (r["week"] <= week))]
+        if "status" in r.columns:
+            r = r[~r["status"].astype(str).str.upper().isin(_DEPARTED_STATUSES)]
+        if len(r):
+            r = r.assign(_key=r["season"].astype(int) * 100 + r["week"].astype(int))
+            r = r[r["_key"] == r.groupby("player_id")["_key"].transform("max")]
+            ev = (r.groupby("player_id")
+                  .agg(roster_team=("team", lambda s: s.iloc[0] if s.nunique() == 1 else np.nan),
+                       roster_season=("season", "first"), roster_week=("week", "first"),
+                       n_teams=("team", "nunique"))
+                  .reset_index())
+
+    out = last.merge(ev, on="player_id", how="left")
+    has_roster = out["roster_season"].notna()
+    newer = has_roster & (
+        (out["roster_season"] > out["last_played_season"])
+        | ((out["roster_season"] == out["last_played_season"])
+           & (out["roster_week"] > out["last_played_week"])))
+    ambiguous = newer & (out["n_teams"] > 1)
+    out["team"] = np.where(newer & ~ambiguous, out["roster_team"], out["last_played_team"])
+    out.loc[ambiguous, "team"] = np.nan
+    out["team_source"] = np.select(
+        [ambiguous, newer, has_roster],
+        [TEAM_SOURCE_AMBIGUOUS, TEAM_SOURCE_ROSTER, TEAM_SOURCE_LAST_PLAYED],
+        default=TEAM_SOURCE_NO_ROSTER)
+    return out[cols].reset_index(drop=True)
+
+
+def asof_player_week(pw: pd.DataFrame, season: int, week: int,
+                     rosters: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     """One row per player, as of the START of (season, week).
 
     ``pw`` is a built ``player_week`` frame. Only rows STRICTLY BEFORE the
     target week are used, so this is leak-free by construction. Returns the
     placeholder rows only, with the same columns as ``pw``.
+
+    ``rosters`` (weekly roster frame with ``team``): when given, each row's
+    ``team`` is the as-of team from ``asof_team_identity`` instead of the last
+    played team, and a ``team_source`` column is appended. Without it the
+    team is the last played team (a transferred player sits on his OLD team).
     """
     hist = _prior_rows(pw, season, week).copy()
     if hist.empty:
         return pw.iloc[0:0].copy()
     hist = hist.sort_values(["player_id", "season", "week"])
     latest = hist.groupby("player_id").tail(1).copy()
+
+    identity = None
+    if rosters is not None:
+        identity = asof_team_identity(pw, rosters, season, week).set_index("player_id")
+        latest["team"] = latest["player_id"].map(identity["team"])
 
     latest["season"], latest["week"] = season, week
     for col in _ASOF_RAW_COLS:
@@ -624,7 +714,10 @@ def asof_player_week(pw: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
 
     frame = _add_rolling_player_features(frame)
     out = frame[(frame["season"] == season) & (frame["week"] == week)]
-    return out[list(pw.columns)].reset_index(drop=True)
+    out = out[list(pw.columns)].reset_index(drop=True)
+    if identity is not None:
+        out["team_source"] = out["player_id"].map(identity["team_source"])
+    return out
 
 
 def asof_team_week(pw: pd.DataFrame, season: int, week: int,
