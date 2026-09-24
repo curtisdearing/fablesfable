@@ -1,0 +1,22 @@
+name: Queue max acceptance probe (non-production)
+
+# Isolated validation only: proves GitHub accepts `concurrency.queue: max`.
+# Push trigger restricted to this branch; no secrets; read-only token; no repo scripts.
+on:
+  push:
+    branches: [validation/queue-max-probe-20260924]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: queue-max-probe-nonproduction-20260924
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: "true"
