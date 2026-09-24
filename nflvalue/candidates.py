@@ -200,6 +200,7 @@ def enumerate_candidates(
     sd_by_market: Optional[Dict[str, Optional[float]]] = None,
     synth_by_market: Optional[Dict[str, pd.Series]] = None,
     margin_source: Optional[str] = None,
+    decision_at=None,
 ) -> pd.DataFrame:
     """All eligible (player, market) candidates for every game of (season, week).
 
@@ -254,6 +255,7 @@ def enumerate_candidates(
     dispersion = ffmod.load_dispersion()
 
     pw = inputs.pw
+    identity_info = None
     if roster_mode == "as_played":
         week_rows = pw[(pw["season"] == season) & (pw["week"] == week)].copy()
     elif roster_mode == "carry_forward":
@@ -270,9 +272,19 @@ def enumerate_candidates(
         #
         # Seat = AS-OF roster team when rosters are supplied, so a player who
         # changed teams is placed in his NEW team's game (features.asof_team_identity).
+        # ``decision_at`` (tz-aware) admits only roster rows captured by then;
+        # without it the re-seat is a reconstruction, labelled unverified.
         week_rows = featuresmod.asof_player_week(pw, season, week,
-                                                 rosters=getattr(inputs, "rosters", None))
+                                                 rosters=getattr(inputs, "rosters", None),
+                                                 decision_at=decision_at)
         if "team_source" in week_rows.columns:
+            identity_info = {
+                "clock": "decision_at" if decision_at is not None else "reconstructed_unverified",
+                "decision_at": (None if decision_at is None else
+                                pd.Timestamp(decision_at).tz_convert("UTC").strftime("%Y-%m-%dT%H:%M:%SZ")),
+                "team_source_counts": {str(k): int(v) for k, v in
+                                       week_rows["team_source"].value_counts().items()},
+            }
             unseated = week_rows[week_rows["team_source"] == featuresmod.TEAM_SOURCE_AMBIGUOUS]
             if len(unseated):
                 print(f"[candidates] {season} W{week}: {len(unseated)} player(s) with ambiguous "
@@ -371,6 +383,8 @@ def enumerate_candidates(
     df = pd.DataFrame(out)
     if not df.empty:
         df = df.sort_values(["game_id", "player_id", "market"], kind="mergesort").reset_index(drop=True)
+    if identity_info is not None:
+        df.attrs["asof_team_identity"] = identity_info
     return df
 
 

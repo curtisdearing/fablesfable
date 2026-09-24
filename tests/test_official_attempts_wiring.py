@@ -112,7 +112,9 @@ def test_walk_forward_residual_target_is_official():
 
 def test_asof_team_matches_team_actually_played_for_transfers():
     # was a strict xfail: the as-of team came from the LAST PLAYED row (NE).
-    # Repaired by as-of roster evidence; see tests/test_asof_transfer_identity.py
+    # Repaired by roster evidence, as a HISTORICAL RECONSTRUCTION: the weekly
+    # roster rows have no capture time, so this is not proof they were known
+    # pregame (see tests/test_asof_transfer_identity.py for the decision clock).
     df = pd.read_parquet(FIXTURE)
     df = df[(df["season_type"] == "REG")].copy()
     pw = F.build_player_week(df, rosters=NO_ROSTERS)
@@ -122,6 +124,7 @@ def test_asof_team_matches_team_actually_played_for_transfers():
     asof = F.asof_player_week(pw, 2020, 1, rosters=rosters[rosters["season"] <= 2020])
     assert played == "TB"
     assert asof[asof["player_id"] == brady]["team"].iloc[0] == played
+    assert asof[asof["player_id"] == brady]["team_source"].iloc[0] == F.TEAM_SOURCE_RECONSTRUCTED
 
 
 def test_frame_without_official_column_is_unresolved_not_keyerror(pw_pair):

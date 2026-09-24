@@ -56,7 +56,7 @@ def test_week1_offseason_transfer_seated_on_new_team(pw, rosters):
         without = F.asof_player_week(pw, 2020, 1)
         assert without[without["player_id"] == pid]["team"].iloc[0] == old   # the defect, unchanged default
         row = _asof(pw, rosters, pid, 2020, 1)
-        assert row["team"] == new and row["team_source"] == F.TEAM_SOURCE_ROSTER
+        assert row["team"] == new and row["team_source"] == F.TEAM_SOURCE_RECONSTRUCTED
 
 
 def test_in_season_before_and_after_transfer(pw, rosters):
@@ -73,7 +73,7 @@ def test_late_season_transfer(pw, rosters):
     assert _played(pw, PETTIS, 2020, 16) == "NYG"
     assert _asof(pw, rosters, PETTIS, 2020, 8)["team"] == "SF"
     row = _asof(pw, rosters, PETTIS, 2020, 16)
-    assert row["team"] == "NYG" and row["team_source"] == F.TEAM_SOURCE_ROSTER
+    assert row["team"] == "NYG" and row["team_source"] == F.TEAM_SOURCE_RECONSTRUCTED
 
 
 def test_future_roster_rows_are_never_read(pw, rosters):
@@ -114,7 +114,7 @@ def test_ambiguous_roster_team_is_unknown_not_guessed_and_row_kept(pw):
     assert row["roll_games"] > 0                                     # history still attached
     traded = amb.assign(status=["ACT", "TRD"])
     row = _asof(pw, traded, BRADY, 2020, 1)
-    assert row["team"] == "TB" and row["team_source"] == F.TEAM_SOURCE_ROSTER
+    assert row["team"] == "TB" and row["team_source"] == F.TEAM_SOURCE_RECONSTRUCTED
 
 
 def test_stat_history_carries_across_the_transfer(pw, rosters):
@@ -153,3 +153,109 @@ def test_native_carry_forward_consumer_places_transfer_in_new_teams_game(pbp, ro
     pd.testing.assert_frame_equal(keep(after)[["game_id", "player_id", "market"]],
                                   keep(before)[["game_id", "player_id", "market"]])
     np.testing.assert_allclose(keep(after)["mean"], keep(before)["mean"])
+
+
+# --------------------------------------------------------------------------- #
+# Decision clock: a week label is not proof the roster was known pregame.
+# The capture/decision timestamps below are hand-set on the real roster rows;
+# they test the clock mechanics only (no real capture log exists for 2020).
+# --------------------------------------------------------------------------- #
+DECISION = pd.Timestamp("2020-09-13T16:00:00Z")          # before 2020 W1 Sunday kickoffs
+
+
+def _captured(rosters, when):
+    return rosters.assign(captured_at=when)
+
+
+def test_without_decision_clock_roster_identity_is_reconstructed_never_verified(pw, rosters):
+    for frame in (rosters, _captured(rosters, DECISION - pd.Timedelta(hours=1))):
+        row = _asof(pw, frame, BRADY, 2020, 1)
+        assert row["team"] == "TB" and row["team_source"] == F.TEAM_SOURCE_RECONSTRUCTED
+        assert row["team_source"] != F.TEAM_SOURCE_VERIFIED
+
+
+def test_same_week_roster_captured_before_decision_is_verified(pw, rosters):
+    a = F.asof_player_week(pw, 2020, 1, rosters=_captured(rosters, DECISION - pd.Timedelta(hours=1)),
+                           decision_at=DECISION)
+    row = a[a["player_id"] == BRADY].iloc[0]
+    assert row["team"] == "TB" and row["team_source"] == F.TEAM_SOURCE_VERIFIED
+
+
+def test_same_week_roster_captured_after_decision_is_rejected(pw, rosters):
+    late = _captured(rosters, DECISION + pd.Timedelta(minutes=1))
+    a = F.asof_player_week(pw, 2020, 1, rosters=late, decision_at=DECISION)
+    row = a[a["player_id"] == BRADY].iloc[0]
+    assert row["team"] == "NE" and row["team_source"] == F.TEAM_SOURCE_ROSTER_REJECTED
+    assert (a["team_source"] != F.TEAM_SOURCE_VERIFIED).all()
+    # only the late W1 row is rejected: a 2019 row captured in time still counts
+    mixed = pd.concat([_captured(rosters[rosters["season"] == 2019], DECISION - pd.Timedelta(days=200)),
+                       late[late["season"] == 2020]])
+    ident = F.asof_team_identity(pw, mixed, 2020, 1, decision_at=DECISION).set_index("player_id")
+    assert ident.loc[BRADY, "team"] == "NE" and ident.loc[BRADY, "roster_week"] == 18
+    assert ident.loc[BRADY, "n_roster_rows_rejected"] >= 1
+
+
+def test_unknown_capture_never_becomes_verified_pregame(pw, rosters):
+    no_col = rosters                                            # no captured_at column at all
+    nat = _captured(rosters, pd.NaT)
+    garbage = _captured(rosters, "not a timestamp")
+    naive = _captured(rosters, "2020-09-13T15:00:00")          # no zone: capture time unknown
+    for frame in (no_col, nat, garbage, naive):
+        a = F.asof_player_week(pw, 2020, 1, rosters=frame, decision_at=DECISION)
+        assert (a["team_source"] != F.TEAM_SOURCE_VERIFIED).all()
+        row = a[a["player_id"] == BRADY].iloc[0]
+        assert row["team"] == "NE" and row["team_source"] == F.TEAM_SOURCE_ROSTER_REJECTED
+
+
+def test_later_week_captured_before_decision_is_still_not_read(pw, rosters):
+    only_future = _captured(rosters[(rosters["season"] == 2020) & (rosters["week"] >= 2)],
+                            DECISION - pd.Timedelta(hours=1))
+    row = F.asof_team_identity(pw, only_future, 2020, 1, decision_at=DECISION).set_index("player_id").loc[BRADY]
+    assert row["team"] == "NE" and row["team_source"] == F.TEAM_SOURCE_NO_ROSTER
+
+
+def test_invalid_decision_clock_fails_loud(pw, rosters):
+    with pytest.raises(ValueError):
+        F.asof_team_identity(pw, rosters, 2020, 1, decision_at="soon")
+    with pytest.raises(ValueError):
+        F.asof_team_identity(pw, rosters, 2020, 1, decision_at="2020-09-13T16:00:00")   # naive
+
+
+def test_active_roster_payload_capture_clock_is_fetched_at(pw):
+    rows = [{"player_id": BRADY, "team": "TB", "status": "ACT", "week": 1},
+            {"player_id": RIVERS, "team": "IND", "status": "ACT", "week": 1}]
+    payload = {"season": 2020, "week": 1, "rows": rows,
+               "snapshot_at": "2020-09-12T10:00:00Z", "fetched_at": "2020-09-13T15:00:00Z"}
+    frame = F.roster_frame_from_active_roster(payload)
+    ident = F.asof_team_identity(pw, frame, 2020, 1, decision_at=DECISION).set_index("player_id")
+    assert ident.loc[BRADY, "team_source"] == F.TEAM_SOURCE_VERIFIED and ident.loc[RIVERS, "team"] == "IND"
+    fetched_late = F.roster_frame_from_active_roster({**payload, "fetched_at": "2020-09-13T16:00:01Z"})
+    assert F.asof_team_identity(pw, fetched_late, 2020, 1, decision_at=DECISION) \
+        .set_index("player_id").loc[BRADY, "team"] == "NE"
+    no_fetch = F.roster_frame_from_active_roster({**payload, "fetched_at": None})
+    assert F.asof_team_identity(pw, no_fetch, 2020, 1, decision_at=DECISION) \
+        .set_index("player_id").loc[BRADY, "team_source"] == F.TEAM_SOURCE_ROSTER_REJECTED
+
+
+def test_native_consumer_reports_identity_clock_and_rejects_late_roster(pbp, rosters):
+    hist = pbp[pbp["season"] == 2019]
+    sched = pd.read_parquet(FIX / "schedules_2019_2020.parquet")
+    kw = dict(pw=F.build_player_week(hist, rosters=rosters), opd=F.build_opp_pos_def(hist, rosters=rosters),
+              tw=F.build_team_week(hist), schedules=sched)
+    sd = {"passing_yards": 70.0, "pass_attempts": 6.0}
+
+    def run(frame, **extra):
+        return enumerate_candidates(2020, 1, inputs=WeekInputs(**kw, rosters=frame), markets=list(sd),
+                                    roster_mode="carry_forward", sd_by_market=sd, **extra)
+
+    recon = run(rosters)
+    assert recon.attrs["asof_team_identity"]["clock"] == "reconstructed_unverified"
+    late = run(_captured(rosters, DECISION + pd.Timedelta(hours=2)), decision_at=DECISION)
+    b = late[late["player_id"] == BRADY]
+    assert set(b["game_id"]) == {"2020_01_MIA_NE"}                  # late roster never re-seats him
+    info = late.attrs["asof_team_identity"]
+    assert info["clock"] == "decision_at" and info["decision_at"] == "2020-09-13T16:00:00Z"
+    assert info["team_source_counts"].get(F.TEAM_SOURCE_VERIFIED, 0) == 0
+    ok = run(_captured(rosters, DECISION - pd.Timedelta(hours=2)), decision_at=DECISION)
+    assert set(ok[ok["player_id"] == BRADY]["game_id"]) == {"2020_01_TB_NO"}
+    assert ok.attrs["asof_team_identity"]["team_source_counts"][F.TEAM_SOURCE_VERIFIED] > 0
