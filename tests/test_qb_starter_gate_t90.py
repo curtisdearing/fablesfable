@@ -28,6 +28,22 @@ QB_MARKETS = ("pass_attempts", "passing_yards")
 LINES = {"pass_attempts": 33.5, "passing_yards": 244.5}
 # claim clocks: published and captured before the (2023-11-05 18:00Z) kickoff and the run
 PUB, GOT = "2023-11-03T20:00:00Z", "2023-11-04T12:00:00Z"
+# explicit official (book-settled) attempts for QB_B: the sack-inclusive 34 minus 2 sacks per game;
+# 0 for non-passers, as the production builder gives for covered team-weeks
+OFFICIAL_ATTEMPTS = 32.0
+
+
+def _inputs(official=True):
+    """``synthetic_inputs`` plus the official pass-attempt columns the pass_attempts market reads.
+
+    Without them production correctly refuses the pass_attempts row (NaN mean, no card).
+    """
+    inp = synthetic_inputs()
+    if official:
+        qb = inp.pw["player_id"] == "QB_B"
+        inp.pw["pass_attempts_official"] = qb.map({True: OFFICIAL_ATTEMPTS, False: 0.0})
+        inp.pw["roll_pass_attempts_official"] = inp.pw["pass_attempts_official"]
+    return inp
 
 
 def _doc(starter_name):
@@ -58,7 +74,7 @@ def _feeds(starter_name):
     return f
 
 
-def _run(monkeypatch, starter_name):
+def _run(monkeypatch, starter_name, official=True):
     real = cfgmod.load_config
     monkeypatch.setattr(cfgmod, "load_config", lambda *a, **k: {**real(*a, **k),
                                                                  "odds_api_key": "TEST-DUMMY"})
@@ -74,7 +90,7 @@ def _run(monkeypatch, starter_name):
 
     def refuse(*a, **k):
         raise AssertionError("no odds acquisition in this test")
-    res = pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=synthetic_inputs(),
+    res = pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=_inputs(official),
                      inject_feeds=_feeds(starter_name), odds_fetch=refuse, list_events_fn=lambda cfg: [])
     conn = dbmod.connect()
     cards = [c for c in pc.week_cards(conn, SEASON, WEEK)["cards"]
@@ -130,3 +146,12 @@ def test_t90_same_confirmed_starter_stays_executable(env, monkeypatch):
     res, cards, _ = _run(monkeypatch, "Bravo Quarterback")
     assert res["factor_receipt"]["qb_context"]["BBB"]["qb_id"] == "QB_B"
     assert len(cards) == 2 and all(c["status"] == "watch" for c in cards)
+
+
+def test_t90_without_official_attempts_refuses_the_pass_attempts_row(env, monkeypatch):
+    # production missing-coverage refusal: no official roll -> no pass_attempts card, never the
+    # sack-inclusive count; passing_yards (sack-inclusive basis by contract) is unaffected
+    _, cards, leans = _run(monkeypatch, None, official=False)
+    assert {c["market"] for c in cards} == {"passing_yards"}
+    assert "pass_attempts" not in set(leans["market"])
+    assert all(c["status"] == "watch" for c in cards)
