@@ -81,7 +81,8 @@ python scripts/pick_delivery.py grade --db <ledger db> --season 2026 --week 3 \
 3. Run `prepare` close to kickoff: quotes must be under 6 h old. If it withholds
    everything, the message is the "No pick" text and nothing is recorded.
 4. Send `message.txt` unchanged, then `record` each sent item with real evidence before
-   kickoff.
+   kickoff. The 6 h limit also runs to delivery: `record` refuses a pregame delivery made
+   more than 6 h after the card's quote capture (even with `--retrospective`); prepare again.
 5. After the finals, capture the boxes and run `grade`.
 6. Keep the model separate:
    - Grades do not feed model fitting. The grader writes no `model_adjustments`.

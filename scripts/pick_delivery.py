@@ -234,6 +234,14 @@ def record(db_path, manifest_path, item_id, evidence, now, retrospective=False):
     if when < _ts(m["prepared_at"]):
         raise ValueError("delivery clock precedes the text's preparation")
     after_kick = when >= _ts(it["kickoff"])
+    # Freshness at preparation does not extend the card's quote: a pregame delivery after the
+    # quote aged past STALE_QUOTE_HOURS was not given at a live price (no --retrospective escape).
+    cap = _ts((it["card"].get("quote") or {}).get("captured_at"))
+    if cap is None:
+        raise ValueError("card quote capture clock missing or not zoned")
+    if not after_kick and (when - cap).total_seconds() / 3600 > STALE_QUOTE_HOURS:
+        raise ValueError(f"card quote expired before delivery (> {STALE_QUOTE_HOURS:.0f} h after capture): "
+                         "prepare again from a fresh quote")
     if after_kick and not retrospective:
         raise ValueError("delivered at/after kickoff: pass --retrospective to record it as retrospective")
     conn = dbmod.connect(os.path.abspath(db_path))

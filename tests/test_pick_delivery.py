@@ -183,6 +183,9 @@ def test_delivery_clock_guards(tmp_path, actionable):
     assert _record(tmp_path, man, item, Z("11:10"), *_platform(at=Z("10:59"))) == 2       # before prepared
     assert _record(tmp_path, man, item, Z("11:10"), *_platform(at=Z("11:30"))) == 2       # future
     assert _record(tmp_path, man, item, Z("21:00"), *_platform(at=Z("20:30"))) == 2       # after kickoff
+    # quote captured 10:00: pregame delivery at 16:30 is past the card's 6 h quote life
+    assert _record(tmp_path, man, item, Z("17:00"), *_platform(at=Z("16:30"))) == 2
+    assert _record(tmp_path, man, item, Z("17:00"), *_platform(at=Z("16:30")), "--retrospective") == 2
     assert _record(tmp_path, man, item, Z("21:00"), *_platform(at=Z("20:30")), "--retrospective") == 0
     res = _grade(tmp_path)
     assert res["counts"]["recommendations_given"] == 0 and res["counts"]["retrospective"] == 1
