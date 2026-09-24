@@ -28,9 +28,10 @@ jobs:
   publish:
     if: >-
       github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'))
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.event != 'workflow_run'))
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -133,3 +134,27 @@ jobs:
         if: steps.pick.outputs.publish == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
+      # Deploying is not publishing until the live site serves these exact bytes. Read the
+      # page back (cache-busted, retried while the CDN may serve the previous deployment);
+      # only a byte-identical readback writes the receipt, otherwise this step fails and no
+      # receipt exists. The receipt (with the hub/manifest it attests) is what the production
+      # state holder records as the ledger's `published` event; this workflow never writes
+      # model state.
+      - name: Verify the live site serves the deployed artifact
+        if: steps.pick.outputs.publish == 'true'
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/receipt"
+          python3 scripts/publication_receipt.py readback --site published-site --base-url "$PAGE_URL" \
+            --run-id "${{ github.run_id }}-${{ github.run_attempt }}" --out "$RUNNER_TEMP/receipt/publication_receipt.json"
+          cp published-site/publication.json "$RUNNER_TEMP/receipt/publication.json"
+          cp published-site/api/hub.json "$RUNNER_TEMP/receipt/hub.json"
+      - name: Keep the publication receipt
+        if: steps.pick.outputs.publish == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: publication-receipt
+          path: ${{ runner.temp }}/receipt
+          if-no-files-found: error
+          retention-days: 90

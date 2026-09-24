@@ -33,7 +33,7 @@ than silently passing as equally reliable.
 from __future__ import annotations
 
 import os
-from typing import Optional, Sequence
+from typing import Dict, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -57,13 +57,28 @@ PBP_COLUMNS = [
     "passer_player_id", "passer_player_name",
 ]
 
+#: Optional play-by-play columns for OFFICIAL QB pass attempts (sacks and
+#: two-point tries excluded; see nflvalue.qb_official).  nflverse sets
+#: ``pass_attempt=1`` on sacks, so ``pass_attempts`` / ``roll_pass_attempts``
+#: stay sack-inclusive (team dropback volume and trained ranker inputs read
+#: them).  Read when present; when ``sack`` is absent the official columns stay
+#: NaN (unresolved) -- never sack-inclusive, never 0.
+QB_OFFICIAL_PBP_COLUMNS = ["sack", "down", "two_point_attempt"]
+
+
+def pbp_columns_for(path: str) -> list:
+    """``PBP_COLUMNS`` plus whichever ``QB_OFFICIAL_PBP_COLUMNS`` the file has."""
+    import pyarrow.parquet as pq
+    names = set(pq.read_schema(path).names)
+    return PBP_COLUMNS + [c for c in QB_OFFICIAL_PBP_COLUMNS if c in names]
+
 
 # --------------------------------------------------------------------------- #
 # Load
 # --------------------------------------------------------------------------- #
 def load_pbp(path: Optional[str] = None) -> pd.DataFrame:
     path = path or os.path.join(HIST, "historical_pbp.parquet")
-    df = pd.read_parquet(path, columns=PBP_COLUMNS)
+    df = pd.read_parquet(path, columns=pbp_columns_for(path))
     df = df[df["season_type"] == "REG"].copy()  # keep regular season only for consistency
     return df
 
@@ -296,6 +311,8 @@ def _add_rolling_player_features(pw: pd.DataFrame) -> pd.DataFrame:
     pw["roll_carry_share"] = g["_carry_share"].transform(_rolling_shifted)
     pw["roll_pass_attempts"] = g["pass_attempts"].transform(_rolling_shifted)
     pw["roll_completions"] = g["completions"].transform(_rolling_shifted)
+    if "pass_attempts_official" in pw.columns:
+        pw["roll_pass_attempts_official"] = g["pass_attempts_official"].transform(_rolling_shifted)
 
     # Cold start (a player's very first row has no own history -> NaN above):
     # fall back to the role's PRIOR-weeks-only league average rather than
@@ -311,6 +328,15 @@ def _add_rolling_player_features(pw: pd.DataFrame) -> pd.DataFrame:
     for roll_col, raw_col in volume_fallbacks.items():
         league_mean = _league_role_prior_mean(pw, raw_col)
         pw[roll_col] = pw[roll_col].fillna(league_mean)
+    if "pass_attempts_official" in pw.columns:
+        # same cold-start fallback, but only where PRIOR official data exists:
+        # _league_role_prior_mean's zero-information 0.0 would turn "no
+        # sack-aware play-by-play" into a 0-attempt projection.
+        lm = _league_role_prior_mean(pw, "pass_attempts_official").to_numpy()
+        seen = _league_role_prior_mean(
+            pw.assign(_off_seen=pw["pass_attempts_official"].notna().astype(float)), "_off_seen").to_numpy() > 0
+        pw["roll_pass_attempts_official"] = pw["roll_pass_attempts_official"].fillna(
+            pd.Series(np.where(seen, lm, np.nan), index=pw.index))
 
     raw_eff = {
         "roll_ypt": "_ypt",
@@ -345,6 +371,8 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw = _combine_player_week(pbp)
     pw = pw.merge(team_week, on=["season", "week", "team"], how="left")
     pw = _assign_position(pw, rosters=rosters)
+    from . import qb_official
+    pw["pass_attempts_official"] = qb_official.official_attempts_raw(pw, pbp)
     pw = pw.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
 
     # ---- per-week raw ratios (this week's realized rate; NOT leaked yet -- ---
@@ -372,6 +400,8 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
         "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
+        # appended last so every pre-existing column keeps its name, values and order
+        "pass_attempts_official", "roll_pass_attempts_official",
     ]
     return pw[keep].reset_index(drop=True)
 
@@ -549,7 +579,7 @@ _ASOF_RAW_COLS = [
     "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum",
     "carries", "rush_yards", "pass_attempts", "completions", "pass_yards",
     "pass_tds", "rush_tds", "rec_tds",
-    "team_pass_att", "team_rush_att", "team_plays",
+    "team_pass_att", "team_rush_att", "team_plays", "pass_attempts_official",
 ]
 
 
@@ -557,18 +587,182 @@ def _prior_rows(df: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
     return df[(df["season"] < season) | ((df["season"] == season) & (df["week"] < week))]
 
 
-def asof_player_week(pw: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
+#: nflverse roster statuses whose row sits on the DEPARTING team
+#: (``sources.active_roster.STATUS_CLASS``): never evidence FOR that team.
+_DEPARTED_STATUSES = {"TRD", "TRC"}
+
+#: ``team_source`` values stamped by ``asof_team_identity``.
+#: Re-seated from a roster row with NO decision clock: historical
+#: reconstruction. Weekly roster files carry a week label, not a capture
+#: time, so the row is not proven to have been available before the decision.
+TEAM_SOURCE_RECONSTRUCTED = "reconstructed_roster_unverified"
+#: Re-seated from a roster row whose ``captured_at`` is at or before ``decision_at``.
+TEAM_SOURCE_VERIFIED = "verified_pregame_roster"
+TEAM_SOURCE_LAST_PLAYED = "last_played"             # last game at least as recent as any usable roster row
+TEAM_SOURCE_NO_ROSTER = "last_played_no_roster"     # no roster row for the player at all
+#: Under a decision clock the player's roster rows were all captured after the
+#: decision or at an unknown time: they are rejected and he stays on his last played team.
+TEAM_SOURCE_ROSTER_REJECTED = "last_played_roster_rejected"
+TEAM_SOURCE_AMBIGUOUS = "ambiguous_roster"          # newest usable roster week lists >1 team: team unknown
+
+#: Roster column holding the UTC time the row was captured (held by us).
+ROSTER_CAPTURED_COL = "captured_at"
+
+
+def _utc(ts, what: str) -> pd.Timestamp:
+    t = pd.Timestamp(ts)
+    if pd.isna(t) or t.tzinfo is None:
+        raise ValueError(f"{what} must be a timezone-aware timestamp, got {ts!r}")
+    return t.tz_convert("UTC")
+
+
+def _capture_times(col: pd.Series) -> pd.Series:
+    """``captured_at`` -> tz-aware UTC; anything naive or unparseable is NaT
+    (an unknown capture time, which never verifies)."""
+    if isinstance(col.dtype, pd.DatetimeTZDtype):
+        return col.dt.tz_convert("UTC")
+
+    def one(x):
+        try:
+            t = pd.Timestamp(x)
+        except (TypeError, ValueError):
+            return pd.NaT
+        return pd.NaT if pd.isna(t) or t.tzinfo is None else t.tz_convert("UTC")
+    return pd.Series([one(x) for x in col], index=col.index, dtype="datetime64[ns, UTC]")
+
+
+def roster_frame_from_active_roster(payload: Dict) -> pd.DataFrame:
+    """``sources.active_roster.fetch_active_roster`` payload -> roster frame
+    for ``asof_team_identity``.
+
+    ``captured_at`` is the payload's ``fetched_at`` (when we held the roster),
+    not ``snapshot_at`` (the asset's Last-Modified): a roster published before
+    the decision but fetched after it was not available to the decision. A
+    missing ``fetched_at`` leaves ``captured_at`` unknown, which never verifies.
+    """
+    rows = pd.DataFrame(payload.get("rows") or [],
+                        columns=["player_id", "team", "status", "week"])
+    rows["season"] = int(payload["season"])
+    rows[ROSTER_CAPTURED_COL] = _capture_times(pd.Series([payload.get("fetched_at")] * len(rows),
+                                                         index=rows.index, dtype=object))
+    rows["snapshot_at"] = payload.get("snapshot_at")
+    return rows[["season", "week", "player_id", "team", "status",
+                 ROSTER_CAPTURED_COL, "snapshot_at"]]
+
+
+def asof_team_identity(pw: pd.DataFrame, rosters: Optional[pd.DataFrame],
+                       season: int, week: int, decision_at=None) -> pd.DataFrame:
+    """Each player's team as of the START of (season, week), one row per player.
+
+    A player's last PLAYED team is only his team until he moves: a QB who
+    changed teams in the offseason would otherwise be seated in his old
+    team's game (Brady 2020 W1: last played NE, played TB). Roster rows can
+    re-seat him:
+
+    * only roster rows labelled at or before (season, week) are read; later
+      weeks never are.
+    * ``decision_at`` (tz-aware) is the decision clock. When given, a row
+      counts only if its ``captured_at`` is known and at or before it; rows
+      captured later or at an unknown time are rejected (counted in
+      ``n_roster_rows_rejected``). Re-seats are ``verified_pregame_roster``.
+    * Without ``decision_at`` nothing proves when a row became available: a
+      week label is not a capture time. Re-seats are then
+      ``reconstructed_roster_unverified`` -- a historical reconstruction,
+      not a leak-free pregame input.
+    * whichever is newer wins: the usable roster row, or the last game played.
+      Ties go to the game. A stale roster therefore can never undo a move
+      the play-by-play has already shown.
+    * ``TRD``/``TRC`` status rows (row on the departing club) are ignored.
+      If the newest usable roster week still lists two teams, the team is
+      unknown (NaN, ``ambiguous_roster``); the row is kept, never guessed.
+
+    The team placement is the only thing that changes. Stat history stays
+    keyed by ``player_id``, so rolling features carry across the move.
+
+    Columns: player_id, last_played_team, last_played_season,
+    last_played_week, roster_team, roster_season, roster_week,
+    n_roster_rows_rejected, team, team_source.
+    """
+    decision = None if decision_at is None else _utc(decision_at, "decision_at")
+    cols = ["player_id", "last_played_team", "last_played_season", "last_played_week",
+            "roster_team", "roster_season", "roster_week", "n_roster_rows_rejected",
+            "team", "team_source"]
+    hist = _prior_rows(pw, season, week)
+    if hist.empty:
+        return pd.DataFrame(columns=cols)
+    last = (hist.sort_values(["player_id", "season", "week"]).groupby("player_id").tail(1)
+            [["player_id", "team", "season", "week"]]
+            .rename(columns={"team": "last_played_team", "season": "last_played_season",
+                             "week": "last_played_week"}))
+
+    ev = pd.DataFrame(columns=["player_id", "roster_team", "roster_season", "roster_week",
+                               "n_teams"])
+    rejected = pd.Series(dtype=int)
+    if rosters is not None and len(rosters) and "team" in rosters.columns:
+        r = rosters.dropna(subset=["player_id", "team"])
+        r = r[(r["season"] < season) | ((r["season"] == season) & (r["week"] <= week))]
+        if "status" in r.columns:
+            r = r[~r["status"].astype(str).str.upper().isin(_DEPARTED_STATUSES)]
+        if decision is not None:
+            cap = (_capture_times(r[ROSTER_CAPTURED_COL]) if ROSTER_CAPTURED_COL in r.columns
+                   else pd.Series(pd.NaT, index=r.index, dtype="datetime64[ns, UTC]"))
+            usable = cap.notna() & (cap <= decision)
+            rejected = r.loc[~usable, "player_id"].value_counts()
+            r = r[usable]
+        if len(r):
+            r = r.assign(_key=r["season"].astype(int) * 100 + r["week"].astype(int))
+            r = r[r["_key"] == r.groupby("player_id")["_key"].transform("max")]
+            ev = (r.groupby("player_id")
+                  .agg(roster_team=("team", lambda s: s.iloc[0] if s.nunique() == 1 else np.nan),
+                       roster_season=("season", "first"), roster_week=("week", "first"),
+                       n_teams=("team", "nunique"))
+                  .reset_index())
+
+    out = last.merge(ev, on="player_id", how="left")
+    out["n_roster_rows_rejected"] = out["player_id"].map(rejected).fillna(0).astype(int)
+    has_roster = out["roster_season"].notna()
+    newer = has_roster & (
+        (out["roster_season"] > out["last_played_season"])
+        | ((out["roster_season"] == out["last_played_season"])
+           & (out["roster_week"] > out["last_played_week"])))
+    ambiguous = newer & (out["n_teams"] > 1)
+    out["team"] = np.where(newer & ~ambiguous, out["roster_team"], out["last_played_team"])
+    out.loc[ambiguous, "team"] = np.nan
+    out["team_source"] = np.select(
+        [ambiguous, newer, has_roster, out["n_roster_rows_rejected"] > 0],
+        [TEAM_SOURCE_AMBIGUOUS,
+         TEAM_SOURCE_VERIFIED if decision is not None else TEAM_SOURCE_RECONSTRUCTED,
+         TEAM_SOURCE_LAST_PLAYED, TEAM_SOURCE_ROSTER_REJECTED],
+        default=TEAM_SOURCE_NO_ROSTER)
+    return out[cols].reset_index(drop=True)
+
+
+def asof_player_week(pw: pd.DataFrame, season: int, week: int,
+                     rosters: Optional[pd.DataFrame] = None, decision_at=None) -> pd.DataFrame:
     """One row per player, as of the START of (season, week).
 
     ``pw`` is a built ``player_week`` frame. Only rows STRICTLY BEFORE the
     target week are used, so this is leak-free by construction. Returns the
     placeholder rows only, with the same columns as ``pw``.
+
+    ``rosters`` (weekly roster frame with ``team``): when given, each row's
+    ``team`` is the as-of team from ``asof_team_identity`` instead of the last
+    played team, and a ``team_source`` column is appended. Without it the
+    team is the last played team (a transferred player sits on his OLD team).
+    ``decision_at`` is the decision clock for that roster evidence; without
+    it re-seats are reconstructed/unverified (see ``asof_team_identity``).
     """
     hist = _prior_rows(pw, season, week).copy()
     if hist.empty:
         return pw.iloc[0:0].copy()
     hist = hist.sort_values(["player_id", "season", "week"])
     latest = hist.groupby("player_id").tail(1).copy()
+
+    identity = None
+    if rosters is not None:
+        identity = asof_team_identity(pw, rosters, season, week,
+                                      decision_at=decision_at).set_index("player_id")
+        latest["team"] = latest["player_id"].map(identity["team"])
 
     latest["season"], latest["week"] = season, week
     for col in _ASOF_RAW_COLS:
@@ -594,7 +788,10 @@ def asof_player_week(pw: pd.DataFrame, season: int, week: int) -> pd.DataFrame:
 
     frame = _add_rolling_player_features(frame)
     out = frame[(frame["season"] == season) & (frame["week"] == week)]
-    return out[list(pw.columns)].reset_index(drop=True)
+    out = out[list(pw.columns)].reset_index(drop=True)
+    if identity is not None:
+        out["team_source"] = out["player_id"].map(identity["team_source"])
+    return out
 
 
 def asof_team_week(pw: pd.DataFrame, season: int, week: int,

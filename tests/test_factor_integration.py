@@ -320,7 +320,7 @@ def test_v5_database_migrates_context_under_its_own_run(tmp_path):
     raw.commit()
     raw.close()
     conn = dbmod.connect(path)
-    assert dbmod.user_version(conn) == dbmod.SCHEMA_VERSION == 6
+    assert dbmod.user_version(conn) == dbmod.SCHEMA_VERSION >= 6
     assert conn.execute("SELECT COUNT(*) FROM factor_context_legacy_v5").fetchone()[0] == 1
     assert set(fimod.load_context_records(conn, 2026, 3)) == {("r1", "G1")}
     dbmod.migrate(conn)                                       # idempotent

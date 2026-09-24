@@ -53,7 +53,8 @@ SCHEDULES_PATH = os.path.join(ROOT, "historical", "historical_lines.parquet")
 ACTUAL_COL = {
     "receiving_yards": "rec_yards", "receptions": "receptions",
     "rushing_yards": "rush_yards", "passing_yards": "pass_yards",
-    "pass_attempts": "pass_attempts", "rush_attempts": "carries",
+    # pass_attempts settles on OFFICIAL attempts (sacks/2-pt excluded; features.build_player_week)
+    "pass_attempts": "pass_attempts_official", "rush_attempts": "carries",
 }
 
 # minimum trailing usage so the candidate pool isn't scrubs (configurable via
@@ -98,8 +99,11 @@ class WeekInputs:
     """All walk-forward tables needed to project one week, built once."""
 
     def __init__(self, pw: pd.DataFrame, opd: pd.DataFrame, tw: pd.DataFrame,
-                 schedules: pd.DataFrame):
+                 schedules: pd.DataFrame, rosters: Optional[pd.DataFrame] = None):
         self.pw = pw
+        # weekly rosters (season, week, player_id, team): seats carry_forward
+        # players on their AS-OF team (features.asof_team_identity)
+        self.rosters = rosters
         self.opd = opd
         self.tw = tw
         self.schedules = schedules
@@ -122,11 +126,14 @@ def build_week_inputs(pbp: Optional[pd.DataFrame] = None,
             pbp = ingest.load_all_pbp()
         else:
             pbp = load_pbp()
+    from .sources import rosters as rostersmod
+    rosters = rostersmod.fetch_rosters_weekly(sorted(pbp["season"].unique().tolist()))
     return WeekInputs(
-        pw=build_player_week(pbp),
+        pw=build_player_week(pbp, rosters=rosters),
         opd=build_opp_pos_def(pbp),
         tw=build_team_week(pbp),
         schedules=schedules if schedules is not None else load_schedules(),
+        rosters=rosters,
     )
 
 
@@ -159,6 +166,8 @@ def synthetic_lines(inputs: WeekInputs, market: str) -> pd.Series:
     pw = inputs.pw
     if actual_col is None:  # anytime_td: the "line" is always 0.5 (yes/no)
         return pd.Series(0.5, index=pw.index)
+    if actual_col not in pw.columns:  # frame predates the official column: no line, not a guess
+        return pd.Series(np.nan, index=pw.index)
     g = pw.sort_values(["player_id", "season", "week"]).groupby("player_id")
     trail = g[actual_col].transform(lambda s: s.shift(1).rolling(8, min_periods=3).mean())
     return np.floor(trail) + 0.5
@@ -191,6 +200,7 @@ def enumerate_candidates(
     sd_by_market: Optional[Dict[str, Optional[float]]] = None,
     synth_by_market: Optional[Dict[str, pd.Series]] = None,
     margin_source: Optional[str] = None,
+    decision_at=None,
 ) -> pd.DataFrame:
     """All eligible (player, market) candidates for every game of (season, week).
 
@@ -245,6 +255,7 @@ def enumerate_candidates(
     dispersion = ffmod.load_dispersion()
 
     pw = inputs.pw
+    identity_info = None
     if roster_mode == "as_played":
         week_rows = pw[(pw["season"] == season) & (pw["week"] == week)].copy()
     elif roster_mode == "carry_forward":
@@ -258,7 +269,47 @@ def enumerate_candidates(
         # that row's features excluded its own game, so the live board was one
         # game staler than anything the backtest scored: the 2026 Week 2 board
         # carried no 2026 Week 1 information for 73 of its 80 leans.
-        week_rows = featuresmod.asof_player_week(pw, season, week)
+        #
+        # Seat = AS-OF roster team when rosters are supplied, so a player who
+        # changed teams is placed in his NEW team's game (features.asof_team_identity).
+        # ``decision_at`` (tz-aware) admits only roster rows captured by then;
+        # without it the re-seat is a reconstruction, labelled unverified.
+        week_rows = featuresmod.asof_player_week(pw, season, week,
+                                                 rosters=getattr(inputs, "rosters", None),
+                                                 decision_at=decision_at)
+        if "team_source" in week_rows.columns:
+            identity_info = {
+                "clock": "decision_at" if decision_at is not None else "reconstructed_unverified",
+                "decision_at": (None if decision_at is None else
+                                pd.Timestamp(decision_at).tz_convert("UTC").strftime("%Y-%m-%dT%H:%M:%SZ")),
+                "team_source_counts": {str(k): int(v) for k, v in
+                                       week_rows["team_source"].value_counts().items()},
+            }
+            ident = featuresmod.asof_team_identity(pw, inputs.rosters, season, week,
+                                                   decision_at=decision_at)
+            on_slate = ident["team"].isin(team_to_game) | ident["last_played_team"].isin(team_to_game)
+            moved = ident[on_slate & ident["team"].notna() & (ident["team"] != ident["last_played_team"])]
+            identity_info["reseated"] = [
+                {"player_id": r.player_id, "from_team": r.last_played_team, "to_team": r.team,
+                 "team_source": r.team_source, "roster_season": int(r.roster_season),
+                 "roster_week": int(r.roster_week)} for r in moved.itertuples(index=False)]
+            # Under a decision clock a player whose roster evidence was all
+            # captured late / at an unknown time, or is ambiguous, has NO
+            # verified seat: he is not enumerated at all (never quietly left on
+            # his last played team) and is listed here instead.
+            bad = [featuresmod.TEAM_SOURCE_AMBIGUOUS]
+            if decision_at is not None:
+                bad.append(featuresmod.TEAM_SOURCE_ROSTER_REJECTED)
+            unseated = ident[ident["team_source"].isin(bad)]
+            identity_info["n_unseated"] = int(len(unseated))
+            identity_info["unseated_on_slate"] = [
+                {"player_id": r.player_id, "last_played_team": r.last_played_team,
+                 "team_source": r.team_source, "n_roster_rows_rejected": int(r.n_roster_rows_rejected)}
+                for r in unseated[on_slate.loc[unseated.index]].itertuples(index=False)]
+            if len(unseated):
+                print(f"[candidates] {season} W{week}: {len(unseated)} player(s) without a usable "
+                      f"as-of roster team, not seated: {sorted(unseated['player_id'])[:10]}")
+                week_rows = week_rows[~week_rows["player_id"].isin(set(unseated["player_id"]))]
         week_rows = week_rows[week_rows["team"].isin(team_to_game)].copy()
     else:
         raise ValueError(f"unknown roster_mode {roster_mode!r}")
@@ -353,6 +404,8 @@ def enumerate_candidates(
     df = pd.DataFrame(out)
     if not df.empty:
         df = df.sort_values(["game_id", "player_id", "market"], kind="mergesort").reset_index(drop=True)
+    if identity_info is not None:
+        df.attrs["asof_team_identity"] = identity_info
     return df
 
 
@@ -387,6 +440,62 @@ ABSENCE_QB_MULT = {"WR": 0.921, "TE": 0.947, "RB": 0.971}
 #: Markets apply_absence_qb_adjustment can change (shared with factor_integration).
 ABSENCE_QB_MARKETS = ("passing_yards", "pass_attempts")
 _QB_MARKETS = ABSENCE_QB_MARKETS
+
+
+#: QB markets whose EXECUTABILITY depends on the team's confirmed starter.  The gate below never
+#: changes a number: it only decides whether a non-starter QB's row may become executable.
+STARTER_GATED_MARKETS = ABSENCE_QB_MARKETS
+
+
+def confirmed_starter(q: Optional[Dict]) -> Optional[str]:
+    """The team's unique confirmed starter id from one ``qb_context_records`` entry, else None."""
+    from . import qb_readiness as qr
+    q = q or {}
+    ok = q.get("state") in (qr.SOURCED_SAME, qr.SOURCED_CHANGED, qr.NO_PRIOR)
+    return q.get("qb_id") if ok and q.get("qb_id") else None
+
+
+def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict]]) -> Dict:
+    """(player_id, market) -> starter eligibility for every QB-market row of this run.
+
+    ``qb_context`` is the run's own ``factor_integration.qb_context_records`` result, so the
+    starter is a team-sourced claim that was explicitly confirmed, published and captured
+    before this run's decision clock and linked to a unique roster QB id (``qb_id``); nothing
+    here reads names or free text.  States:
+
+    * ``confirmed_starter``      -- this row's QB is the confirmed starter (no change).
+    * ``not_confirmed_starter``  -- another QB is the confirmed starter: ``blocks_execution``.
+    * ``starter_not_confirmed``  -- no unique usable confirmed starter (unconfirmed, conflict,
+      claim after the clock, unlinked id, or no context): disclosed, NOT asserted as backup,
+      and not blocked here.
+    """
+    out: Dict = {}
+    for r in rows:
+        market = r.get("market")
+        if market not in STARTER_GATED_MARKETS:
+            continue
+        pid, team = r.get("player_id"), r.get("team")
+        q = (qb_context or {}).get(team) or {}
+        state_t, starter = q.get("state") or "not_resolved", confirmed_starter(q)
+        info = {"team": team, "team_state": state_t, "starter_qb_id": starter,
+                "starter_name": q.get("qb_name"), "source": q.get("source"),
+                "source_tier": q.get("source_tier"), "published_at": q.get("published_at"),
+                "fetched_at": q.get("fetched_at")}
+        if starter:
+            if pid == starter:
+                out[(pid, market)] = {**info, "state": "confirmed_starter",
+                                      "blocks_execution": False, "reason": None}
+            else:
+                out[(pid, market)] = {**info, "state": "not_confirmed_starter", "blocks_execution": True,
+                                      "reason": (f"{team} confirmed starter is {q.get('qb_name') or starter} "
+                                                 f"({starter}; {q.get('source_tier') or 'team'} source "
+                                                 f"published {q.get('published_at')}); not executable "
+                                                 f"for another QB")}
+        else:
+            out[(pid, market)] = {**info, "state": "starter_not_confirmed", "blocks_execution": False,
+                                  "reason": (f"{team} starter not confirmed before this run ({state_t}); "
+                                             f"this QB is not asserted to be the starter or a backup")}
+    return out
 
 
 def team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:
@@ -525,8 +634,10 @@ def _carry_forward_synth(inputs: WeekInputs, market: str, player_id: str) -> Opt
     actual_col = ACTUAL_COL.get(market)
     if actual_col is None:
         return 0.5
+    if actual_col not in inputs.pw.columns:
+        return None
     hist = inputs.pw[inputs.pw["player_id"] == player_id].sort_values(["season", "week"])
-    tail = hist[actual_col].tail(8)
+    tail = hist[actual_col].dropna().tail(8)
     if len(tail) < 3:
         return None
     return float(np.floor(tail.mean()) + 0.5)

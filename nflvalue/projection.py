@@ -65,8 +65,14 @@ MARKETS: Dict[str, Dict] = {
                            use_opp_factor=True, dist="gamma", low_confidence=False),
     "passing_yards": dict(role=("QB",), opportunity="pass_attempts", efficiency="roll_ypa",
                            use_opp_factor=True, dist="normal", low_confidence=False),
+    # volume_col: books settle pass attempts on the OFFICIAL stat (sacks and
+    # two-point tries excluded; nflvalue.qb_official), so this market's volume
+    # reads the official prior-games roll.  passing_yards and the usage floor
+    # keep the sack-inclusive roll_pass_attempts (yards = attempts x ypa is
+    # internally consistent on that basis).
     "pass_attempts": dict(role=("QB",), opportunity="pass_attempts", efficiency=None,
-                           use_opp_factor=False, dist="negbinom", low_confidence=False),
+                           use_opp_factor=False, dist="negbinom", low_confidence=False,
+                           volume_col="roll_pass_attempts_official"),
     "rush_attempts": dict(role=("RB",), opportunity="carries", efficiency=None,
                            use_opp_factor=False, dist="negbinom", low_confidence=False),
     "anytime_td": dict(role=("RB", "WR", "TE"), opportunity=None, efficiency=None,
@@ -135,8 +141,14 @@ def expected_volume(player_row: Dict, team_row: Optional[Dict], market_spec: Dic
     if opp_key == "pass_attempts":
         # a starting QB is ~all of a team's dropbacks; his own rolling rate is
         # already the right volume basis (no need to re-derive a team share).
-        base = player_row.get("roll_pass_attempts")
-        base = float(base) if base is not None and not (isinstance(base, float) and math.isnan(base)) else 0.0
+        col = market_spec.get("volume_col", "roll_pass_attempts")
+        base = player_row.get(col)
+        missing = base is None or (isinstance(base, float) and math.isnan(base))
+        if missing and col != "roll_pass_attempts":
+            # official attempts unavailable (no sack-aware play-by-play): the
+            # projection is unresolved, never the sack-inclusive count or 0
+            return float("nan")
+        base = 0.0 if missing else float(base)
         return base * game_script["pass_mult"]
 
     raise ValueError(f"unknown opportunity key {opp_key!r}")

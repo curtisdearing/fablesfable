@@ -6,6 +6,8 @@ GREEN after the repair; see the report for the log paths.
 """
 from __future__ import annotations
 
+import json
+
 import datetime as dt
 import io
 import sys
@@ -209,7 +211,15 @@ def test_t90_applies_the_roster_gate_and_scopes_its_persist_to_the_game(env):  #
     assert res["publish"] is True
     pids = {ln["player_id"] for g in res["games"] for ln in g["leans"]}
     assert "WR_A" not in pids
-    assert res["roster_eligibility"]["by_reason"].get("team_changed") == 1
+    # His verified live roster row (ZZZ) now seats him OFF this slate before
+    # candidates are built (pipeline_weekly._acquire_live_identity), so the
+    # exclusion is recorded as a re-seat in the run receipt instead of a
+    # roster-eligibility team_changed row. Either way he never reaches the board.
+    assert res["roster_eligibility"]["by_reason"].get("team_changed", 0) == 0
+    rec = json.loads(dbmod.query_df(dbmod.connect(), "SELECT receipt_json FROM run_receipts "
+                                    "WHERE clock='t90'")["receipt_json"].iloc[0])
+    assert {"player_id": "WR_A", "from_team": "AAA", "to_team": "ZZZ"}.items() <= \
+        next(m for m in rec["team_identity"]["reseated"] if m["player_id"] == "WR_A").items()
 
     conn = dbmod.connect()
     # a T-90 lean for ANOTHER game must survive this game's persist

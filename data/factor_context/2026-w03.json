@@ -122,6 +122,9 @@
  "curated_games_kept": [
   "2026_03_ATL_GB"
  ],
+ "club_reports": {
+  "2026_03_ATL_GB": "https://www.packers.com/news/packers-rule-out-four-list-two-questionable-vs-falcons-week-3-injury-report-2026"
+ },
  "routes": {
   "official_report": "failed: official report page is week 2 2026, wanted week 3 2026",
   "espn_injuries": "ok",

@@ -301,4 +301,9 @@ def write_week_cards(conn, season: int, week: int, out_dir: str = "reports") -> 
         json.dump(payload, f, indent=2, default=str)
     with open(os.path.join(out_dir, "pick_cards_latest.html"), "w") as f:
         f.write("<!doctype html><meta charset='utf-8'>" + render_cards_html(payload["cards"]))
+    # every displayed card goes into the append-only ledger (bookkeeping, not the user's chore)
+    from . import issued_ledger
+    payload["ledger_written"] = len(issued_ledger.record_cards(conn, season, week, payload["cards"]))
+    with open(os.path.join(out_dir, f"issued_picks_{season}_wk{week}.json"), "w") as f:
+        f.write(issued_ledger.export(issued_ledger.load(conn, season, week)))
     return payload

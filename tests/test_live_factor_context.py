@@ -5,6 +5,7 @@ All payloads are small synthetic fixtures served by an injected ``http``; no soc
 
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -267,3 +268,112 @@ def test_curated_items_kept_verbatim_and_other_weeks_ignored():
     assert doc["curated_games_kept"] == ["2026_03_ATL_GB"]
     doc2 = build(FakeHTTP(routes()), curated={**cur, "week": 2})
     assert doc2["curated_games_kept"] == []
+
+
+# --------------------------------------------------------------------------- #
+# Team-official (club-site) report: game status vs practice ESTIMATE, identity
+# checks.  Shape-only fixture modelled on the club CMS layout; not real rows.
+# --------------------------------------------------------------------------- #
+CLUB_URL = "https://www.packers.com/news/club-report-w3"
+
+
+def club_page(week=3, published="2026-09-23T02:00:00Z", second_team="Atlanta Falcons"):
+    def table(team, head, rows):
+        th = "".join(f"<th>{h}</th>" for h in head)
+        trs = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
+        return f"<h3>{team}</h3><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>"
+    pub = f'<script type="application/ld+json">{{"datePublished": "{published}"}}</script>' if published else ""
+    return (f"<title>Packers list two questionable vs. Falcons | Week {week} Injury Report</title>{pub}"
+            + table("Green Bay Packers", ["Player", "Injury", "*Monday", "*Tuesday", "Game Status"], [
+                ["Wide Out, WR", "Neck", "Did Not Participate", "Did Not Participate", "Out"],
+                ["Big Guard, G", "Hand", "Did Not Participate", "Limited Participation", "--"]])
+            + "<p>* The Packers held a walkthrough; participation reports are an estimation.</p>"
+            + table(second_team, ["Player", "Injury", "*Monday", "Tuesday", "Game Status"], [
+                ["Nickel Back, CB", "Achilles", "Full Participation", "Full Participation", "Questionable"]]))
+
+
+def test_club_report_separates_game_status_from_estimated_practice():
+    got = lfc.parse_club_report(club_page(), 2026, 3, home="GB", away="ATL")
+    assert got["published_at"] == "2026-09-23T02:00:00Z" and got["teams"] == ["ATL", "GB"]
+    rows = {r["name"]: r for r in got["rows"]}
+    assert rows["Wide Out"]["team"] == "GB" and rows["Wide Out"]["game_status"] == "Out"
+    assert rows["Big Guard"]["game_status"] is None, "'--' is no designation, not healthy"
+    assert rows["Big Guard"]["practice"][-1] == {"day": "tuesday", "status": "LP", "estimated": True}
+    assert rows["Nickel Back"]["team"] == "ATL"
+    assert rows["Nickel Back"]["practice"][-1]["estimated"] is False
+
+
+@pytest.mark.parametrize("page, why", [
+    (club_page(week=2), "Week 3"),
+    (club_page(published=None), "datePublished"),
+    (club_page(second_team="Chicago Bears"), "not ATL@GB"),
+])
+def test_club_report_identity_is_strict(page, why):
+    with pytest.raises(lfc.IdentityMismatch, match=why):
+        lfc.parse_club_report(page, 2026, 3, home="GB", away="ATL")
+
+
+def test_club_report_route_feeds_official_items_and_stays_context():
+    doc = build(FakeHTTP(routes(**{"club-report-w3": club_page()})),
+                club_reports={"2026_03_ATL_GB": CLUB_URL, "2026_03_KC_DEN": CLUB_URL})
+    assert doc["routes"]["club_report:2026_03_ATL_GB"] == "ok"
+    assert doc["routes"]["club_report:2026_03_KC_DEN"].startswith("failed: 2026_03_KC_DEN is not on")
+    news = {i["story_id"]: i for i in doc["news"] if i["story_id"].startswith("club_")}
+    out = news["club_status:2026_03_ATL_GB:GB:wide_out"]
+    assert (out["source_tier"], out["claim_kind"], out["claim_value"]) == ("team_official", "confirmed", "Out")
+    assert out["published_at"] == "2026-09-23T02:00:00Z" and out["fetched_at"] == CAP
+    est = news["club_practice:2026_03_ATL_GB:GB:big_guard"]
+    assert est["claim_kind"] == "report" and "estimated" in est["claim"]
+    assert "club_status:2026_03_ATL_GB:GB:big_guard" not in news, "no designation -> no status claim"
+    assert doc["coverage"]["2026_03_ATL_GB"]["ol_injury"]["state"] == "official"
+    recs = fe.assess_news(list(news.values()), CAP)
+    assert recs and all(r["status"] != "numeric_applied" for r in recs), "news never self-promotes"
+
+
+def test_club_report_missing_a_team_is_rejected_not_half_covered():
+    one_team = club_page().split("<p>* The Packers")[0]  # GB table only
+    with pytest.raises(lfc.IdentityMismatch, match="missing ATL"):
+        lfc.parse_club_report(one_team, 2026, 3, home="GB", away="ATL")
+
+
+@pytest.mark.parametrize("page", [
+    "",
+    "<title>Week 3 Injury Report</title><script>{\"datePublished\": \"2026-09-23T02:00:00Z\"}</script>"
+    "<p>No tables today.</p>",
+    club_page().replace("<h3>Green Bay Packers</h3>", "<h3>Injury report</h3>"),
+    club_page().replace("<th>Game Status</th>", "<th>Notes</th>", 1),
+])
+def test_malformed_club_content_fails_safely(page):
+    with pytest.raises(lfc.IdentityMismatch):
+        lfc.parse_club_report(page, 2026, 3, home="GB", away="ATL")
+
+
+@pytest.mark.parametrize("url", [
+    "https://www.chicagobears.com/news/x",          # official, but not a team in this game
+    "https://packers.com.evil.example/news/x",      # look-alike host
+    "http://www.packers.com/news/x",                # not https
+    "https://www.nfl.com/news/x",                   # league page is a different route
+])
+def test_club_url_off_the_teams_official_sites_is_rejected_unfetched(url):
+    http = FakeHTTP(routes(**{"/news/x": club_page()}))
+    doc = build(http, club_reports={"2026_03_ATL_GB": url})
+    assert doc["routes"]["club_report:2026_03_ATL_GB"].startswith("failed: club report URL is not on")
+    assert url not in http.calls
+    assert not [i for i in doc["news"] if i["story_id"].startswith("club_")]
+
+
+def test_captured_packers_report_parses_both_teams():
+    page = (Path(__file__).parent / "fixtures" / "club_report_packers_2026w3.html").read_text()
+    got = lfc.parse_club_report(page, 2026, 3, home="GB", away="ATL")
+    assert got["published_at"] == "2026-09-23T20:00:00Z" and got["teams"] == ["ATL", "GB"]
+    st = {(r["team"], r["name"]): r["game_status"] for r in got["rows"]}
+    assert len(st) == 21
+    assert [k for k, v in st.items() if v == "Out"] == [
+        ("GB", "Zach Bako-Bewele"), ("GB", "Aaron Banks"), ("GB", "Warren Brinson"),
+        ("GB", "Jayden Reed"), ("ATL", "Samson Ebukam")]
+    assert st[("ATL", "Michael Penix")] is None, "no designation stays None"
+    last = {(r["team"], r["name"]): r["practice"][-1] for r in got["rows"]}
+    assert last[("GB", "Jayden Reed")]["estimated"] is True
+    tue = [p for r in got["rows"] if r["name"] == "Michael Penix" for p in r["practice"]]
+    assert [(p["day"], p["estimated"]) for p in tue] == [
+        ("monday", True), ("tuesday", False), ("wednesday", True)]

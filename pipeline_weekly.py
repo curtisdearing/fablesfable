@@ -150,6 +150,8 @@ def _prior_kickoffs(schedules: pd.DataFrame, season: int, week: int) -> Dict[str
 
 
 _CURATED_RECORD_EXCLUDE = ("coverage:", "qb_depth:")
+# Club-report items are live captures: a later run re-fetches them, never inherits them.
+_LIVE_CLUB_STORIES = ("club_status:", "club_practice:")
 
 
 def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
@@ -170,24 +172,30 @@ def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
         return None, None, {"refresh": "not attempted (offline, injected or disabled run); "
                                        "committed context file used"}
     path = fimod.context_path(season, week)
-    curated = None
+    curated, filed = None, None
     try:
         if os.path.isfile(path):
             with open(path) as f:
                 filed = json.load(f)
             curated = {"season": filed.get("season"), "week": filed.get("week"),
                        "news": [i for i in filed.get("news", [])
-                                if i.get("source_tier") == "team_official"],
+                                if i.get("source_tier") == "team_official"
+                                and not str(i.get("story_id", "")).startswith(_LIVE_CLUB_STORIES)],
                        "records": [r for r in filed.get("records", [])
                                    if not str(r.get("factor_id", "")).startswith(_CURATED_RECORD_EXCLUDE)]}
     except Exception as exc:  # noqa: BLE001 -- the refresh still runs without curated items
         print(f"[pipeline] committed context file unreadable ({type(exc).__name__}); "
               f"refreshing without curated items")
+    # Club-site report URLs for this week, registered in the committed file (slugs cannot be
+    # discovered).  Each is re-fetched by THIS run under its own capture clock.
+    club_reports = {g: u for g, u in ((filed or {}).get("club_reports") or {}).items()
+                    if isinstance(g, str) and isinstance(u, str)} if os.path.isfile(path) else {}
     id_map = [{"espn_id": r["espn_id"], "team": r.get("team"), "gsis_id": r["player_id"]}
               for r in (roster or {}).get("rows") or [] if r.get("espn_id")]
     try:
         from nflvalue.sources import live_factor_context as lfc
-        doc = lfc.build_live_context(season, week, curated=curated, id_map=id_map)
+        doc = lfc.build_live_context(season, week, curated=curated, id_map=id_map,
+                                     club_reports=club_reports)
     except Exception as exc:  # noqa: BLE001 -- degrade to the committed file, loudly
         print(f"[pipeline] live context refresh failed ({type(exc).__name__}: {exc}); "
               f"committed context file used")
@@ -196,6 +204,7 @@ def _run_context_doc(cfg: Dict, season: int, week: int, mode: str,
     meta = {"refresh": "ok", "captured_at": doc.get("captured_at"), "routes": doc.get("routes"),
             "sources_checked": len(doc.get("sources_checked") or []),
             "curated_games_kept": doc.get("curated_games_kept"), "id_map_rows": len(id_map),
+            "club_reports": sorted(club_reports),
             "coverage_states": _coverage_counts(doc)}
     return doc, f"live refresh captured {doc.get('captured_at')} (curated team items kept)", meta
 
@@ -268,6 +277,56 @@ def _committed_context(season: int, week: int) -> Optional[Dict]:
             return json.load(f)
     except Exception:  # noqa: BLE001 -- load_context reports the file's own failure
         return None
+
+
+def _apply_starter_gate(stamps: Dict[tuple, Dict], gate: Dict[tuple, Dict]) -> None:
+    """Persist each QB-market row's starter eligibility on its stamp.  A row whose team has a
+    different confirmed starter gets its persisted availability eligibility set to degraded
+    (state ``not_confirmed_starter``) -- the hold the card builder already honours -- so it is
+    never executable.  The resolver's own status fields are kept; no number changes."""
+    for key, g in gate.items():
+        st = stamps.get(key)
+        if st is None:
+            continue
+        st["qb_eligibility"] = g
+        if g["blocks_execution"]:
+            a = dict(st.get("availability") or {})
+            a["eligibility_before_starter_gate"] = a.get("eligibility")
+            a.update({"eligibility": "degraded", "availability_state": "not_confirmed_starter",
+                      "evidence_kind": "team_sourced_starter_claim", "starter_gate": g["reason"]})
+            st["availability"] = a
+
+
+def _starter_diagnostics(qb_ctx: Optional[Dict], gate: Dict[tuple, Dict], cands,
+                         games: List[Dict]) -> Optional[Dict]:
+    """Per team: the starter decision this run used, which QB rows it blocked, and -- when the
+    confirmed starter has no published QB-market card -- the exact reason (never a forecast)."""
+    if qb_ctx is None:
+        return None
+    shown = {(l.get("player_id"), l.get("market")) for g in games or [] for l in g.get("leans", [])}
+    rows = cands.to_dict("records") if cands is not None and len(cands) else []
+    out = {}
+    for team, q in sorted(qb_ctx.items()):
+        starter = candmod.confirmed_starter(q)
+        confirmed = starter is not None
+        mine = [r for r in rows if r.get("player_id") == starter
+                and r.get("market") in candmod.STARTER_GATED_MARKETS] if starter else []
+        carded = sorted(m for (p, m) in shown if p == starter and m in candmod.STARTER_GATED_MARKETS)
+        if not confirmed:
+            why = None
+        elif not mine:
+            why = "no candidate row for the confirmed starter in this run (no forecast is invented)"
+        elif not carded:
+            why = ("candidate rows exist but were not shortlisted (ranked below the per-game "
+                   "top_n / max_per_player cut)")
+        else:
+            why = None
+        out[team] = {"state": q.get("state"), "starter_qb_id": starter if confirmed else None,
+                     "confirmed": confirmed, "starter_candidate_markets": sorted(r["market"] for r in mine),
+                     "starter_cards": carded, "starter_no_card_reason": why,
+                     "blocked_rows": sorted([p, m] for (p, m), g in gate.items()
+                                            if g["team"] == team and g["blocks_execution"])}
+    return out
 
 
 def _availability_receipt(live: Dict, qb_ctx: Optional[Dict], ctx_meta: Dict,
@@ -475,12 +534,65 @@ def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
 
 
 # --------------------------------------------------------------------------- #
+# Live team identity: the active roster, acquired BEFORE candidates
+# --------------------------------------------------------------------------- #
+_NOT_ACQUIRED = object()
+
+
+def _acquire_live_identity(season: int, inject_feeds: Optional[Dict],
+                           inputs: candmod.WeekInputs):
+    """Acquire the active roster ONCE, before candidate enumeration, and stamp
+    the identity decision clock AFTER the acquisition.
+
+    Returns ``(roster, identity_inputs, identity_at)``. ``identity_inputs`` is
+    a shallow copy of ``inputs`` whose ``rosters`` is ONLY this payload's rows,
+    with ``captured_at`` = the payload's own ``fetched_at`` (never invented,
+    never back-dated). A payload whose fetch time is missing or later than
+    ``identity_at`` verifies nobody (``features.asof_team_identity``).
+    The same payload is handed to ``gather_live_feeds`` so the roster is not
+    fetched twice and the roster gate judges the snapshot the seats came from.
+    """
+    import copy
+    from nflvalue import features as featuresmod
+    if "active_roster" in (inject_feeds or {}):
+        roster = inject_feeds["active_roster"]
+    else:
+        try:
+            from nflvalue.sources import active_roster as armod
+            roster = armod.fetch_active_roster(season)
+        except Exception as exc:  # noqa: BLE001 -- fail LOUD via the gate, not a crash
+            print(f"[pipeline] active roster fetch FAILED: {exc}")
+            roster = None
+    identity_at = stamp_now()
+    payload = dict(roster or {})
+    payload.setdefault("season", season)
+    identity_inputs = copy.copy(inputs)
+    identity_inputs.rosters = featuresmod.roster_frame_from_active_roster(payload)
+    return roster, identity_inputs, identity_at
+
+
+def _identity_receipt(cands: pd.DataFrame, roster: Optional[Dict], identity_at: Optional[str]) -> Dict:
+    """Run-receipt ``team_identity``: which clock seated the carry-forward
+    players, from which roster capture, and who moved / was left unseated."""
+    if identity_at is None:
+        return {"clock": "not a live run (as_played seats)"}
+    info = dict(cands.attrs.get("asof_team_identity") or {"clock": "missing"})
+    info.update({"identity_at": identity_at, "roster_source": (roster or {}).get("source"),
+                 "roster_fetched_at": (roster or {}).get("fetched_at"),
+                 "roster_snapshot_at": (roster or {}).get("snapshot_at"),
+                 "roster_week": (roster or {}).get("week"),
+                 "roster_rows": len((roster or {}).get("rows") or [])})
+    return info
+
+
+# --------------------------------------------------------------------------- #
 # Live feed gathering (fully injectable)
 # --------------------------------------------------------------------------- #
 def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
                       clock: str = "wed", game_event_ids: Optional[List[str]] = None,
                       inject: Optional[Dict] = None,
-                      prior_kickoff: Optional[Dict[str, str]] = None) -> Dict:
+                      prior_kickoff: Optional[Dict[str, str]] = None,
+                      active_roster=_NOT_ACQUIRED) -> Dict:
     """Fetch injuries (+ inactives at t90) and Sleeper projections; stamp
     everything for the freshness gate. ``inject`` overrides any feed for
     tests/offline runs: {injury_rows, injuries_fetched_at, inactive_rows,
@@ -580,7 +692,11 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     # Carry-forward history is not roster membership. The snapshot's OWN
     # timestamp (nflverse asset Last-Modified) is what the gate ages, so a
     # fresh fetch of a stale asset cannot pass as fresh.
-    if "active_roster" in inject:
+    # ``active_roster``: the payload the run already acquired (and seated its
+    # candidates from) -- used as-is, never re-fetched.
+    if active_roster is not _NOT_ACQUIRED:
+        roster = active_roster
+    elif "active_roster" in inject:
         roster = inject["active_roster"]
     else:
         try:
@@ -675,12 +791,18 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     slate = candmod.games_for_week(season, week, inputs.schedules)
     as_of = stamp_now()
 
+    # 0. live team identity: roster acquired before candidates, clock after it
+    live_roster, identity_at = None, None
+    if mode == "live":
+        live_roster, inputs, identity_at = _acquire_live_identity(season, inject_feeds, inputs)
+
     # 1. candidates (deterministic numbers; leak-free features)
     roster_mode = "as_played" if mode == "historical" else "carry_forward"
     cands = candmod.enumerate_candidates(
         season, week, inputs=inputs,
         min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-        roster_mode=roster_mode)
+        roster_mode=roster_mode, decision_at=identity_at)
+    identity_receipt = _identity_receipt(cands, live_roster, identity_at)
 
     # 2. live feeds + freshness gate
     publish, publish_reasons = True, []
@@ -696,7 +818,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
                                  clock="wed", inject=inject_feeds,
-                                 prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
+                                 prior_kickoff=_prior_kickoffs(inputs.schedules, season, week),
+                                 active_roster=live_roster)
         statuses, sleeper_df, feeds_ts = live["statuses"], live["sleeper_df"], live["ts"]
         news_by_player = live.get("news_by_player") or {}
         # slate-wide sourced context, fetched BEFORE the decision clock is stamped
@@ -780,13 +903,16 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         carried = sorted({r["game_id"] for r in snap_rows} - set(pull["pulled"]))
         line_note = (f"Odds pull: {len(pull['pulled'])} game(s) pulled "
                      f"({', '.join(pull['pulled']) or 'none'}); "
-                     f"{len(carried)} game(s) priced from stored quotes "
+                     + (f"{len(pull.get('empty') or [])} answered with no quotes "
+                        f"({', '.join(pull.get('empty') or []) or 'none'}); ")
+                     + f"{len(carried)} game(s) priced from stored quotes "
                      f"({', '.join(carried) or 'none'}); "
                      f"{len(pull['skipped_budget'])} skipped by credit budget, "
                      f"{len(pull['skipped_cap'])} by per-run cap, "
                      f"{len(pull.get('skipped_started') or [])} already under way; "
                      f"{len(unmatched)} not in the odds events listing; "
-                     f"{pull['budget_remaining']:.0f} credits left this month. "
+                     f"{pull['budget_remaining']:.0f} credits left this month; "
+                     + oapmod.billing_text(pull) + ". "
                      + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else "")
                      + (f" NO odds pulled: {pull['quota_preflight']['reason']}."
                         if (pull.get("quota_preflight") or {}).get("ok") is False else ""))
@@ -794,7 +920,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-                prop_lines=prop_lines, roster_mode=roster_mode)
+                prop_lines=prop_lines, roster_mode=roster_mode, decision_at=identity_at)
             if mode == "live":
                 # the re-enumeration must pass the same roster gate
                 if roster_gate["publish"]:
@@ -876,6 +1002,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     stamps = fimod.build_stamps(cands, stage_ran, stage_why, ordering_features=ml_feats,
                                 availability=statuses if mode == "live" else None,
                                 qb_context=qb_ctx)
+    starter_gate = (candmod.confirmed_starter_gate(cands.to_dict("records"), qb_ctx)
+                    if qb_ctx is not None and len(cands) else {})
+    _apply_starter_gate(stamps, starter_gate)
     # SHADOW role/opportunity forecast: stored beside the pick, never read by mean/SD/side/order
     shadow = (fimod.shadow_opportunity(inputs.pw, cands, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate))
@@ -931,6 +1060,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
                # the run's own publication decision: cards from a held run are never executable
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
+               "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
+               "team_identity": identity_receipt,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
@@ -963,15 +1094,26 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     inputs = inputs or candmod.build_week_inputs()
     as_of = stamp_now()
 
+    # live team identity: roster acquired before candidates, clock after it (see run_week)
+    live_roster, identity_at = None, None
+    if mode == "live":
+        live_roster, inputs, identity_at = _acquire_live_identity(season, inject_feeds, inputs)
+
     roster_mode = "as_played" if mode == "historical" else "carry_forward"
     cands = candmod.enumerate_candidates(
         season, week, inputs=inputs,
         min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-        roster_mode=roster_mode)
-    cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
+        roster_mode=roster_mode, decision_at=identity_at)
+    identity_receipt = _identity_receipt(cands, live_roster, identity_at)
+    if not cands.empty:          # a board with nobody seated has no columns to filter on
+        cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
     if cands.empty:
         conn.close()
-        raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+        raise ValueError(f"no candidates for game {game_id} — check season/week/game_id; "
+                         f"team identity {identity_receipt.get('clock')}, "
+                         f"{identity_receipt.get('n_unseated', 0)} player(s) unseated "
+                         f"(roster fetched_at {identity_receipt.get('roster_fetched_at')}, "
+                         f"identity_at {identity_receipt.get('identity_at')})")
 
     # REAL LINES AT T-90. This is the best moment of the week to spend a
     # credit on this game: the line is closest to its close and the inactives
@@ -1019,7 +1161,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-                prop_lines=prop_lines, roster_mode=roster_mode)
+                prop_lines=prop_lines, roster_mode=roster_mode, decision_at=identity_at)
             cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
 
     # Stages THIS refresh evaluates. Every stage starts not-evaluated with the
@@ -1066,7 +1208,8 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             print(f"[t90] event id lookup failed for {game_id}: {exc}")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
                              game_event_ids=event_ids, inject=inject_feeds,
-                             prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
+                             prior_kickoff=_prior_kickoffs(inputs.schedules, season, week),
+                             **({"active_roster": live_roster} if mode == "live" else {}))
     statuses = live["statuses"]
     # this refresh's own context and participation, fetched before its decision clock
     ctx_doc, ctx_label, ctx_meta = _run_context_doc(cfg, season, week, mode, inject_feeds,
@@ -1157,6 +1300,9 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         season, week, cands2, inputs.schedules, live.get("active_roster"), as_of, snaps)
     stamps = fimod.build_stamps(cands2, stage_ran, stage_why, ordering_features=ml_feats,
                                 availability=statuses, qb_context=qb_ctx)
+    starter_gate = (candmod.confirmed_starter_gate(cands2.to_dict("records"), qb_ctx)
+                    if len(cands2) else {})
+    _apply_starter_gate(stamps, starter_gate)
     # SHADOW at the refresh's own clock (never read by mean/SD/side/order)
     shadow = (fimod.shadow_opportunity(inputs.pw, cands2, season=season, week=week,
                                        as_of=parse_ts(as_of), kickoffs=slate_kickoffs(slate_t))
@@ -1196,6 +1342,8 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "inactives_state": inactives_state,
                "inactives_reason": live.get("inactives_reason") or None,
                "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
+               "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands2, games),
+               "team_identity": identity_receipt,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "

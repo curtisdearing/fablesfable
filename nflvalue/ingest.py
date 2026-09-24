@@ -169,9 +169,10 @@ def refresh(season: Optional[int] = None, force: bool = False) -> Dict:
 # --------------------------------------------------------------------------- #
 def load_all_pbp() -> pd.DataFrame:
     """2019-2023 base + every per-season file on disk, REG only, one frame."""
-    frames = [pd.read_parquet(BASE_PBP, columns=PBP_COLUMNS)]
+    from .features import pbp_columns_for  # + official-attempt columns when the file has them
+    frames = [pd.read_parquet(BASE_PBP, columns=pbp_columns_for(BASE_PBP))]
     for s in extra_seasons_on_disk():
-        frames.append(pd.read_parquet(_season_pbp_path(s), columns=PBP_COLUMNS))
+        frames.append(pd.read_parquet(_season_pbp_path(s), columns=pbp_columns_for(_season_pbp_path(s))))
     df = pd.concat(frames, ignore_index=True)
     return df[df["season_type"] == "REG"].reset_index(drop=True)
 

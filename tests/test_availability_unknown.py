@@ -113,3 +113,66 @@ def test_compat_listed_statuses_unchanged():
     got = {k: (v["status"], v["eligibility"], v["timestamp"]) for k, v in res["statuses"].items()}
     assert got == {"o": ("OUT", "ineligible", TS), "r": ("RISK", "eligible", TS), "k": ("OK", "eligible", TS)}
     assert res["summary"]["status"] == {"OUT": 1, "RISK": 1, "OK": 1}
+
+
+# --------------------------------------------------------------------------- #
+# ESPN's pregame 404 "No roster found" is the source answering "not created
+# yet" (captured 2026-09-23T22:34Z for event 401872948, both competitors; the
+# completed W2 event 401872933 returned 200).  It must read as UNPOPULATED --
+# never as inactives data, and not as a fetch defect -- while any other 404 or
+# error still fails closed.  The bodies below are shape-only fixtures.
+# --------------------------------------------------------------------------- #
+import io  # noqa: E402
+import json  # noqa: E402
+import urllib.error  # noqa: E402
+
+import pytest  # noqa: E402
+
+from nflvalue.sources import availability as _av  # noqa: E402
+
+_SUMMARY = {"header": {"competitions": [{"competitors": [
+    {"team": {"id": "9", "abbreviation": "GB"}},
+    {"team": {"id": "1", "abbreviation": "ATL"}}]}]}}
+
+
+def _http_404(url, message):
+    body = json.dumps({"error": {"message": message, "code": 404}}).encode()
+    return urllib.error.HTTPError(url, 404, "Not Found", {}, io.BytesIO(body))
+
+
+def _fake_fetch(monkeypatch, roster_error):
+    def fake(url, params=None):
+        if url.endswith("/summary"):
+            return _SUMMARY
+        team = url.rstrip("/").split("/")[-2]
+        raise roster_error(url, team)
+    monkeypatch.setattr(_av, "get_json", fake)
+
+
+def test_pregame_no_roster_404_is_unpopulated_not_a_fetch_failure(monkeypatch):
+    _fake_fetch(monkeypatch, lambda url, team: _http_404(
+        url, f"No roster found for team {team} and competition 401872948"))
+    res = _av.fetch_event_rosters("401872948")
+    assert res["populated"] is False
+    assert res["rows"] == [], "an absent roster must never yield inactives rows"
+    assert res["fetched_at"], "the source answered, so the fetch is stamped"
+    assert "No roster found for team 9 and competition 401872948" in res["reason"]
+    assert "GB" in res["reason"] and "ATL" in res["reason"]
+
+
+@pytest.mark.parametrize("message", [
+    "No roster found for team 9 and competition 401872999",   # another event
+    "No roster found for team 12 and competition 401872948",  # another team
+    "Not Found",
+])
+def test_other_404s_still_fail_closed(monkeypatch, message):
+    _fake_fetch(monkeypatch, lambda url, team: _http_404(url, message))
+    with pytest.raises(urllib.error.HTTPError):
+        _av.fetch_event_rosters("401872948")
+
+
+def test_server_errors_still_fail_closed(monkeypatch):
+    _fake_fetch(monkeypatch, lambda url, team: urllib.error.HTTPError(
+        url, 503, "Unavailable", {}, io.BytesIO(b"")))
+    with pytest.raises(urllib.error.HTTPError):
+        _av.fetch_event_rosters("401872948")

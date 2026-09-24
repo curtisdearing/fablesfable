@@ -49,7 +49,7 @@ ACTUAL_COL = {
     "receptions": "receptions",
     "rushing_yards": "rush_yards",
     "passing_yards": "pass_yards",
-    "pass_attempts": "pass_attempts",
+    "pass_attempts": "pass_attempts_official",  # settles on official (sack/2-pt excluded)
     "rush_attempts": "carries",
 }
 
@@ -72,7 +72,11 @@ def _predictions_for_market(pw: pd.DataFrame, market: str, team_idx: Dict, opp_i
         rows["actual"] = rows["rush_tds"] + rows["rec_tds"]
     else:
         rows = pw[pw["role"].isin(spec["role"])].copy()
-        rows["actual"] = rows[ACTUAL_COL[market]]
+        # a frame built before the official-attempts column existed has no
+        # pass_attempts_official: the outcome is unresolved (NaN), never the
+        # sack-inclusive count
+        col = ACTUAL_COL[market]
+        rows["actual"] = rows[col] if col in rows.columns else np.nan
 
     if rows.empty:
         return rows

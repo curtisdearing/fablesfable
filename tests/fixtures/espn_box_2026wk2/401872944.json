@@ -1,0 +1,604 @@
+{
+"_fixture_note": "Trimmed from ESPN summary event 401872944 (2026 wk2 WSH@DAL final), fetched 2026-09-22T01:20Z; source sha256 5cc21566fb4a9e0c0f459828e2dd08b816c23bc736de03e1b3c0b4c77b8e6f51",
+"gamepackageJSON": {
+"boxscore": {
+"players": [
+{
+"statistics": [
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "Marcus Mariota",
+"firstName": "Marcus",
+"id": "2576980",
+"lastName": "Mariota"
+},
+"stats": [
+"11/16",
+"111",
+"6.9",
+"1",
+"0",
+"0-0",
+"84.0",
+"109.1"
+]
+},
+{
+"athlete": {
+"displayName": "Jayden Daniels",
+"firstName": "Jayden",
+"id": "4426348",
+"lastName": "Daniels"
+},
+"stats": [
+"11/17",
+"96",
+"5.6",
+"1",
+"0",
+"0-0",
+"70.7",
+"99.1"
+]
+},
+{
+"athlete": {
+"displayName": "Dyami Brown",
+"firstName": "Dyami",
+"id": "4361577",
+"lastName": "Brown"
+},
+"stats": [
+"1/1",
+"0",
+"0.0",
+"0",
+"0",
+"0-0",
+"0.1",
+"79.2"
+]
+},
+{
+"athlete": {
+"displayName": "Antonio Williams",
+"firstName": "Antonio",
+"id": "5081432",
+"lastName": "Williams"
+},
+"stats": [
+"0/1",
+"0",
+"0.0",
+"0",
+"0",
+"0-0",
+"0.8",
+"39.6"
+]
+}
+],
+"keys": [
+"completions/passingAttempts",
+"passingYards",
+"yardsPerPassAttempt",
+"passingTouchdowns",
+"interceptions",
+"sacks-sackYardsLost",
+"adjQBR",
+"QBRating"
+],
+"name": "passing"
+},
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "Jayden Daniels",
+"firstName": "Jayden",
+"id": "4426348",
+"lastName": "Daniels"
+},
+"stats": [
+"7",
+"69",
+"9.9",
+"0",
+"20"
+]
+},
+{
+"athlete": {
+"displayName": "Rachaad White",
+"firstName": "Rachaad",
+"id": "4697815",
+"lastName": "White"
+},
+"stats": [
+"7",
+"43",
+"6.1",
+"0",
+"14"
+]
+},
+{
+"athlete": {
+"displayName": "Jacory Croskey-Merritt",
+"firstName": "Jacory",
+"id": "4575131",
+"lastName": "Croskey-Merritt"
+},
+"stats": [
+"12",
+"43",
+"3.6",
+"0",
+"9"
+]
+},
+{
+"athlete": {
+"displayName": "Kaytron Allen",
+"firstName": "Kaytron",
+"id": "4685246",
+"lastName": "Allen"
+},
+"stats": [
+"5",
+"24",
+"4.8",
+"0",
+"9"
+]
+},
+{
+"athlete": {
+"displayName": "Marcus Mariota",
+"firstName": "Marcus",
+"id": "2576980",
+"lastName": "Mariota"
+},
+"stats": [
+"1",
+"3",
+"3.0",
+"0",
+"3"
+]
+}
+],
+"keys": [
+"rushingAttempts",
+"rushingYards",
+"yardsPerRushAttempt",
+"rushingTouchdowns",
+"longRushing"
+],
+"name": "rushing"
+},
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "Terry McLaurin",
+"firstName": "Terry",
+"id": "3121422",
+"lastName": "McLaurin"
+},
+"stats": [
+"2",
+"50",
+"25.0",
+"0",
+"26",
+"9"
+]
+},
+{
+"athlete": {
+"displayName": "Stefon Diggs",
+"firstName": "Stefon",
+"id": "2976212",
+"lastName": "Diggs"
+},
+"stats": [
+"5",
+"47",
+"9.4",
+"2",
+"20",
+"6"
+]
+},
+{
+"athlete": {
+"displayName": "Rachaad White",
+"firstName": "Rachaad",
+"id": "4697815",
+"lastName": "White"
+},
+"stats": [
+"6",
+"40",
+"6.7",
+"0",
+"13",
+"6"
+]
+},
+{
+"athlete": {
+"displayName": "Antonio Williams",
+"firstName": "Antonio",
+"id": "5081432",
+"lastName": "Williams"
+},
+"stats": [
+"3",
+"24",
+"8.0",
+"0",
+"10",
+"3"
+]
+},
+{
+"athlete": {
+"displayName": "Dyami Brown",
+"firstName": "Dyami",
+"id": "4361577",
+"lastName": "Brown"
+},
+"stats": [
+"4",
+"21",
+"5.3",
+"0",
+"18",
+"6"
+]
+},
+{
+"athlete": {
+"displayName": "Colson Yankoff",
+"firstName": "Colson",
+"id": "4361088",
+"lastName": "Yankoff"
+},
+"stats": [
+"1",
+"14",
+"14.0",
+"0",
+"14",
+"1"
+]
+},
+{
+"athlete": {
+"displayName": "Ben Sinnott",
+"firstName": "Ben",
+"id": "4690923",
+"lastName": "Sinnott"
+},
+"stats": [
+"1",
+"6",
+"6.0",
+"0",
+"6",
+"1"
+]
+},
+{
+"athlete": {
+"displayName": "Jacory Croskey-Merritt",
+"firstName": "Jacory",
+"id": "4575131",
+"lastName": "Croskey-Merritt"
+},
+"stats": [
+"1",
+"5",
+"5.0",
+"0",
+"5",
+"1"
+]
+},
+{
+"athlete": {
+"displayName": "Treylon Burks",
+"firstName": "Treylon",
+"id": "4567156",
+"lastName": "Burks"
+},
+"stats": [
+"0",
+"0",
+"0.0",
+"0",
+"0",
+"1"
+]
+}
+],
+"keys": [
+"receptions",
+"receivingYards",
+"yardsPerReception",
+"receivingTouchdowns",
+"longReception",
+"receivingTargets"
+],
+"name": "receiving"
+}
+],
+"team": {
+"abbreviation": "WSH"
+}
+},
+{
+"statistics": [
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "Dak Prescott",
+"firstName": "Dak",
+"id": "2577417",
+"lastName": "Prescott"
+},
+"stats": [
+"26/31",
+"279",
+"9.0",
+"4",
+"0",
+"2-13",
+"89.8",
+"143.8"
+]
+}
+],
+"keys": [
+"completions/passingAttempts",
+"passingYards",
+"yardsPerPassAttempt",
+"passingTouchdowns",
+"interceptions",
+"sacks-sackYardsLost",
+"adjQBR",
+"QBRating"
+],
+"name": "passing"
+},
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "Javonte Williams",
+"firstName": "Javonte",
+"id": "4361579",
+"lastName": "Williams"
+},
+"stats": [
+"12",
+"30",
+"2.5",
+"0",
+"9"
+]
+},
+{
+"athlete": {
+"displayName": "Dak Prescott",
+"firstName": "Dak",
+"id": "2577417",
+"lastName": "Prescott"
+},
+"stats": [
+"4",
+"26",
+"6.5",
+"0",
+"11"
+]
+},
+{
+"athlete": {
+"displayName": "Emari Demercado",
+"firstName": "Emari",
+"id": "4362478",
+"lastName": "Demercado"
+},
+"stats": [
+"3",
+"8",
+"2.7",
+"0",
+"7"
+]
+},
+{
+"athlete": {
+"displayName": "KaVontae Turpin",
+"firstName": "KaVontae",
+"id": "3676833",
+"lastName": "Turpin"
+},
+"stats": [
+"1",
+"1",
+"1.0",
+"0",
+"1"
+]
+},
+{
+"athlete": {
+"displayName": "Hunter Luepke",
+"firstName": "Hunter",
+"id": "4383396",
+"lastName": "Luepke"
+},
+"stats": [
+"1",
+"1",
+"1.0",
+"0",
+"1"
+]
+}
+],
+"keys": [
+"rushingAttempts",
+"rushingYards",
+"yardsPerRushAttempt",
+"rushingTouchdowns",
+"longRushing"
+],
+"name": "rushing"
+},
+{
+"athletes": [
+{
+"athlete": {
+"displayName": "CeeDee Lamb",
+"firstName": "CeeDee",
+"id": "4241389",
+"lastName": "Lamb"
+},
+"stats": [
+"8",
+"153",
+"19.1",
+"2",
+"38",
+"9"
+]
+},
+{
+"athlete": {
+"displayName": "Jake Ferguson",
+"firstName": "Jake",
+"id": "4242355",
+"lastName": "Ferguson"
+},
+"stats": [
+"4",
+"43",
+"10.8",
+"2",
+"14",
+"4"
+]
+},
+{
+"athlete": {
+"displayName": "George Pickens",
+"firstName": "George",
+"id": "4426354",
+"lastName": "Pickens"
+},
+"stats": [
+"6",
+"40",
+"6.7",
+"0",
+"12",
+"8"
+]
+},
+{
+"athlete": {
+"displayName": "Ryan Flournoy",
+"firstName": "Ryan",
+"id": "5083754",
+"lastName": "Flournoy"
+},
+"stats": [
+"5",
+"23",
+"4.6",
+"0",
+"10",
+"6"
+]
+},
+{
+"athlete": {
+"displayName": "Javonte Williams",
+"firstName": "Javonte",
+"id": "4361579",
+"lastName": "Williams"
+},
+"stats": [
+"3",
+"20",
+"6.7",
+"0",
+"8",
+"4"
+]
+}
+],
+"keys": [
+"receptions",
+"receivingYards",
+"yardsPerReception",
+"receivingTouchdowns",
+"longReception",
+"receivingTargets"
+],
+"name": "receiving"
+}
+],
+"team": {
+"abbreviation": "DAL"
+}
+}
+]
+},
+"header": {
+"competitions": [
+{
+"competitors": [
+{
+"homeAway": "home",
+"score": "37",
+"team": {
+"abbreviation": "DAL"
+}
+},
+{
+"homeAway": "away",
+"score": "20",
+"team": {
+"abbreviation": "WSH"
+}
+}
+],
+"date": "2026-09-20T20:25Z",
+"id": "401872944",
+"status": {
+"type": {
+"completed": true,
+"name": "STATUS_FINAL"
+}
+}
+}
+],
+"id": "401872944",
+"season": {
+"current": true,
+"type": 2,
+"year": 2026
+},
+"week": 2
+}
+}
+}

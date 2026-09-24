@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import math
 import sys
+import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -33,6 +35,16 @@ T90_WINDOW_HOURS = 2.75      # legacy outer bound (kept for the heartbeat text)
 #: because a processed game is skipped by every later run -- never re-read
 #: it. So the window is [T-90, T-0), not "anything in the next 2.75h".
 T90_DUE_MINUTES = 90
+#: GitHub starts this repo's scheduled runs late and unpredictably (2026-09:
+#: the 23:15Z slot started 01:02-01:35Z, 19:20Z at 21:26-21:35Z, 15:55Z at
+#: 15:58-16:09Z; 4.6-5.6 h on 2026-09-23), so cron is not a reliable T-90
+#: trigger; the primary trigger is a workflow_dispatch job=t90 inside the
+#: window. A run arriving at most this many minutes before a window opens
+#: sleeps until it opens instead of exiting as a no-op; further out it is
+#: still a no-op. Bounded well inside the run job's 60-minute timeout. The due
+#: set and the processed set are both read AFTER the wait.
+T90_MAX_EARLY_WAIT_MINUTES = 35
+_sleep = time.sleep
 
 
 def utc_stamp() -> str:
@@ -139,6 +151,20 @@ def games_due_for_t90(slate, now: dt.datetime):
     """
     lead = dt.timedelta(minutes=T90_DUE_MINUTES)
     return slate[(slate["kickoff"] > now) & (slate["kickoff"] - now <= lead)].copy()
+
+
+def t90_wait_seconds(slate, now: dt.datetime,
+                     max_wait_minutes: float = T90_MAX_EARLY_WAIT_MINUTES):
+    """0 when a game is due now; else the seconds until the next T-90 window
+    opens if that is within ``max_wait_minutes``; else None (no-op run)."""
+    if not games_due_for_t90(slate, now).empty:
+        return 0
+    lead = dt.timedelta(minutes=T90_DUE_MINUTES)
+    opens = [k - lead for k in slate["kickoff"] if k - lead > now]
+    if not opens:
+        return None
+    wait = (min(opens) - now).total_seconds()
+    return int(math.ceil(wait)) if wait <= max_wait_minutes * 60 else None
 
 
 def last_completed_week(slate, now: dt.datetime):
@@ -265,6 +291,12 @@ def job_t90() -> int:
     report = ensure_current_inputs("t90")
     slate = load_slate()
     now = now_et()
+    wait = t90_wait_seconds(slate, now)
+    if wait:
+        print(f"[auto] next T-90 window opens in {wait}s (<= {T90_MAX_EARLY_WAIT_MINUTES} min); "
+              f"waiting instead of exiting early")
+        _sleep(wait)
+        now = now_et()
     soon = games_due_for_t90(slate, now)
     if soon.empty:
         print("[auto] no kickoffs within the T-90 window — no-op")
@@ -295,7 +327,9 @@ def job_t90() -> int:
                 emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
                 res = oap.resnap_lines(cfg, emap, conn=conn)
                 print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
-                      f"{res['rows_written']} rows, {res['budget_remaining']:.0f} credits left")
+                      f"{len(res.get('empty') or [])} with no quotes, "
+                      f"{res['rows_written']} rows, {oap.billing_text(res)}, "
+                      f"{res['budget_remaining']:.0f} credits left")
         except Exception as exc:  # noqa: BLE001
             print(f"[auto] closing resnap failed (CLV close may be stale): {exc}")
     conn.close()
