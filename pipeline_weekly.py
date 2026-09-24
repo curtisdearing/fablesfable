@@ -534,12 +534,65 @@ def _synthesis_for_games(games: List[Dict], statuses: Dict[str, Dict],
 
 
 # --------------------------------------------------------------------------- #
+# Live team identity: the active roster, acquired BEFORE candidates
+# --------------------------------------------------------------------------- #
+_NOT_ACQUIRED = object()
+
+
+def _acquire_live_identity(season: int, inject_feeds: Optional[Dict],
+                           inputs: candmod.WeekInputs):
+    """Acquire the active roster ONCE, before candidate enumeration, and stamp
+    the identity decision clock AFTER the acquisition.
+
+    Returns ``(roster, identity_inputs, identity_at)``. ``identity_inputs`` is
+    a shallow copy of ``inputs`` whose ``rosters`` is ONLY this payload's rows,
+    with ``captured_at`` = the payload's own ``fetched_at`` (never invented,
+    never back-dated). A payload whose fetch time is missing or later than
+    ``identity_at`` verifies nobody (``features.asof_team_identity``).
+    The same payload is handed to ``gather_live_feeds`` so the roster is not
+    fetched twice and the roster gate judges the snapshot the seats came from.
+    """
+    import copy
+    from nflvalue import features as featuresmod
+    if "active_roster" in (inject_feeds or {}):
+        roster = inject_feeds["active_roster"]
+    else:
+        try:
+            from nflvalue.sources import active_roster as armod
+            roster = armod.fetch_active_roster(season)
+        except Exception as exc:  # noqa: BLE001 -- fail LOUD via the gate, not a crash
+            print(f"[pipeline] active roster fetch FAILED: {exc}")
+            roster = None
+    identity_at = stamp_now()
+    payload = dict(roster or {})
+    payload.setdefault("season", season)
+    identity_inputs = copy.copy(inputs)
+    identity_inputs.rosters = featuresmod.roster_frame_from_active_roster(payload)
+    return roster, identity_inputs, identity_at
+
+
+def _identity_receipt(cands: pd.DataFrame, roster: Optional[Dict], identity_at: Optional[str]) -> Dict:
+    """Run-receipt ``team_identity``: which clock seated the carry-forward
+    players, from which roster capture, and who moved / was left unseated."""
+    if identity_at is None:
+        return {"clock": "not a live run (as_played seats)"}
+    info = dict(cands.attrs.get("asof_team_identity") or {"clock": "missing"})
+    info.update({"identity_at": identity_at, "roster_source": (roster or {}).get("source"),
+                 "roster_fetched_at": (roster or {}).get("fetched_at"),
+                 "roster_snapshot_at": (roster or {}).get("snapshot_at"),
+                 "roster_week": (roster or {}).get("week"),
+                 "roster_rows": len((roster or {}).get("rows") or [])})
+    return info
+
+
+# --------------------------------------------------------------------------- #
 # Live feed gathering (fully injectable)
 # --------------------------------------------------------------------------- #
 def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
                       clock: str = "wed", game_event_ids: Optional[List[str]] = None,
                       inject: Optional[Dict] = None,
-                      prior_kickoff: Optional[Dict[str, str]] = None) -> Dict:
+                      prior_kickoff: Optional[Dict[str, str]] = None,
+                      active_roster=_NOT_ACQUIRED) -> Dict:
     """Fetch injuries (+ inactives at t90) and Sleeper projections; stamp
     everything for the freshness gate. ``inject`` overrides any feed for
     tests/offline runs: {injury_rows, injuries_fetched_at, inactive_rows,
@@ -639,7 +692,11 @@ def gather_live_feeds(cfg: Dict, season: int, week: int, players: pd.DataFrame,
     # Carry-forward history is not roster membership. The snapshot's OWN
     # timestamp (nflverse asset Last-Modified) is what the gate ages, so a
     # fresh fetch of a stale asset cannot pass as fresh.
-    if "active_roster" in inject:
+    # ``active_roster``: the payload the run already acquired (and seated its
+    # candidates from) -- used as-is, never re-fetched.
+    if active_roster is not _NOT_ACQUIRED:
+        roster = active_roster
+    elif "active_roster" in inject:
         roster = inject["active_roster"]
     else:
         try:
@@ -734,12 +791,18 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     slate = candmod.games_for_week(season, week, inputs.schedules)
     as_of = stamp_now()
 
+    # 0. live team identity: roster acquired before candidates, clock after it
+    live_roster, identity_at = None, None
+    if mode == "live":
+        live_roster, inputs, identity_at = _acquire_live_identity(season, inject_feeds, inputs)
+
     # 1. candidates (deterministic numbers; leak-free features)
     roster_mode = "as_played" if mode == "historical" else "carry_forward"
     cands = candmod.enumerate_candidates(
         season, week, inputs=inputs,
         min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-        roster_mode=roster_mode)
+        roster_mode=roster_mode, decision_at=identity_at)
+    identity_receipt = _identity_receipt(cands, live_roster, identity_at)
 
     # 2. live feeds + freshness gate
     publish, publish_reasons = True, []
@@ -755,7 +818,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
                                  clock="wed", inject=inject_feeds,
-                                 prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
+                                 prior_kickoff=_prior_kickoffs(inputs.schedules, season, week),
+                                 active_roster=live_roster)
         statuses, sleeper_df, feeds_ts = live["statuses"], live["sleeper_df"], live["ts"]
         news_by_player = live.get("news_by_player") or {}
         # slate-wide sourced context, fetched BEFORE the decision clock is stamped
@@ -856,7 +920,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-                prop_lines=prop_lines, roster_mode=roster_mode)
+                prop_lines=prop_lines, roster_mode=roster_mode, decision_at=identity_at)
             if mode == "live":
                 # the re-enumeration must pass the same roster gate
                 if roster_gate["publish"]:
@@ -997,6 +1061,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                # the run's own publication decision: cards from a held run are never executable
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
+               "team_identity": identity_receipt,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
@@ -1029,15 +1094,26 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     inputs = inputs or candmod.build_week_inputs()
     as_of = stamp_now()
 
+    # live team identity: roster acquired before candidates, clock after it (see run_week)
+    live_roster, identity_at = None, None
+    if mode == "live":
+        live_roster, inputs, identity_at = _acquire_live_identity(season, inject_feeds, inputs)
+
     roster_mode = "as_played" if mode == "historical" else "carry_forward"
     cands = candmod.enumerate_candidates(
         season, week, inputs=inputs,
         min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-        roster_mode=roster_mode)
-    cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
+        roster_mode=roster_mode, decision_at=identity_at)
+    identity_receipt = _identity_receipt(cands, live_roster, identity_at)
+    if not cands.empty:          # a board with nobody seated has no columns to filter on
+        cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
     if cands.empty:
         conn.close()
-        raise ValueError(f"no candidates for game {game_id} — check season/week/game_id")
+        raise ValueError(f"no candidates for game {game_id} — check season/week/game_id; "
+                         f"team identity {identity_receipt.get('clock')}, "
+                         f"{identity_receipt.get('n_unseated', 0)} player(s) unseated "
+                         f"(roster fetched_at {identity_receipt.get('roster_fetched_at')}, "
+                         f"identity_at {identity_receipt.get('identity_at')})")
 
     # REAL LINES AT T-90. This is the best moment of the week to spend a
     # credit on this game: the line is closest to its close and the inactives
@@ -1085,7 +1161,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
                 min_usage=(cfg.get("candidates") or {}).get("min_usage"),
-                prop_lines=prop_lines, roster_mode=roster_mode)
+                prop_lines=prop_lines, roster_mode=roster_mode, decision_at=identity_at)
             cands = cands[cands["game_id"] == game_id].reset_index(drop=True)
 
     # Stages THIS refresh evaluates. Every stage starts not-evaluated with the
@@ -1132,7 +1208,8 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
             print(f"[t90] event id lookup failed for {game_id}: {exc}")
     live = gather_live_feeds(cfg, season, week, _players_frame(cands), clock="t90",
                              game_event_ids=event_ids, inject=inject_feeds,
-                             prior_kickoff=_prior_kickoffs(inputs.schedules, season, week))
+                             prior_kickoff=_prior_kickoffs(inputs.schedules, season, week),
+                             **({"active_roster": live_roster} if mode == "live" else {}))
     statuses = live["statuses"]
     # this refresh's own context and participation, fetched before its decision clock
     ctx_doc, ctx_label, ctx_meta = _run_context_doc(cfg, season, week, mode, inject_feeds,
@@ -1266,6 +1343,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "inactives_reason": live.get("inactives_reason") or None,
                "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands2, games),
+               "team_identity": identity_receipt,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "

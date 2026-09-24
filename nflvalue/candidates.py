@@ -285,10 +285,31 @@ def enumerate_candidates(
                 "team_source_counts": {str(k): int(v) for k, v in
                                        week_rows["team_source"].value_counts().items()},
             }
-            unseated = week_rows[week_rows["team_source"] == featuresmod.TEAM_SOURCE_AMBIGUOUS]
+            ident = featuresmod.asof_team_identity(pw, inputs.rosters, season, week,
+                                                   decision_at=decision_at)
+            on_slate = ident["team"].isin(team_to_game) | ident["last_played_team"].isin(team_to_game)
+            moved = ident[on_slate & ident["team"].notna() & (ident["team"] != ident["last_played_team"])]
+            identity_info["reseated"] = [
+                {"player_id": r.player_id, "from_team": r.last_played_team, "to_team": r.team,
+                 "team_source": r.team_source, "roster_season": int(r.roster_season),
+                 "roster_week": int(r.roster_week)} for r in moved.itertuples(index=False)]
+            # Under a decision clock a player whose roster evidence was all
+            # captured late / at an unknown time, or is ambiguous, has NO
+            # verified seat: he is not enumerated at all (never quietly left on
+            # his last played team) and is listed here instead.
+            bad = [featuresmod.TEAM_SOURCE_AMBIGUOUS]
+            if decision_at is not None:
+                bad.append(featuresmod.TEAM_SOURCE_ROSTER_REJECTED)
+            unseated = ident[ident["team_source"].isin(bad)]
+            identity_info["n_unseated"] = int(len(unseated))
+            identity_info["unseated_on_slate"] = [
+                {"player_id": r.player_id, "last_played_team": r.last_played_team,
+                 "team_source": r.team_source, "n_roster_rows_rejected": int(r.n_roster_rows_rejected)}
+                for r in unseated[on_slate.loc[unseated.index]].itertuples(index=False)]
             if len(unseated):
-                print(f"[candidates] {season} W{week}: {len(unseated)} player(s) with ambiguous "
+                print(f"[candidates] {season} W{week}: {len(unseated)} player(s) without a usable "
                       f"as-of roster team, not seated: {sorted(unseated['player_id'])[:10]}")
+                week_rows = week_rows[~week_rows["player_id"].isin(set(unseated["player_id"]))]
         week_rows = week_rows[week_rows["team"].isin(team_to_game)].copy()
     else:
         raise ValueError(f"unknown roster_mode {roster_mode!r}")

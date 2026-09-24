@@ -251,9 +251,12 @@ def test_native_consumer_reports_identity_clock_and_rejects_late_roster(pbp, ros
     recon = run(rosters)
     assert recon.attrs["asof_team_identity"]["clock"] == "reconstructed_unverified"
     late = run(_captured(rosters, DECISION + pd.Timedelta(hours=2)), decision_at=DECISION)
-    b = late[late["player_id"] == BRADY]
-    assert set(b["game_id"]) == {"2020_01_MIA_NE"}                  # late roster never re-seats him
+    # a late roster never re-seats him, and he is not left on NE as if verified: unseated
+    assert late.empty or BRADY not in set(late["player_id"])
     info = late.attrs["asof_team_identity"]
+    u = next(x for x in info["unseated_on_slate"] if x["player_id"] == BRADY)
+    assert u["last_played_team"] == "NE" and u["team_source"] == F.TEAM_SOURCE_ROSTER_REJECTED
+    assert u["n_roster_rows_rejected"] >= 1
     assert info["clock"] == "decision_at" and info["decision_at"] == "2020-09-13T16:00:00Z"
     assert info["team_source_counts"].get(F.TEAM_SOURCE_VERIFIED, 0) == 0
     ok = run(_captured(rosters, DECISION - pd.Timedelta(hours=2)), decision_at=DECISION)
