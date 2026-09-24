@@ -57,13 +57,28 @@ PBP_COLUMNS = [
     "passer_player_id", "passer_player_name",
 ]
 
+#: Optional play-by-play columns for OFFICIAL QB pass attempts (sacks and
+#: two-point tries excluded; see nflvalue.qb_official).  nflverse sets
+#: ``pass_attempt=1`` on sacks, so ``pass_attempts`` / ``roll_pass_attempts``
+#: stay sack-inclusive (team dropback volume and trained ranker inputs read
+#: them).  Read when present; when ``sack`` is absent the official columns stay
+#: NaN (unresolved) -- never sack-inclusive, never 0.
+QB_OFFICIAL_PBP_COLUMNS = ["sack", "down", "two_point_attempt"]
+
+
+def pbp_columns_for(path: str) -> list:
+    """``PBP_COLUMNS`` plus whichever ``QB_OFFICIAL_PBP_COLUMNS`` the file has."""
+    import pyarrow.parquet as pq
+    names = set(pq.read_schema(path).names)
+    return PBP_COLUMNS + [c for c in QB_OFFICIAL_PBP_COLUMNS if c in names]
+
 
 # --------------------------------------------------------------------------- #
 # Load
 # --------------------------------------------------------------------------- #
 def load_pbp(path: Optional[str] = None) -> pd.DataFrame:
     path = path or os.path.join(HIST, "historical_pbp.parquet")
-    df = pd.read_parquet(path, columns=PBP_COLUMNS)
+    df = pd.read_parquet(path, columns=pbp_columns_for(path))
     df = df[df["season_type"] == "REG"].copy()  # keep regular season only for consistency
     return df
 
@@ -296,6 +311,8 @@ def _add_rolling_player_features(pw: pd.DataFrame) -> pd.DataFrame:
     pw["roll_carry_share"] = g["_carry_share"].transform(_rolling_shifted)
     pw["roll_pass_attempts"] = g["pass_attempts"].transform(_rolling_shifted)
     pw["roll_completions"] = g["completions"].transform(_rolling_shifted)
+    if "pass_attempts_official" in pw.columns:
+        pw["roll_pass_attempts_official"] = g["pass_attempts_official"].transform(_rolling_shifted)
 
     # Cold start (a player's very first row has no own history -> NaN above):
     # fall back to the role's PRIOR-weeks-only league average rather than
@@ -311,6 +328,15 @@ def _add_rolling_player_features(pw: pd.DataFrame) -> pd.DataFrame:
     for roll_col, raw_col in volume_fallbacks.items():
         league_mean = _league_role_prior_mean(pw, raw_col)
         pw[roll_col] = pw[roll_col].fillna(league_mean)
+    if "pass_attempts_official" in pw.columns:
+        # same cold-start fallback, but only where PRIOR official data exists:
+        # _league_role_prior_mean's zero-information 0.0 would turn "no
+        # sack-aware play-by-play" into a 0-attempt projection.
+        lm = _league_role_prior_mean(pw, "pass_attempts_official").to_numpy()
+        seen = _league_role_prior_mean(
+            pw.assign(_off_seen=pw["pass_attempts_official"].notna().astype(float)), "_off_seen").to_numpy() > 0
+        pw["roll_pass_attempts_official"] = pw["roll_pass_attempts_official"].fillna(
+            pd.Series(np.where(seen, lm, np.nan), index=pw.index))
 
     raw_eff = {
         "roll_ypt": "_ypt",
@@ -345,6 +371,8 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
     pw = _combine_player_week(pbp)
     pw = pw.merge(team_week, on=["season", "week", "team"], how="left")
     pw = _assign_position(pw, rosters=rosters)
+    from . import qb_official
+    pw["pass_attempts_official"] = qb_official.official_attempts_raw(pw, pbp)
     pw = pw.sort_values(["player_id", "season", "week"]).reset_index(drop=True)
 
     # ---- per-week raw ratios (this week's realized rate; NOT leaked yet -- ---
@@ -372,6 +400,8 @@ def build_player_week(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_carries", "roll_carry_share", "roll_pass_attempts", "roll_completions",
         "roll_ypt", "roll_catch_rate", "roll_ypc", "roll_ypa",
         "roll_pass_td_rate", "roll_rush_td_rate", "roll_rec_td_rate",
+        # appended last so every pre-existing column keeps its name, values and order
+        "pass_attempts_official", "roll_pass_attempts_official",
     ]
     return pw[keep].reset_index(drop=True)
 
@@ -549,7 +579,7 @@ _ASOF_RAW_COLS = [
     "targets", "receptions", "rec_yards", "air_yards_sum", "yac_sum",
     "carries", "rush_yards", "pass_attempts", "completions", "pass_yards",
     "pass_tds", "rush_tds", "rec_tds",
-    "team_pass_att", "team_rush_att", "team_plays",
+    "team_pass_att", "team_rush_att", "team_plays", "pass_attempts_official",
 ]
 
 

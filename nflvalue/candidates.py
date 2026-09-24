@@ -53,7 +53,8 @@ SCHEDULES_PATH = os.path.join(ROOT, "historical", "historical_lines.parquet")
 ACTUAL_COL = {
     "receiving_yards": "rec_yards", "receptions": "receptions",
     "rushing_yards": "rush_yards", "passing_yards": "pass_yards",
-    "pass_attempts": "pass_attempts", "rush_attempts": "carries",
+    # pass_attempts settles on OFFICIAL attempts (sacks/2-pt excluded; features.build_player_week)
+    "pass_attempts": "pass_attempts_official", "rush_attempts": "carries",
 }
 
 # minimum trailing usage so the candidate pool isn't scrubs (configurable via
@@ -159,6 +160,8 @@ def synthetic_lines(inputs: WeekInputs, market: str) -> pd.Series:
     pw = inputs.pw
     if actual_col is None:  # anytime_td: the "line" is always 0.5 (yes/no)
         return pd.Series(0.5, index=pw.index)
+    if actual_col not in pw.columns:  # frame predates the official column: no line, not a guess
+        return pd.Series(np.nan, index=pw.index)
     g = pw.sort_values(["player_id", "season", "week"]).groupby("player_id")
     trail = g[actual_col].transform(lambda s: s.shift(1).rolling(8, min_periods=3).mean())
     return np.floor(trail) + 0.5
@@ -581,8 +584,10 @@ def _carry_forward_synth(inputs: WeekInputs, market: str, player_id: str) -> Opt
     actual_col = ACTUAL_COL.get(market)
     if actual_col is None:
         return 0.5
+    if actual_col not in inputs.pw.columns:
+        return None
     hist = inputs.pw[inputs.pw["player_id"] == player_id].sort_values(["season", "week"])
-    tail = hist[actual_col].tail(8)
+    tail = hist[actual_col].dropna().tail(8)
     if len(tail) < 3:
         return None
     return float(np.floor(tail.mean()) + 0.5)

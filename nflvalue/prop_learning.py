@@ -323,7 +323,9 @@ def record_candidate_aggregates(conn, season: int, week: int,
             if arow is None:
                 continue
             actual = ((arow["rush_tds"] + arow["rec_tds"]) if market == "anytime_td"
-                      else arow[ACTUAL_COL[market]])
+                      else arow.get(ACTUAL_COL[market]))
+            if actual is None or actual != actual:   # unresolved (e.g. no official attempts): not a 0
+                continue
             n += 1
             s_pred += float(c.mean)
             s_act += float(actual)
