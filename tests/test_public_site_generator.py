@@ -149,6 +149,94 @@ def test_generated_pages_keep_mobile_scroll_bridge(tmp_path):
     _run_checker(out.parent)
 
 
+def test_refresh_preserves_same_week_analyst_reading_experience(tmp_path):
+    """A T90 refresh must update data, not replace the curated UI with a data dump."""
+    import hashlib
+    archive = Path(_archive(tmp_path))
+    paths = ('index.html', 'best-bets.html', 'reports/latest.html', 'reports/2026/week-3.html')
+    reading = '<html><body><a href="#g-ATL-GB">ATL at GB</a><section data-game="ATL-GB" id="g-ATL-GB"><details><summary>Research</summary>Original quote 2026-09-22</details></section></body></html>'
+    for name in paths:
+        (archive / name).write_text(reading)
+    analyst = {'date': '2026-09-27', 'model_approved': False}
+    manifest = {'season': 2026, 'week': 3, 'analyst_card': analyst,
+                'quote_clocks': {'latest': '2026-09-22T00:00:00Z'},
+                'files': {name: hashlib.sha256(reading.encode()).hexdigest() for name in paths}}
+    (archive / 'publication.json').write_text(json.dumps(manifest))
+    db = _db(tmp_path, [_lean()])
+    out = tmp_path / 'site' / 'published-site'
+    assert bps.main(['--db', db, '--season', '2026', '--week', '3', '--archive', str(archive),
+                     '--out', str(out), '--label', 'fresh', '--now', '2026-09-23T00:00:00Z']) == 0
+    for name in paths:
+        text = (out / name).read_text()
+        assert 'data-game="ATL-GB"' in text, name
+        assert '<details>' in text and 'Original quote 2026-09-22' in text
+        assert 'model-cards.html' in text
+    assert 'D.London' in (out / 'model-cards.html').read_text()
+    hub = json.loads((out / 'api/hub.json').read_text())
+    assert hub['cards'][0]['player'] == 'D.London'
+    assert hub['analyst_card'] == analyst
+    assert hub['quote_clocks']['latest'] == '2026-09-22T22:19:33Z'
+    saved = json.loads((out / 'publication.json').read_text())
+    assert saved['reading_experience']['quote_clocks'] == manifest['quote_clocks']
+    _run_checker(out.parent)
+    # Rebuilding an already repaired publication keeps analyst provenance and
+    # inserts only one notice, while production data remains separate.
+    second = tmp_path / 'second'
+    bps.build(hub, 'fresh', str(out), str(second), '2026-09-23T01:00:00Z')
+    assert (second / 'index.html').read_text().count('<!-- model-refresh-link -->') == 1
+    assert json.loads((second / 'publication.json').read_text())['reading_experience'] == saved['reading_experience']
+    # A subsequent week must not inherit this Sunday's curated picks.
+    manifest['week'] = 2
+    (archive / 'publication.json').write_text(json.dumps(manifest))
+    assert bps.main(['--db', db, '--season', '2026', '--week', '3', '--archive', str(archive),
+                     '--out', str(out), '--label', 'fresh']) == 0
+    assert 'Original quote 2026-09-22' not in (out / 'index.html').read_text()
+    assert 'analyst_card' not in json.loads((out / 'api/hub.json').read_text())
+
+
+def test_generated_fallback_has_game_links_and_closed_evidence(tmp_path):
+    from html.parser import HTMLParser
+    class Tags(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.tags = []
+        def handle_starttag(self, tag, attrs):
+            self.tags.append((tag, dict(attrs)))
+    db = _db(tmp_path, [_lean(), _lean(player_id='p2', name='B.Robinson')])
+    out = tmp_path / 'site' / 'published-site'
+    assert bps.main(['--db', db, '--season', '2026', '--week', '3', '--archive', _archive(tmp_path),
+                     '--out', str(out), '--label', 'fresh', '--now', '2026-09-23T00:00:00Z']) == 0
+    for name in ('index.html', 'best-bets.html', 'model-cards.html', 'reports/latest.html', 'reports/2026/week-3.html'):
+        doc = (out / name).read_text()
+        p = Tags()
+        p.feed(doc)
+        assert any(t == 'a' and a.get('href') == '#g-2026_03_ATL_GB' for t, a in p.tags), name
+        cards = [a for t, a in p.tags if t == 'details' and a.get('class') == 'model-card']
+        if name != 'best-bets.html':  # stale fixture quotes may leave the watch list empty
+            assert len(cards) == 2 and all('open' not in a for a in cards), name
+        # Every relative report navigation link resolves inside the published root.
+        for t, a in p.tags:
+            href = a.get('href', '')
+            if t == 'a' and href and not href.startswith(('#', 'https:', 'http:')):
+                assert (out / name).parent.joinpath(href).resolve().is_file(), (name, href)
+    _run_checker(out.parent)
+
+
+def test_workflow_rejects_expanded_report_even_with_valid_hashes(tmp_path):
+    import hashlib
+    db = _db(tmp_path, [_lean()])
+    out = tmp_path / 'published-site'
+    assert bps.main(['--db', db, '--season', '2026', '--week', '3', '--archive', _archive(tmp_path),
+                     '--out', str(out), '--label', 'fresh']) == 0
+    bad = '<html><body>Plain expanded report overwrote the dashboard</body></html>'
+    (out / 'index.html').write_text(bad)
+    manifest = json.loads((out / 'publication.json').read_text())
+    manifest['files']['index.html'] = hashlib.sha256(bad.encode()).hexdigest()
+    (out / 'publication.json').write_text(json.dumps(manifest))
+    with pytest.raises(AssertionError, match='interactive'):
+        _run_checker(out.parent)
+
+
 def test_production_runs_generate_and_one_publisher_deploys():
     live = (ROOT / ".github/workflows/live-weekly.yml").read_text()
     site = (ROOT / ".github/workflows/website.yml").read_text()
