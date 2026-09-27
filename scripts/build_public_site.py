@@ -120,8 +120,14 @@ def page(title, body, nav=True):
     links = ('<nav><a href="index.html">This week</a><a href="best-bets.html">Watch list</a>'
              '<a href="reports/latest.html">Full report</a><a href="history.html">Archive</a></nav>'
              if nav else "")
+    # Inline the committed UI bridge so scheduled rebuilds retain mobile
+    # scrolling behavior at every report depth, even with an empty archive.
+    with open(os.path.join(ROOT, "published-site", "assets", "hub-scroll.js"), encoding="utf-8") as f:
+        scroll_bridge = f.read()
     return (f"<!doctype html><html><head><meta charset='utf-8'><title>{e(title)}</title>"
-            f"<style>{CSS}</style></head><body>{links}{body}</body></html>")
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            f"<style>{CSS}</style></head><body>{links}{body}"
+            f"<script>{scroll_bridge}</script></body></html>")
 
 
 def header(payload, label, generated_at):
