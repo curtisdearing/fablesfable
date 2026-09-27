@@ -5,7 +5,7 @@
   "label": "fresh",
   "season": 2026,
   "week": 3,
-  "published_at": "2026-09-27T19:13:11.912601+00:00",
+  "published_at": "2026-09-27T19:24:21.641993+00:00",
   "source_as_of": "2026-09-27T16:59:44Z",
   "quote_clocks": {
     "earliest": "2026-09-23T09:04:41Z",
@@ -102,16 +102,52 @@
       "clock": "t90",
       "as_of": "2026-09-27T17:01:10Z",
       "created_at": "2026-09-27T17:01:11Z"
+    },
+    {
+      "run_id": "gha:36343963196-1:t90:2026_03_ARI_SF",
+      "code_sha": "70bcd0a2f8b9c5a4deb35b2428f7e3e82391f821",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "t90",
+      "as_of": "2026-09-27T19:22:00Z",
+      "created_at": "2026-09-27T19:22:01Z"
+    },
+    {
+      "run_id": "gha:36343963196-1:t90:2026_03_MIN_TB",
+      "code_sha": "70bcd0a2f8b9c5a4deb35b2428f7e3e82391f821",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "t90",
+      "as_of": "2026-09-27T19:22:19Z",
+      "created_at": "2026-09-27T19:22:21Z"
+    },
+    {
+      "run_id": "gha:36343963196-1:t90:2026_03_BAL_DAL",
+      "code_sha": "70bcd0a2f8b9c5a4deb35b2428f7e3e82391f821",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "t90",
+      "as_of": "2026-09-27T19:22:39Z",
+      "created_at": "2026-09-27T19:22:40Z"
+    },
+    {
+      "run_id": "gha:36343963196-1:t90:2026_03_LV_NO",
+      "code_sha": "70bcd0a2f8b9c5a4deb35b2428f7e3e82391f821",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
+      "clock": "t90",
+      "as_of": "2026-09-27T19:22:59Z",
+      "created_at": "2026-09-27T19:23:00Z"
     }
   ],
   "counts": {
     "actionable": 0,
     "watch": 22,
-    "research": 68,
-    "pass": 11
+    "research": 76,
+    "pass": 10
   },
   "approved_bets": 0,
-  "model_candidates": 101,
+  "model_candidates": 108,
   "archived_files": [
     "assets/hub-scroll.js",
     "dashboard.html",
@@ -138,7 +174,7 @@
   ],
   "files": {
     "README.txt": "9e162ea118f8ce587d46c34e4ba161b0e8d58fbbeb2f66dfe2ce1a591ad1249e",
-    "api/hub.json": "f028acf6a42d89a4ac4e3658ecf20e6fa2c05ce2fe8f4c0a81b68c889c3a2213",
+    "api/hub.json": "19d46a787ef1438d595dcb942692d721d4d6ee507bedd5d9a95a7509a945251c",
     "assets/hub-scroll.js": "501efcfc177f91ffccb23687508d31d8f47b10f7c5d409f5a6e7e034d313ad5f",
     "best-bets.html": "b551a42c6aafb0d66ba4bec056d386bd3d59f4aad8c8618eed8e9c8e2253ff47",
     "dashboard.html": "e91ac59ab45f1ab4c2dc35e727f2d5b05ed489d714e7532d55207bc6b8bf3279",
@@ -162,7 +198,7 @@
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "94076c4fbeea5ce941ff1af22c70f832a9b46aae0c7d9d58ab3a052bfc1c1f2f",
     "index.html": "ecfe23aebcb637d79de6ed81f9ee947790cf6665968c20fb0c1208e647d47b49",
-    "model-cards.html": "0ddd2866da3ad75280ac5ccbee1091708f00167ddb3595863c368e2feab1f47c",
+    "model-cards.html": "4fdb5e1b0b32942a83f1bdc97056aa1a86edb33ebc66546577e3d0f77375c2a2",
     "reports/2026/week-1.html": "d1cd5c467b9961a1ba4022f91b58578e1926abc92dd2084949ef8b54da717a1d",
     "reports/2026/week-3.html": "2f61dfce3d0c68556a827599058d8a3a2cf2509405191939cea6e15a0ac6642f",
     "reports/index.json": "ac2b850639220d9f01ed530900c40ff3a02811bc3f42b0282de93c5f3f12565a",
