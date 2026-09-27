@@ -5,7 +5,7 @@
   "label": "analyst-card",
   "season": 2026,
   "week": 3,
-  "published_at": "2026-09-27T02:56:15+00:00",
+  "published_at": "2026-09-27T02:59:18+00:00",
   "source_as_of": "2026-09-27T01:54:53Z",
   "quote_clocks": {
     "earliest": "2026-09-27T01:52:58Z",
@@ -70,8 +70,8 @@
   ],
   "files": {
     "README.txt": "8e970a5be0e651b208853902e58a3c3e1b57d5bcbfeea8329d0a7a37cd2a5931",
-    "api/hub.json": "bc343e98ebd2db97fd521e8fecaecb237641ec20281c77e1ae8afa5554ea4aee",
-    "best-bets.html": "a209af75ba8e494ec993b75ce33afd5388b744f92175d7bb6a31b930fcc50a2d",
+    "api/hub.json": "8d48d8ec9d81deecdce6d12e68ecbe3b094855b59cd895f220314e895507621c",
+    "best-bets.html": "70a13fe4df4dbdad25bbd21ef20fde6e4aed4d113c1f33e0bd7ee613f50662b1",
     "dashboard.html": "e91ac59ab45f1ab4c2dc35e727f2d5b05ed489d714e7532d55207bc6b8bf3279",
     "games/2026_01_ARI_LAC.html": "259e0949e9b14095b766504e9a3360ce4aca00c3694174c154d2f45c16358200",
     "games/2026_01_ATL_PIT.html": "e25859c748140488ead1f13955a3ac0a688a3848b2bb1b704c9c432efe4fed60",
@@ -92,9 +92,9 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "aa4df5c7f6b0d6948938d8c9606cd335d5ecf83464ff336eb082526bff05bd64",
-    "index.html": "6d91e0d51577aceb9465ae47b0f6da833fe897d1b00d97e03aeaef75c3cf5949",
+    "index.html": "165b580976196848884ab65004c1c65674564281270a4f14222bca578e4b5f72",
     "reports/2026/week-1.html": "4ae268b26800324d805f4b4c2eb4379f63a57598d70d90b82d89335ed93017a6",
-    "reports/2026/week-3.html": "55b29ffa7e175d115730f135a22e1a57338402161b35759ab2a86e6e3bd0edfe",
+    "reports/2026/week-3.html": "364d8991a1d24f5dd935ed451e82ceef8312361f9e3511369950b3854c82a95d",
     "reports/index.json": "4b8e3c638acb9b6023c1a52e66b70e7530a6d7b11a11732ce09d458bd660fbb2",
     "reports/latest.html": "952069f3f56bf38484e1c77296bfc34786036d66cafe7e955edec60da70182f5"
   }
