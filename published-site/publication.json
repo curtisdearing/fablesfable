@@ -1,36 +1,50 @@
 {
   "schema_version": 2,
   "kind": "saved-model-analysis",
-  "generator": "scripts/build_public_site.py",
-  "label": "replay",
+  "generator": "external analyst-card build (not scripts/build_public_site.py)",
+  "label": "analyst-card",
   "season": 2026,
   "week": 3,
-  "published_at": "2026-09-23T04:07:03+00:00",
-  "source_as_of": "2026-09-22T22:19:33Z",
+  "published_at": "2026-09-27T02:59:18+00:00",
+  "source_as_of": "2026-09-27T01:54:53Z",
   "quote_clocks": {
-    "earliest": "2026-09-22T22:19:33Z",
-    "latest": "2026-09-22T22:19:33Z",
-    "leans_with_quote": 3
+    "earliest": "2026-09-27T01:52:58Z",
+    "latest": "2026-09-27T01:52:58Z",
+    "leans_with_quote": 14,
+    "threshold_only_no_price": 14,
+    "threshold_fetch_clocks": "2026-09-27T01:56:32Z..2026-09-27T01:56:36Z"
   },
   "runs": [
     {
-      "run_id": "local:readiness-replay-20260923T040534Z",
-      "code_sha": "edc0abdb85b509a147d07338376b913965cf5aa7",
-      "forecast_version": "ff-football-only-v1",
+      "run_id": "local:native-inference-20260927T015453Z",
+      "code_sha": "282740e711f653f0c821e36a8c076066b6eaa685",
+      "forecast_version": null,
       "ranker_sha256": "eba2bcb6eb3b5f1b89c18ea8d071bcb0a24765472ff0676270a8aae6af04e07e",
       "clock": "wed",
-      "as_of": "2026-09-23T04:06:06Z",
-      "created_at": "2026-09-23T04:06:06Z"
+      "as_of": "2026-09-27T01:54:53Z",
+      "created_at": "2026-09-27T02:00:41Z"
     }
   ],
   "counts": {
     "actionable": 0,
-    "watch": 3,
-    "research": 77,
+    "watch": 0,
+    "research": 70,
     "pass": 0
   },
   "approved_bets": 0,
-  "model_candidates": 80,
+  "model_candidates": 70,
+  "games": 14,
+  "analyst_selections": 28,
+  "calibrated_probabilities": false,
+  "overtime_implemented": false,
+  "analyst_card": {
+    "date": "2026-09-27",
+    "model_approved": false,
+    "source_report_sha256": "eaed18e1ee87306a4ac9c801f0544d3effaf8ce50e8261f612aef073bed7ba4c",
+    "selections_csv_sha256": "bdfd9fe7c64365c960ca82f42452c98e0385afe273bd37a00ff8e7c1544d90b3",
+    "packaged_at": "2026-09-27T02:22:48Z",
+    "parent_verified_at": "2026-09-27T02:22:48.236926+00:00"
+  },
   "archived_files": [
     "dashboard.html",
     "games/2026_01_ARI_LAC.html",
@@ -55,10 +69,10 @@
     "reports/2026/week-1.html"
   ],
   "files": {
-    "README.txt": "513e9f8eeae20a04f6744b7ca48270d6e4afa5238cf45aec071b28723a641069",
-    "api/hub.json": "d9632d9d133e7ab5983d307a5466ef395e5c7d7f9a3c26ac83e59a1084b63c8e",
-    "best-bets.html": "eb4ee2e47ae6d8a081e26dfb6ea6a2414fe01dca1c8250cb73aea2b075ee874a",
-    "dashboard.html": "4860d129ecf1894b6105d83f3588220ba3abc970e622abf292335642b77e576e",
+    "README.txt": "8e970a5be0e651b208853902e58a3c3e1b57d5bcbfeea8329d0a7a37cd2a5931",
+    "api/hub.json": "8d48d8ec9d81deecdce6d12e68ecbe3b094855b59cd895f220314e895507621c",
+    "best-bets.html": "70a13fe4df4dbdad25bbd21ef20fde6e4aed4d113c1f33e0bd7ee613f50662b1",
+    "dashboard.html": "e91ac59ab45f1ab4c2dc35e727f2d5b05ed489d714e7532d55207bc6b8bf3279",
     "games/2026_01_ARI_LAC.html": "259e0949e9b14095b766504e9a3360ce4aca00c3694174c154d2f45c16358200",
     "games/2026_01_ATL_PIT.html": "e25859c748140488ead1f13955a3ac0a688a3848b2bb1b704c9c432efe4fed60",
     "games/2026_01_BAL_IND.html": "96bb8a47c95cdba5d52240b784d8b415e8c107bdcc87a44593ddbc7d3a999d4f",
@@ -78,10 +92,10 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "aa4df5c7f6b0d6948938d8c9606cd335d5ecf83464ff336eb082526bff05bd64",
-    "index.html": "b542ed8685d45f5679e7eedd138b9a9c846744f549786f618f390b6cde104a04",
-    "reports/2026/week-1.html": "e9b8f253828668e71ed218ceb3c07bc2b81e8604774486329cb21194c8b042ec",
-    "reports/2026/week-3.html": "3e17e2bd53ab74eea0ad343b918ac174ab1c15ab495f87428a5e4229f9c2227a",
-    "reports/index.json": "ac2b850639220d9f01ed530900c40ff3a02811bc3f42b0282de93c5f3f12565a",
-    "reports/latest.html": "3e17e2bd53ab74eea0ad343b918ac174ab1c15ab495f87428a5e4229f9c2227a"
+    "index.html": "165b580976196848884ab65004c1c65674564281270a4f14222bca578e4b5f72",
+    "reports/2026/week-1.html": "4ae268b26800324d805f4b4c2eb4379f63a57598d70d90b82d89335ed93017a6",
+    "reports/2026/week-3.html": "364d8991a1d24f5dd935ed451e82ceef8312361f9e3511369950b3854c82a95d",
+    "reports/index.json": "4b8e3c638acb9b6023c1a52e66b70e7530a6d7b11a11732ce09d458bd660fbb2",
+    "reports/latest.html": "952069f3f56bf38484e1c77296bfc34786036d66cafe7e955edec60da70182f5"
   }
 }
