@@ -4,10 +4,12 @@
     python scripts/build_public_site.py --current --db data/nfl_props.db \
         --archive published-site --out public-site --label fresh
 
-The top-level pages (index, best-bets, api/hub.json, reports/latest) become
-this week's evidence cards; archived week reports and game pages are carried
-over from ``--archive`` unchanged. ``publication.json`` records every file hash
-plus the run/code/model/version provenance and the quote and run clocks.
+The production model cards are always published separately as model-cards.html.
+A checksummed, same-week analyst dashboard keeps its presentation and original
+quote clocks; automated data refreshes never overwrite it. Without that seed,
+the generated homepage has native collapsed evidence and game-jump navigation.
+Archived week reports and game pages are carried over from ``--archive``.
+``publication.json`` records file hashes and separate model/analyst provenance.
 
 Exit codes (fail closed; the previous publication stays live on any non-zero):
   0  built
@@ -54,7 +56,14 @@ CSS = ("body{font:15px system-ui;max-width:900px;margin:auto;padding:1em}"
        "nav a{margin-right:1em}"
        ".fe-panel{border-top:1px dashed #bbb;margin-top:.5em;padding-top:.4em;font-size:13px}"
        ".fe-head,.fe-cat{font-weight:600}.fe-panel ul{margin:.2em 0 .4em 1.1em;padding:0}"
-       ".fe-d,.fe-s,.fe-c,.fe-m,.fe-r{color:#555}.fe-c{color:#8a4b00}")
+       ".fe-d,.fe-s,.fe-c,.fe-m,.fe-r{color:#555}.fe-c{color:#8a4b00}"
+       "*{box-sizing:border-box}body{line-height:1.5;color:#182233;overflow-wrap:anywhere}"
+       "nav{display:flex;flex-wrap:wrap;gap:4px 10px}nav a{display:inline-flex;align-items:center;min-height:44px}"
+       "a{color:#17529c}summary{cursor:pointer;min-height:44px;padding:10px;font-weight:600}"
+       "details{border:1px solid #d5dce6;border-radius:8px;margin:8px 0}details[open]>summary{border-bottom:1px solid #d5dce6}"
+       ".game-jumps a{border:1px solid #d5dce6;border-radius:8px;padding:4px 10px;text-decoration:none}"
+       "section{scroll-margin-top:8px}.banner{padding:0}.banner .provenance{padding:10px}"
+       "h1{font-size:24px}h2{font-size:19px}section .card{border:0;margin:0}")
 
 
 class Refused(Exception):
@@ -115,10 +124,12 @@ def collect(db_path, season, week, now):
     return payload
 
 
-def page(title, body, nav=True):
+def page(title, body, nav=True, depth=0):
     e = html.escape
-    links = ('<nav><a href="index.html">This week</a><a href="best-bets.html">Watch list</a>'
-             '<a href="reports/latest.html">Full report</a><a href="history.html">Archive</a></nav>'
+    prefix = '../' * depth
+    links = (f'<nav><a href="{prefix}index.html">This week</a><a href="{prefix}best-bets.html">Watch list</a>'
+             f'<a href="{prefix}model-cards.html">Model cards</a>'
+             f'<a href="{prefix}reports/latest.html">Full report</a><a href="{prefix}history.html">Archive</a></nav>'
              if nav else "")
     # Inline the committed UI bridge so scheduled rebuilds retain mobile
     # scrolling behavior at every report depth, even with an empty archive.
@@ -138,7 +149,9 @@ def header(payload, label, generated_at):
     c = payload["counts"]
     ctx = payload.get("context_captured") or "no sourced context file for this week"
     return (f"<h1>{payload['season']} week {payload['week']}: evidence cards</h1>"
-            f"<div class=banner><b>{e(label.upper())}</b>. {e(LABELS[label])}<br>"
+            f"<p><b>No card is a recommended wager.</b> Saved model output; quotes are not live.</p>"
+            f"<details class=banner><summary>Run timestamps, quote clocks and model caveats</summary><div class=provenance>"
+            f"<b>{e(label.upper())}</b>. {e(LABELS[label])}<br>"
             f"Generated {e(generated_at)}. Quote clocks {e(str(qc['earliest']))} to {e(str(qc['latest']))}. "
             f"Runs: {e(runs)}.<br>Status counts: {c['actionable']} actionable, {c['watch']} watch, "
             f"{c['research']} research, {c['pass']} pass. <b>No card is a recommended wager.</b> "
@@ -151,7 +164,61 @@ def header(payload, label, generated_at):
             f"healthy in this context layer; the primary pipeline's older availability step still treats a "
             f"player with no matched injury row as available). Context was captured by {e(ctx)}; each card "
             f"shows only the context recorded by the run that made it. The odds quote clocks above are "
-            f"unchanged.</div>")
+            f"unchanged.</div></details>")
+
+
+def grouped_cards(cards):
+    """Readable, native-HTML navigation and disclosure; no JS dependency."""
+    groups = {}
+    for card in cards:
+        groups.setdefault(str(card.get('game_id') or 'unknown'), []).append(card)
+    e = html.escape
+    links, sections = [], []
+    for game, rows in groups.items():
+        anchor = 'g-' + re.sub(r'[^A-Za-z0-9_-]', '-', game)
+        label = ' @ '.join(game.split('_')[-2:])
+        links.append(f'<a href="#{e(anchor)}">{e(label)}</a>')
+        items = []
+        for card in rows:
+            quote = card.get('quote') or {}
+            price = f"{quote.get('book', '')} {quote.get('price_american', '')}" if quote else 'no executable quote'
+            summary = (f"{card['player']} · {card['market'].replace('_', ' ')} "
+                       f"{card['side']} {card['line']} · {price} · {card['status']}")
+            items.append(f'<details class="model-card"><summary>{e(summary)}</summary>'
+                         + pc.render_cards_html([card]) + '</details>')
+        sections.append(f'<section id="{e(anchor)}"><h2>{e(label)}</h2>' + ''.join(items) + '</section>')
+    return '<nav class="game-jumps" aria-label="Jump to game">' + ''.join(links) + '</nav>' + ''.join(sections)
+
+
+def analyst_reading(archive, season, week):
+    """Keep reviewed same-week presentation separate from production model data."""
+    if not archive or not os.path.isfile(os.path.join(archive, 'publication.json')):
+        return None
+    with open(os.path.join(archive, 'publication.json'), encoding='utf-8') as f:
+        manifest = json.load(f)
+    if (manifest.get('season'), manifest.get('week')) != (season, week) or not manifest.get('analyst_card'):
+        return None
+    names = ('index.html', 'best-bets.html', 'reports/latest.html', f'reports/{season}/week-{week}.html')
+    documents = {}
+    for name in names:
+        path = os.path.join(archive, name)
+        with open(path, 'rb') as f:
+            data = f.read()
+        if hashlib.sha256(data).hexdigest() != manifest.get('files', {}).get(name):
+            raise Refused(1, f'analyst reading checksum mismatch: {name}')
+        documents[name] = data.decode('utf-8')
+    analyst = manifest['analyst_card']
+    hub_path = os.path.join(archive, 'api', 'hub.json')
+    if os.path.isfile(hub_path):
+        with open(hub_path, encoding='utf-8') as f:
+            analyst = json.load(f).get('analyst_card', analyst)
+    provenance = manifest.get('reading_experience') or {
+        'kind': 'preserved-analyst-snapshot',
+        'quote_clocks': manifest.get('quote_clocks'),
+        'source_as_of': manifest.get('source_as_of'),
+        'runs': manifest.get('runs'),
+    }
+    return documents, analyst, provenance
 
 
 def build(payload, label, archive, out, generated_at):
@@ -170,15 +237,33 @@ def build(payload, label, archive, out, generated_at):
 
     season, week = payload["season"], payload["week"]
     head = header(payload, label, generated_at)
-    cards = pc.render_cards_html(payload["cards"])
+    cards = grouped_cards(payload["cards"])
     watch = [c for c in payload["cards"] if c["status"] in ("actionable", "watch")]
     put("index.html", page(f"{season} week {week} cards", head + (cards or "<p>No leans.</p>")))
     put("best-bets.html", page(f"{season} week {week} watch list", head + (
-        pc.render_cards_html(watch) if watch else
+        grouped_cards(watch) if watch else
         "<p>No card is actionable, and none currently qualifies for the watch list.</p>")))
     report = page(f"{season} week {week} report", head + cards)
-    put("reports/latest.html", report)
-    put(f"reports/{season}/week-{week}.html", report)
+    put("reports/latest.html", page(f"{season} week {week} report", head + cards, depth=1))
+    put(f"reports/{season}/week-{week}.html", page(f"{season} week {week} report", head + cards, depth=2))
+    put("model-cards.html", report)
+
+    reading = analyst_reading(archive, season, week)
+    if reading:
+        documents, analyst, reading_provenance = reading
+        for name, document in documents.items():
+            # Idempotent UI-only notice; do not relabel old analyst quotes as fresh.
+            document = re.sub(r'<!-- model-refresh-link -->.*?<!-- /model-refresh-link -->',
+                              '', document, flags=re.DOTALL)
+            prefix = '../' * name.count('/')
+            notice = ('<!-- model-refresh-link --><aside style="padding:10px 12px;'
+                      'border:1px solid #d5dce6;border-radius:8px;margin:10px 0;font:14px/1.5 system-ui">'
+                      '<b>Saved analyst card.</b> Original selections and quote clocks are unchanged; '
+                      'these are not live prices or in-game picks. '
+                      f'<a href="{prefix}model-cards.html">Latest automated model cards ↗</a>'
+                      '</aside><!-- /model-refresh-link -->')
+            document = document.replace('<body>', '<body>' + notice, 1)
+            put(name, document)
 
     archived = []
     if archive:
@@ -212,6 +297,8 @@ def build(payload, label, archive, out, generated_at):
     hub.update({"label": label, "label_text": LABELS[label], "cards": payload["cards"],
                 "factor_receipts": payload.get("factor_receipts") or [],
                 "context_captured": payload.get("context_captured")})
+    if reading:
+        hub['analyst_card'] = analyst
     put("api/hub.json", json.dumps(hub, indent=2, default=str))
     put("README.txt", f"FablesFable {season} week {week} evidence cards ({label}).\n"
         "Generated by scripts/build_public_site.py; no API keys, databases or model binaries.\n"
@@ -224,6 +311,9 @@ def build(payload, label, archive, out, generated_at):
         "counts": payload["counts"], "approved_bets": 0, "model_candidates": len(payload["cards"]),
         "archived_files": sorted(archived), "files": dict(sorted(files.items())),
     }
+    if reading:
+        manifest['analyst_card'] = reading[1]
+        manifest['reading_experience'] = reading[2]
     with open(os.path.join(out, "publication.json"), "w") as f:
         json.dump(manifest, f, indent=2, default=str)
         f.write("\n")

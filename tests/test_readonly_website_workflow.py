@@ -53,7 +53,8 @@ def _public_fixture(tmp_path):
     root = tmp_path / 'published-site'
     root.mkdir(parents=True)
     files = {
-        'index.html': '<!doctype html><title>Synthetic index</title>',
+        'index.html': '<!doctype html><title>Synthetic index</title><details><summary>Synthetic details</summary></details>',
+        'model-cards.html': '<!doctype html><title>Synthetic automated cards</title>',
         'best-bets.html': '<!doctype html><title>Synthetic best bets</title>',
         'history.html': '<!doctype html><title>Synthetic history</title>',
         'api/hub.json': '{"fixture": "synthetic"}',
