@@ -133,6 +133,22 @@ def test_missing_db_or_archive_is_an_error(tmp_path):
                      "--out", str(tmp_path / "o"), "--label", "fresh"]) == 1
 
 
+def test_generated_pages_keep_mobile_scroll_bridge(tmp_path):
+    """The next scheduled rebuild must not pin the mobile header again."""
+    db = _db(tmp_path, [_lean()])
+    out = tmp_path / "site" / "published-site"
+    assert bps.main(["--db", db, "--season", "2026", "--week", "3",
+                     "--archive", _archive(tmp_path), "--out", str(out),
+                     "--label", "replay", "--now", "2026-09-23T00:00:00Z"]) == 0
+    for relative in ("index.html", "best-bets.html", "reports/latest.html", "reports/2026/week-3.html"):
+        document = (out / relative).read_text()
+        assert "dearing-hub:hello" in document, relative
+        assert "dearing-hub:scroll" in document, relative
+        assert "window.parent" in document, relative
+        assert "name=\"viewport\"" in document, relative
+    _run_checker(out.parent)
+
+
 def test_production_runs_generate_and_one_publisher_deploys():
     live = (ROOT / ".github/workflows/live-weekly.yml").read_text()
     site = (ROOT / ".github/workflows/website.yml").read_text()
