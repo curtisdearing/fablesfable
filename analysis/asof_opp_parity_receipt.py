@@ -35,6 +35,26 @@ COL = {"QB": "roll_ypa_allowed_factor", "WR": "roll_ypt_allowed_factor",
        "TE": "roll_ypt_allowed_factor", "RB": "roll_ypc_allowed_factor"}
 
 
+def _sha(path: str) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    with open(os.path.realpath(path), "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _input_hashes(fixture: bool) -> dict:
+    """sha256 of every data file the run reads (symlinks resolved)."""
+    if fixture:
+        files = [os.path.join(ROOT, "tests", "fixtures", f) for f in ("pbp_2019_2020.parquet", "schedules_2019_2020.parquet")]
+    else:
+        from nflvalue import ingest
+        files = [ingest.BASE_PBP] + [os.path.join(ingest.HIST, f"pbp_{s}.parquet") for s in ingest.extra_seasons_on_disk()]
+        files += [ingest.BASE_LINES, ingest.LINES_EXTRA]
+    return {os.path.relpath(f, ROOT): {"resolved_path": os.path.realpath(f), "sha256": _sha(f)} for f in files if os.path.exists(f)}
+
+
 def classify(df: pd.DataFrame) -> dict:
     y = df[df["market"].isin(YARDS)]
     cls = np.where(y["opp_source"] == "played", "played",
@@ -85,6 +105,9 @@ def main():
         "fully_played": full,
     }
     rec = {"commit": subprocess.check_output(["git", "-C", ROOT, "rev-parse", "HEAD"], text=True).strip(),
+           "worktree_dirty_tracked_files": subprocess.check_output(["git", "-C", ROOT, "status", "--porcelain", "--untracked-files=no"], text=True).strip().splitlines(),
+           "code_sha256": {f: _sha(os.path.join(ROOT, f)) for f in ("nflvalue/features.py", "nflvalue/candidates.py", "nflvalue/projection.py", "analysis/asof_opp_parity_receipt.py")},
+           "input_sha256": _input_hashes(a.fixture),
            "season": S, "week": W, "first_completed_game": first, "scenarios": {}}
     ok = True
     for name, opd in scenarios.items():
