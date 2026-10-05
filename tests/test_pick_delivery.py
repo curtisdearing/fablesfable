@@ -98,11 +98,15 @@ def test_prepare_separates_pick_watch_and_no_recommendation(tmp_path, actionable
                 {"availability": {"eligibility": "degraded", "availability_state": "unknown"}})),
             _row(player_id="00-3", name="Voided", status="voided", void_reason="inactive")]
     m, _ = _prepare(tmp_path, rows)
-    assert m["status"] == pd.GENERATED_ONLY and m["counts"] == {"recommendation": 1, "watch": 1,
-                                                                "no_recommendation": 3}
+    assert m["status"] == pd.GENERATED_ONLY and m["counts"] == {"recommendation": 1, "approved": 1, "exception": 0,
+                                                                "watch": 1, "no_recommendation": 3}
     rec, watch = m["items"]
-    assert rec["pick_class"] == "recommendation" and rec["text"].startswith("PICK: Dak Prescott pass_attempts UNDER 32.5")
-    assert watch["pick_class"] == "watch" and watch["text"].startswith("WATCH ONLY (not a recommendation)")
+    # every delivered text STARTS with the approval line; the pick line follows
+    assert rec["pick_class"] == "recommendation" and rec["tier"] == "primary"
+    assert rec["text"].splitlines()[0].startswith("APPROVAL: approved")
+    assert rec["text"].splitlines()[1].startswith("PICK: Dak Prescott pass_attempts UNDER 32.5")
+    assert watch["pick_class"] == "watch" and watch["text"].splitlines()[0].startswith("APPROVAL: none")
+    assert watch["text"].splitlines()[1].startswith("WATCH ONLY (not a recommendation)")
     reasons = {w["player"]: w["reason"] for w in m["withheld"]}
     assert "no offered price" in reasons["No Price"] and "availability not established" in reasons["Unknown Avail"]
     assert "voided: inactive" in reasons["Voided"]
@@ -231,8 +235,10 @@ def test_hermes_local_message_row_is_evidence_only_with_exact_text(tmp_path, act
     conn = sqlite3.connect(tmp_path / "ledger.db")
     ev = il.load(conn)[0]["events"][0]
     conn.close()
-    assert json.loads(ev["evidence_json"]) == {"message_id": "hermes-local:desktop:sess-a:3",
-                                               "channel": "hermes-desktop"}
+    evj = json.loads(ev["evidence_json"])
+    assert (evj["message_id"], evj["channel"]) == ("hermes-local:desktop:sess-a:3", "hermes-desktop")
+    assert evj["policy_decision"] == "approved" and evj["policy_violation"] is False
+    assert evj["delivery_evidence_kind"] == "live_message"
     assert ev["event_ts"] == Z("11:05")                          # the row's own clock, not a supplied one
     assert _grade(tmp_path)["counts"]["recommendations_given"] == 1
 

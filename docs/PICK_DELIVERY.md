@@ -88,3 +88,22 @@ python scripts/pick_delivery.py grade --db <ledger db> --season 2026 --week 3 \
    - Grades do not feed model fitting. The grader writes no `model_adjustments`.
    - Nothing retunes Sunday from Thursday's result.
    - Any refit is a separate, pre-registered step.
+
+## Authorization before sending vs recording what was sent (2026-10-05)
+
+`nflvalue/delivery_policy.authorize` decides whether a card may be SENT as a recommendation:
+`approved` only for an `actionable` card (validated market); game lines (spread / total /
+moneyline) are `blocked` under the ledger decision of 2026-09-22; any other card is `blocked`
+unless an explicit, complete exception (`by`, `reason`, zoned `clock`) is attached, in which
+case it is sent as an `exception` whose text still says the forecast is unvalidated. Every
+delivered text starts with the approval line (`APPROVAL … · EXCEPTION … · RISK CAP …`).
+`prepare` applies this; `--exception-by/--exception-reason/--exception-key` name the cards an
+analyst chooses to send anyway, and `--risk-cap` prints the cap.
+
+`issued_ledger.record_delivered` records what WAS sent regardless: a recommendation the policy
+would have blocked is stored with `policy_violation: true` in the event evidence (exact text,
+quote, clocks and message id preserved), the tier is derived from the policy and the derivation
+recorded (`tier_source`), and `delivery_evidence_kind` is `live_message` only when the kickoff
+is supplied and precedes the delivery clock (`retrospective_import` otherwise). The grader keeps
+such picks in the analyst-issued denominator under `policy_groups` (`approved` / `exception` /
+`violation` / `unrecorded`) and never counts them as approved.

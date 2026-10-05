@@ -307,6 +307,36 @@ def _mean(xs):
     return (sum(xs) / len(xs)) if xs else None
 
 
+def policy_of(r: Dict) -> Dict:
+    """What the delivery ledger recorded about authorization for this record.
+
+    From the ``delivered`` event evidence (``issued_ledger.record_delivered``). Records
+    with no such evidence (generated/published only, or legacy deliveries) are
+    ``unrecorded``. Classes: ``approved`` (policy approved, tier primary), ``exception``
+    (explicit complete exception), ``violation`` (a recommendation the policy would have
+    blocked, sent anyway -- graded, never approved), ``watch``, ``unrecorded``."""
+    for e in r.get("events") or []:
+        if e.get("stage") != "delivered":
+            continue
+        try:
+            ev = json.loads(e.get("evidence_json") or "{}")
+        except ValueError:
+            ev = {}
+        if "policy_decision" not in ev:
+            continue
+        if ev.get("policy_violation"):
+            cls = "violation"
+        elif ev["policy_decision"] == "approved" and r.get("tier") == "primary":
+            cls = "approved"
+        else:
+            cls = ev["policy_decision"]
+        return {"policy_class": cls, "policy_decision": ev["policy_decision"],
+                "policy_violation": bool(ev.get("policy_violation")), "tier_source": ev.get("tier_source"),
+                "delivery_evidence_kind": ev.get("delivery_evidence_kind"), "exception": ev.get("exception")}
+    return {"policy_class": "unrecorded", "policy_decision": None, "policy_violation": None,
+            "tier_source": None, "delivery_evidence_kind": None, "exception": None}
+
+
 def summarize(rows: List[Dict]) -> Dict:
     games = sorted({r["game_id"] for r in rows})
     settled = [r for r in rows if r["settlement"] in st.SETTLED]
@@ -406,8 +436,12 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
             latest.append({"record": pro[-1]["r"], "stage": pro[-1]["stage"], "first_seen": pro[-1]["first_seen"],
                            "same_decision_records": [], "later_records": [], "revises": None})
     secs["latest_pre_kick_snapshot"] = latest
+    pol = [policy_of(i["r"]) for i in info]
     counts = {"records": len(records),
               "not_a_pick_records": sum(i["r"].get("pick_class") == "not_a_pick" for i in info),
+              "policy_violation_records": sum(bool(p["policy_violation"]) for p in pol),
+              "policy_exception_records": sum(p["policy_class"] == "exception" for p in pol),
+              "policy_approved_records": sum(p["policy_class"] == "approved" for p in pol),
               **{k: len(v) for k, v in secs.items()}}
     return secs, counts
 
@@ -427,17 +461,22 @@ def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
                 g = grade_record(r, games, id_map)
                 g.update(clv_row(r, closes, g["kickoff"]))
                 cache[r["record_id"]] = g
-            rows.append({**cache[r["record_id"]], "section": name, "evidence_stage": u["stage"],
+            rows.append({**cache[r["record_id"]], **policy_of(r), "section": name, "evidence_stage": u["stage"],
                          "first_seen_in_ledger": u["first_seen"].isoformat() if u["first_seen"] else None,
                          "same_decision_records": u["same_decision_records"],
                          "later_records": u["later_records"], "revises": u["revises"]})
         rows.sort(key=lambda g: (g["season"], g["week"], g["game_id"] or "", g["pick_key"],
                                  g["first_seen_in_ledger"] or ""))
         groups = defaultdict(list)
+        pgroups = defaultdict(list)
         for g in rows:
             groups[(g["tier"], g["slate_tag"])].append(g)
             groups[(g["tier"], "all_slates")].append(g)
-        out_secs[name] = {"rows": rows, "groups": {"|".join(k): summarize(v) for k, v in sorted(groups.items())}}
+            # policy classes are never pooled: a violating sent pick is graded here, not as approved
+            pgroups[(f"policy:{g['policy_class']}", g["slate_tag"])].append(g)
+            pgroups[(f"policy:{g['policy_class']}", "all_slates")].append(g)
+        out_secs[name] = {"rows": rows, "groups": {"|".join(k): summarize(v) for k, v in sorted(groups.items())},
+                          "policy_groups": {"|".join(k): summarize(v) for k, v in sorted(pgroups.items())}}
     corrections = []
     if prior_rows:
         prev = {p["record_id"]: p for p in prior_rows}

@@ -54,6 +54,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from nflvalue import delivery_policy as dp  # noqa: E402
 from nflvalue import issued_ledger as il  # noqa: E402
 from nflvalue import settlement as st  # noqa: E402
 from nflvalue.pick_cards import STALE_QUOTE_HOURS  # noqa: E402
@@ -120,39 +121,73 @@ def withheld_reason(card, kickoff, now):
     return None
 
 
-def pick_text(card, pick_class, kickoff) -> str:
-    q = card["quote"]
+def pick_text(card, pick_class, kickoff, policy=None, risk_cap=None) -> str:
+    """The exact text given. It STARTS with the approval line: approved / exception / none."""
+    q = card.get("quote") or {}
     p = card.get("model_p_side")
     prob = f"{p:.1%}" if isinstance(p, (int, float)) and 0 <= p <= 1 else "n/a"
     be = card.get("breakeven")
-    head = "PICK" if pick_class == "recommendation" else "WATCH ONLY (not a recommendation)"
-    return (f"{head}: {card['player']} {card['market']} {str(card['side']).upper()} {card['line']:g} "
-            f"at {q['book']} {q.get('price_american') or ''} ({q['price_decimal']}), quote captured "
+    policy = policy or dp.authorize(card, pick_class=pick_class)
+    if pick_class == "recommendation":
+        head = "PICK" if policy["decision"] == "approved" else "ANALYST EXCEPTION PICK (not model-approved)"
+    else:
+        head = "WATCH ONLY (not a recommendation)"
+    return (f"{dp.approval_line(policy, risk_cap)}\n"
+            f"{head}: {card['player']} {card['market']} {str(card['side']).upper()} {card['line']:g} "
+            f"at {q.get('book')} {q.get('price_american') or ''} ({q.get('price_decimal')}), quote captured "
             f"{q['captured_at']}. Game {card['game_id']}, kickoff {kickoff}. Model P({card['side']}) {prob}"
             f"{f', breakeven {be:.1%}' if isinstance(be, (int, float)) else ''}; model probability is not "
             f"validated at offered lines. Do not act if the player is ruled out or the line/price has moved; "
             f"sportsbook settlement rules (inactive, stat corrections) are not verified.")
 
 
-def prepare(cards_path, season, week, kickoffs, now):
+def prepare(cards_path, season, week, kickoffs, now, exception=None, exception_keys=(), risk_cap=None):
+    """Authorize before anything is written. ``exception`` (by/reason/clock) applies ONLY to the
+    cards named in ``exception_keys`` ("game_id|player_id|market|side|line"); each becomes an
+    explicit analyst-override recommendation whose text says the forecast is not approved."""
     raw = open(cards_path, "rb").read()
     payload = json.loads(raw)
     if (payload.get("season"), payload.get("week")) != (season, week):
         raise ValueError(f"cards are for season/week {payload.get('season')}/{payload.get('week')}, "
                          f"not {season}/{week}")
+    keys = set(exception_keys or ())
+    if keys and dp.exception_problems(exception, now):
+        raise ValueError("exception keys given but the exception is incomplete: "
+                         + "; ".join(dp.exception_problems(exception, now)))
+    seen_keys = set()
     items, withheld = [], []
     for card in payload.get("cards") or []:
         kickoff = kickoffs.get(card.get("game_id"))
-        why = withheld_reason(card, kickoff, now)
         ident = {k: card.get(k) for k in ("game_id", "player_id", "player", "market", "side", "line", "status")}
-        if why:
-            withheld.append({**ident, "classification": "no_recommendation", "reason": why})
+        key = "|".join(str(card.get(k)) for k in ("game_id", "player_id", "market", "side", "line"))
+        wants_exception = key in keys
+        if wants_exception:
+            seen_keys.add(key)
+        pick_class = "recommendation" if (wants_exception or card.get("status") == "actionable") else CLASS_OF.get(card.get("status"))
+        policy = dp.authorize(card, exception if wants_exception else None, now, pick_class=pick_class or "recommendation")
+        why = withheld_reason(card, kickoff, now) if pick_class else None
+        if pick_class is None or policy["decision"] == "blocked":
+            reason = why or "; ".join(policy["reasons"])
+            if pick_class is None:
+                reason = withheld_reason(card, kickoff, now)
+            withheld.append({**ident, "classification": "no_recommendation", "reason": reason,
+                             "policy_decision": policy["decision"], "policy_reasons": policy["reasons"]})
             continue
-        pick_class = CLASS_OF[card["status"]]
-        text = pick_text(card, pick_class, kickoff)
-        body = {"season": season, "week": week, "pick_class": pick_class, "kickoff": kickoff,
+        if why:
+            withheld.append({**ident, "classification": "no_recommendation", "reason": why,
+                             "policy_decision": policy["decision"], "policy_reasons": policy["reasons"]})
+            continue
+        tier = "primary" if policy["decision"] == "approved" else "analyst_override"
+        text = pick_text(card, pick_class, kickoff, policy, risk_cap if pick_class == "recommendation" else None)
+        body = {"season": season, "week": week, "pick_class": pick_class, "kickoff": kickoff, "tier": tier,
+                "policy": {k: policy[k] for k in ("decision", "reasons", "approval_status", "game_line")},
+                "exception": policy["exception"] if policy["decision"] == "exception" else None,
+                "risk_cap_units": risk_cap if pick_class == "recommendation" else None,
                 "text": text, "card": card}
         items.append({"item_id": _sha(_canon(body))[:16], **body, "text_sha256": _sha(text)})
+    unknown = keys - seen_keys
+    if unknown:
+        raise ValueError(f"exception keys match no card: {sorted(unknown)}")
     items.sort(key=lambda i: (i["pick_class"] != "recommendation", i["kickoff"], i["card"]["game_id"],
                               i["card"]["player"], i["card"]["market"]))
     manifest = {"schema": SCHEMA, "status": GENERATED_ONLY,
@@ -162,6 +197,8 @@ def prepare(cards_path, season, week, kickoffs, now):
                 "source_cards": os.path.abspath(cards_path), "source_cards_sha256": _sha(raw),
                 "source_label": payload.get("label"), "kickoffs": kickoffs,
                 "counts": {"recommendation": sum(i["pick_class"] == "recommendation" for i in items),
+                           "approved": sum(i["policy"]["decision"] == "approved" for i in items),
+                           "exception": sum(i["policy"]["decision"] == "exception" for i in items),
                            "watch": sum(i["pick_class"] == "watch" for i in items),
                            "no_recommendation": len(withheld)},
                 "items": items, "withheld": withheld,
@@ -248,14 +285,17 @@ def record(db_path, manifest_path, item_id, evidence, now, retrospective=False):
     try:
         n0 = conn.execute("SELECT COUNT(*) FROM issued_pick_events").fetchone()[0]
         rec = il.record_delivered(conn, m["season"], m["week"], it["card"], it["text"], evidence["message_id"],
-                                  _iso(when), evidence["channel"], pick_class=it["pick_class"], tier="primary",
-                                  recorded_at=_iso(now))
+                                  _iso(when), evidence["channel"], pick_class=it["pick_class"],
+                                  tier=it.get("tier", "primary"), recorded_at=_iso(now),
+                                  exception=it.get("exception"), kickoff=it["kickoff"],
+                                  retrospective=after_kick)
         new = conn.execute("SELECT COUNT(*) FROM issued_pick_events").fetchone()[0] > n0
         revision = conn.execute("SELECT revision, supersedes FROM issued_picks WHERE record_id=?",
                                 (rec["record_id"],)).fetchone()
     finally:
         conn.close()
     return {"item_id": item_id, "record_id": rec["record_id"], "pick_class": it["pick_class"],
+            "tier": rec["tier"], "policy": rec["policy"],
             "revision": revision[0], "supersedes": revision[1], "new_event": new,
             "retrospective": after_kick, **evidence}
 
@@ -315,6 +355,11 @@ def main(argv=None) -> int:
     p.add_argument("--week", type=int, required=True)
     p.add_argument("--kickoffs", required=True, help="JSON {game_id: zoned ISO kickoff} from an official source")
     p.add_argument("--out", required=True)
+    p.add_argument("--exception-by", help="who authorizes sending the cards named by --exception-key")
+    p.add_argument("--exception-reason", help="why; stored verbatim; the forecast stays unvalidated")
+    p.add_argument("--exception-key", action="append", default=[],
+                   help="game_id|player_id|market|side|line of a non-actionable card to send as an explicit exception")
+    p.add_argument("--risk-cap", type=float, help="risk cap in units printed on every recommendation")
     r = sub.add_parser("record")
     r.add_argument("--db", required=True)
     r.add_argument("--manifest", required=True)
@@ -341,7 +386,12 @@ def main(argv=None) -> int:
     try:
         if a.cmd == "prepare":
             kick = json.load(open(a.kickoffs))
-            m = prepare(a.cards, a.season, a.week, kick, now)
+            if bool(a.exception_by) != bool(a.exception_reason) or (a.exception_key and not a.exception_by):
+                print("[delivery] an exception needs --exception-by, --exception-reason and >=1 --exception-key")
+                return 2
+            exc = {"by": a.exception_by, "reason": a.exception_reason, "clock": _iso(now)} if a.exception_by else None
+            m = prepare(a.cards, a.season, a.week, kick, now, exception=exc, exception_keys=a.exception_key,
+                        risk_cap=a.risk_cap)
             os.makedirs(a.out, exist_ok=True)
             with open(os.path.join(a.out, "manifest.json"), "w") as f:
                 json.dump(m, f, indent=1, sort_keys=True, default=str)
