@@ -1,0 +1,65 @@
+{
+  "commit": "44de45e869310ad52e28da59add7d705478db957",
+  "season": 2026,
+  "week": 4,
+  "first_completed_game": "2026_04_PIT_CLE",
+  "scenarios": {
+    "wholly_unplayed": {
+      "all_rows": {
+        "asof_informed": 600,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 600,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 523,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "after_first_completed_game": {
+      "all_rows": {
+        "asof_informed": 564,
+        "played": 36,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 564,
+        "yards_rows": 564,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 523,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "fully_played": {
+      "all_rows": {
+        "played": 193,
+        "yards_rows": 193,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "played": 193,
+        "yards_rows": 193,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 193,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    }
+  },
+  "required_invariant": "adding a completed game never removes as-of factors from unplayed games; every present factor equals the as-played table",
+  "required_invariant_passes": true
+}

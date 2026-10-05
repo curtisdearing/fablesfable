@@ -326,6 +326,27 @@ def enumerate_candidates(
         _atw = featuresmod.asof_team_week(pw, season, week, teams=list(team_to_game))
         asof_team_rows = {r.team: r._asdict() for r in _atw.itertuples(index=False)}
 
+    # Opponent factors as of this week. build_opp_pos_def likewise only has
+    # rows for PLAYED weeks, so a live week had no opponent row and
+    # projection.project silently used opp_factor = 1.0 for every yards
+    # market -- while every backtest applied the prior-weeks-only factor
+    # (2026 W4: Hampton rushing_yards served 59.0 vs 49.5 with SEA's 0.845).
+    # Supply the as-of rows; played rows, where they exist, are untouched.
+    # Coverage is decided PER (opponent, role) KEY, never per week: once a
+    # Thursday game has been played its opponent rows exist, and a whole-week
+    # guard would then leave every other game's opponent at 1.0 (found by
+    # independent review of the first repair: 293/293 remaining rows lost
+    # their factor when one game completed). Played rows keep precedence.
+    asof_opp_rows: Dict = {}
+    missing_keys = {(g["opp"], role) for g in team_to_game.values()
+                    for role in ("QB", "RB", "WR", "TE")
+                    if (season, week, g["opp"], role) not in inputs.opp_idx}
+    if missing_keys:
+        _aod = featuresmod.asof_opp_pos_def(inputs.opd, season, week,
+                                            defteams=sorted({t for t, _ in missing_keys}))
+        asof_opp_rows = {(r.defteam, r.role): r._asdict() for r in _aod.itertuples(index=False)
+                         if (r.defteam, r.role) in missing_keys}
+
     # index real prop lines if provided
     line_idx: Dict = {}
     if prop_lines is not None and not prop_lines.empty:
@@ -359,8 +380,17 @@ def enumerate_candidates(
                 continue
             if not _passes_usage_floor(player_row, spec, min_usage):
                 continue
-            opp_row = (inputs.opp_idx.get((season, week, ginfo["opp"], role))
-                       if spec["use_opp_factor"] else None)
+            opp_row, opp_source, opp_roll_games = None, None, None
+            if spec["use_opp_factor"]:
+                opp_row = inputs.opp_idx.get((season, week, ginfo["opp"], role))
+                opp_source = "played"
+                if opp_row is None:
+                    opp_row = asof_opp_rows.get((ginfo["opp"], role))
+                    opp_source = "asof" if opp_row is not None else "missing"
+                if opp_row is not None:
+                    # 0 prior games -> the factor is the league prior (1.0): a
+                    # justified neutral, distinguishable from a MISSING row
+                    opp_roll_games = float(opp_row.get("roll_games") or 0.0)
 
             real = line_idx.get((ginfo["game_id"], market, player_row["player_id"]))
             if real is not None:
@@ -397,6 +427,7 @@ def enumerate_candidates(
                 "sd_source": ("walk_forward_residuals" if sd_by_market.get(market) else "default_fraction"),
                 "forecast_version": ffmod.FORECAST_VERSION,
                 "margin_source": margin_source, "forecast_margin": ginfo["margin"],
+                "opp_source": opp_source, "opp_roll_games": opp_roll_games,
             })
             proj.update(ffmod.dispersion_fields(market, proj, dispersion))
             out.append(proj)

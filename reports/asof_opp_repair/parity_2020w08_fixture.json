@@ -1,0 +1,65 @@
+{
+  "commit": "44de45e869310ad52e28da59add7d705478db957",
+  "season": 2020,
+  "week": 8,
+  "first_completed_game": "2020_08_ATL_CAR",
+  "scenarios": {
+    "wholly_unplayed": {
+      "all_rows": {
+        "asof_informed": 314,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 314,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 314,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "after_first_completed_game": {
+      "all_rows": {
+        "asof_informed": 293,
+        "played": 21,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 293,
+        "yards_rows": 293,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 314,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "fully_played": {
+      "all_rows": {
+        "played": 192,
+        "yards_rows": 192,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "played": 192,
+        "yards_rows": 192,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 192,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    }
+  },
+  "required_invariant": "adding a completed game never removes as-of factors from unplayed games; every present factor equals the as-played table",
+  "required_invariant_passes": true
+}
