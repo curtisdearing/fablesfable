@@ -32,7 +32,9 @@ import hashlib
 import json
 import math
 import os
+import re
 import sys
+from collections import Counter
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import numpy as np
@@ -63,15 +65,44 @@ def parse_aware(value) -> Optional[dt.datetime]:
     return t if t.tzinfo is not None else None
 
 
+SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
+TRUSTED_CAPTURE = "ledger_pre_kickoff_event"
+EVIDENCE_SECTIONS = ("recommendations_given", "watch_published", "retrospective")
+
+
+def trusted_capture(row: Dict, kick: Optional[dt.datetime] = None) -> bool:
+    """Is there trusted evidence the row was captured before kickoff?
+
+    Only the issued ledger's own clock counts: the receipt digest (64-hex sha256) of the first
+    pre-kickoff stage event, whose ledger ``capture_recorded_at`` precedes kickoff, on a record
+    that is not a historical/postgame import. A content identifier, a source's claim that it
+    was pregame or a backdated ``decision_ts`` never qualifies on its own."""
+    kick = kick or parse_aware(row.get("kickoff"))
+    seen = parse_aware(row.get("capture_recorded_at"))
+    return (row.get("capture_basis") == TRUSTED_CAPTURE and not row.get("historical_import")
+            and bool(SHA256_RE.match(str(row.get("capture_sha256") or "")))
+            and seen is not None and kick is not None and seen < kick)
+
+
 def window_of(row: Dict) -> str:
     decided, kick = parse_aware(row.get("decision_ts")), parse_aware(row.get("kickoff"))
     if decided is None or kick is None:
         return "unknown_clock"
     if decided >= kick:
         return "excluded_late"
-    if (int(row["season"]), int(row["week"])) >= PROSPECTIVE_START and row.get("capture_sha256"):
+    if (int(row["season"]), int(row["week"])) >= PROSPECTIVE_START and trusted_capture(row, kick):
         return "prospective_confirmation"
+    # includes historically pregame decisions imported after the fact: graded honestly, never confirmation
     return "retrospective_exploratory"
+
+
+def unused_confirmation(row: Dict, frozen_at: Optional[str]) -> bool:
+    """Untouched evidence for a challenger frozen at ``frozen_at``: a prospective row whose trusted
+    capture postdates the freeze. Earlier issued forecasts stay gradable but were already seen."""
+    frozen = parse_aware(frozen_at)
+    seen = parse_aware(row.get("capture_recorded_at"))
+    return (window_of(row) == "prospective_confirmation" and frozen is not None and seen is not None
+            and seen > frozen)
 
 
 # --------------------------------------------------------------- adapters --
@@ -90,22 +121,41 @@ def _outcome(settlement) -> str:
     return {"win": "win", "loss": "loss", "push": "push", "void": "void"}.get(s, "pending")
 
 
+def _issued_row(g: Dict, section: str) -> Dict:
+    price = g.get("quote_price")
+    pre = section in ("recommendations_given", "watch_published")
+    receipt = g.get("capture_receipt_sha256") if pre else None
+    return {
+        "evidence_id": g["record_id"] if section == "recommendations_given" else f"{g['record_id']}:{section}",
+        "source": "issued_ledger", "record_id": g["record_id"], "section": section,
+        "season": g["season"], "week": g["week"],
+        "game_id": g.get("game_id"), "market": g["market"], "side": g.get("side"), "line": g.get("line"),
+        "issued_class": "recommendation" if g.get("pick_class") == "recommendation" else str(g.get("pick_class")),
+        "tier": g.get("tier"), "policy_class": g.get("policy_class"),
+        "decision_ts": g.get("decision_ts"), "kickoff": g.get("kickoff"),
+        # trusted capture = receipt of the first pre-kickoff ledger event + its ledger clock;
+        # record_id is a content id and proves nothing about timing
+        "capture_sha256": receipt, "capture_recorded_at": g.get("first_seen_in_ledger") if pre else None,
+        "capture_basis": (TRUSTED_CAPTURE if receipt else
+                          "historical_import" if g.get("historical_import") else "no_pre_kickoff_ledger_event"),
+        "historical_import": bool(g.get("historical_import")),
+        "delivery_evidence_kind": g.get("delivery_evidence_kind"),
+        "outcome": _outcome(g.get("settlement")), "actual": g.get("actual"),
+        "actuals_sha256": g.get("actuals_sha256"),
+        "price_decimal": float(price) if price else None, "book": g.get("quote_book"),
+        "p": {"issued": g.get("model_p_side")}}
+
+
 def from_issued_grading(grade_output: Dict, section: str = "recommendations_given") -> List[Dict]:
     """Adapter for ``nflvalue.issued_grading.grade()`` output (settlement -> analysis contract)."""
-    rows = []
-    for g in grade_output["sections"].get(section, {}).get("rows", []):
-        price = g.get("quote_price")
-        rows.append({
-            "evidence_id": g["record_id"], "source": "issued_ledger", "season": g["season"], "week": g["week"],
-            "game_id": g.get("game_id"), "market": g["market"], "side": g.get("side"), "line": g.get("line"),
-            "issued_class": "recommendation" if g.get("pick_class") == "recommendation" else str(g.get("pick_class")),
-            "tier": g.get("tier"), "decision_ts": g.get("decision_ts"), "kickoff": g.get("kickoff"),
-            # record_id is the issued ledger's content-derived id of the immutable decision record
-            "capture_sha256": g.get("record_id"),
-            "outcome": _outcome(g.get("settlement")), "actual": g.get("actual"),
-            "price_decimal": float(price) if price else None, "book": g.get("quote_book"),
-            "p": {"issued": g.get("model_p_side")}})
-    return rows
+    return [_issued_row(g, section) for g in grade_output["sections"].get(section, {}).get("rows", [])]
+
+
+def from_results_rows(rows: Iterable[Dict]) -> List[Dict]:
+    """Adapter for ``nflvalue.issued_results.current()``: the latest persisted grade per record and
+    section (earlier revisions stay in the results table). Only verified final-box grades exist there."""
+    return [_issued_row(r, r["section"]) for r in rows
+            if r.get("section") in EVIDENCE_SECTIONS and r.get("actuals_sha256")]
 
 
 def from_card_grade(grade_json: Dict, season: int, week: int, game_id: str, kickoff: Optional[str]) -> List[Dict]:
@@ -161,6 +211,14 @@ def _canon(obj) -> str:
 def append_evidence(path: str, rows: Iterable[Dict], recorded_at: Optional[str] = None) -> Dict:
     """Append rows to a sha256-chained JSONL ledger.  Same id + same content -> skipped;
     same id + changed content -> appended as a new revision (the old line is never edited)."""
+    import fcntl
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path + ".lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)   # one writer; a second fails loudly
+        return _append_locked(path, rows, recorded_at)
+
+
+def _append_locked(path: str, rows: Iterable[Dict], recorded_at: Optional[str]) -> Dict:
     existing = read_ledger(path)
     latest = {}
     for e in existing:
@@ -515,6 +573,65 @@ def _sha_file(path: str) -> str:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def research_status(ledger_path: str, registry_path: str = REGISTRY_PATH, checked_at: Optional[str] = None,
+                    last_append: Optional[Dict] = None) -> Dict:
+    """Public research status from the persisted evidence ledger and the frozen registry.
+
+    Descriptive counts and the exact missing-data gates only. Nothing here promotes a candidate,
+    changes a production weight/default, refits on recent results or blends the market into the
+    football forecast; a passing test or one winning slate is not evidence."""
+    entries = read_ledger(ledger_path)
+    rows = [r for r in latest_rows(entries) if r.get("source") == "issued_ledger"]
+    reg = json.load(open(registry_path))
+    frozen_at = (reg.get("freeze") or {}).get("frozen_at_utc")
+    given = [r for r in rows if r.get("section") == "recommendations_given"]
+    pro = [r for r in given if window_of(r) == "prospective_confirmation"]
+    scored = [r for r in pro if r.get("outcome") in ("win", "loss") and r.get("price_decimal")
+              and _p((r.get("p") or {}).get("issued")) is not None]
+    unused = [r for r in scored if unused_confirmation(r, frozen_at)]
+    games = sorted({r.get("game_id") for r in scored if r.get("game_id")})
+    gates = []
+    if not scored:
+        gates.append("prospective confirmation: 0 settled 2026 week>=5 given-before-kickoff recommendations "
+                     "with a trusted pre-kickoff ledger capture, an offered price and an issued probability")
+    if len(games) < MIN_CLUSTERS:
+        gates.append(f"game clusters: {len(games)} of the {MIN_CLUSTERS} needed for any clustered interval")
+    if not unused:
+        gates.append(f"untouched confirmation for challengers frozen at {frozen_at}: 0 rows captured after the freeze")
+    gates += ["account P/L: unknown (no ticket/stake ledger exists; hypothetical flat-stake ROI is not P/L)",
+              "totals CLV/ROI: no entry/close over-under price receipts for the retrospective totals screens",
+              "prop opponent-factor ablation: capture rows do not record opp_factor/opp_source"]
+
+    def tally(pred):
+        c = Counter(str(r.get("outcome")) for r in rows if pred(r))
+        return {k: c.get(k, 0) for k in ("win", "loss", "push", "void", "pending")}
+
+    sections = {s: {"n": sum(r.get("section") == s for r in rows), "outcomes": tally(lambda r, s=s: r.get("section") == s),
+                    "by_policy_class": {pc: tally(lambda r, s=s, pc=pc: r.get("section") == s
+                                                  and str(r.get("policy_class")) == pc)
+                                        for pc in sorted({str(r.get("policy_class")) for r in rows
+                                                          if r.get("section") == s})}}
+                for s in EVIDENCE_SECTIONS}
+    return {
+        "schema": "fablesfable.research_status.v1", "checked_at": checked_at, "protocol": reg["protocol"]["protocol_id"],
+        "registry_criteria_sha256": (reg.get("freeze") or {}).get("criteria_sha256"), "registry_frozen_at": frozen_at,
+        "ledger": {"entries": len(entries), "records": len(rows),
+                   "revisions": len(entries) - len({e["row"]["evidence_id"] for e in entries}),
+                   "head_entry_sha256": entries[-1]["entry_sha256"] if entries else None,
+                   "last_append": last_append},
+        "windows": dict(sorted(Counter(f"{r.get('section')}|{window_of(r)}" for r in rows).items())),
+        "historical_imports": sum(bool(r.get("historical_import")) for r in rows),
+        "sections": sections,
+        "prospective": {"settled_scored": len(scored), "unused_since_freeze": len(unused), "game_clusters": len(games)},
+        "candidates": [{"candidate_id": c["candidate_id"], "status": c["status"]} for c in reg["candidates"]],
+        "promotion": {"passed_predeclared_gate": [], "production_weights_or_defaults_changed": False,
+                      "market_blend": False, "refit_on_latest_results": False,
+                      "statement": ("No candidate has passed a predeclared prospective gate, so nothing was "
+                                    "promoted. Sections are graded separately and never pooled; losses are kept. "
+                                    "Model probabilities are confidence diagnostics, not a demonstrated edge.")},
+        "missing_data_gates": gates}
 
 
 def main(argv=None) -> int:

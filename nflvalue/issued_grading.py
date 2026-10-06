@@ -407,8 +407,9 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         kick = _ts(g["kickoff"]) if g else None
         pro = _prospective_events(r, kick)
         stage = max((e["stage"] for e in pro), key=_STAGE_RANK.get, default=None)
-        first = min((_ts(e["recorded_at"]) for e in pro), default=None)
-        info.append({"r": r, "stage": stage, "first_seen": first, "has_game": g is not None})
+        first_ev = min(pro, key=lambda e: _ts(e["recorded_at"]), default=None)
+        first = _ts(first_ev["recorded_at"]) if first_ev else None
+        info.append({"r": r, "stage": stage, "first_seen": first, "first_event": first_ev, "has_game": g is not None})
     by_key = defaultdict(list)
     for i in info:
         by_key[i["r"]["pick_key"]].append(i)
@@ -426,7 +427,7 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
                 seen[key]["same_decision_records"].append(i["r"]["record_id"])
                 continue
             unit = {"record": i["r"], "stage": i["stage"], "first_seen": i["first_seen"],
-                    "same_decision_records": []}
+                    "first_event": i["first_event"], "same_decision_records": []}
             seen[key] = unit
             rows.append(unit)
         for u in rows:
@@ -455,6 +456,7 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         pro = [i for i in lst if i["stage"] is not None]
         if pro:
             latest.append({"record": pro[-1]["r"], "stage": pro[-1]["stage"], "first_seen": pro[-1]["first_seen"],
+                           "first_event": pro[-1]["first_event"],
                            "same_decision_records": [], "later_records": [], "revises": None})
     secs["latest_pre_kick_snapshot"] = latest
     pol = [policy_of(i["r"]) for i in info]
@@ -465,6 +467,29 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
               "policy_approved_records": sum(p["policy_class"] == "approved" for p in pol),
               **{k: len(v) for k, v in secs.items()}}
     return secs, counts
+
+
+_RECEIPT_KEYS = ("event_id", "record_id", "stage", "surface", "event_ts", "evidence_json", "recorded_at")
+
+
+def event_receipt(event: Optional[Dict]) -> Optional[str]:
+    """sha256 of one ledger stage event (its evidence and ledger clock): the capture receipt."""
+    if not event:
+        return None
+    return hashlib.sha256(json.dumps({k: event.get(k) for k in _RECEIPT_KEYS}, sort_keys=True,
+                                     default=str).encode()).hexdigest()
+
+
+def historical_import(record: Dict) -> bool:
+    """True when any delivery event says the record was imported after the fact."""
+    for e in record.get("events") or []:
+        try:
+            ev = json.loads(e.get("evidence_json") or "{}")
+        except (TypeError, ValueError):
+            continue
+        if isinstance(ev, dict) and ev.get("delivery_evidence_kind") == "retrospective_import":
+            return True
+    return False
 
 
 def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
@@ -484,6 +509,8 @@ def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
                 cache[r["record_id"]] = g
             rows.append({**cache[r["record_id"]], **policy_of(r), "section": name, "evidence_stage": u["stage"],
                          "first_seen_in_ledger": u["first_seen"].isoformat() if u["first_seen"] else None,
+                         "capture_receipt_sha256": event_receipt(u.get("first_event")),
+                         "historical_import": historical_import(r),
                          "same_decision_records": u["same_decision_records"],
                          "later_records": u["later_records"], "revises": u["revises"]})
         rows.sort(key=lambda g: (g["season"], g["week"], g["game_id"] or "", g["pick_key"],

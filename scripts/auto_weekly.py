@@ -406,6 +406,8 @@ def job_tuesday() -> int:
 
 RESULTS_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_EXPORT = "data/issued_results.json"
+EVIDENCE_LEDGER = "data/evidence_ledger.jsonl"   # persisted by scripts/state_store.py
+RESEARCH_STATUS = "data/research_status.json"
 RESULTS_EVIDENCE = "reports/results"
 
 
@@ -430,12 +432,27 @@ def job_results() -> int:
     try:
         summary = ir.settle(conn, now=now_et().astimezone(dt.timezone.utc), evidence_dir=str(evidence / "boxes"))
         doc = ir.export(conn, checked_at=summary["checked_at"])
+        latest = ir.current(conn)
     except Exception as exc:  # noqa: BLE001 -- never save a half-settled state
         print(f"[auto] results settlement FAILED; production state not changed: {exc}")
         return 1
     finally:
         conn.close()
     summary.setdefault("written", 0)
+    # Research evidence loop, strictly AFTER issuance capture and verified final-box grading:
+    # the latest grade per record/section is appended to the sha256-chained ledger (identical
+    # re-reads skip, a stat correction appends a revision). Descriptive only: no fit, no promotion.
+    try:
+        from analysis import evidence_loop as el
+        ledger = str(root / EVIDENCE_LEDGER)
+        appended = el.append_evidence(ledger, el.from_results_rows(latest), recorded_at=summary["checked_at"])
+        research = el.research_status(ledger, checked_at=summary["checked_at"], last_append=appended)
+    except Exception as exc:  # noqa: BLE001 -- the ledger is state: never save a half-written one
+        print(f"[auto] research evidence loop FAILED; production state not changed: {exc}")
+        return 1
+    summary["evidence"] = appended
+    summary["written"] += appended["appended"]
+    cfgmod.save_json(str(root / RESEARCH_STATUS), research)
     cfgmod.save_json(str(root / RESULTS_EXPORT), doc)
     evidence.mkdir(parents=True, exist_ok=True)
     (evidence / "summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True, default=str) + "\n")
@@ -443,6 +460,8 @@ def job_results() -> int:
     print(f"[auto] results: weeks {summary['weeks']}, {summary['requests']} request(s), "
           f"{summary['results_written']} new grade(s), {summary['captures']} capture(s), "
           f"{len(summary['pending'])} pending, errors={summary['errors'] or 'none'}; "
+          f"evidence +{appended['appended']} ({appended['revisions']} revision(s), "
+          f"{appended['skipped_identical']} identical skipped); "
           f"given-before-kickoff record {given}")
     detail = (f"Results-only settlement checked {len(summary['weeks'])} week(s): "
               f"{summary['results_written']} new grade(s), {len(summary['pending'])} pending.")

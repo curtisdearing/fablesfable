@@ -225,7 +225,8 @@ def test_results_job_is_results_only_and_writes_state_export_and_summary(tmp_pat
                         "run", forbidden)
     assert aw.job_results() == 0
     summary = json.loads((tmp_path / "reports/results/summary.json").read_text())
-    assert summary["written"] == 3 and summary["results_written"] == 2
+    # 2 grades + 1 capture + 2 research evidence rows (appended after verified grading)
+    assert summary["written"] == 5 and summary["results_written"] == 2 and summary["evidence"]["appended"] == 2
     doc = json.loads((tmp_path / "data/issued_results.json").read_text())
     assert {r["settlement"] for r in doc["sections"]["retrospective"]["rows"]} == {"win", "loss"}
     assert beats and beats[-1][0] == "active" and beats[-1][2] == "results"

@@ -14,9 +14,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _row(eid="r1", season=2026, week=5, decided="2026-10-11T15:00:00+00:00", kick="2026-10-11T17:00:00Z",
-         outcome="win", p=0.6, price=1.91, capture="abc", cls="recommendation", game="g1", market="passing_yards"):
+         outcome="win", p=0.6, price=1.91, capture="c" * 64, cls="recommendation", game="g1", market="passing_yards"):
+    # trusted capture = ledger receipt digest + ledger clock before kickoff (see el.trusted_capture)
     return {"evidence_id": eid, "season": season, "week": week, "game_id": game, "market": market, "side": "over",
             "line": 250.5, "issued_class": cls, "decision_ts": decided, "kickoff": kick, "capture_sha256": capture,
+            "capture_recorded_at": decided, "capture_basis": "ledger_pre_kickoff_event",
             "outcome": outcome, "price_decimal": price, "p": {"issued": p}}
 
 
@@ -114,12 +116,19 @@ def test_settlement_adapter_maps_issued_grading_rows():
         {"record_id": "rid1", "season": 2026, "week": 6, "game_id": "2026_06_X_Y", "market": "rushing_yards",
          "side": "under", "line": 60.5, "pick_class": "recommendation", "tier": "primary",
          "decision_ts": "2026-10-18T15:00:00+00:00", "kickoff": "2026-10-18T17:00:00Z", "settlement": "loss",
-         "actual": 75, "quote_price": 1.87, "quote_book": "dk", "model_p_side": 0.56},
+         "actual": 75, "quote_price": 1.87, "quote_book": "dk", "model_p_side": 0.56,
+         "capture_receipt_sha256": "d" * 64, "first_seen_in_ledger": "2026-10-18T15:00:01+00:00"},
         {"record_id": "rid2", "season": 2026, "week": 6, "game_id": "2026_06_X_Y", "market": "receptions",
          "side": "over", "line": 4.5, "pick_class": "watch", "settlement": "unresolved", "model_p_side": 0.5}]}}}
     rows = el.from_issued_grading(out)
     assert rows[0]["outcome"] == "loss" and rows[0]["price_decimal"] == 1.87
     assert el.window_of(rows[0]) == "prospective_confirmation"
+    assert rows[0]["capture_sha256"] == "d" * 64 != rows[0]["record_id"]
+    # the record's content id alone is no capture receipt
+    bare = el.from_issued_grading({"sections": {"recommendations_given": {"rows": [
+        {k: v for k, v in out["sections"]["recommendations_given"]["rows"][0].items()
+         if k not in ("capture_receipt_sha256", "first_seen_in_ledger")}]}}})
+    assert el.window_of(bare[0]) == "retrospective_exploratory"
     assert rows[1]["issued_class"] == "watch" and rows[1]["outcome"] == "pending"
 
 

@@ -252,7 +252,11 @@ def settle(conn, now: Optional[dt.datetime] = None, http: Optional[Callable[[str
         for p in paths:
             os.unlink(p)
         os.rmdir(tmp)
-    out["written"] = out["results_written"] + out["captures"]
+    # Only a new or changed grade is news. A re-read whose stats grade identically (ESPN bytes
+    # differ run to run) writes no grade; its audit capture is not saved, so the state and the
+    # public site are not republished for it, and the bounded recheck window simply repeats.
+    out["audit_only_captures"] = 0 if out["results_written"] else out["captures"]
+    out["written"] = out["results_written"] + (out["captures"] if out["results_written"] else 0)
     return out
 
 

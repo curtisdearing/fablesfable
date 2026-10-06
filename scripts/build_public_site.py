@@ -141,6 +141,7 @@ def page(title, body, nav=True, depth=0):
     links = (f'<nav><a href="{prefix}index.html">This week</a><a href="{prefix}best-bets.html">Watch list</a>'
              f'<a href="{prefix}model-cards.html">Model cards</a>'
              f'<a href="{prefix}reports/latest.html">Full report</a><a href="{prefix}results.html">Results</a>'
+             f'<a href="{prefix}research.html">Research</a>'
              f'<a href="{prefix}history.html">Archive</a></nav>'
              if nav else "")
     # Inline the committed UI bridge so scheduled rebuilds retain mobile
@@ -153,7 +154,53 @@ def page(title, body, nav=True, depth=0):
             f"<script>{scroll_bridge}</script></body></html>")
 
 
-def header(payload, label, generated_at):
+NEW_FORECAST_HOURS = 3.0
+
+
+def _clock(value):
+    try:
+        t = dt.datetime.fromisoformat(str(value).replace("Z", "+00:00")) if value else None
+    except ValueError:
+        return None
+    return t if t is None or t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+
+
+def clocks(payload, label, published_at, results_checked_at=None, research_checked_at=None):
+    """Every clock a reader needs, kept apart: publishing a page is not a new forecast or price.
+
+    ``new_forecast_in_this_publication`` is true only for a ``fresh`` build whose newest forecast
+    run is at most NEW_FORECAST_HOURS older than the publish clock; a no-op/deploy/results
+    rebuild of saved output says so instead of inheriting generic fresh copy."""
+    runs = payload.get("runs") or []
+    as_of = max((r["as_of"] for r in runs if r.get("as_of")), default=None)
+    q = payload.get("quote_clocks") or {}
+    pub, fc = _clock(published_at), _clock(as_of)
+    age = round((pub - fc).total_seconds() / 3600, 1) if pub and fc else None
+    new = label == "fresh" and age is not None and age <= NEW_FORECAST_HOURS
+    missing = [m for m, bad in (("forecast run clock", fc is None), ("quote clock", not q.get("latest")),
+                                ("settlement check", not results_checked_at),
+                                ("research evidence loop", not research_checked_at)) if bad]
+    return {"published_at": published_at, "forecast_as_of": as_of,
+            "forecast_code_shas": sorted({r["code_sha"] for r in runs if r.get("code_sha")}),
+            "forecast_versions": sorted({r["forecast_version"] for r in runs if r.get("forecast_version")}),
+            "quote_clock_earliest": q.get("earliest"), "quote_clock_latest": q.get("latest"),
+            "leans_with_quote": q.get("leans_with_quote"), "results_updated_at": results_checked_at,
+            "research_checked_at": research_checked_at, "forecast_age_hours_at_publish": age,
+            "new_forecast_in_this_publication": new, "missing": missing}
+
+
+def clock_line(c):
+    e = html.escape
+    lead = ("New forecast run in this publication." if c["new_forecast_in_this_publication"] else
+            "<b>NO NEW FORECAST OR PRICE IN THIS PUBLICATION</b>: it re-renders saved output.")
+    gaps = f" Missing: {e(', '.join(c['missing']))}." if c["missing"] else ""
+    return (f"<p class=clocks>{lead} Published {e(str(c['published_at']))}; newest forecast run "
+            f"{e(str(c['forecast_as_of']))} (code {e(', '.join(x[:12] for x in c['forecast_code_shas']) or 'unknown')}); "
+            f"quotes captured {e(str(c['quote_clock_earliest']))} to {e(str(c['quote_clock_latest']))}; "
+            f"results checked {e(str(c['results_updated_at']))}.{gaps}</p>")
+
+
+def header(payload, label, generated_at, clock_info=None):
     e = html.escape
     runs = "; ".join(f"{r['clock']} run {r['run_id']} (code {r['code_sha'][:12]}, {r['forecast_version']}, "
                      f"ranker {(r['ranker_sha256'] or 'none')[:12]}, as of {r['as_of']})" for r in payload["runs"])
@@ -162,6 +209,7 @@ def header(payload, label, generated_at):
     ctx = payload.get("context_captured") or "no sourced context file for this week"
     return (f"<h1>{payload['season']} week {payload['week']}: evidence cards</h1>"
             f"<p><b>No card is a recommended wager.</b> Saved model output; quotes are not live.</p>"
+            + (clock_line(clock_info) if clock_info else "") +
             f"<details class=banner><summary>Run timestamps, quote clocks and model caveats</summary><div class=provenance>"
             f"<b>{e(label.upper())}</b>. {e(LABELS[label])}<br>"
             f"Generated {e(generated_at)}. Quote clocks {e(str(qc['earliest']))} to {e(str(qc['latest']))}. "
@@ -268,7 +316,47 @@ def results_page(doc):
     return page("Issued-pick results", "".join(parts))
 
 
-def build(payload, label, archive, out, generated_at, published_at=None, results=None):
+def research_page(doc):
+    """The research evidence loop's status: descriptive counts and exact missing-data gates."""
+    e = html.escape
+    parts = [f"<h1>Research status</h1><p>Evidence loop checked {e(str(doc.get('checked_at')))}. "
+             f"{e((doc.get('promotion') or {}).get('statement') or doc.get('note') or '')}</p>"]
+    pro = doc.get("prospective") or {}
+    parts.append(f"<p>Prospective confirmation rows settled: {pro.get('settled_scored', 0)} "
+                 f"({pro.get('unused_since_freeze', 0)} untouched since the registry freeze "
+                 f"{e(str(doc.get('registry_frozen_at')))}; {pro.get('game_clusters', 0)} game clusters). "
+                 f"Historical/postgame imports: {doc.get('historical_imports', 0)} (never confirmation).</p>")
+    for name, sec in (doc.get("sections") or {}).items():
+        o = sec.get("outcomes") or {}
+        parts.append(f"<h2>{e(SETTLEMENT_LABELS.get(name, name))}</h2><p>{sec.get('n', 0)} record(s): "
+                     f"{o.get('win', 0)} won, {o.get('loss', 0)} lost, {o.get('push', 0)} pushed, "
+                     f"{o.get('void', 0)} void, {o.get('pending', 0)} pending. By policy class: "
+                     + e("; ".join(f"{k} {v.get('win', 0)}-{v.get('loss', 0)}" for k, v in
+                                   (sec.get("by_policy_class") or {}).items()) or "none") + "</p>")
+    parts.append("<h2>Missing-data gates</h2><ul>" + "".join(f"<li>{e(g)}</li>" for g in
+                                                             doc.get("missing_data_gates") or []) + "</ul>")
+    parts.append("<h2>Candidates</h2><ul>" + "".join(f"<li>{e(c['candidate_id'])}: {e(c['status'])}</li>"
+                                                     for c in doc.get("candidates") or []) + "</ul>")
+    return page("Research status", "".join(parts))
+
+
+def research_empty(checked_at=None):
+    return {"schema": "fablesfable.research_status.v1", "checked_at": checked_at,
+            "note": "The research evidence loop has not run in this production state yet; nothing was promoted.",
+            "missing_data_gates": ["no evidence ledger in this production state"], "candidates": [],
+            "sections": {}, "prospective": {}}
+
+
+def research_readonly(db_path):
+    path = os.path.join(os.path.dirname(os.path.abspath(db_path)), "research_status.json")
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return research_empty()
+
+
+def build(payload, label, archive, out, generated_at, published_at=None, results=None, research=None):
     if os.path.exists(out):
         shutil.rmtree(out)
     os.makedirs(out)
@@ -283,7 +371,11 @@ def build(payload, label, archive, out, generated_at, published_at=None, results
         files[name] = hashlib.sha256(data).hexdigest()
 
     season, week = payload["season"], payload["week"]
-    head = header(payload, label, generated_at)
+    results = results or ir.export_empty()
+    research = research or research_empty()
+    clock_info = clocks(payload, label, published_at or generated_at, results.get("results_checked_at"),
+                        research.get("checked_at"))
+    head = header(payload, label, generated_at, clock_info)
     cards = grouped_cards(payload["cards"])
     watch = [c for c in payload["cards"] if c["status"] in ("actionable", "watch")]
     put("index.html", page(f"{season} week {week} cards", head + (cards or "<p>No leans.</p>")))
@@ -341,22 +433,23 @@ def build(payload, label, archive, out, generated_at, published_at=None, results
                                                     for s, w in weeks]}, indent=2))
     hub = {k: payload[k] for k in ("season", "week", "generated_at", "counts", "validated_markets",
                                    "runs", "quote_clocks")}
-    hub.update({"label": label, "label_text": LABELS[label], "cards": payload["cards"],
+    hub.update({"label": label, "label_text": LABELS[label], "cards": payload["cards"], "clocks": clock_info,
                 "factor_receipts": payload.get("factor_receipts") or [],
                 "context_captured": payload.get("context_captured")})
     if reading:
         hub['analyst_card'] = analyst
     put("api/hub.json", json.dumps(hub, indent=2, default=str))
-    results = results or ir.export_empty()
     put("results.html", results_page(results))
     put("api/results.json", json.dumps(results, indent=2, sort_keys=True, default=str))
+    put("research.html", research_page(research))
+    put("api/research.json", json.dumps(research, indent=2, sort_keys=True, default=str))
     put("README.txt", f"FablesFable {season} week {week} evidence cards ({label}).\n"
         "Generated by scripts/build_public_site.py; no API keys, databases or model binaries.\n"
         "No card is a recommended wager.\n")
     manifest = {
         "schema_version": 2, "kind": "saved-model-analysis", "generator": "scripts/build_public_site.py",
         "label": label, "season": season, "week": week, "published_at": published_at or generated_at,
-        "results_checked_at": results.get("results_checked_at"),
+        "results_checked_at": results.get("results_checked_at"), "clocks": clock_info,
         "source_as_of": payload["quote_clocks"]["latest"] or max((r["as_of"] or "") for r in payload["runs"]),
         "quote_clocks": payload["quote_clocks"], "runs": payload["runs"],
         "counts": payload["counts"], "approved_bets": 0, "model_candidates": len(payload["cards"]),
@@ -422,7 +515,8 @@ def main(argv=None):
         cards_now = run_clock(a.db, season, week) if a.label == "results" else now
         payload = collect(a.db, season, week, cards_now)
         m = build(payload, a.label, a.archive, a.out, cards_now.isoformat(timespec="seconds"),
-                  published_at=now.isoformat(timespec="seconds"), results=ir.export_readonly(a.db))
+                  published_at=now.isoformat(timespec="seconds"), results=ir.export_readonly(a.db),
+                  research=research_readonly(a.db))
     except Refused as exc:
         print(f"[site] not built (exit {exc.code}): {exc}")
         return exc.code
