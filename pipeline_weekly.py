@@ -823,6 +823,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     stage_ran = {s: False for s in fimod.STAGES}
     stage_why = {s: "not a live run" for s in fimod.STAGES}
     live: Dict = {}
+    absence_leader_identity = {"mode": "not evaluated", "leaders": [], "teams": {}}
     ctx_doc, ctx_label, ctx_meta = None, None, {"refresh": "not a live run"}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
@@ -1021,7 +1022,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # skill-leader absence -> QB passing markets (absence matrix)
         cands = candmod.apply_backup_qb_adjustment(cands)
         stage_ran["backup_qb"], stage_why["backup_qb"] = True, None
-        cands = candmod.apply_absence_qb_adjustment(cands, inputs.pw, season, week, outs_now)
+        cands = candmod.apply_absence_qb_adjustment(
+            cands, inputs.pw, season, week, outs_now,
+            active_roster_rows=(live.get("active_roster") or {}).get("rows"))
+        absence_leader_identity = cands.attrs.get("absence_leader_identity", absence_leader_identity)
     elif mode == "live":
         for s_ in stage_ran:
             stage_ran[s_], stage_why[s_] = False, "no candidates reached the adjustment stages"
@@ -1106,6 +1110,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
                "team_identity": identity_receipt,
+               "absence_leader_identity": absence_leader_identity,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
@@ -1233,6 +1238,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     stage_ran = {s: False for s in fimod.STAGES}
     stage_why = {s: ("not executed by the T-90 refresh" if mode == "live" else "not a live run")
                  for s in fimod.STAGES}
+    absence_leader_identity = {"mode": "not evaluated", "leaders": [], "teams": {}}
 
     # stamp context/advanced features + ML so t90 leans carry the same
     # writeup facts and ranking as the Wednesday run
@@ -1327,6 +1333,18 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         g["publish"] = False
         g["reasons"] = list(g["reasons"]) + [roster_gate["reason"]]
 
+    # Match Wednesday's availability contract: the absence-QB stage is only
+    # evaluated when this refresh received a report and its current roster
+    # snapshot passed.  Game-day inactive rows have already been merged into
+    # ``statuses`` by gather_live_feeds, so this uses T-90's own OUT ids.
+    if mode == "live":
+        avail_evaluated = bool(live.get("report_evaluated")) and roster_gate["publish"]
+        stage_ran["absence_qb"] = avail_evaluated
+        stage_why["absence_qb"] = None if avail_evaluated else (
+            f"injury report {live.get('report_state') or 'not received'} this run; "
+            f"availability not evaluated" if roster_gate["publish"]
+            else "availability statuses not evaluated this run")
+
     # 1. VOID wed leans whose player is now OUT (auto, with provenance)
     wed = dbmod.query_df(conn, """
         SELECT * FROM leans WHERE season=? AND week=? AND clock='wed' AND game_id=?
@@ -1347,6 +1365,12 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     # 2. re-rank without OUT players; downgrade note for RISK
     out_ids = {pid for pid, s in statuses.items() if s["status"] == "OUT"}
     cands2 = cands[~cands["player_id"].isin(out_ids)].reset_index(drop=True)
+    if mode == "live" and not cands2.empty:
+        cands2 = candmod.apply_absence_qb_adjustment(
+            cands2, inputs.pw, season, week, out_ids,
+            active_roster_rows=(live.get("active_roster") or {}).get("rows"))
+        absence_leader_identity = cands2.attrs.get(
+            "absence_leader_identity", absence_leader_identity)
     if cands2.empty:
         for s_ in stage_ran:
             stage_ran[s_], stage_why[s_] = False, "no candidates reached the adjustment stages"
@@ -1407,6 +1431,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands2, games),
                "team_identity": identity_receipt,
+               "absence_leader_identity": absence_leader_identity,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     print(f"[t90] {game_id} factor receipt {run_id}: stages {receipt['stages_executed']}; "

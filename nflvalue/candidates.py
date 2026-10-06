@@ -563,9 +563,8 @@ def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict
     return out
 
 
-def team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:
-    """{(team, role): player_id} -- trailing-usage leader (>=30 touches)
-    strictly before (season, week); the measurement's leader definition."""
+def _historical_team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:
+    """Raw trailing-usage leaders, measured strictly before ``(season, week)``."""
     ucol = {"WR": "targets", "TE": "targets", "RB": "carries"}
     hist = pw[((pw["season"] < season) |
                ((pw["season"] == season) & (pw["week"] < week)))]
@@ -579,15 +578,89 @@ def team_leaders(pw: pd.DataFrame, season: int, week: int) -> Dict:
     return out
 
 
+def team_leader_identity(pw: pd.DataFrame, season: int, week: int,
+                         active_roster_rows: Optional[List[Dict]] = None) -> Dict:
+    """Verify a historical leader map against the live roster without rewriting history.
+
+    Usage leaders are *always* selected by trailing pre-week usage.  For a live
+    run, the roster is used only to prove the selected player's current team
+    from an ID-exact, same-snapshot lookup.  An unresolved role is never
+    replaced or treated as neutral.  It is excluded fail-closed; independently
+    verified roles on that same team remain eligible so a stale former teammate
+    cannot blanket-remove a legitimate current injury effect.
+    """
+    raw = _historical_team_leaders(pw, season, week)
+    by_team: Dict[str, Dict] = {}
+    for (team, role), pid in raw.items():
+        by_team.setdefault(str(team), {"leaders": [], "rejected": []})["leaders"].append(
+            {"role": role, "player_id": str(pid)})
+    if active_roster_rows is None:
+        return {"mode": "historical_asof",
+                "leaders": [{"team": team, "role": role, "player_id": str(pid)}
+                            for (team, role), pid in sorted(raw.items())],
+                "teams": {team: {"state": "historical_asof", **info}
+                          for team, info in sorted(by_team.items())}}
+
+    from .prop_decision import roster_index
+    roster = roster_index(active_roster_rows)
+    allowed_current_classes = {"active", "reserve", "inactive"}
+    accepted: List[Dict] = []
+    teams: Dict[str, Dict] = {}
+    for team, info in sorted(by_team.items()):
+        rejected = []
+        accepted_team = []
+        for leader in info["leaders"]:
+            current = roster.get(leader["player_id"])
+            if current is None:
+                reason, roster_team = "missing_current_identity", None
+            elif current.get("ambiguous"):
+                reason, roster_team = "ambiguous_current_identity", current.get("team")
+            elif current.get("team") != team:
+                reason, roster_team = "current_team_mismatch", current.get("team")
+            elif current.get("class") not in allowed_current_classes:
+                reason, roster_team = "current_roster_ineligible", current.get("team")
+            else:
+                accepted_team.append(leader)
+                continue
+            rejected.append({**leader, "reason": reason, "roster_team": roster_team})
+        state = "blocked" if not accepted_team else ("partial" if rejected else "verified")
+        teams[team] = {"state": state, "leaders": info["leaders"],
+                       "accepted": accepted_team, "rejected": rejected}
+        accepted.extend({"team": team, **leader} for leader in accepted_team)
+    return {"mode": "live_roster", "leaders": accepted, "teams": teams}
+
+
+def team_leaders(pw: pd.DataFrame, season: int, week: int,
+                 active_roster_rows: Optional[List[Dict]] = None) -> Dict:
+    """{(team, role): player_id} under the historical or live identity contract."""
+    identity = team_leader_identity(pw, season, week, active_roster_rows)
+    return {(r["team"], r["role"]): r["player_id"] for r in identity["leaders"]}
+
+
 def apply_absence_qb_adjustment(cands: pd.DataFrame, pw: pd.DataFrame,
                                 season: int, week: int,
-                                out_player_ids: set) -> pd.DataFrame:
+                                out_player_ids: set,
+                                active_roster_rows: Optional[List[Dict]] = None) -> pd.DataFrame:
     """Dampen a QB's passing markets when his team's WR1/TE1/RB1 is OUT
     (measured cross-effects; multiplicative when several leaders sit,
     floored at 0.85)."""
-    if cands.empty or not out_player_ids:
+    if cands.empty:
         return cands
-    leaders = team_leaders(pw, season, week)
+    identity = team_leader_identity(pw, season, week, active_roster_rows)
+    cands = cands.copy()
+    unresolved = {team: info for team, info in identity["teams"].items()
+                  if info["state"] in {"blocked", "partial"}}
+    if unresolved:
+        mask = cands["market"].isin(_QB_MARKETS) & cands["team"].isin(unresolved)
+        cands.loc[mask, "absence_qb_identity_state"] = cands.loc[mask, "team"].map(
+            lambda team: unresolved[team]["state"])
+        cands.loc[mask, "absence_qb_identity_reason"] = cands.loc[mask, "team"].map(
+            lambda team: "current leader identity unresolved: "
+            + ", ".join(sorted({r["reason"] for r in unresolved[team]["rejected"]})))
+    cands.attrs["absence_leader_identity"] = identity
+    if not out_player_ids:
+        return cands
+    leaders = {(r["team"], r["role"]): r["player_id"] for r in identity["leaders"]}
     team_mult: Dict[str, float] = {}
     for (team, role), pid in leaders.items():
         if pid in out_player_ids:
@@ -595,7 +668,6 @@ def apply_absence_qb_adjustment(cands: pd.DataFrame, pw: pd.DataFrame,
     if not team_mult:
         return cands
     from .projection import p_over as p_over_fn
-    cands = cands.copy()
     mask = cands["market"].isin(_QB_MARKETS) & cands["team"].isin(team_mult)
     if not mask.any():
         return cands

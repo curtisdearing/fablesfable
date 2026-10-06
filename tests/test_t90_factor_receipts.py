@@ -68,7 +68,8 @@ def test_t90_persists_its_own_stamps_shadow_receipt_and_context(env):
     assert r["as_of"] == t90["as_of"] and r["as_of"] >= wed["factor_receipt"]["as_of"]
     # only what the refresh executed; the Wednesday stages are not assumed
     assert "backup_qb" in r["stages_executed"]
-    for s in ("realloc_volume", "realloc_efficiency", "absence_qb"):
+    assert "absence_qb" in r["stages_executed"]
+    for s in ("realloc_volume", "realloc_efficiency"):
         assert s not in r["stages_executed"]
         assert r["stages_not_executed"][s] == "not executed by the T-90 refresh"
     assert r["shadow"]["status"] and r["inactives_state"] == "populated"
