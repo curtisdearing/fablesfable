@@ -247,6 +247,9 @@ def test_public_build_exports_research_status_and_clocks(tmp_path):
     assert m["clocks"]["new_forecast_in_this_publication"] is False          # saved week-3 cards, not new
     assert "NO NEW FORECAST OR PRICE" in (out / "index.html").read_text()
     assert "prospective confirmation: 0 settled" in (out / "research.html").read_text()
+    cov = json.loads((out / "api" / "coverage.json").read_text())
+    assert {"coverage.html", "api/coverage.json"} <= set(m["files"]) and cov["runs"]
+    assert all(r["recorded"] is False for r in cov["runs"])                 # old runs: missing, not invented
 
 
 def test_scheduler_retry_uses_the_current_kickoff_and_never_relaunches_a_dispatched_slot(tmp_path):
@@ -263,3 +266,52 @@ def test_scheduler_retry_uses_the_current_kickoff_and_never_relaunches_a_dispatc
     for t in ("2026-10-08T23:06:00Z", "2026-10-08T23:11:00Z"):
         h.tick(t)
     assert all("--execute" not in c for c, _ in h.spawned[launches:])      # read-back only, no second charge
+
+
+class _FakeOdds:
+    def __init__(self, answered):
+        self.answered, self.resnapped = answered, []
+
+    def answered_since(self, conn, game_ids, now=None, max_age_hours=1.0):
+        return {g: self.answered[g] for g in game_ids if g in self.answered}
+
+    def resnap_lines(self, cfg, emap, conn=None):
+        self.resnapped.append(dict(emap))
+        return {"pulled": list(emap), "empty": [], "rows_written": 12, "budget_remaining": 100.0}
+
+    def latest_snapshots(self, conn, game_ids, now=None, max_age_hours=1.0):
+        return {g: {"ts": "2026-10-11T15:31:00Z", "n_rows": 12, "fresh": True} for g in game_ids}
+
+    def billing_text(self, res):
+        return "7 credits"
+
+
+class _FakePipeline:
+    def __init__(self):
+        self.asked = []
+
+    def build_event_map(self, cfg, slate, details=None):
+        self.asked.append(sorted(slate["game_id"]))
+        details["games"] = {"G4": {"reason": "event_outside_kickoff_window"}}
+        return {g: f"ev-{g}" for g in slate["game_id"] if g != "G4"}
+
+
+def test_closing_resnap_never_rebills_answered_games_and_reports_every_game(capsys):
+    import pandas as pd
+    aw = loop._aw()
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE lines (game_id TEXT)")
+    conn.executemany("INSERT INTO lines VALUES (?)", [("G1",), ("G2",), ("G3",), ("G4",)])
+    soon = pd.DataFrame({"game_id": ["G1", "G2", "G3", "G4", "G5"]})
+    odds, pipe = _FakeOdds({"G1": "2026-10-11T15:20:00Z"}), _FakePipeline()
+    out = aw.closing_resnap(conn, {}, soon, {"G3"}, odds, pipe, now=dt.datetime(2026, 10, 11, 15, 35,
+                                                                             tzinfo=dt.timezone.utc))
+    assert out["skipped_recent"] == ["G1"] and out["resnapped"] == ["G2", "G4"]
+    assert pipe.asked == [["G2", "G4"]] and odds.resnapped == [{"G2": "ev-G2"}]     # G1 never billed twice
+    text = capsys.readouterr().out
+    assert "[auto] closing resnap G1: skipped, provider answered" in text
+    assert "[auto] closing resnap G2: 12 rows at 2026-10-11T15:31:00Z" in text
+    assert "[auto] closing resnap G4: no provider event (event_outside_kickoff_window)" in text
+    # a re-fired slot after the close was taken: nothing is billed again
+    again = aw.closing_resnap(conn, {}, soon, {"G3"}, _FakeOdds({"G1": "t", "G2": "t", "G4": "t"}), pipe)
+    assert again["resnapped"] == [] and pipe.asked == [["G2", "G4"]]

@@ -91,7 +91,7 @@ jobs:
           fixed_public_files = {
               'index.html', 'best-bets.html', 'model-cards.html', 'history.html', 'dashboard.html', 'history.json', 'README.txt',
               'api/hub.json', 'reports/index.json', 'reports/latest.html', 'games/pages.json', 'games/index.json',
-              'results.html', 'api/results.json', 'research.html', 'api/research.json',
+              'results.html', 'api/results.json', 'research.html', 'api/research.json', 'coverage.html', 'api/coverage.json',
           }
           report_week = re.compile(r'reports/[0-9]{4}/week-(?:[1-9]|1[0-9]|2[0-2])\.html\Z')
           game_page = re.compile(r'games/[0-9]{4}_[0-9]{2}_[A-Za-z]{2,3}_[A-Za-z]{2,3}\.html\Z')
