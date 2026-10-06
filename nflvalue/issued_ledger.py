@@ -246,11 +246,25 @@ def record_publication(conn, hub_path: str, manifest_path: str, attestation: Dic
 
 def record_delivered(conn, season: int, week: int, card: Dict, display_text: str, message_id: str,
                      delivered_at: str, channel: str, pick_class: str = "recommendation",
-                     tier: str = "analyst_override", recorded_at: Optional[str] = None) -> Dict:
+                     tier: Optional[str] = None, recorded_at: Optional[str] = None,
+                     exception: Optional[Dict] = None, kickoff: Optional[str] = None,
+                     retrospective: bool = False) -> Dict:
     """Stage ``delivered``: the exact text the user was given, its source message id and clock.
 
     ``card`` carries the quote identity and decision clock the pick was given at; nothing is
-    filled in from later data. Call at issuance -- there is no automatic chat capture."""
+    filled in from later data. Call at issuance -- there is no automatic chat capture.
+
+    Authorization is decided BEFORE sending (``delivery_policy.authorize``); this function
+    records what WAS sent, whatever the policy said. It never drops or alters a sent pick:
+    a recommendation the policy would have blocked is stored with ``policy_violation`` true
+    in the event evidence, so the grader keeps it in the analyst-issued denominator and
+    never counts it as approved. ``tier`` is no longer a silent default: omitted, it is
+    derived from the policy (``primary`` only when approved, otherwise ``analyst_override``)
+    and the derivation is recorded. ``delivery_evidence_kind`` is ``live_message`` only when
+    the caller supplies the kickoff and the delivery clock precedes it; ``retrospective``
+    or a post-kick clock make it ``retrospective_import``.
+    """
+    from . import delivery_policy as dp
     if not display_text or not display_text.strip():
         raise ValueError("a delivered pick needs the exact text given to the user")
     if not message_id or not str(message_id).strip():
@@ -259,13 +273,32 @@ def record_delivered(conn, season: int, week: int, card: Dict, display_text: str
         raise ValueError("a delivered pick needs its delivery clock and channel")
     if pick_class not in ISSUED_CLASSES:
         raise ValueError(f"pick_class must be one of {ISSUED_CLASSES}")
+    policy = dp.authorize(card, exception, pick_class=pick_class)
+    if tier is None:
+        tier, tier_source = ("primary" if policy["decision"] == "approved" else "analyst_override"), "derived_from_policy"
+    else:
+        tier_source = "explicit"
+    violation = pick_class == "recommendation" and policy["decision"] == "blocked"
+    when, kick = dp._zoned(delivered_at), dp._zoned(kickoff)
+    if retrospective or (kick is not None and (when is None or when >= kick)):
+        kind = "retrospective_import"
+    elif kick is not None and when is not None and when < kick:
+        kind = "live_message"
+    else:
+        kind = "kickoff_not_supplied: liveness unverified"
     recorded_at = recorded_at or _now()
     rec = build_record(card, season, week, tier=tier, surface=f"delivered:{channel}",
                        display_html=display_text, pick_class=pick_class)
     _append(conn, rec, season, week, card, tier, recorded_at)
     _event(conn, rec["record_id"], "delivered", f"delivered:{channel}", delivered_at,
-           {"message_id": str(message_id), "channel": channel}, recorded_at)
+           {"message_id": str(message_id), "channel": channel,
+            "policy_decision": policy["decision"], "policy_reasons": policy["reasons"],
+            "approval_status": policy["approval_status"], "exception": policy["exception"],
+            "exception_complete": policy["exception_complete"], "policy_violation": violation,
+            "tier_source": tier_source, "kickoff": kickoff, "delivery_evidence_kind": kind}, recorded_at)
     conn.commit()
+    rec["policy"] = {"decision": policy["decision"], "violation": violation, "tier_source": tier_source,
+                     "delivery_evidence_kind": kind}
     return rec
 
 

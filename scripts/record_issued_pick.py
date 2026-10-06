@@ -43,6 +43,11 @@ def main(argv=None) -> int:
     d.add_argument("--channel", required=True)
     d.add_argument("--delivered-at", required=True)
     d.add_argument("--watch", action="store_true", help="given as a watch item, not a recommendation")
+    d.add_argument("--tier", choices=il.TIERS, help="explicit tier; omitted = derived from the policy and recorded")
+    d.add_argument("--exception-by", help="who authorized sending a non-approved pick")
+    d.add_argument("--exception-reason", help="why; stored verbatim, never relabels the forecast as approved")
+    d.add_argument("--kickoff", help="zoned ISO kickoff: lets the ledger label the evidence live vs retrospective")
+    d.add_argument("--retrospective", action="store_true", help="this is an after-the-fact import of a sent pick")
     p = sub.add_parser("published")
     p.add_argument("--hub", required=True)
     p.add_argument("--publication", required=True)
@@ -56,9 +61,26 @@ def main(argv=None) -> int:
             if missing:
                 print(f"[record] card lacks {missing}: not recorded")
                 return 2
+            from nflvalue import delivery_policy as dp
+            if bool(a.exception_by) != bool(a.exception_reason):
+                print("[record] an exception needs both --exception-by and --exception-reason: not recorded")
+                return 2
+            exc = ({"by": a.exception_by, "reason": a.exception_reason, "clock": a.delivered_at}
+                   if a.exception_by else None)
+            pick_class = "watch" if a.watch else "recommendation"
+            preview = dp.authorize(card, exc, pick_class=pick_class)
+            tier = a.tier or ("primary" if preview["decision"] == "approved" else "analyst_override")
+            violation = pick_class == "recommendation" and preview["decision"] == "blocked"
+            print(f"[record] pick_class={pick_class} tier={tier}{'' if a.tier else ' (derived)'} "
+                  f"policy_decision={preview['decision']} policy_violation={violation}; "
+                  f"approval: {preview['approval_status']}")
+            if violation:
+                print("[record] recording a SENT pick the policy would have blocked: kept and flagged, never promoted")
             rec = il.record_delivered(conn, a.season, a.week, card, open(a.text_file).read(), a.message_id,
-                                      a.delivered_at, a.channel, pick_class="watch" if a.watch else "recommendation")
-            print(f"[record] delivered {rec['record_id']} ({rec['pick_class']})")
+                                      a.delivered_at, a.channel, pick_class=pick_class, tier=a.tier,
+                                      exception=exc, kickoff=a.kickoff, retrospective=a.retrospective)
+            print(f"[record] delivered {rec['record_id']} ({rec['pick_class']}, {rec['tier']}, "
+                  f"{rec['policy']['delivery_evidence_kind']})")
         else:
             try:
                 n = il.record_publication(conn, a.hub, a.publication, json.load(open(a.receipt)))
