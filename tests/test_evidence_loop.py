@@ -243,3 +243,87 @@ def test_every_issued_recommendation_counts_in_hypothetical_roi_even_below_break
     assert roi["units"] == pytest.approx(-0.2)
     event = {**_row("e", p=0.45, price=1.91), "issued_class": "candidate_event"}
     assert el.flat_roi([event], "issued")["bets"] == 0  # candidate events still need p > breakeven
+
+
+def test_issued_confidence_diagnostic_uses_frozen_probabilities_by_market_and_game_cluster_only():
+    """The report is descriptive: issued p/settlement only, never prices or a refit target."""
+    rows = []
+    for i in range(6):
+        rows.append({
+            **_row(f"p{i}", game=f"g{i}", market="passing_yards", p=0.7,
+                    outcome="win" if i % 2 else "loss", price=1.50 + i),
+            "section": "recommendations_given",
+            "factor_panel": {"status": "recorded", "counts": {
+                "numeric_applied": 1, "considered_no_change": 2, "context_only": 3,
+                "shadow_only": 1, "unavailable_unverified": 1,
+            }},
+        })
+    # These rows must appear only as exclusions, not silently alter reliability.
+    rows += [
+        {**_row("watch", game="g7", market="receptions", p=0.9), "section": "watch_published"},
+        {**_row("push", game="g8", market="receptions", p=0.9, outcome="push"),
+         "section": "recommendations_given"},
+        {**_row("missing", game="g9", market="receptions", p=None),
+         "section": "recommendations_given", "factor_panel": {"status": "absent", "counts": None}},
+        {**_row("untrusted", game="g10", market="receptions", p=0.9, capture=None),
+         "section": "recommendations_given"},
+    ]
+
+    out = el.issued_confidence_diagnostic(rows, n_boot=100, seed=7)
+
+    assert out["included"] == 6
+    assert out["exclusions"] == {"not_recommendation": 1, "untrusted_capture": 1,
+                                  "outside_frozen_prospective_window": 0, "missing_game_cluster": 0,
+                                  "non_win_loss": 1, "missing_or_invalid_probability": 1}
+    market = out["by_market"]["passing_yards"]
+    assert market["n"] == 6 and market["game_clusters"] == 6
+    assert market["brier"]["n_clusters"] == 6 and market["brier"]["low"] is not None
+    assert market["reliability"]["n"] == 6
+    assert out["factor_panels"] == {
+        "recorded": 6, "absent": 0, "withheld": 0,
+        "status_counts": {"numeric_applied": 6, "considered_no_change": 12, "context_only": 18,
+                          "shadow_only": 6, "unavailable_unverified": 6},
+    }
+    assert "descriptive" in out["statement"] and out["promotion"] is False and out["refit"] is False
+
+    # The diagnostic has no price input: changing every price leaves it byte-for-byte unchanged.
+    repriced = [{**r, "price_decimal": 99.0} for r in rows]
+    assert el.issued_confidence_diagnostic(repriced, n_boot=100, seed=7) == out
+
+
+def test_research_status_wires_the_issued_confidence_diagnostic_from_the_append_only_ledger(tmp_path):
+    row = {**_row("status", game="g1", market="pass_attempts", p=0.6), "source": "issued_ledger",
+           "section": "recommendations_given", "factor_panel": {"status": "withheld", "counts": None}}
+    ledger = str(tmp_path / "evidence.jsonl")
+    el.append_evidence(ledger, [row], recorded_at="2026-10-12T00:00:00Z")
+    doc = el.research_status(ledger, checked_at="2026-10-12T00:01:00Z")
+    assert doc["issued_confidence"]["included"] == 1
+    assert doc["issued_confidence"]["factor_panels"]["withheld"] == 1
+    assert doc["issued_confidence"]["promotion"] is False and doc["issued_confidence"]["refit"] is False
+
+
+def test_issued_confidence_diagnostic_excludes_rows_outside_the_frozen_prospective_window():
+    late = _row("late", decided="2026-10-11T17:00:00+00:00")
+    historical = _row("historical", week=4)
+    no_game = _row("no-game", game=None)
+    for row in (late, historical, no_game):
+        row["section"] = "recommendations_given"
+
+    out = el.issued_confidence_diagnostic([late, historical, no_game])
+
+    assert out["included"] == 0
+    assert out["exclusions"] == {"not_recommendation": 0, "untrusted_capture": 0,
+                                  "outside_frozen_prospective_window": 2, "missing_game_cluster": 1,
+                                  "non_win_loss": 0, "missing_or_invalid_probability": 0}
+    assert out["by_market"] == {}
+
+
+def test_issued_confidence_diagnostic_labels_malformed_factor_panel_without_counting_it_or_crashing():
+    row = {**_row("bad-panel"), "section": "recommendations_given",
+           "factor_panel": {"status": "withheld", "counts": ["not", "counts"]}}
+
+    out = el.issued_confidence_diagnostic([row])
+
+    assert out["included"] == 1
+    assert out["factor_panels"] == {"recorded": 0, "absent": 0, "withheld": 0,
+                                    "malformed": 1, "status_counts": {}}

@@ -341,6 +341,26 @@ def test_invalid_side_and_probability_fail_closed():
     assert g["settlement"] == st.WIN and "brier" not in g and g["probability_status"].startswith("invalid")
 
 
+def test_grade_carries_only_the_saved_factor_panel_counts_without_inventing_missing_statuses():
+    r = {"record_id": "r", "pick_key": "k", "season": 2026, "week": 2, "game_id": GAME,
+         "player_name": "Dak Prescott", "market": "pass_attempts", "side": "under", "line": 32.5,
+         "model_p_side": 0.6, "mean": 31.0, "sd": 5.0,
+         "card_json": json.dumps({"factor_panel": {"counts": {"numeric_applied": 1, "context_only": 4}}})}
+    g = ig.grade_record(r, _boxes()["games"])
+    assert g["factor_panel"] == {"status": "recorded", "counts": {"numeric_applied": 1, "context_only": 4}}
+    # An absent panel is a provenance gap, not evidence that every factor count was zero.
+    assert ig.grade_record({k: v for k, v in r.items() if k != "card_json"}, _boxes()["games"])["factor_panel"] == {
+        "status": "absent", "counts": None}
+
+
+def test_grade_marks_malformed_saved_factor_panel_counts_without_crashing_downstream_reporting():
+    r = {"record_id": "r", "pick_key": "k", "season": 2026, "week": 2, "game_id": GAME,
+         "player_name": "Dak Prescott", "market": "pass_attempts", "side": "under", "line": 32.5,
+         "model_p_side": 0.6, "mean": 31.0, "sd": 5.0,
+         "card_json": json.dumps({"factor_panel": {"counts": {"numeric_applied": "one", "context_only": 4}}})}
+    assert ig.grade_record(r, _boxes()["games"])["factor_panel"] == {"status": "malformed", "counts": None}
+
+
 def test_official_attempts_cover_only_seen_passers_and_exclude_two_point_tries():
     base = {"season": 2026, "week": 2, "pass_attempt": 1, "down": 1.0, "sack": 0.0}
     pbp = pd.DataFrame([{**base, "passer_player_id": "A"}, {**base, "passer_player_id": "A", "down": None},
