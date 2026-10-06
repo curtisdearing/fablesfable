@@ -88,3 +88,38 @@ def test_quote_verification_needs_the_exact_row_and_rejects_multibook_labels():
 def test_html_escapes_and_disclaims():
     html = pc.render_cards_html([pc.build_card(_row(name="<b>x</b>"), NOW)])
     assert "<b>x</b>" not in html and "&lt;b&gt;" in html
+
+
+def test_week_cards_refuses_a_fresh_pregame_quote_after_its_eastern_schedule_kickoff(monkeypatch):
+    """Rendering is a new decision: an old issued row stays stored, but its
+    still-fresh quote cannot remain executable after the game starts."""
+    import pandas as pd
+    from nflvalue import ingest
+
+    conn = sqlite3.connect(":memory:")
+    cols = ("season", "week", "clock", "game_id", "player_id", "name", "market", "side", "line",
+            "line_source", "price", "book", "mean", "sd", "p_side", "status", "as_of", "created_at",
+            "quote_book", "quote_ts", "run_id", "stage_json")
+    conn.execute("CREATE TABLE leans (" + ", ".join(cols) + ")")
+    conn.execute("CREATE TABLE lines (ts, game_id, book, market, player_id, player_name, side, point, price)")
+    conn.execute("CREATE TABLE run_receipts (run_id, season, week, clock, as_of, receipt_json, created_at)")
+    row = _row()
+    lean = {**row, "season": 2026, "week": 3, "clock": "wed"}
+    conn.execute("INSERT INTO leans VALUES (" + ",".join("?" * len(cols)) + ")", [lean.get(k) for k in cols])
+    conn.execute("INSERT INTO lines VALUES ('2026-09-24T18:30:00Z','2026_03_ATL_GB','draftkings',"
+                 "'receiving_yards','','K.Pitts','over',45.5,1.87)")
+    conn.execute("INSERT INTO run_receipts VALUES ('gha:1-1', 2026, 3, 'wed', '2026-09-24T18:35:00Z', "
+                 "'{\"run_id\": \"gha:1-1\", \"publish\": true}', '2026-09-24T18:35:00Z')")
+    monkeypatch.setattr(ingest, "load_all_schedules", lambda: pd.DataFrame([{
+        "game_id": "2026_03_ATL_GB", "season": 2026, "week": 3, "game_type": "REG",
+        "gameday": "2026-09-24", "gametime": "15:30",
+    }]))
+
+    card = pc.week_cards(conn, 2026, 3, now=NOW)["cards"][0]
+
+    assert card["status"] == "research" and card["quote"] is None
+    assert card["status_reasons"] == [
+        "game under way at decision time; pregame quote no longer executable"
+    ]
+    # Rendering never changes the previously issued row that settlement will grade.
+    assert conn.execute("SELECT status, quote_ts FROM leans").fetchone() == ("active", "2026-09-24T18:30:00Z")

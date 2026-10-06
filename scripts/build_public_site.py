@@ -57,6 +57,9 @@ LABELS = {
                 "the runs listed, rendered at their own run clock; they are not a new forecast."),
 }
 SETTLEMENT_LABELS = {"recommendations_given": "Given before kickoff",
+                     "delivered_historical_import": ("Delivered recommendations imported after the game (historical: "
+                                                     "original pregame issue clock kept; graded; not prospective "
+                                                     "confirmation)"),
                      "retrospective": "Recorded after kickoff (retrospective; not a prospective record)",
                      "watch_published": "Watch list (not recommendations)",
                      "generated_not_shown": "Generated, publication not evidenced"}
@@ -308,6 +311,8 @@ def results_page(doc):
                 f"{e(str(r['market']))} {e(str(r['side']))} {e(str(r['line']))} &middot; {e(price)} &middot; "
                 f"actual {e(str(r['actual']))} &middot; {e(str(r['game_id']))} &middot; tier {e(str(r['tier']))}, "
                 f"policy {e(str(r['policy_class']))} <span class=muted>(decided {e(str(r['decision_ts']))}; "
+                + (f"originally issued {e(str(r['original_issue_ts']))}, imported after the game; "
+                   if r.get("historical_import") else "") +
                 f"final box captured {e(str(r['actuals_captured_at']))}: {e(str(r['actuals_url']))}; "
                 f"{e(str(r['detail']))}.{fix})</span></li>")
         parts.append("<ul>" + "".join(items) + "</ul>")
@@ -341,17 +346,60 @@ def research_page(doc):
 
 
 def coverage_doc(payload):
-    """Per-game odds coverage exactly as each issuing run recorded it (run_receipts): priced,
-    unpriced and why. Runs that predate the coverage receipt are listed as not recorded."""
+    """Per-run player-prop and game-line coverage, kept as separate products.
+
+    A game-line answer (moneyline, spread, total) cannot establish player-prop
+    availability, and a prop board cannot establish a game line. Runs that
+    predate either receipt say so rather than inheriting or fabricating coverage.
+    """
     runs = []
     for rec in payload.get("factor_receipts") or []:
         rec = rec if isinstance(rec, dict) else {}
-        cov = rec.get("odds_coverage") or (rec.get("extra") or {}).get("odds_coverage")
-        runs.append({"run_id": rec.get("run_id"), "clock": rec.get("clock"), "as_of": rec.get("as_of"),
-                     "recorded": bool(cov), "summary": (cov or {}).get("summary"), "games": (cov or {}).get("games")})
-    return {"schema": "fablesfable.odds_coverage.v1", "season": payload.get("season"), "week": payload.get("week"),
-            "note": ("Provider coverage as recorded by the issuing runs. A game or prop without an offered "
-                     "quote is shown as missing, never as a synthetic price."), "runs": runs}
+        extra = rec.get("extra") or {}
+        props = rec.get("odds_coverage") or extra.get("odds_coverage")
+        game_lines = rec.get("game_lines") or extra.get("game_lines")
+        runs.append({
+            "run_id": rec.get("run_id"), "clock": rec.get("clock"), "as_of": rec.get("as_of"),
+            # v1 compatibility: these three aliases always mean player props.
+            "recorded": bool(props), "summary": (props or {}).get("summary"),
+            "games": (props or {}).get("games"),
+            "props": {"recorded": bool(props), "summary": (props or {}).get("summary"),
+                      "games": (props or {}).get("games")},
+            "game_lines": {"recorded": bool(game_lines), "summary": (game_lines or {}).get("summary"),
+                           "games": (game_lines or {}).get("games")},
+        })
+    return {"schema": "fablesfable.odds_coverage.v2", "season": payload.get("season"), "week": payload.get("week"),
+            "note": ("Provider coverage as recorded by the issuing runs. Player props and game lines are "
+                     "separate products; a missing quote is never shown as a synthetic price."), "runs": runs}
+
+
+def _coverage_table(title, coverage, game_lines=False):
+    e = html.escape
+    if not coverage["recorded"]:
+        return (f"<h3>{e(title)}</h3>"
+                "<p>Coverage not recorded by this run (it predates this receipt).</p>")
+    summary = e(json.dumps(coverage["summary"], sort_keys=True, default=str))
+    rows = coverage["games"] or {}
+    parts = [f"<h3>{e(title)}</h3><p class=muted>{summary}</p>"]
+    if game_lines:
+        parts.append("<table><thead><tr><th>Game</th><th>State</th><th>Capture clock</th>"
+                     "<th>Book clocks</th><th>Age (h)</th><th>Books by market</th>"
+                     "<th>Markets offered / missing</th><th>Books missing</th></tr></thead><tbody>")
+        for gid, g in sorted(rows.items()):
+            clocks = f"{g.get('book_clock_min')} to {g.get('book_clock_max')}"
+            markets = f"{g.get('markets_offered')} / {g.get('markets_missing')}"
+            parts.append(f"<tr><td>{e(str(gid))}</td><td>{e(str(g.get('state')))}</td>"
+                         f"<td>{e(str(g.get('capture_clock')))}</td><td>{e(clocks)}</td>"
+                         f"<td>{e(str(g.get('quote_age_hours')))}</td>"
+                         f"<td>{e(json.dumps(g.get('books_by_market'), sort_keys=True, default=str))}</td>"
+                         f"<td>{e(markets)}</td><td>{e(str(g.get('books_missing')))}</td></tr>")
+    else:
+        parts.append("<table><thead><tr><th>Game</th><th>State</th><th>Recorded detail</th></tr></thead><tbody>")
+        for gid, g in sorted(rows.items()):
+            parts.append(f"<tr><td>{e(str(gid))}</td><td>{e(str(g.get('state')))}</td>"
+                         f"<td>{e(json.dumps(g, sort_keys=True, default=str))}</td></tr>")
+    parts.append("</tbody></table>")
+    return "".join(parts)
 
 
 def coverage_page(doc):
@@ -361,13 +409,9 @@ def coverage_page(doc):
         parts.append("<p>No issuing run is recorded for this week.</p>")
     for r in doc["runs"]:
         parts.append(f"<h2>{e(str(r['clock']))} run {e(str(r['run_id']))} (as of {e(str(r['as_of']))})</h2>")
-        if not r["recorded"]:
-            parts.append("<p>Coverage not recorded by this run (it predates the coverage receipt).</p>")
-            continue
-        parts.append(f"<p class=muted>{e(json.dumps(r['summary'], sort_keys=True, default=str))}</p><ul>")
-        for gid, g in sorted((r["games"] or {}).items()):
-            parts.append(f"<li><b>{e(gid)}</b>: {e(json.dumps(g, sort_keys=True, default=str))}</li>")
-        parts.append("</ul>")
+        parts.append(_coverage_table("Player-prop coverage", r["props"]))
+        parts.append(_coverage_table("Game-line coverage (moneyline / spread / total)", r["game_lines"],
+                                     game_lines=True))
     return page("Odds coverage", "".join(parts))
 
 

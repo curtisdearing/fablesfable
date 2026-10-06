@@ -45,11 +45,13 @@ RECHECK_HOURS = 20
 CORRECTION_DAYS = 4
 MAX_REQUESTS = 40
 RETRIES = 2
-SECTIONS = ("recommendations_given", "retrospective", "watch_published", "generated_not_shown")
+SECTIONS = ("recommendations_given", "delivered_historical_import", "retrospective", "watch_published",
+            "generated_not_shown")
+BACKFILL_WEEKS = 2      # older weeks with ungraded issued records settled per run, oldest first
 PUBLIC_FIELDS = ("record_id", "revision", "section", "season", "week", "game_id", "kickoff", "slate_tag",
                  "player_name", "market", "side", "line", "tier", "pick_class", "card_status", "quote_book",
                  "quote_price", "quote_ts", "decision_ts", "model_p_side", "mean", "evidence_stage",
-                 "first_seen_in_ledger", "delivery_evidence_kind", "policy_class", "settlement", "hit",
+                 "first_seen_in_ledger", "delivery_evidence_kind", "historical_import", "original_issue_ts", "policy_class", "settlement", "hit",
                  "actual", "detail", "espn_event", "actuals_url", "actuals_sha256", "actuals_captured_at",
                  "graded_at", "supersedes")
 FINAL = "STATUS_FINAL"
@@ -122,6 +124,21 @@ def due_weeks(records: List[Dict], now: dt.datetime) -> List[tuple]:
     return sorted(k for k, t in latest.items() if t >= floor)
 
 
+def backfill_weeks(records: List[Dict], now: dt.datetime, graded_ids, recent) -> List[tuple]:
+    """Weeks older than the lookback that still hold an issued, game-bound record with no
+    persisted grade (postponement, outage, missed runs). At most ``BACKFILL_WEEKS`` per run,
+    oldest first; a pending game stays visible in the export until an official final settles it."""
+    floor = now - dt.timedelta(days=LOOKBACK_DAYS)
+    out = set()
+    for r in _issued(records):
+        k = (int(r["season"]), int(r["week"]))
+        t = ig._ts(r.get("recorded_at"))
+        if k in recent or not r.get("game_id") or r["record_id"] in graded_ids or t is None or t >= floor:
+            continue
+        out.add(k)
+    return sorted(out)[:BACKFILL_WEEKS]
+
+
 def _last_accepted(conn, game_id: str) -> Optional[dt.datetime]:
     row = conn.execute("SELECT MAX(captured_at) FROM result_captures WHERE game_id=? AND accepted=1",
                        (game_id,)).fetchone()
@@ -175,7 +192,11 @@ def settle(conn, now: Optional[dt.datetime] = None, http: Optional[Callable[[str
     stamp = _iso(now)
     records = il.load(conn)
     weeks = due_weeks(records, now)
-    out = {"checked_at": stamp, "weeks": [list(w) for w in weeks], "requests": 0, "captures": 0,
+    graded_ids = {row[0] for row in conn.execute("SELECT DISTINCT record_id FROM issued_results")}
+    backfill = backfill_weeks(records, now, graded_ids, set(weeks))
+    weeks = sorted(set(weeks) | set(backfill))
+    out = {"checked_at": stamp, "weeks": [list(w) for w in weeks], "backfill_weeks": [list(w) for w in backfill],
+           "requests": 0, "captures": 0,
            "results_written": 0, "pending": [], "errors": [], "skipped_recent": [], "graded_games": []}
     if not weeks:
         out["written"] = 0

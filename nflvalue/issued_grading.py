@@ -409,7 +409,8 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         stage = max((e["stage"] for e in pro), key=_STAGE_RANK.get, default=None)
         first_ev = min(pro, key=lambda e: _ts(e["recorded_at"]), default=None)
         first = _ts(first_ev["recorded_at"]) if first_ev else None
-        info.append({"r": r, "stage": stage, "first_seen": first, "first_event": first_ev, "has_game": g is not None})
+        info.append({"r": r, "stage": stage, "first_seen": first, "first_event": first_ev, "has_game": g is not None,
+                     "kick": kick})
     by_key = defaultdict(list)
     for i in info:
         by_key[i["r"]["pick_key"]].append(i)
@@ -444,12 +445,22 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         return rows
 
     issued = lambda i: i["r"].get("pick_class") in ("recommendation", "watch")  # noqa: E731
+
+    def delivered_historical(i):
+        # a recommendation the source says was delivered before kickoff, imported after it:
+        # keeps its identity, original issue clock and W/L record; never prospective
+        issued_at = _ts(original_issue_ts(i["r"]))
+        return (i["r"].get("pick_class") == "recommendation" and i["stage"] is None
+                and historical_import(i["r"]) and i["kick"] is not None and issued_at is not None
+                and issued_at < i["kick"])
+
     secs = {
         "recommendations_given": section(lambda i: i["r"].get("pick_class") == "recommendation"
                                          and i["stage"] in SHOWN),
+        "delivered_historical_import": section(delivered_historical),
         "watch_published": section(lambda i: i["r"].get("pick_class") == "watch" and i["stage"] in SHOWN),
         "generated_not_shown": section(lambda i: issued(i) and i["stage"] == "generated"),
-        "retrospective": section(lambda i: issued(i) and i["stage"] is None),
+        "retrospective": section(lambda i: issued(i) and i["stage"] is None and not delivered_historical(i)),
     }
     latest = []
     for lst in by_key.values():
@@ -478,6 +489,13 @@ def event_receipt(event: Optional[Dict]) -> Optional[str]:
         return None
     return hashlib.sha256(json.dumps({k: event.get(k) for k in _RECEIPT_KEYS}, sort_keys=True,
                                      default=str).encode()).hexdigest()
+
+
+def original_issue_ts(record: Dict) -> Optional[str]:
+    """The earliest zoned clock of a ``delivered`` stage event: the original issue time."""
+    clocks = sorted((_ts(e.get("event_ts")), e.get("event_ts")) for e in record.get("events") or []
+                    if e.get("stage") == "delivered" and _ts(e.get("event_ts")) is not None)
+    return clocks[0][1] if clocks else None
 
 
 def historical_import(record: Dict) -> bool:
@@ -510,7 +528,7 @@ def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
             rows.append({**cache[r["record_id"]], **policy_of(r), "section": name, "evidence_stage": u["stage"],
                          "first_seen_in_ledger": u["first_seen"].isoformat() if u["first_seen"] else None,
                          "capture_receipt_sha256": event_receipt(u.get("first_event")),
-                         "historical_import": historical_import(r),
+                         "historical_import": historical_import(r), "original_issue_ts": original_issue_ts(r),
                          "same_decision_records": u["same_decision_records"],
                          "later_records": u["later_records"], "revises": u["revises"]})
         rows.sort(key=lambda g: (g["season"], g["week"], g["game_id"] or "", g["pick_key"],

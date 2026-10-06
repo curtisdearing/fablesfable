@@ -79,14 +79,16 @@ def test_real_final_box_binds_to_the_canonical_game_with_both_scores(tmp_path):
 def test_delivered_game_total_under_is_graded_a_loss_not_left_unresolved(tmp_path):
     conn = _ledger(tmp_path)
     res = ig.grade(il.load(conn), ig.load_boxes([str(_box_file(tmp_path))], CAPTURED))
-    rows = {r["market"]: r for r in res["sections"]["retrospective"]["rows"]}
+    rows = {r["market"]: r for r in res["sections"]["delivered_historical_import"]["rows"]}
     total = rows["game_total"]
     assert (total["settlement"], total["hit"], total["actual"]) == ("loss", 0, 69.0)
     assert total["identity"] == "game_level_market"
     shough = rows["passing_yards"]
     assert (shough["settlement"], shough["hit"], shough["actual"]) == ("win", 1, 286.0)
     # the delivered selections are a postgame capture: never prospective, never "given before kickoff"
-    assert res["counts"]["recommendations_given"] == 0 and res["counts"]["retrospective"] == 2
+    assert res["counts"]["recommendations_given"] == 0 and res["counts"]["retrospective"] == 0
+    # delivered before kickoff per the source, imported after it: its own section, recommendation kept
+    assert res["counts"]["delivered_historical_import"] == 2
     assert {r["delivery_evidence_kind"] for r in rows.values()} == {"retrospective_import"}
     # research leans delivered as picks: the policy would have blocked them, so they are graded
     # as analyst-override policy violations -- kept in the record, never counted as approved
@@ -114,5 +116,5 @@ def test_game_total_without_a_final_score_stays_unresolved(tmp_path):
     p.write_text(json.dumps(raw))
     conn = _ledger(tmp_path)
     res = ig.grade(il.load(conn), ig.load_boxes([str(p)], CAPTURED))
-    total = next(r for r in res["sections"]["retrospective"]["rows"] if r["market"] == "game_total")
+    total = next(r for r in res["sections"]["delivered_historical_import"]["rows"] if r["market"] == "game_total")
     assert total["settlement"] == "unresolved" and total["actual"] is None

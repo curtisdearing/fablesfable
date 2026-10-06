@@ -469,7 +469,7 @@ def test_readback_is_not_processed_until_every_slot_game_is(env):
     rb = _receipt(receipt, "readback")["readback"]
     assert rb["verdict"] == "not-processed" and rb["unprocessed_games"] == [GAME2]
     assert rb["games"][GAME] == {"processed_line": True, "failed_line": False, "voided": 0,
-                                 "t90_leans": 4, "stored_lines": 3, "processed": True}
+                                 "t90_leans": 4, "stored_lines": 3, "processed": True, "closing_resnap": None}
     assert rb["games"][GAME2]["processed_line"] is False and rb["games"][GAME2]["t90_leans"] == 0
     # The same run once the second game's line and leans exist: processed.
     gh.logs[rid] += f"run\t[auto] t90 {GAME2}: 1 voided\n"

@@ -14,6 +14,7 @@ the inactives are expected, and never waits past the bound.
 from __future__ import annotations
 
 import datetime as dt
+import sqlite3
 import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -70,31 +71,66 @@ def _patch_job(monkeypatch, clock, slept, processed, overrun=0, done_after_wait=
     monkeypatch.setattr(cfgmod, "load_config", lambda: {"discord_enabled": False})
     from nflvalue import db as dbmod
     import pipeline_weekly as pw
-    monkeypatch.setattr(dbmod, "connect", lambda p=None: _MemConn())
+    # One real SQLite state DB per test, shared by every connect() like the persisted state:
+    # the close-resnap once-only guard (oddsapi_props.answered_since) reads real line_pulls
+    # receipts from it. The game's Wednesday entry line is a day old.
+    mem = sqlite3.connect(":memory:")
+    mem.execute("CREATE TABLE lines (game_id TEXT, ts TEXT)")
+    mem.execute("INSERT INTO lines VALUES ('2026_03_ATL_GB', ?)",
+                ((KICK - dt.timedelta(days=1)).astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),))
+    monkeypatch.setattr(dbmod, "connect", lambda p=None: _MemConn(mem))
     state = {"done": []}
 
     def query_df(conn, sql, params=()):
         if "FROM leans" in sql:
             return pd.DataFrame({"game_id": state["done"]})
-        return pd.DataFrame({"game_id": ["2026_03_ATL_GB"]})     # has stored lines
+        if "SELECT DISTINCT game_id FROM lines" in sql:
+            return pd.DataFrame({"game_id": ["2026_03_ATL_GB"]})     # has stored entry lines
+        return pd.read_sql_query(sql, mem, params=params)             # receipts: the real SQL
 
     monkeypatch.setattr(dbmod, "query_df", query_df)
     if resnaps is not None:
         monkeypatch.setattr(cfgmod, "load_config",
                             lambda: {"discord_enabled": False, "odds_api_key": "k"})
         from nflvalue.sources import oddsapi_props as oap
-        monkeypatch.setattr(oap, "resnap_lines", lambda cfg, emap, conn=None: resnaps.append(
-            dict(emap)) or {"pulled": list(emap), "empty": [], "rows_written": 0,
-                            "credits_spent": 5.0, "credits_billed_measured": 5.0,
-                            "credits_estimated": 0.0, "credits_planned": 5.0,
-                            "account_usage_delta": 5.0, "budget_remaining": 65.0})
-        monkeypatch.setattr(pw, "build_event_map", lambda cfg, s: {g: f"e_{g}" for g in s.game_id})
+
+        def resnap_lines(cfg, emap, conn=None):
+            # like the real call: the answered event call leaves a line_pulls receipt at its clock
+            resnaps.append(dict(emap))
+            ts = clock[0].astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            oap.record_pulls(conn, [{"ts": ts, "game_id": g, "event_id": e, "kind": "close", "month": ts[:7],
+                                     "n_rows": 0, "books": "[]", "markets": "[]", "credits_planned": 5.0,
+                                     "credits_billed": 5.0, "hold_credits": 0.0, "kickoff": None}
+                                    for g, e in emap.items()])
+            return {"pulled": list(emap), "empty": list(emap), "rows_written": 0,
+                    "credits_spent": 5.0, "credits_billed_measured": 5.0,
+                    "credits_estimated": 0.0, "credits_planned": 5.0,
+                    "account_usage_delta": 5.0, "budget_remaining": 65.0}
+
+        def build_event_map(cfg, slate, list_events_fn=None, details=None):
+            # identity is the team pair AND the listed commence_time at the slate kickoff
+            if details is not None:
+                details["games"] = {r.game_id: {"event_id": f"e_{r.game_id}", "reason": None,
+                                                "commence_time": r.kickoff.astimezone(dt.timezone.utc).isoformat()}
+                                    for r in slate.itertuples(index=False)}
+            return {g: f"e_{g}" for g in slate.game_id}
+
+        monkeypatch.setattr(oap, "resnap_lines", resnap_lines)
+        monkeypatch.setattr(pw, "build_event_map", build_event_map)
     monkeypatch.setattr(pw, "run_t90", lambda *a, **k: processed.append((a[2], clock[0])) or {"voided": []})
     import nflvalue.candidates as cand
     monkeypatch.setattr(cand, "build_week_inputs", lambda: object())
 
 
 class _MemConn:
+    """The job's state connection: a shared in-memory SQLite DB that survives close()."""
+
+    def __init__(self, db):
+        self._db = db
+
+    def __getattr__(self, name):
+        return getattr(self._db, name)
+
     def close(self):
         pass
 
@@ -144,3 +180,8 @@ def test_single_early_run_acquires_once_after_the_wait(monkeypatch):
     assert aw.job_t90() == 0
     assert resnaps == [{"2026_03_ATL_GB": "e_2026_03_ATL_GB"}]
     assert processed == [("2026_03_ATL_GB", opens)]
+    # the slot re-fires 5 minutes later (say a sibling failed and the game has no t90 leans
+    # yet): the provider's answer is within the hour, so the close is never bought twice
+    clock[0] = opens + dt.timedelta(minutes=5)
+    assert aw.job_t90() == 0
+    assert resnaps == [{"2026_03_ATL_GB": "e_2026_03_ATL_GB"}]

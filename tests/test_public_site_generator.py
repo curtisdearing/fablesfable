@@ -82,6 +82,44 @@ def _run_checker(site_parent):
         os.chdir(cwd)
 
 
+def test_coverage_keeps_game_lines_in_a_truthful_table_separate_from_player_props():
+    payload = {
+        "season": 2026,
+        "week": 5,
+        "factor_receipts": [{
+            "run_id": "run-1",
+            "clock": "wed",
+            "as_of": "2026-10-07T15:00:00Z",
+            "odds_coverage": {
+                "summary": {"product": "player props", "n_games": 1},
+                "games": {"2026_05_TB_DAL": {"state": "no_current_quotes"}},
+            },
+            "game_lines": {
+                "summary": {"product": "game lines (h2h/spreads/totals)", "n_games": 1},
+                "games": {"2026_05_TB_DAL": {
+                    "state": "priced", "capture_clock": "2026-10-07T15:00:00Z",
+                    "book_clock_min": "2026-10-07T14:59:00Z", "book_clock_max": "2026-10-07T15:00:00Z",
+                    "quote_age_hours": 0.0, "books_by_market": {"h2h": ["draftkings"],
+                                                                    "spreads": ["draftkings"],
+                                                                    "totals": ["draftkings"]},
+                    "markets_offered": ["h2h", "spreads", "totals"], "markets_missing": [],
+                    "books_missing": [], "started": False, "reused_cached_answer": False,
+                }},
+            },
+        }],
+    }
+
+    doc = bps.coverage_doc(payload)
+    run = doc["runs"][0]
+    assert doc["schema"] == "fablesfable.odds_coverage.v2"
+    assert run["props"]["games"]["2026_05_TB_DAL"]["state"] == "no_current_quotes"
+    assert run["game_lines"]["games"]["2026_05_TB_DAL"]["state"] == "priced"
+    page = bps.coverage_page(doc)
+    assert "Player-prop coverage" in page and "Game-line coverage (moneyline / spread / total)" in page
+    assert page.count("<table>") == 2
+    assert "no_current_quotes" in page and "Book clocks" in page and "2026-10-07T14:59:00Z" in page
+
+
 def test_builds_current_week_top_level_and_passes_the_workflow_checker(tmp_path):
     db = _db(tmp_path, [_lean(), _lean(player_id="p2", name="B.Robinson", market="rushing_yards",
                                        line_source="synthetic_trailing_mean", price=None, quote_book=None,
@@ -295,7 +333,7 @@ def test_results_page_shows_settled_issued_picks_and_passes_the_publisher_checke
     m = json.loads((out / "publication.json").read_text())
     assert {"results.html", "api/results.json"} <= set(m["files"])
     doc = json.loads((out / "api" / "results.json").read_text())
-    rows = {r["market"]: r for r in doc["sections"]["retrospective"]["rows"]}
+    rows = {r["market"]: r for r in doc["sections"]["delivered_historical_import"]["rows"]}
     assert (rows["passing_yards"]["settlement"], rows["game_total"]["settlement"]) == ("win", "loss")
     assert m["results_checked_at"] == doc["results_checked_at"] == "2026-10-06T09:40:00Z"
     page = (out / "results.html").read_text()

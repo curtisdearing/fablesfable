@@ -289,14 +289,17 @@ def job_wed() -> int:
 def closing_resnap(conn, cfg, soon, done, oap, pwmod, now=None) -> dict:
     """Pre-kick close snapshot for due games that have entry lines and no t90 leans yet.
 
-    A game whose provider already answered within the hour (a re-fired slot, or a retry after a
-    sibling failed) is skipped, so a retry never bills the processed games twice. Every target
-    gets its own ``[auto] closing resnap <game>: ...`` receipt line for the scheduler's
-    per-game read-back, including why a game has no provider event."""
+    Once-only: a game whose provider already answered within
+    ``pipeline_weekly.T90_LINE_FRESH_HOURS`` (the same guard ``run_t90`` applies) is skipped,
+    so a re-fired slot or a retry after one sibling failed never bills a game twice. Every
+    target gets one ``[auto] closing resnap <game>: ...`` receipt line for the scheduler's
+    per-game read-back -- priced, answered without quotes, not answered, no provider event
+    (with the identity reason) or FAILED -- and the answered-call receipts stay in line_pulls."""
     from nflvalue import db as dbmod
     have_lines = set(dbmod.query_df(conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
     targets = [g.game_id for g in soon.itertuples(index=False) if g.game_id in have_lines and g.game_id not in done]
-    recent = oap.answered_since(conn, targets, now=now, max_age_hours=1.0) if targets else {}
+    fresh_hours = float(getattr(pwmod, "T90_LINE_FRESH_HOURS", 1.0))
+    recent = oap.answered_since(conn, targets, now=now, max_age_hours=fresh_hours) if targets else {}
     for gid in targets:
         if gid in recent:
             print(f"[auto] closing resnap {gid}: skipped, provider answered at {recent[gid]} (no second charge)")
@@ -304,18 +307,26 @@ def closing_resnap(conn, cfg, soon, done, oap, pwmod, now=None) -> dict:
     out = {"targets": targets, "skipped_recent": sorted(recent), "resnapped": todo, "per_game": {}}
     if not todo:
         return out
-    identity: dict = {}
-    emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(todo)], details=identity)
-    res = oap.resnap_lines(cfg, emap, conn=conn)
-    snaps = oap.latest_snapshots(conn, [g for g in todo if g in emap], now=now, max_age_hours=1.0)
+    try:
+        identity: dict = {}
+        emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(todo)], details=identity)
+        res = oap.resnap_lines(cfg, emap, conn=conn)
+    except Exception as exc:
+        for gid in todo:
+            print(f"[auto] closing resnap {gid} FAILED: {exc}")
+        raise
+    empty = set(res.get("empty") or [])
+    priced = set(res.get("priced") or [g for g in res.get("pulled") or [] if g not in empty])
     for gid in todo:
         if gid not in emap:
             why = ((identity.get("games") or {}).get(gid) or {}).get("reason") or "no event match"
             line = f"no provider event ({why}); close not priced"
+        elif gid in priced:
+            line = f"answered with quotes (event {emap[gid]}); close priced"
+        elif gid in empty:
+            line = f"answered without quotes (event {emap[gid]}); close not priced"
         else:
-            snap = snaps.get(gid)
-            line = (f"{snap['n_rows']} rows at {snap['ts']}" if snap and snap.get("fresh")
-                    else "no provider answer recorded; close not priced")
+            line = "not answered (budget, close hold or call failure); close not priced"
         out["per_game"][gid] = line
         print(f"[auto] closing resnap {gid}: {line}")
     print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "

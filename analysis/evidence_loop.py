@@ -67,7 +67,7 @@ def parse_aware(value) -> Optional[dt.datetime]:
 
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 TRUSTED_CAPTURE = "ledger_pre_kickoff_event"
-EVIDENCE_SECTIONS = ("recommendations_given", "watch_published", "retrospective")
+EVIDENCE_SECTIONS = ("recommendations_given", "delivered_historical_import", "watch_published", "retrospective")
 
 
 def trusted_capture(row: Dict, kick: Optional[dt.datetime] = None) -> bool:
@@ -138,7 +138,7 @@ def _issued_row(g: Dict, section: str) -> Dict:
         "capture_sha256": receipt, "capture_recorded_at": g.get("first_seen_in_ledger") if pre else None,
         "capture_basis": (TRUSTED_CAPTURE if receipt else
                           "historical_import" if g.get("historical_import") else "no_pre_kickoff_ledger_event"),
-        "historical_import": bool(g.get("historical_import")),
+        "historical_import": bool(g.get("historical_import")), "original_issue_ts": g.get("original_issue_ts"),
         "delivery_evidence_kind": g.get("delivery_evidence_kind"),
         "outcome": _outcome(g.get("settlement")), "actual": g.get("actual"),
         "actuals_sha256": g.get("actuals_sha256"),

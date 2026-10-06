@@ -69,7 +69,7 @@ def _ledger(tmp_path):
 
 
 def _given(doc):
-    return {r["market"]: r for r in doc["sections"]["retrospective"]["rows"]}
+    return {r["market"]: r for r in doc["sections"]["delivered_historical_import"]["rows"]}
 
 
 def test_real_monday_final_settles_the_delivered_card(tmp_path):
@@ -174,13 +174,19 @@ def test_a_non_final_summary_is_refused_and_recorded_as_a_refused_capture(tmp_pa
 
 def test_bounded_lookback_and_request_budget(tmp_path, monkeypatch):
     conn = _ledger(tmp_path)
-    f = Fetcher()
-    old = ir.settle(conn, now=NOW + dt.timedelta(days=ir.LOOKBACK_DAYS + 1), http=f)
-    assert old["weeks"] == [] and f.urls == []
     monkeypatch.setattr(ir, "MAX_REQUESTS", 1)
     capped = ir.settle(conn, now=NOW, http=Fetcher())
     assert capped["requests"] == 1 and capped["written"] == 0
     assert any("request budget" in e for e in capped["errors"])
+    monkeypatch.setattr(ir, "MAX_REQUESTS", 40)
+    # past the lookback, a week whose issued records were never graded is backfilled ...
+    late = NOW + dt.timedelta(days=ir.LOOKBACK_DAYS + 1)
+    back = ir.settle(conn, now=late, http=Fetcher())
+    assert back["backfill_weeks"] == [[2026, 4]] and back["results_written"] == 2
+    # ... and once graded it is never fetched again
+    f = Fetcher()
+    old = ir.settle(conn, now=late + dt.timedelta(days=1), http=f)
+    assert old["weeks"] == [] and old["backfill_weeks"] == [] and f.urls == []
 
 
 def test_fetch_failures_leave_games_pending_and_exit_cleanly(tmp_path):
@@ -228,7 +234,7 @@ def test_results_job_is_results_only_and_writes_state_export_and_summary(tmp_pat
     # 2 grades + 1 capture + 2 research evidence rows (appended after verified grading)
     assert summary["written"] == 5 and summary["results_written"] == 2 and summary["evidence"]["appended"] == 2
     doc = json.loads((tmp_path / "data/issued_results.json").read_text())
-    assert {r["settlement"] for r in doc["sections"]["retrospective"]["rows"]} == {"win", "loss"}
+    assert {r["settlement"] for r in doc["sections"]["delivered_historical_import"]["rows"]} == {"win", "loss"}
     assert beats and beats[-1][0] == "active" and beats[-1][2] == "results"
     assert list((tmp_path / "reports/results/boxes").glob("2026_04_ATL_NO-*.json"))
     # second run inside the recheck window: nothing new to save or publish

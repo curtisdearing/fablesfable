@@ -58,7 +58,7 @@ def test_only_a_ledger_clocked_pre_kickoff_receipt_is_prospective_confirmation(t
     late = _grade_one(tmp_path, week=4, delivered_at="2026-10-05T23:00:00Z",
                       recorded_at="2026-10-06T04:00:00Z", retrospective=True)
     assert late["sections"]["recommendations_given"]["rows"] == []
-    hist = el.from_issued_grading(late, section="retrospective")[0]
+    hist = el.from_issued_grading(late, section="delivered_historical_import")[0]
     assert hist["historical_import"] and hist["capture_sha256"] is None
     assert el.window_of({**hist, "week": 5}) == "retrospective_exploratory"  # pregame decision kept, not relabelled late
 
@@ -107,11 +107,13 @@ def test_results_job_appends_the_evidence_ledger_after_grading_and_is_idempotent
     assert aw.job_results() == 0
     ledger = tmp_path / "data/evidence_ledger.jsonl"
     entries = el.read_ledger(str(ledger))
-    assert len(entries) == 2 and {e["row"]["section"] for e in entries} == {"retrospective"}
+    assert len(entries) == 2 and {e["row"]["section"] for e in entries} == {"delivered_historical_import"}
+    assert {e["row"]["issued_class"] for e in entries} == {"recommendation"}
+    assert {e["row"]["original_issue_ts"] for e in entries} == {"2026-10-05T23:00:00Z"}
     assert all(e["row"]["historical_import"] and el.window_of(e["row"]) != "prospective_confirmation"
                for e in entries)
     status = json.loads((tmp_path / "data/research_status.json").read_text())
-    assert status["sections"]["retrospective"]["outcomes"]["loss"] == 1          # the loss is kept
+    assert status["sections"]["delivered_historical_import"]["outcomes"]["loss"] == 1          # the loss is kept
     assert status["promotion"]["passed_predeclared_gate"] == [] and not status["promotion"]["market_blend"]
     assert any(g.startswith("prospective confirmation: 0") for g in status["missing_data_gates"])
     summary = json.loads((tmp_path / "reports/results/summary.json").read_text())
@@ -198,7 +200,7 @@ def test_delivered_card_import_records_both_leans_and_the_pass_without_private_t
     ir.settle(conn, now=loop.NOW, http=loop.Fetcher())
     doc = ir.export(conn)
     conn.close()
-    retro = {r["market"]: r for r in doc["sections"]["retrospective"]["rows"]}
+    retro = {r["market"]: r for r in doc["sections"]["delivered_historical_import"]["rows"]}
     assert (retro["passing_yards"]["settlement"], retro["game_total"]["settlement"]) == ("win", "loss")
     assert {r["policy_class"] for r in retro.values()} != {"approved"}
     assert doc["sections"]["recommendations_given"]["rows"] == []           # postgame import is never "given"
@@ -277,7 +279,8 @@ class _FakeOdds:
 
     def resnap_lines(self, cfg, emap, conn=None):
         self.resnapped.append(dict(emap))
-        return {"pulled": list(emap), "empty": [], "rows_written": 12, "budget_remaining": 100.0}
+        return {"pulled": list(emap), "priced": list(emap), "empty": [], "rows_written": 12,
+                "budget_remaining": 100.0}
 
     def latest_snapshots(self, conn, game_ids, now=None, max_age_hours=1.0):
         return {g: {"ts": "2026-10-11T15:31:00Z", "n_rows": 12, "fresh": True} for g in game_ids}
@@ -289,6 +292,8 @@ class _FakeOdds:
 class _FakePipeline:
     def __init__(self):
         self.asked = []
+
+    T90_LINE_FRESH_HOURS = 1.0
 
     def build_event_map(self, cfg, slate, details=None):
         self.asked.append(sorted(slate["game_id"]))
@@ -310,8 +315,30 @@ def test_closing_resnap_never_rebills_answered_games_and_reports_every_game(caps
     assert pipe.asked == [["G2", "G4"]] and odds.resnapped == [{"G2": "ev-G2"}]     # G1 never billed twice
     text = capsys.readouterr().out
     assert "[auto] closing resnap G1: skipped, provider answered" in text
-    assert "[auto] closing resnap G2: 12 rows at 2026-10-11T15:31:00Z" in text
+    assert "[auto] closing resnap G2: answered with quotes (event ev-G2); close priced" in text
     assert "[auto] closing resnap G4: no provider event (event_outside_kickoff_window)" in text
     # a re-fired slot after the close was taken: nothing is billed again
     again = aw.closing_resnap(conn, {}, soon, {"G3"}, _FakeOdds({"G1": "t", "G2": "t", "G4": "t"}), pipe)
     assert again["resnapped"] == [] and pipe.asked == [["G2", "G4"]]
+
+
+def test_backfill_is_bounded_oldest_first_and_skips_graded_or_unbound_records():
+    now = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
+    rec = lambda rid, wk, **kw: {"record_id": rid, "season": 2026, "week": wk, "game_id": f"g{wk}",
+                                 "pick_class": "watch", "recorded_at": f"2026-09-{wk + 10:02d}T12:00:00Z", **kw}
+    records = [rec("a", 3), rec("b", 1), rec("c", 2), rec("d", 4), rec("e", 5, game_id=None),
+               rec("f", 6, pick_class="not_a_pick"), rec("g", 7)]
+    assert ir.backfill_weeks(records, now, graded_ids={"g"}, recent=set()) == [(2026, 1), (2026, 2)]
+    assert ir.backfill_weeks(records, now, graded_ids={"b", "c"}, recent={(2026, 3)}) == [(2026, 4), (2026, 7)]
+    assert ir.backfill_weeks(records, now - dt.timedelta(days=90), graded_ids=set(), recent=set()) == []
+
+
+def test_dispatch_read_back_keeps_each_games_closing_receipt():
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import pregame_dispatch as pdsp
+    log = ("[auto] closing resnap G1: answered with quotes (event e1); close priced\n"
+           "[auto] closing resnap G2: skipped, provider answered at 2026-10-11T15:20:00Z (no second charge)\n"
+           "[auto] closing resnap G3 FAILED: boom\n[auto] t90 G1: 0 voided\n")
+    assert pdsp.closing_line(log, "G1") == "[auto] closing resnap G1: answered with quotes (event e1); close priced"
+    assert "no second charge" in pdsp.closing_line(log, "G2") and "FAILED: boom" in pdsp.closing_line(log, "G3")
+    assert pdsp.closing_line(log, "G4") is None

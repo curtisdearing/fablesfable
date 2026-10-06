@@ -442,6 +442,12 @@ def readiness(gh: GitHub, fetch: Fetcher, t: Target, expect_sha: str,
 
 
 # ------------------------------------------------------------------ read-back
+def closing_line(log: str, game: str) -> str | None:
+    """The per-game ``[auto] closing resnap <game>: ...`` (or ``... FAILED: ...``) receipt, if logged."""
+    m = re.search(rf"^.*\[auto\] closing resnap {re.escape(game)}(?::| FAILED:) .*$", log, re.M)
+    return m.group(0)[m.group(0).index("[auto]"):].rstrip() if m else None
+
+
 def readback(gh: GitHub, run_id: int, t: Target, expect_sha: str | None) -> dict:
     """What a dispatched run actually did. Never infers success from the
     dispatch call; every field is read from GitHub or the published state."""
@@ -481,7 +487,10 @@ def readback(gh: GitHub, run_id: int, t: Target, expect_sha: str | None) -> dict
         games[g] = {"processed_line": f"[auto] t90 {g}:" in log,
                     "failed_line": f"[auto] t90 {g} FAILED" in log,
                     "voided": int(line.group(1)) if line else None,
-                    "t90_leans": st_g.get("t90_leans"), "stored_lines": st_g.get("stored_lines")}
+                    "t90_leans": st_g.get("t90_leans"), "stored_lines": st_g.get("stored_lines"),
+                    # the game's close receipt from job_t90 (priced / skipped as already answered /
+                    # not answered / no event / FAILED); recorded, never part of the processed verdict
+                    "closing_resnap": closing_line(log, g)}
         games[g]["processed"] = (games[g]["processed_line"] and not games[g]["failed_line"]
                                  and (st_g.get("t90_leans") or 0) > 0)
     out["games"] = games
