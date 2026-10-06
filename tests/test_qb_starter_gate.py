@@ -115,7 +115,7 @@ def _card_row(stamp):
             "_quote_verified": True, "stage_json": json.dumps(stamp)}
 
 
-def test_blocked_row_renders_research_and_rerender_preserves_each_runs_decision():
+def test_blocked_row_renders_pass_and_rerender_preserves_each_runs_decision():
     import datetime as dt
     now = dt.datetime(2026, 9, 23, 5, tzinfo=dt.timezone.utc)
     ok = {"availability": {"status": "OK", "eligibility": "eligible", "availability_state": "not_listed"}}
@@ -124,7 +124,7 @@ def test_blocked_row_renders_research_and_rerender_preserves_each_runs_decision(
     pw._apply_starter_gate(stamps, cand.confirmed_starter_gate(ROWS, _qb(_doc())))
     blocked = pc.build_card(_card_row(stamps[(RUSH, "pass_attempts")]), now)
     assert earlier["status"] == "watch"
-    assert blocked["status"] == "research" and "not_confirmed_starter" in " ".join(blocked["status_reasons"])
+    assert blocked["status"] == "pass" and "not_confirmed_starter" in " ".join(blocked["status_reasons"])
     assert blocked["mean"] == earlier["mean"]
     # re-rendering the earlier run's persisted row later still gives that run's decision
     assert pc.build_card(_card_row(ok), now)["status"] == "watch"

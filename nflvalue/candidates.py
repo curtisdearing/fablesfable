@@ -486,6 +486,20 @@ def confirmed_starter(q: Optional[Dict]) -> Optional[str]:
     return q.get("qb_id") if ok and q.get("qb_id") else None
 
 
+def presumed_starter(q: Optional[Dict]) -> Optional[str]:
+    """The previous game's starter, presumed when no starter claim was confirmed before the clock.
+
+    Only for state ``starter_unconfirmed`` (no usable claim, prior known) and only when the prior
+    proxy is the first pass attempt by a player listed at QB on the roster -- never a first
+    passer whose position is unverified, never under conflicting claims."""
+    from . import qb_readiness as qr
+    q = q or {}
+    p = q.get("prior") or {}
+    if q.get("state") == qr.UNCONFIRMED and p.get("basis") == qr.PRIOR_BASIS_ROSTER_QB:
+        return p.get("qb_id") or None
+    return None
+
+
 def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict]]) -> Dict:
     """(player_id, market) -> starter eligibility for every QB-market row of this run.
 
@@ -496,9 +510,15 @@ def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict
 
     * ``confirmed_starter``      -- this row's QB is the confirmed starter (no change).
     * ``not_confirmed_starter``  -- another QB is the confirmed starter: ``blocks_execution``.
-    * ``starter_not_confirmed``  -- no unique usable confirmed starter (unconfirmed, conflict,
-      claim after the clock, unlinked id, or no context): disclosed, NOT asserted as backup,
-      and not blocked here.
+    * ``presumed_starter``       -- no confirmed starter, and this row's QB started the team's
+      previous game (roster-QB proxy): not blocked.
+    * ``not_presumed_starter``   -- no confirmed starter, and a different roster QB started the
+      previous game: ``blocks_execution``.  A backup's QB-market forecast carries starter volume
+      it will not get (2026 W4 ATL@NO: Tagovailoa 25.2 and Rush 19.2 pass attempts priced while
+      Penix, the previous starter and depth-chart QB1, started).
+    * ``starter_not_confirmed``  -- no confirmed starter and no usable roster-QB proxy (conflict,
+      claim after the clock with no prior, unlinked id, or no context): disclosed, NOT asserted
+      as backup, and not blocked here.
     """
     out: Dict = {}
     for r in rows:
@@ -522,6 +542,20 @@ def confirmed_starter_gate(rows: List[Dict], qb_context: Optional[Dict[str, Dict
                                                  f"({starter}; {q.get('source_tier') or 'team'} source "
                                                  f"published {q.get('published_at')}); not executable "
                                                  f"for another QB")}
+        elif presumed_starter(q):
+            prior = q.get("prior") or {}
+            presumed = presumed_starter(q)
+            pinfo = {**info, "presumed_qb_id": presumed, "presumed_name": prior.get("name"),
+                     "presumed_from_game": prior.get("game_id")}
+            if pid == presumed:
+                out[(pid, market)] = {**pinfo, "state": "presumed_starter",
+                                      "blocks_execution": False, "reason": None}
+            else:
+                out[(pid, market)] = {**pinfo, "state": "not_presumed_starter", "blocks_execution": True,
+                                      "reason": (f"{team} starter not confirmed before this run; "
+                                                 f"{prior.get('name') or presumed} ({presumed}) started "
+                                                 f"the previous game ({prior.get('game_id')}) and is "
+                                                 f"presumed; not executable for another QB")}
         else:
             out[(pid, market)] = {**info, "state": "starter_not_confirmed", "blocks_execution": False,
                                   "reason": (f"{team} starter not confirmed before this run ({state_t}); "

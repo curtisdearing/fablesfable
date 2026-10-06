@@ -15,8 +15,9 @@ conditions and a status:
 * ``research`` -- no offered price (synthetic line), or the player's availability was not
   established by the issuing run (unknown is neither healthy nor ruled out, so the
   forecast stays visible but the quote is not treated as executable).
-* ``pass``     -- voided, stale/future/unrecorded quote, quote not found in
-  the captured lines, or an invalid forecast/price/side/line.
+* ``pass``     -- voided, a QB-market row for a QB who is not the team's confirmed (or,
+  with none confirmed, previous-game) starter, stale/future/unrecorded quote, quote not
+  found in the captured lines, or an invalid forecast/price/side/line.
 
 Provenance and quote identity are what the pipeline persisted with the lean
 (``report.persist_leans``, db migration 4). Rows written before that carry
@@ -96,6 +97,24 @@ def _availability_hold(row: Dict) -> Optional[str]:
     return None
 
 
+#: Availability states the QB starter gate writes; a row in one is not this team's starter.
+STARTER_BLOCK_STATES = ("not_confirmed_starter", "not_presumed_starter")
+
+
+def _starter_block(row: Dict) -> Optional[str]:
+    """Why this QB-market row is not the team's (confirmed or presumed) starter, else None."""
+    import json
+    try:
+        stamps = json.loads(row.get("stage_json") or "null") or {}
+    except (TypeError, ValueError):
+        stamps = {}
+    a = stamps.get("availability") or {}
+    if a.get("availability_state") in STARTER_BLOCK_STATES:
+        return (f"not the team's starter ({a['availability_state']}): "
+                f"{a.get('starter_gate') or 'blocked by the starter gate'}")
+    return None
+
+
 def build_card(row: Dict, now: dt.datetime) -> Dict:
     side = (_s(row.get("side")) or "").lower()
     line, price = _f(row.get("line")), _f(row.get("price"))
@@ -128,6 +147,9 @@ def build_card(row: Dict, now: dt.datetime) -> Dict:
     elif invalid:
         status = "pass"
         reasons.extend(invalid)
+    elif _starter_block(row):
+        status = "pass"
+        reasons.append(_starter_block(row))
     elif not offered:
         status = "research"
         reasons.append("no offered price: synthetic line, not a wager")
