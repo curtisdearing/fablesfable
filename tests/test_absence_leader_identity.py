@@ -17,8 +17,11 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pipeline_weekly as pw  # noqa: E402
+from nflvalue import candidates as candmod  # noqa: E402
+from nflvalue import factor_integration as fimod  # noqa: E402
 from nflvalue.candidates import WeekInputs  # noqa: E402
-from tests.test_pipeline_weekly import _fresh_feeds, _roster, env  # noqa: E402,F401
+from nflvalue.freshness import stamp_now  # noqa: E402
+from tests.test_pipeline_weekly import GAME_ID, _fresh_feeds, _roster, env  # noqa: E402,F401
 from tests.test_report_phase2 import SEASON, WEEK, _pw_row, synthetic_inputs  # noqa: E402
 
 
@@ -161,3 +164,134 @@ def test_leader_selection_remains_preweek_safe_with_mixed_played_unplayed_rows()
     assert {tuple(r[k] for k in ("team", "role", "player_id")) for r in identity["leaders"]} >= {
         ("AAA", "WR", "WR_OLD")}
     assert identity["teams"]["AAA"]["state"] == "verified"
+
+
+# All feeds below are intentionally SYNTHETIC fixtures.  They exercise only
+# caller ordering and receipt behavior, not NFL personnel accuracy.
+ABSENCE_WR = candmod.ABSENCE_QB_MULT["WR"]
+
+
+def _t90_feeds(feeds, now, *, inactive_rows=None):
+    """Add a frozen populated T-90 inactives response to a synthetic feed set."""
+    result = dict(feeds)
+    result["inactive_rows"] = list(inactive_rows or [
+        {"espn_id": "9", "name": "Nobody Inactive", "active": False,
+         "did_not_play": True, "starter": False, "team": "BBB"},
+    ])
+    result["inactives_fetched_at"] = now
+    return result
+
+
+def _current_out_leader_feeds(now):
+    """WR_A remains AAA's current rostered historical WR leader and is OUT."""
+    feeds = dict(_fresh_feeds(now, wr_a_status="Out"))
+    feeds["active_roster"] = _roster(
+        now, extra=[{"player_id": "QB_A", "team": "AAA", "status": "ACT", "week": WEEK}])
+    return _t90_feeds(feeds, now, inactive_rows=[
+        {"espn_id": "1", "name": "Alpha Wideout", "active": False,
+         "did_not_play": True, "starter": True, "team": "AAA"},
+    ])
+
+
+def _capture_stamped_runs(monkeypatch):
+    """Capture post-adjustment frames that each native caller hands to stamps."""
+    seen = []
+    real_build = fimod.build_stamps
+
+    def capture(cands, ran, why, **kwargs):
+        stamps = real_build(cands, ran, why, **kwargs)
+        seen.append({"cands": cands.copy(), "ran": dict(ran), "stamps": stamps})
+        return stamps
+
+    monkeypatch.setattr(fimod, "build_stamps", capture)
+    return seen
+
+
+def _qb_markets(run):
+    rows = run["cands"]
+    rows = rows[(rows["player_id"] == "QB_A") & rows["market"].isin(candmod._QB_MARKETS)]
+    return {r["market"]: r for r in rows.to_dict("records")}
+
+
+def _factor(row):
+    value = row.get("absence_qb_mult")
+    return None if value is None or pd.isna(value) else float(value)
+
+
+def test_t90_rejects_moved_historical_leader_with_same_identity_receipt_as_wednesday(env, monkeypatch):
+    """A former AAA WR cannot become an AAA QB absence at the refresh clock."""
+    seen = _capture_stamped_runs(monkeypatch)
+    now = stamp_now()
+    feeds = _t90_feeds(_trade_feeds(now), now)
+    wed = pw.run_week(SEASON, WEEK, mode="live", inputs=_inputs_with_aaa_qb(), inject_feeds=feeds)
+    t90 = pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=_inputs_with_aaa_qb(),
+                     inject_feeds=feeds)
+
+    wed_rows, t90_rows = _qb_markets(seen[0]), _qb_markets(seen[1])
+    assert wed_rows and set(wed_rows) == set(t90_rows)
+    for market in wed_rows:
+        assert _factor(wed_rows[market]) is None
+        assert _factor(t90_rows[market]) is None
+        assert t90_rows[market]["absence_qb_identity_state"] == "partial"
+        assert t90_rows[market]["mean"] == pytest.approx(wed_rows[market]["mean"])
+        assert seen[1]["stamps"][("QB_A", market)]["stages"]["absence_qb"] == \
+            seen[0]["stamps"][("QB_A", market)]["stages"]["absence_qb"]
+    assert t90["factor_receipt"]["absence_leader_identity"] == wed["factor_receipt"]["absence_leader_identity"]
+    assert t90["factor_receipt"]["absence_leader_identity"]["teams"]["AAA"]["rejected"] == [{
+        "role": "WR", "player_id": "WR_A", "reason": "current_team_mismatch", "roster_team": "BBB",
+    }]
+
+
+def test_t90_keeps_confirmed_out_current_leader_factor_and_matches_wednesday_once(env, monkeypatch):
+    """The same frozen OUT leader produces one x0.921 adjustment at both clocks."""
+    seen = _capture_stamped_runs(monkeypatch)
+    now = stamp_now()
+    feeds = _current_out_leader_feeds(now)
+    wed = pw.run_week(SEASON, WEEK, mode="live", inputs=_inputs_with_aaa_qb(), inject_feeds=feeds)
+    t90 = pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=_inputs_with_aaa_qb(),
+                     inject_feeds=feeds)
+
+    wed_rows, t90_rows = _qb_markets(seen[0]), _qb_markets(seen[1])
+    assert wed_rows and set(wed_rows) == set(t90_rows)
+    for market in wed_rows:
+        assert _factor(wed_rows[market]) == ABSENCE_WR
+        assert _factor(t90_rows[market]) == ABSENCE_WR
+        assert t90_rows[market]["mean"] == pytest.approx(wed_rows[market]["mean"])
+        assert seen[1]["stamps"][("QB_A", market)]["stages"]["absence_qb"] == \
+            seen[0]["stamps"][("QB_A", market)]["stages"]["absence_qb"]
+    for result in (wed, t90):
+        assert "absence_qb" in result["factor_receipt"]["stages_executed"]
+        assert result["factor_receipt"]["absence_leader_identity"]["teams"]["AAA"]["state"] == "verified"
+
+
+def test_t90_applies_absence_factor_once_not_twice(env, monkeypatch):
+    """A factor applied at T-90 must be baseline x0.921, never x0.921 squared."""
+    seen = _capture_stamped_runs(monkeypatch)
+    now = stamp_now()
+    base_feeds = dict(_fresh_feeds(now, wr_a_status="Active"))
+    base_feeds["active_roster"] = _roster(
+        now, extra=[{"player_id": "QB_A", "team": "AAA", "status": "ACT", "week": WEEK}])
+    pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=_inputs_with_aaa_qb(),
+               inject_feeds=_t90_feeds(base_feeds, now))
+    pw.run_t90(SEASON, WEEK, GAME_ID, mode="live", inputs=_inputs_with_aaa_qb(),
+               inject_feeds=_current_out_leader_feeds(now))
+
+    base_rows, out_rows = _qb_markets(seen[0]), _qb_markets(seen[1])
+    assert base_rows and set(base_rows) == set(out_rows)
+    for market in base_rows:
+        assert _factor(base_rows[market]) is None
+        assert _factor(out_rows[market]) == ABSENCE_WR
+        once = round(float(base_rows[market]["mean"]) * ABSENCE_WR, 3)
+        twice = round(float(base_rows[market]["mean"]) * ABSENCE_WR ** 2, 3)
+        assert float(out_rows[market]["mean"]) == pytest.approx(once)
+        assert float(out_rows[market]["mean"]) != pytest.approx(twice)
+
+
+def test_historical_t90_keeps_absence_stage_not_live(env):
+    """The live repair must not relabel a historical T-90 receipt as executed."""
+    now = stamp_now()
+    result = pw.run_t90(SEASON, WEEK, GAME_ID, mode="historical", inputs=_inputs_with_aaa_qb(),
+                        inject_feeds=_current_out_leader_feeds(now))
+    receipt = result["factor_receipt"]
+    assert "absence_qb" not in receipt["stages_executed"]
+    assert receipt["stages_not_executed"]["absence_qb"] == "not a live run"
