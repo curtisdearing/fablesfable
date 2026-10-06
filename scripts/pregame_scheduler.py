@@ -70,13 +70,13 @@ TICK_MINUTES = 5
 STALE_AFTER_MINUTES = 3 * TICK_MINUTES
 #: --health reports finished slots whose last kickoff is at most this old.
 RECENT_DAYS = 8
-#: A dispatched slot may still be waiting on its run's read-back this long after last_launch.
+#: A dispatched slot's run is read back (again) until this long after its last launch.
 READBACK_HOURS = 3
 #: ESPN statuses of a game that will not be played at its listed time.
 NOT_PLAYED = {"STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_CANCELLED", "STATUS_SUSPENDED",
               "STATUS_FORFEIT"}
 #: Terminal slot outcomes that need nobody's attention.
-OK_FINALS = ("dispatched and processed", "already processed", "superseded")
+OK_FINALS = ("dispatched and processed", "already processed", "superseded")  # prefixes
 assert GROUP_SPAN_MINUTES + 2 * TICK_MINUTES <= (
     pd.T90_DUE_MINUTES - pd.DEFAULT_MIN_LEAD_MINUTES - LAUNCH_MARGIN_MINUTES)
 
@@ -330,11 +330,34 @@ def _write_json(path: Path, body: Dict) -> None:
     os.replace(tmp, path)
 
 
-def _finish(key: str, st: Dict, games: List[str], notify: Notify, res: TickResult) -> None:
-    """The wrapper dispatched (its lock exists) and has exited: record its read-back once."""
-    dec = last_decision(st.get("log")) or "dispatched (decision not recorded)"
+def _finish(key: str, st: Dict, games: List[str], notify: Notify, res: TickResult,
+            readback: Optional[Callable[[int], None]] = None,
+            now: Optional[dt.datetime] = None) -> None:
+    """The wrapper dispatched (its lock exists) and has exited: settle the slot from its report.
+
+    A run still in progress when the wrapper's wait ended is read back again (read-only
+    ``--readback RUN_ID``, same SHA and slot games) on later ticks, until READBACK_HOURS after
+    the slot's last launch: the slot is not complete until every member game is read back."""
+    rep = last_report(st.get("log")) or {}
+    rb = rep.get("readback") if isinstance(rep.get("readback"), dict) else {}
+    run_id = (rep.get("dispatch") or {}).get("run_id") or rb.get("run_id") or st.get("run_id")
+    if rep.get("mode") == "readback" and rb.get("verdict") == "processed":
+        dec = "dispatched and processed (read back after the wrapper's wait)"
+    elif rep.get("mode") == "readback" and rb.get("verdict") == "not-processed":
+        dec = (f"dispatched; run {run_id} did NOT process "
+               f"{', '.join(rb.get('unprocessed_games') or []) or 'the slot'}")
+    else:
+        dec = last_decision(st.get("log")) or "dispatched (decision not recorded)"
+    if rb.get("verdict") == "pending" and run_id and readback is not None and now is not None:
+        if now - pd.parse_utc(st["last_launch"]) <= dt.timedelta(hours=READBACK_HOURS):
+            st["run_id"] = run_id
+            readback(int(run_id))
+            st["readbacks"] = st.get("readbacks", 0) + 1
+            res.actions.append(f"{key}: run {run_id} still running; read-back {st['readbacks']} launched")
+            return
+        dec = f"read-back still pending {READBACK_HOURS} h after last launch: use --readback {run_id}"
     st["notified"], st["final"] = True, dec
-    if dec != "dispatched and processed":
+    if not dec.startswith("dispatched and processed"):
         notify("fablesfable T-90", f"{key} ({', '.join(games)}): {dec}")
     res.actions.append(f"{key}: finished -> {dec}")
 
@@ -391,6 +414,20 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
     except Exception as exc:  # noqa: BLE001 -- persisted slots are still accounted for
         res.errors.append(f"current scoreboard unusable: {type(exc).__name__}: {exc}"[:300])
         res.actions.append("current scoreboard unusable; nothing launched this tick")
+    def readback_for(key: str, st: Dict) -> Optional[Callable[[int], None]]:
+        sha = st.get("sha") or expect_sha
+        if dry_run or not sha or not st.get("named_game"):
+            return None
+
+        def launch(run_id: int) -> None:
+            cmd = [python, str(repo_dir / "scripts" / "pregame_dispatch.py"), "--readback", str(run_id),
+                   "--season", str(st["season"]), "--week", str(st["week"]),
+                   "--game", st["named_game"], "--kickoff", st["named_kickoff"], "--expect-sha", sha,
+                   "--receipt-dir", str(receipts), "--slot-games", ",".join(st["games"])]
+            log = logs / f"readback-{st['named_game']}-{res.now.replace(':', '')}.log"
+            st.update(pid=spawn(cmd, log), log=str(log))
+        return launch
+
     status = {g.game_id: g.status for g in games}
     fresh = plan_slots([g for g in games if g.status == "STATUS_SCHEDULED"])
     on_plan = {g for s in fresh for g in s.games}
@@ -411,7 +448,7 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
         if st.get("final") or running:
             continue
         if lock.exists():
-            _finish(s.key, st, s.games, notify, res)
+            _finish(s.key, st, s.games, notify, res, readback_for(s.key, st), now)
             continue
         if already_processed(st.get("log")):
             st["notified"], st["final"] = True, "already processed: every slot game has t90 leans"
@@ -437,7 +474,7 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
             continue
         log = logs / f"dispatch-{s.named_game}-{pd.iso(now).replace(':', '')}.log"
         st.update(pid=spawn(cmd, log), log=str(log), attempts=st.get("attempts", 0) + 1,
-                  last_attempt=pd.iso(now))
+                  last_attempt=pd.iso(now), sha=expect_sha)
         res.actions.append(f"{s.key}: launched attempt {st['attempts']} (games {', '.join(s.games)})")
 
     # 3. Persisted slots no longer on the plan (kicked off while the host slept, ESPN rolled
@@ -450,7 +487,7 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
         if alive(st.get("pid")):
             continue
         if (receipts / f"dispatch-{st.get('named_game', key)}.lock").exists():
-            _finish(key, st, members, notify, res)
+            _finish(key, st, members, notify, res, readback_for(key, st), now)
         elif already_processed(st.get("log")):
             st["notified"], st["final"] = True, "already processed: every slot game has t90 leans"
             res.actions.append(f"{key}: {st['final']}")

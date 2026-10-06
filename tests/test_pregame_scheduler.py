@@ -437,3 +437,59 @@ def test_health_waits_for_a_dispatched_slots_read_back_but_not_forever(tmp_path)
     assert rep["recent_slots"][0]["final"] == "dispatched; read-back pending"
     late = ps.health(h.ops, _t("2026-10-09T03:00:00Z"))
     assert any("no recorded outcome" in p for p in late["problems"])
+
+
+def test_a_run_outlasting_the_wrappers_wait_is_read_back_later_for_the_whole_slot(tmp_path):
+    h = Harness(tmp_path, {"current": WEEK5})
+    h.tick("2026-10-11T15:31:00Z")                                     # 1 PM ET slot
+    cmd, log = h.spawned[-1]
+    h.live.clear()
+    (h.ops / "receipts").mkdir(parents=True, exist_ok=True)
+    (h.ops / "receipts" / "dispatch-2026_05_CHI_GB.lock").write_text("1 x\n")
+    log.write_text(json.dumps({"mode": "execute", "decision": "dispatched; run 77 still running, "
+                               "use --readback 77", "dispatch": {"run_id": 77},
+                               "readback": {"run_id": 77, "verdict": "pending"}}) + "\n")
+    res = h.tick("2026-10-11T16:50:00Z")
+    rb_cmd, rb_log = h.spawned[-1]
+    chi = lambda: [n for n in h.notes if n[1].startswith("2026_05_CHI_GB")]  # noqa: E731
+    assert any("read-back 1 launched" in a for a in res.actions) and not chi()
+    assert rb_cmd[rb_cmd.index("--readback") + 1] == "77" and "--execute" not in rb_cmd
+    assert rb_cmd[rb_cmd.index("--expect-sha") + 1] == SHA
+    assert rb_cmd[rb_cmd.index("--slot-games") + 1] == "2026_05_CHI_GB,2026_05_WAS_NYG"
+    h.live.clear()
+    rb_log.write_text(json.dumps({"mode": "readback", "decision": "not-processed", "readback": {
+        "run_id": 77, "verdict": "not-processed", "unprocessed_games": ["2026_05_WAS_NYG"]}}) + "\n")
+    h.tick("2026-10-11T16:55:00Z")
+    (title, text), = chi()
+    assert "did NOT process 2026_05_WAS_NYG" in text
+
+
+def test_a_processed_late_read_back_settles_quietly_and_pending_is_bounded(tmp_path):
+    h = Harness(tmp_path, {"current": WEEK5})
+    h.tick("2026-10-08T22:46:00Z")
+    _, log = h.spawned[-1]
+    h.live.clear()
+    (h.ops / "receipts").mkdir(parents=True, exist_ok=True)
+    (h.ops / "receipts" / "dispatch-2026_05_TB_DAL.lock").write_text("1 x\n")
+    pending = {"mode": "execute", "decision": "dispatched; run 5 still running",
+               "dispatch": {"run_id": 5}, "readback": {"run_id": 5, "verdict": "pending"}}
+    log.write_text(json.dumps(pending) + "\n")
+    h.tick("2026-10-09T00:10:00Z")
+    _, rb_log = h.spawned[-1]
+    h.live.clear()
+    rb_log.write_text(json.dumps({"mode": "readback", "decision": "processed",
+                                  "readback": {"run_id": 5, "verdict": "processed"}}) + "\n")
+    h.tick("2026-10-09T00:15:00Z")
+    st = json.loads((h.ops / "state" / "scheduler.json").read_text())["2026_05_TB_DAL"]
+    assert st["final"].startswith("dispatched and processed") and not h.notes
+    assert ps.health(h.ops, _t("2026-10-09T00:16:00Z"))["healthy"]
+    # Still pending 3 h after the last launch: settled as such, announced, unhealthy.
+    h2 = Harness(tmp_path / "b", {"current": WEEK5})
+    h2.tick("2026-10-08T22:46:00Z")
+    _, log2 = h2.spawned[-1]
+    h2.live.clear()
+    (h2.ops / "receipts").mkdir(parents=True, exist_ok=True)
+    (h2.ops / "receipts" / "dispatch-2026_05_TB_DAL.lock").write_text("1 x\n")
+    log2.write_text(json.dumps(pending) + "\n")
+    h2.tick("2026-10-09T02:40:00Z")
+    assert h2.notes and "read-back still pending" in h2.notes[0][1]
