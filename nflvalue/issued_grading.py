@@ -264,6 +264,22 @@ def _quantile(mean: float, sd: float, dist: str, q: float) -> float:
     return hi
 
 
+def _factor_panel(r: Dict) -> Dict:
+    """Saved factor-panel counts from the frozen card; absent is a provenance gap, never zero counts."""
+    try:
+        card = r.get("card_json")
+        card = json.loads(card) if isinstance(card, (str, bytes)) else card
+        counts = ((card or {}).get("factor_panel") or {}).get("counts")
+    except (ValueError, AttributeError):
+        counts = None
+    if not isinstance(counts, dict):
+        return {"status": "absent", "counts": None}
+    if any(not isinstance(k, str) or not k or isinstance(v, bool) or not isinstance(v, int) or v < 0
+           for k, v in counts.items()):
+        return {"status": "malformed", "counts": None}
+    return {"status": "recorded", "counts": dict(counts)}
+
+
 def grade_record(r: Dict, games: Dict[str, Dict], id_map=None) -> Dict:
     game = _game_for(r, games)
     out = {k: r.get(k) for k in ("record_id", "pick_key", "revision", "season", "week", "game_id", "player_id",
@@ -273,6 +289,7 @@ def grade_record(r: Dict, games: Dict[str, Dict], id_map=None) -> Dict:
     out.update(kickoff=game and game["kickoff"], slate_tag=slate_tag(game and game["kickoff"]),
                espn_event=game and game["espn_event"], actuals_source=game and game["source"],
                actuals_sha256=game and game.get("sha256"), actuals_captured_at=game and game["captured_at"])
+    out["factor_panel"] = _factor_panel(r)
     ident = None
     if not game:
         v = st.Verdict(st.UNRESOLVED, None, None, "no verified official final box for this exact game id")
