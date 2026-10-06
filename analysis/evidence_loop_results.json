@@ -1,0 +1,877 @@
+{
+  "schema": "evidence-loop-report-v1",
+  "criteria_sha256": "456c254d5c0401653cc108ab33ecf325c40c3ee7400c2743dfc8353c6bdff5ca",
+  "inputs_sha256": {
+    "lines_extra.parquet": "597d704308918f829b0239d0557a2929065c6038a4d44226eb18e5caaa0093b1",
+    "injuries.parquet": "1ccd9823ff09d16ca651861b53c306a11b0e756a574245c2251e1ff42d374255",
+    "historical_pbp.parquet": "075a41165f45e5d65458e515f6f52d4e975370a9e7b412938f95c635efb80999",
+    "pbp_2024.parquet": "b136688702674c43e5e94d8d133fa88b1e9ed4b11c20c90247b7a4e2db369aeb",
+    "pbp_2025.parquet": "a7a5cb9de00069a788f45fac4dccb1f251b8783196c044700df4e8fd47ac3485",
+    "pbp_2026.parquet": "69fec0cbc9ae74501109b6a8e9274b73b663eaf688d9a7edff2dace672fbd890",
+    "real_lines": "bf8632e681820e5d0e1a43897e800a25c2f268e4c0486e41c22ab84c8b5e25e8",
+    "issued_grade": "97a4e4202c3b9fe111a50457eb562a71243eb41604f69132b648e13d7521a016"
+  },
+  "bootstrap_n": 4000,
+  "seed": 20261006,
+  "never": "no production weight/calibration/default change; no odds/API call; no synthetic line",
+  "offered_line_props": {
+    "label": "REAL offered lines, 2026 W1-2, retrospective/exploratory (already read)",
+    "coverage": {
+      "rows_received": 307,
+      "by_status": {
+        "scored": 307,
+        "push": 0,
+        "void": 0,
+        "pending": 0,
+        "missing_probability": 0,
+        "not_in_scope": 0
+      },
+      "by_window": {
+        "prospective_confirmation": 0,
+        "retrospective_exploratory": 307,
+        "excluded_late": 0,
+        "unknown_clock": 0
+      },
+      "missing_price": 0
+    },
+    "scores": {
+      "n": 307,
+      "n_games": 20,
+      "n_season_weeks": 2,
+      "per_market_n": {
+        "passing_yards": 35,
+        "receiving_yards": 114,
+        "receptions": 114,
+        "rushing_yards": 44
+      },
+      "arms": {
+        "A1": {
+          "brier": {
+            "point": 0.26797784532877134,
+            "low": 0.2427835581272045,
+            "high": 0.2963925803017208,
+            "p_ge_0": 1.0,
+            "n_clusters": 20,
+            "method": "cluster bootstrap"
+          },
+          "logloss": 0.7391722112643658,
+          "ece": 0.1305547012121619,
+          "reliability": {
+            "n": 307,
+            "bins": 10,
+            "brier": 0.267978,
+            "ece": 0.130555,
+            "overconfidence_ece": 0.040169,
+            "max_calibration_error": 0.941526,
+            "table": [
+              {
+                "bin": 1,
+                "lower": 0.0,
+                "upper": 0.1,
+                "n": 2,
+                "mean_probability": 0.058474,
+                "observed_rate": 1.0,
+                "gap": -0.941526
+              },
+              {
+                "bin": 2,
+                "lower": 0.1,
+                "upper": 0.2,
+                "n": 13,
+                "mean_probability": 0.156754,
+                "observed_rate": 0.384615,
+                "gap": -0.227861
+              },
+              {
+                "bin": 3,
+                "lower": 0.2,
+                "upper": 0.3,
+                "n": 50,
+                "mean_probability": 0.261226,
+                "observed_rate": 0.46,
+                "gap": -0.198774
+              },
+              {
+                "bin": 4,
+                "lower": 0.3,
+                "upper": 0.4,
+                "n": 59,
+                "mean_probability": 0.359613,
+                "observed_rate": 0.559322,
+                "gap": -0.199709
+              },
+              {
+                "bin": 5,
+                "lower": 0.4,
+                "upper": 0.5,
+                "n": 62,
+                "mean_probability": 0.451199,
+                "observed_rate": 0.467742,
+                "gap": -0.016543
+              },
+              {
+                "bin": 6,
+                "lower": 0.5,
+                "upper": 0.6,
+                "n": 55,
+                "mean_probability": 0.546307,
+                "observed_rate": 0.472727,
+                "gap": 0.07358
+              },
+              {
+                "bin": 7,
+                "lower": 0.6,
+                "upper": 0.7,
+                "n": 47,
+                "mean_probability": 0.63809,
+                "observed_rate": 0.510638,
+                "gap": 0.127451
+              },
+              {
+                "bin": 8,
+                "lower": 0.7,
+                "upper": 0.8,
+                "n": 12,
+                "mean_probability": 0.743002,
+                "observed_rate": 0.583333,
+                "gap": 0.159669
+              },
+              {
+                "bin": 9,
+                "lower": 0.8,
+                "upper": 0.9,
+                "n": 5,
+                "mean_probability": 0.875735,
+                "observed_rate": 0.8,
+                "gap": 0.075735
+              },
+              {
+                "bin": 10,
+                "lower": 0.9,
+                "upper": 1.0,
+                "n": 2,
+                "mean_probability": 0.921972,
+                "observed_rate": 1.0,
+                "gap": -0.078028
+              }
+            ]
+          },
+          "per_market_brier": {
+            "passing_yards": 0.2537781391907976,
+            "receiving_yards": 0.2794378662172495,
+            "receptions": 0.25882465489757234,
+            "rushing_yards": 0.2732962781173909
+          },
+          "hypothetical_roi": {
+            "status": "hypothetical flat 1u at offered prices; not account P/L",
+            "bets": 271,
+            "won": 137,
+            "lost": 134,
+            "units": -12.08,
+            "roi": -0.0446
+          },
+          "account_pl": null
+        },
+        "C1m": {
+          "brier": {
+            "point": 0.26558548425495854,
+            "low": 0.2402420314235428,
+            "high": 0.2932158456120814,
+            "p_ge_0": 1.0,
+            "n_clusters": 20,
+            "method": "cluster bootstrap"
+          },
+          "logloss": 0.732330633017745,
+          "ece": 0.12103329351035225,
+          "reliability": {
+            "n": 307,
+            "bins": 10,
+            "brier": 0.265585,
+            "ece": 0.121033,
+            "overconfidence_ece": 0.033506,
+            "max_calibration_error": 0.922219,
+            "table": [
+              {
+                "bin": 1,
+                "lower": 0.0,
+                "upper": 0.1,
+                "n": 2,
+                "mean_probability": 0.077781,
+                "observed_rate": 1.0,
+                "gap": -0.922219
+              },
+              {
+                "bin": 2,
+                "lower": 0.1,
+                "upper": 0.2,
+                "n": 15,
+                "mean_probability": 0.169004,
+                "observed_rate": 0.266667,
+                "gap": -0.097663
+              },
+              {
+                "bin": 3,
+                "lower": 0.2,
+                "upper": 0.3,
+                "n": 36,
+                "mean_probability": 0.249869,
+                "observed_rate": 0.416667,
+                "gap": -0.166798
+              },
+              {
+                "bin": 4,
+                "lower": 0.3,
+                "upper": 0.4,
+                "n": 72,
+                "mean_probability": 0.349184,
+                "observed_rate": 0.555556,
+                "gap": -0.206372
+              },
+              {
+                "bin": 5,
+                "lower": 0.4,
+                "upper": 0.5,
+                "n": 68,
+                "mean_probability": 0.448231,
+                "observed_rate": 0.485294,
+                "gap": -0.037063
+              },
+              {
+                "bin": 6,
+                "lower": 0.5,
+                "upper": 0.6,
+                "n": 54,
+                "mean_probability": 0.550692,
+                "observed_rate": 0.518519,
+                "gap": 0.032174
+              },
+              {
+                "bin": 7,
+                "lower": 0.6,
+                "upper": 0.7,
+                "n": 42,
+                "mean_probability": 0.639521,
+                "observed_rate": 0.47619,
+                "gap": 0.163331
+              },
+              {
+                "bin": 8,
+                "lower": 0.7,
+                "upper": 0.8,
+                "n": 9,
+                "mean_probability": 0.749541,
+                "observed_rate": 0.666667,
+                "gap": 0.082874
+              },
+              {
+                "bin": 9,
+                "lower": 0.8,
+                "upper": 0.9,
+                "n": 7,
+                "mean_probability": 0.849011,
+                "observed_rate": 0.714286,
+                "gap": 0.134726
+              },
+              {
+                "bin": 10,
+                "lower": 0.9,
+                "upper": 1.0,
+                "n": 2,
+                "mean_probability": 0.911087,
+                "observed_rate": 1.0,
+                "gap": -0.088913
+              }
+            ]
+          },
+          "per_market_brier": {
+            "passing_yards": 0.23791643558614886,
+            "receiving_yards": 0.2768796321464198,
+            "receptions": 0.2589089464173993,
+            "rushing_yards": 0.275631146920038
+          },
+          "hypothetical_roi": {
+            "status": "hypothetical flat 1u at offered prices; not account P/L",
+            "bets": 269,
+            "won": 138,
+            "lost": 131,
+            "units": -8.86,
+            "roi": -0.0329
+          },
+          "account_pl": null,
+          "vs_A1": {
+            "d_brier_game_cluster": {
+              "point": -0.002392361073812848,
+              "low": -0.009952128330301934,
+              "high": 0.00495799221897888,
+              "p_ge_0": 0.2656835791052237,
+              "n_clusters": 20,
+              "method": "cluster bootstrap"
+            },
+            "d_brier_week_cluster": {
+              "point": -0.002392361073812848,
+              "low": null,
+              "high": null,
+              "p_ge_0": null,
+              "n_clusters": 2,
+              "method": "unavailable (<5 clusters)"
+            },
+            "d_logloss": -0.006841578246620799
+          }
+        },
+        "C2": {
+          "brier": {
+            "point": 0.26801932722384986,
+            "low": 0.24266054491346312,
+            "high": 0.29843638038202325,
+            "p_ge_0": 1.0,
+            "n_clusters": 20,
+            "method": "cluster bootstrap"
+          },
+          "logloss": 0.7386521963661788,
+          "ece": 0.13519314856366316,
+          "reliability": {
+            "n": 307,
+            "bins": 10,
+            "brier": 0.268019,
+            "ece": 0.135193,
+            "overconfidence_ece": 0.044108,
+            "max_calibration_error": 0.931445,
+            "table": [
+              {
+                "bin": 1,
+                "lower": 0.0,
+                "upper": 0.1,
+                "n": 2,
+                "mean_probability": 0.068555,
+                "observed_rate": 1.0,
+                "gap": -0.931445
+              },
+              {
+                "bin": 2,
+                "lower": 0.1,
+                "upper": 0.2,
+                "n": 13,
+                "mean_probability": 0.16362,
+                "observed_rate": 0.384615,
+                "gap": -0.220996
+              },
+              {
+                "bin": 3,
+                "lower": 0.2,
+                "upper": 0.3,
+                "n": 50,
+                "mean_probability": 0.260797,
+                "observed_rate": 0.46,
+                "gap": -0.199203
+              },
+              {
+                "bin": 4,
+                "lower": 0.3,
+                "upper": 0.4,
+                "n": 56,
+                "mean_probability": 0.356087,
+                "observed_rate": 0.553571,
+                "gap": -0.197485
+              },
+              {
+                "bin": 5,
+                "lower": 0.4,
+                "upper": 0.5,
+                "n": 66,
+                "mean_probability": 0.452404,
+                "observed_rate": 0.484848,
+                "gap": -0.032444
+              },
+              {
+                "bin": 6,
+                "lower": 0.5,
+                "upper": 0.6,
+                "n": 50,
+                "mean_probability": 0.548196,
+                "observed_rate": 0.48,
+                "gap": 0.068196
+              },
+              {
+                "bin": 7,
+                "lower": 0.6,
+                "upper": 0.7,
+                "n": 49,
+                "mean_probability": 0.642003,
+                "observed_rate": 0.489796,
+                "gap": 0.152207
+              },
+              {
+                "bin": 8,
+                "lower": 0.7,
+                "upper": 0.8,
+                "n": 13,
+                "mean_probability": 0.735079,
+                "observed_rate": 0.615385,
+                "gap": 0.119695
+              },
+              {
+                "bin": 9,
+                "lower": 0.8,
+                "upper": 0.9,
+                "n": 7,
+                "mean_probability": 0.873902,
+                "observed_rate": 0.714286,
+                "gap": 0.159616
+              },
+              {
+                "bin": 10,
+                "lower": 0.9,
+                "upper": 1.0,
+                "n": 1,
+                "mean_probability": 0.933453,
+                "observed_rate": 1.0,
+                "gap": -0.066547
+              }
+            ]
+          },
+          "per_market_brier": {
+            "passing_yards": 0.2540003122127134,
+            "receiving_yards": 0.27858276585004765,
+            "receptions": 0.25995958314269546,
+            "rushing_yards": 0.27268397147964146
+          },
+          "hypothetical_roi": {
+            "status": "hypothetical flat 1u at offered prices; not account P/L",
+            "bets": 277,
+            "won": 142,
+            "lost": 135,
+            "units": -8.36,
+            "roi": -0.0302
+          },
+          "account_pl": null,
+          "vs_A1": {
+            "d_brier_game_cluster": {
+              "point": 4.148189507848285e-05,
+              "low": -0.0016421133353438015,
+              "high": 0.0019597819872841033,
+              "p_ge_0": 0.5211197200699825,
+              "n_clusters": 20,
+              "method": "cluster bootstrap"
+            },
+            "d_brier_week_cluster": {
+              "point": 4.148189507848285e-05,
+              "low": null,
+              "high": null,
+              "p_ge_0": null,
+              "n_clusters": 2,
+              "method": "unavailable (<5 clusters)"
+            },
+            "d_logloss": -0.0005200148981868518
+          }
+        },
+        "market": {
+          "brier": {
+            "point": 0.24749122141260527,
+            "low": 0.2437482305796947,
+            "high": 0.2512767102598348,
+            "p_ge_0": 1.0,
+            "n_clusters": 20,
+            "method": "cluster bootstrap"
+          },
+          "logloss": 0.688074087206072,
+          "ece": 0.04944461091926188,
+          "reliability": {
+            "n": 307,
+            "bins": 10,
+            "brier": 0.247491,
+            "ece": 0.049445,
+            "overconfidence_ece": 0.021317,
+            "max_calibration_error": 0.367246,
+            "table": [
+              {
+                "bin": 4,
+                "lower": 0.3,
+                "upper": 0.4,
+                "n": 6,
+                "mean_probability": 0.383217,
+                "observed_rate": 0.333333,
+                "gap": 0.049884
+              },
+              {
+                "bin": 5,
+                "lower": 0.4,
+                "upper": 0.5,
+                "n": 132,
+                "mean_probability": 0.479129,
+                "observed_rate": 0.431818,
+                "gap": 0.047311
+              },
+              {
+                "bin": 6,
+                "lower": 0.5,
+                "upper": 0.6,
+                "n": 168,
+                "mean_probability": 0.516262,
+                "observed_rate": 0.565476,
+                "gap": -0.049214
+              },
+              {
+                "bin": 7,
+                "lower": 0.6,
+                "upper": 0.7,
+                "n": 1,
+                "mean_probability": 0.632754,
+                "observed_rate": 1.0,
+                "gap": -0.367246
+              }
+            ]
+          },
+          "per_market_brier": {
+            "passing_yards": 0.2503493782990776,
+            "receiving_yards": 0.24934797224577093,
+            "receptions": 0.24395804358121714,
+            "rushing_yards": 0.24956115747557855
+          },
+          "hypothetical_roi": {
+            "status": "hypothetical flat 1u at offered prices; not account P/L",
+            "bets": 1,
+            "won": 0,
+            "lost": 1,
+            "units": -1.0,
+            "roi": -1.0
+          },
+          "account_pl": null,
+          "vs_A1": {
+            "d_brier_game_cluster": {
+              "point": -0.020486623916166083,
+              "low": -0.051662326375316786,
+              "high": 0.007833214477446839,
+              "p_ge_0": 0.0854786303424144,
+              "n_clusters": 20,
+              "method": "cluster bootstrap"
+            },
+            "d_brier_week_cluster": {
+              "point": -0.020486623916166083,
+              "low": null,
+              "high": null,
+              "p_ge_0": null,
+              "n_clusters": 2,
+              "method": "unavailable (<5 clusters)"
+            },
+            "d_logloss": -0.05109812405829373
+          }
+        }
+      }
+    }
+  },
+  "issued_card": {
+    "label": "delivered card graded from ESPN final box; no machine decision clock -> unknown_clock",
+    "coverage": {
+      "rows_received": 3,
+      "by_status": {
+        "scored": 2,
+        "push": 0,
+        "void": 0,
+        "pending": 0,
+        "missing_probability": 0,
+        "not_in_scope": 1
+      },
+      "by_window": {
+        "prospective_confirmation": 0,
+        "retrospective_exploratory": 0,
+        "excluded_late": 0,
+        "unknown_clock": 3
+      },
+      "missing_price": 0
+    },
+    "recommendation_record": {
+      "won": 1,
+      "lost": 1
+    },
+    "scores": {
+      "n": 2,
+      "n_games": 1,
+      "n_season_weeks": 1,
+      "per_market_n": {
+        "game total": 1,
+        "player prop": 1
+      },
+      "arms": {
+        "issued": {
+          "brier": {
+            "point": 0.30002851310855105,
+            "low": null,
+            "high": null,
+            "p_ge_0": null,
+            "n_clusters": 1,
+            "method": "unavailable (<5 clusters)"
+          },
+          "logloss": 0.7982341419304103,
+          "ece": 0.5363272136792734,
+          "reliability": {
+            "n": 2,
+            "bins": 10,
+            "brier": 0.300029,
+            "ece": 0.536327,
+            "overconfidence_ece": 0.3238,
+            "max_calibration_error": 0.6476,
+            "table": [
+              {
+                "bin": 6,
+                "lower": 0.5,
+                "upper": 0.6,
+                "n": 1,
+                "mean_probability": 0.574946,
+                "observed_rate": 1.0,
+                "gap": -0.425054
+              },
+              {
+                "bin": 7,
+                "lower": 0.6,
+                "upper": 0.7,
+                "n": 1,
+                "mean_probability": 0.6476,
+                "observed_rate": 0.0,
+                "gap": 0.6476
+              }
+            ]
+          },
+          "per_market_brier": {
+            "game total": 0.41938575999999994,
+            "player prop": 0.18067126621710214
+          },
+          "hypothetical_roi": {
+            "status": "hypothetical flat 1u at offered prices; not account P/L",
+            "bets": 2,
+            "won": 1,
+            "lost": 1,
+            "units": -0.115,
+            "roi": -0.0575
+          },
+          "account_pl": null
+        }
+      }
+    },
+    "pass_rows_counted_not_scored": 1
+  },
+  "ledger_append": {
+    "appended": 0,
+    "skipped_identical": 310,
+    "revisions": 0
+  },
+  "ledger_rows": 310,
+  "challengers": {
+    "label": "REAL public closing game totals (nflverse schedules) + native final scores; retrospective screening; W5+ prospective confirmation reserved",
+    "results": {
+      "QBROLE-TOTAL-v1": {
+        "signal": "m1_signal",
+        "beta_dev": 0.04700854700854701,
+        "fit_n": 269,
+        "price_receipt": "none: source carries closing total lines without prices; ROI not computed",
+        "eval": {
+          "n": 272,
+          "n_games": 272,
+          "counts": {
+            "games": 272,
+            "push": 0,
+            "signal_missing": 0
+          },
+          "n_exposed": 106,
+          "brier_market": 0.25,
+          "brier_challenger": 0.25095644903808556,
+          "d_brier_game_cluster": {
+            "point": 0.0009564490380855439,
+            "low": -0.0029295221608805658,
+            "high": 0.004940022353177529,
+            "p_ge_0": 0.6875781054736316,
+            "n_clusters": 272,
+            "method": "cluster bootstrap"
+          },
+          "d_brier_week_cluster": {
+            "point": 0.0009564490380855439,
+            "low": -0.003646072834396616,
+            "high": 0.006579770417915311,
+            "p_ge_0": 0.6373406648337916,
+            "n_clusters": 18,
+            "method": "cluster bootstrap"
+          },
+          "d_logloss": 0.0019379588679747026,
+          "residual_mean_by_signal": {
+            "0": {
+              "n": 166,
+              "mean_actual_minus_line": 1.06,
+              "over_rate": 0.5301
+            },
+            "1": {
+              "n": 95,
+              "mean_actual_minus_line": 0.763,
+              "over_rate": 0.5158
+            },
+            "2": {
+              "n": 11,
+              "mean_actual_minus_line": 5.864,
+              "over_rate": 0.4545
+            }
+          }
+        },
+        "descriptive_2026": {
+          "n": 49,
+          "n_games": 49,
+          "counts": {
+            "games": 49,
+            "push": 0,
+            "signal_missing": 0
+          },
+          "n_exposed": 10,
+          "brier_market": 0.25,
+          "brier_challenger": 0.2556536530895505,
+          "d_brier_game_cluster": {
+            "point": 0.0056536530895505265,
+            "low": -0.0023819959717395647,
+            "high": 0.014693758283501878,
+            "p_ge_0": 0.8995251187203199,
+            "n_clusters": 49,
+            "method": "cluster bootstrap"
+          },
+          "d_brier_week_cluster": {
+            "point": 0.0056536530895505265,
+            "low": null,
+            "high": null,
+            "p_ge_0": null,
+            "n_clusters": 4,
+            "method": "unavailable (<5 clusters)"
+          },
+          "d_logloss": 0.011462659901250385,
+          "residual_mean_by_signal": {
+            "0": {
+              "n": 39,
+              "mean_actual_minus_line": 1.321,
+              "over_rate": 0.5128
+            },
+            "1": {
+              "n": 7,
+              "mean_actual_minus_line": 1.071,
+              "over_rate": 0.5714
+            },
+            "2": {
+              "n": 3,
+              "mean_actual_minus_line": -2.833,
+              "over_rate": 0.0
+            }
+          }
+        }
+      },
+      "OPPFORM-TOTAL-v1": {
+        "signal": "m2_signal",
+        "beta_dev": 0.0008105768973274747,
+        "fit_n": 253,
+        "price_receipt": "none: source carries closing total lines without prices; ROI not computed",
+        "eval": {
+          "n": 272,
+          "n_games": 272,
+          "counts": {
+            "games": 272,
+            "push": 0,
+            "signal_missing": 0
+          },
+          "n_exposed": 272,
+          "brier_market": 0.25,
+          "brier_challenger": 0.2500274367104909,
+          "d_brier_game_cluster": {
+            "point": 2.743671049092341e-05,
+            "low": -0.00028918726525934774,
+            "high": 0.0003388106059471047,
+            "p_ge_0": 0.5641089727568108,
+            "n_clusters": 272,
+            "method": "cluster bootstrap"
+          },
+          "d_brier_week_cluster": {
+            "point": 2.743671049092341e-05,
+            "low": -0.00018990410438751238,
+            "high": 0.00025010892947265837,
+            "p_ge_0": 0.5946013496625844,
+            "n_clusters": 18,
+            "method": "cluster bootstrap"
+          },
+          "d_logloss": 5.487051383775029e-05,
+          "residual_mean_by_signal": {
+            "-1": {
+              "n": 82,
+              "mean_actual_minus_line": 2.488,
+              "over_rate": 0.5732
+            },
+            "1": {
+              "n": 190,
+              "mean_actual_minus_line": 0.574,
+              "over_rate": 0.5
+            }
+          }
+        },
+        "descriptive_2026": {
+          "n": 49,
+          "n_games": 49,
+          "counts": {
+            "games": 49,
+            "push": 0,
+            "signal_missing": 0
+          },
+          "n_exposed": 49,
+          "brier_market": 0.25,
+          "brier_challenger": 0.2505389464992428,
+          "d_brier_game_cluster": {
+            "point": 0.0005389464992428414,
+            "low": -0.00019563372921406667,
+            "high": 0.0012923334066842003,
+            "p_ge_0": 0.9217695576105973,
+            "n_clusters": 49,
+            "method": "cluster bootstrap"
+          },
+          "d_brier_week_cluster": {
+            "point": 0.0005389464992428414,
+            "low": null,
+            "high": null,
+            "p_ge_0": null,
+            "n_clusters": 4,
+            "method": "unavailable (<5 clusters)"
+          },
+          "d_logloss": 0.0010779377740865086,
+          "residual_mean_by_signal": {
+            "-1": {
+              "n": 22,
+              "mean_actual_minus_line": 2.545,
+              "over_rate": 0.5
+            },
+            "1": {
+              "n": 27,
+              "mean_actual_minus_line": -0.204,
+              "over_rate": 0.4815
+            }
+          }
+        }
+      }
+    },
+    "screening": {
+      "QBROLE-TOTAL-v1": {
+        "checks": {
+          "S1_sample": true,
+          "S2_holm_game_cluster": false,
+          "S2b_week_cluster_upper_lt_0": false,
+          "S3_logloss_point_lt_0": false,
+          "S4_mechanism_sign": false
+        },
+        "holm_adjusted_p": 1.0,
+        "verdict": "retired_retrospective_fail"
+      },
+      "OPPFORM-TOTAL-v1": {
+        "checks": {
+          "S1_sample": true,
+          "S2_holm_game_cluster": false,
+          "S2b_week_cluster_upper_lt_0": false,
+          "S3_logloss_point_lt_0": false,
+          "S4_mechanism_sign": true
+        },
+        "holm_adjusted_p": 1.0,
+        "verdict": "retired_retrospective_fail"
+      }
+    }
+  },
+  "prospective_confirmation": {
+    "rows": 0,
+    "status": "no qualifying rows yet"
+  }
+}

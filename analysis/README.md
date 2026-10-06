@@ -3,6 +3,11 @@
 This directory is the reproducible replacement for ad-hoc pattern scripts.
 None of its outputs alter live scores.
 
+The cumulative result-to-research loop (settled issued picks, offered-line
+events, frozen candidate registry, chronological windows, game-clustered proper
+scores) is `evidence_loop.py` with `research_registry.json`; see
+`docs/EVIDENCE_LOOP.md`.
+
 ```bash
 python -m analysis.build_factor_frame --output data/factor_frame.parquet
 python -m analysis.all_data_factor_audit \
