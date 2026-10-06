@@ -289,7 +289,7 @@ def test_results_crons_cover_thursday_sunday_and_monday_night_finals():
 
 
 def test_state_and_site_are_saved_only_when_the_results_job_wrote_something():
-    guard = 'if [[ "$JOB" == "results" && "$RESULTS_WRITTEN" == "0" ]]; then'
+    guard = 'if [[ "${JOB:-}" == "results" && "${RESULTS_WRITTEN:-}" == "0" ]]; then'  # nounset-safe
     for step in ("Publish successful production state", "Keep the eight newest state archives"):
         block = WF[WF.index(f"- name: {step}"):]
         block = block[:block.index("\n      - ", 1)]

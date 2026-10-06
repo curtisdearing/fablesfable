@@ -250,7 +250,7 @@ jobs:
           JOB: ${{ steps.select.outputs.job }}
           RESULTS_WRITTEN: ${{ steps.results.outputs.written }}
         run: |
-          if [[ "$JOB" == "results" && "$RESULTS_WRITTEN" == "0" ]]; then
+          if [[ "${JOB:-}" == "results" && "${RESULTS_WRITTEN:-}" == "0" ]]; then
             echo "results-only run appended nothing; the previous state pointer stays current"; exit 0
           fi
           asset="state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
@@ -289,7 +289,7 @@ jobs:
           JOB: ${{ steps.select.outputs.job }}
           RESULTS_WRITTEN: ${{ steps.results.outputs.written }}
         run: |
-          if [[ "$JOB" == "results" && "$RESULTS_WRITTEN" == "0" ]]; then exit 0; fi
+          if [[ "${JOB:-}" == "results" && "${RESULTS_WRITTEN:-}" == "0" ]]; then exit 0; fi
           gh release view "$STATE_TAG" --json assets --jq '.assets | sort_by(.createdAt) | reverse | map(select(.name | test("^state-[0-9]+-[0-9]+\\.tar\\.gz$"))) | .[8:] | .[].name' |
           while read -r old_asset; do
             [[ -z "$old_asset" ]] || gh release delete-asset "$STATE_TAG" "$old_asset" --yes
