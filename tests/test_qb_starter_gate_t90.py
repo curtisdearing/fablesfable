@@ -118,7 +118,7 @@ def test_t90_confirmed_other_starter_blocks_the_qb_after_persistence_and_rerende
     assert rc["qb_context"]["BBB"]["qb_id"] == "QB_B2"
     # persisted, then rendered: never watch/actionable
     for c in cards:
-        assert c["status"] == "research" and c["quote"] is None
+        assert c["status"] == "pass" and c["quote"] is None
         assert "not_confirmed_starter" in " ".join(c["status_reasons"])
     for s in leans["stage_json"]:
         st = json.loads(s)
@@ -128,7 +128,7 @@ def test_t90_confirmed_other_starter_blocks_the_qb_after_persistence_and_rerende
     again = {c["market"]: c["status"] for c in pc.week_cards(conn, SEASON, WEEK)["cards"]
              if c["player_id"] == "QB_B" and c["market"] in QB_MARKETS}
     conn.close()
-    assert again == {m: "research" for m in QB_MARKETS}
+    assert again == {m: "pass" for m in QB_MARKETS}
     # numbers unchanged by the gate
     key = ["market", "mean", "sd", "p_side", "line"]
     a = control_leans[key].sort_values("market").reset_index(drop=True)

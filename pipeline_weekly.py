@@ -281,9 +281,10 @@ def _committed_context(season: int, week: int) -> Optional[Dict]:
 
 def _apply_starter_gate(stamps: Dict[tuple, Dict], gate: Dict[tuple, Dict]) -> None:
     """Persist each QB-market row's starter eligibility on its stamp.  A row whose team has a
-    different confirmed starter gets its persisted availability eligibility set to degraded
-    (state ``not_confirmed_starter``) -- the hold the card builder already honours -- so it is
-    never executable.  The resolver's own status fields are kept; no number changes."""
+    different confirmed starter (or, with none confirmed, a different previous-game starter)
+    gets its persisted availability eligibility set to degraded (state ``not_confirmed_starter``
+    / ``not_presumed_starter``); the card builder renders it ``pass``.  The resolver's own status
+    fields are kept; no number changes."""
     for key, g in gate.items():
         st = stamps.get(key)
         if st is None:
@@ -292,8 +293,12 @@ def _apply_starter_gate(stamps: Dict[tuple, Dict], gate: Dict[tuple, Dict]) -> N
         if g["blocks_execution"]:
             a = dict(st.get("availability") or {})
             a["eligibility_before_starter_gate"] = a.get("eligibility")
-            a.update({"eligibility": "degraded", "availability_state": "not_confirmed_starter",
-                      "evidence_kind": "team_sourced_starter_claim", "starter_gate": g["reason"]})
+            presumed = g.get("state") == "not_presumed_starter"
+            a.update({"eligibility": "degraded",
+                      "availability_state": "not_presumed_starter" if presumed else "not_confirmed_starter",
+                      "evidence_kind": ("previous_game_starter_proxy" if presumed
+                                        else "team_sourced_starter_claim"),
+                      "starter_gate": g["reason"]})
             st["availability"] = a
 
 
