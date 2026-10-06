@@ -823,6 +823,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     stage_ran = {s: False for s in fimod.STAGES}
     stage_why = {s: "not a live run" for s in fimod.STAGES}
     live: Dict = {}
+    absence_leader_identity = {"mode": "not evaluated", "leaders": [], "teams": {}}
     ctx_doc, ctx_label, ctx_meta = None, None, {"refresh": "not a live run"}
     if mode == "live":
         live = gather_live_feeds(cfg, season, week, _players_frame(cands),
@@ -1021,7 +1022,10 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # skill-leader absence -> QB passing markets (absence matrix)
         cands = candmod.apply_backup_qb_adjustment(cands)
         stage_ran["backup_qb"], stage_why["backup_qb"] = True, None
-        cands = candmod.apply_absence_qb_adjustment(cands, inputs.pw, season, week, outs_now)
+        cands = candmod.apply_absence_qb_adjustment(
+            cands, inputs.pw, season, week, outs_now,
+            active_roster_rows=(live.get("active_roster") or {}).get("rows"))
+        absence_leader_identity = cands.attrs.get("absence_leader_identity", absence_leader_identity)
     elif mode == "live":
         for s_ in stage_ran:
             stage_ran[s_], stage_why[s_] = False, "no candidates reached the adjustment stages"
@@ -1106,6 +1110,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
                "team_identity": identity_receipt,
+               "absence_leader_identity": absence_leader_identity,
                **_availability_receipt(live, qb_ctx, ctx_meta, snap_receipt)},
         context_doc=ctx_doc, context_label=ctx_label, extra_records=snap_recs)
     result["factor_receipt"] = receipt
