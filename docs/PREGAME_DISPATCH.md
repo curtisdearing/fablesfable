@@ -37,7 +37,11 @@ These are decided before any network call:
 - `ci_green_on_sha`: the Tests workflow has a successful run on that SHA and no unsuccessful one.
 - `workflow_active`, `workflow_dispatch_t90`: `live-weekly.yml` is enabled and offers `job=t90` at that SHA.
 - `no_active_production_run`: no queued or running run of `live-weekly.yml` or `publication-ingest.yml`, the `nfl-live-production` group.
-- `no_prior_dispatch_this_window`: no `workflow_dispatch` run of `live-weekly.yml` since one hour before the window.
+- `no_prior_dispatch_this_window`: every `workflow_dispatch` run of `live-weekly.yml` since one hour before the window is examined (its log and completion time are read). A run counts as a *distinct* slot's run, and does not block, only when its log names no slot game (`[auto] t90 <game>:` or `... FAILED`) and either:
+  - it completed before the earliest slot game's T-90 window opened, so every clock its `job_t90` read was earlier and no slot game was due; or
+  - it concluded `success` as a `job=t90` run. A successful run processed and logged every game it resnapped.
+
+  Anything else blocks, failing closed. That includes: a run still queued or running; an unreadable log; a run whose log names a slot game, whether processed, failed, or under a kickoff that has since shifted (the processed-state guard or `--fallback-after` decides those); a failed, cancelled or non-`t90` run that ended inside the window; and a missing completion time. Each run's verdict and evidence is written into the check's detail in the receipt.
 - `processed_state_guard`:
   - The current production state is checksum-verified, restored into a temp dir and read read-only.
   - There must be zero `leans` rows with `clock='t90'` for the game.
@@ -134,11 +138,14 @@ power through it (for example `caffeinate -s` in a terminal, or a one-off
 choices, not installed by this script). A healthy installed agent is not evidence that a
 future slot will be processed: only the slot's read-back is.
 
-Known limit: kickoffs 41-100 minutes apart (e.g. a 7:15 + 8:15 PM ET Monday doubleheader)
-form separate slots, and the wrapper's `no_prior_dispatch_this_window` check (any
-`workflow_dispatch` since one hour before the window) refuses the second one after the first
-dispatch; the second slot then ends `MISSED` and must be dispatched by hand. Weeks 5-6 of 2026
-have no such pair.
+Doubleheaders: kickoffs 41+ minutes apart, such as a 7:15 + 8:15 PM ET Monday, form separate
+slots. The second slot is dispatched once the first slot's run has completed:
+`no_active_production_run` still serializes runs. That first run blocks the second slot only if it
+could have processed or billed one of its games (see `no_prior_dispatch_this_window`); if it did
+process them, the second slot ends `already processed`. Table-driven tests cover separations of
+41/60/64/65/90/100 min, exact window boundaries, shifted kickoffs and multi-game slots. A tick-by-tick
+replay of the real 2026 slate (`tests/fixtures/espn_2026_reg_kickoffs.json`, an ESPN capture) and
+of every 2026 Monday night with an injected second game shows each game processed exactly once.
 
 Install on macOS as a LaunchAgent: `scripts/install_pregame_scheduler.sh` (default ops
 directory `~/fablesfable-ops`: `runner/` checkout fast-forwarded to `origin/main` each tick,

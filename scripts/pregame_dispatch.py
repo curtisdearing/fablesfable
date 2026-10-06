@@ -77,6 +77,7 @@ ESPN_SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl/s
 USER_AGENT = "fablesfable-pregame-dispatch/1.0 (+https://github.com/curtisdearing/fablesfable)"
 #: nflverse -> ESPN team abbreviations where they differ.
 ESPN_ABBR = {"LA": "LAR", "WAS": "WSH"}
+NFLVERSE_ABBR = {espn: nv for nv, espn in ESPN_ABBR.items()}
 GAME_ID = re.compile(r"^(\d{4})_(\d{2})_([A-Z]{2,3})_([A-Z]{2,3})$")
 STATE_ASSET = re.compile(r"^(state|pubstate)-([0-9]+)-([0-9]+)\.tar\.gz$")
 
@@ -309,6 +310,64 @@ def dispatches_since(gh: GitHub, since: dt.datetime) -> list:
             if parse_utc(r["created_at"]) >= since]
 
 
+def slot_window_open(fetch: Fetcher, t: Target) -> dt.datetime | None:
+    """Earliest T-90 window opening among the slot's games, from the official schedule.
+    None when a slot game's kickoff cannot be read: the time rule below then never applies."""
+    if t.games == (t.game_id,):
+        return t.window_open
+    try:
+        body = json.loads(fetch(ESPN_SCOREBOARD.format(week=t.week, season=t.season)))
+        kicks = {}
+        for ev in body.get("events", []):
+            sides = {c["homeAway"]: c["team"]["abbreviation"] for c in ev["competitions"][0]["competitors"]}
+            a, h = (NFLVERSE_ABBR.get(sides[k], sides[k]) for k in ("away", "home"))
+            kicks[f"{t.season}_{t.week:02d}_{a}_{h}"] = parse_utc(ev["date"])
+    except Exception:  # noqa: BLE001 -- unknown windows only disable the time rule
+        return None
+    if any(g not in kicks for g in t.games if g != t.game_id):
+        return None
+    return min([t.kickoff] + [kicks[g] for g in t.games if g != t.game_id]) - dt.timedelta(
+        minutes=T90_DUE_MINUTES)
+
+
+def prior_run_verdict(run: dict, log: str | None, games: tuple,
+                      window_open: dt.datetime | None) -> tuple[bool, str]:
+    """(blocks, evidence) for one earlier ``workflow_dispatch`` run against this slot.
+
+    ``job_t90`` processes exactly the games due at the clock it reads inside its run step
+    (``kickoff - 90 min <= clock < kickoff``), resnaps only those, and logs one
+    ``[auto] t90 <game>:`` or ``... FAILED`` line for each.  So a COMPLETED run is distinct
+    from this slot -- it neither processed nor billed any slot game -- when its log names no
+    slot game and either
+      * it completed before the earliest slot game's T-90 window opened (every clock it read
+        was earlier, so no slot game was due), or
+      * it concluded success as a ``job=t90`` run (success means every game it resnapped was
+        processed and logged).
+    Everything else blocks: a run still queued or running, an unreadable log, a run whose
+    log names a slot game (processed, failed or a shifted kickoff: the per-game guard and
+    ``--fallback-after`` decide), a failed / cancelled / non-t90 run that ended inside the
+    window, or a missing completion time."""
+    rid = run.get("id")
+    if run.get("status") != "completed":
+        return True, f"run {rid} is {run.get('status')!r}: it may still process this slot"
+    if log is None:
+        return True, f"run {rid}: log unreadable, cannot tell which games it processed"
+    touched = [g for g in games if re.search(rf"\[auto\] t90 {re.escape(g)}(:| FAILED)", log)]
+    if touched:
+        return True, f"run {rid} processed or attempted {', '.join(touched)}"
+    try:
+        ended = parse_utc(run["updated_at"])
+    except (KeyError, TypeError, ValueError, AttributeError):
+        ended = None
+    if ended is not None and window_open is not None and ended < window_open:
+        return False, (f"run {rid} distinct: completed {iso(ended)}, before this slot's T-90 window "
+                       f"opened {iso(window_open)}")
+    if run.get("conclusion") == "success" and re.search(r"\bjob=t90\b", log):
+        return False, f"run {rid} distinct: successful job=t90 run whose log names no slot game"
+    return True, (f"run {rid} ({run.get('conclusion')}) ended {run.get('updated_at')} with no proof "
+                  f"it skipped this slot's games")
+
+
 def readiness(gh: GitHub, fetch: Fetcher, t: Target, expect_sha: str,
               now: dt.datetime, allow_prior_dispatch: int | None = None) -> list:
     checks: list[Check] = []
@@ -336,10 +395,29 @@ def readiness(gh: GitHub, fetch: Fetcher, t: Target, expect_sha: str,
     add("no_active_production_run", not active,
         f"active runs in the production concurrency group: {active or 'none'}")
 
-    prior = [r["id"] for r in dispatches_since(gh, t.earliest - dt.timedelta(minutes=60))
-             if r["id"] != allow_prior_dispatch]
-    add("no_prior_dispatch_this_window", not prior,
-        f"workflow_dispatch runs since {iso(t.earliest - dt.timedelta(minutes=60))}: {prior or 'none'}")
+    # Every workflow_dispatch run since an hour before the window still counts, but one blocks
+    # only without evidence that it is a distinct slot's run (a doubleheader's first game):
+    # see prior_run_verdict.  The scoreboard read is shared with official_kickoff below.
+    cache: dict = {}
+
+    def once(url: str) -> bytes:
+        if url not in cache:
+            cache[url] = fetch(url)
+        return cache[url]
+
+    since = t.earliest - dt.timedelta(minutes=60)
+    prior = [r for r in dispatches_since(gh, since) if r["id"] != allow_prior_dispatch]
+    window = slot_window_open(once, t) if prior else t.window_open
+    verdicts = []
+    for r in prior:
+        try:
+            log = gh.run_log(r["id"]) if r.get("status") == "completed" else None
+        except Exception:  # noqa: BLE001 -- unreadable is unidentifiable: fail closed
+            log = None
+        verdicts.append(prior_run_verdict(r, log, t.games, window))
+    add("no_prior_dispatch_this_window", not any(blocks for blocks, _ in verdicts),
+        f"workflow_dispatch runs since {iso(since)}: "
+        + ("; ".join(why for _, why in verdicts) if verdicts else "none"))
 
     try:
         st = state_evidence(gh, t.game_id, t.games)
@@ -354,7 +432,7 @@ def readiness(gh: GitHub, fetch: Fetcher, t: Target, expect_sha: str,
         add("processed_state_guard", False, f"could not read production state: {exc}")
 
     try:
-        off = official_kickoff(fetch, t)
+        off = official_kickoff(once, t)
         add("official_kickoff", off["kickoff"] == iso(t.kickoff) and off["status"] == "STATUS_SCHEDULED",
             f"ESPN {off['espn_event']} kickoff {off['kickoff']} status {off['status']}; "
             f"requested {iso(t.kickoff)}")

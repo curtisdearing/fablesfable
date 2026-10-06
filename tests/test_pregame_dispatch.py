@@ -509,3 +509,145 @@ def test_processed_guard_covers_the_slot_not_only_the_named_game(env):
 def test_slot_games_from_another_week_are_refused(no_network, bad, capsys):
     assert pd.run(base_args("--slot-games", f"{GAME},{bad}")) == pd.EXIT_REFUSED
     assert "slot game" in capsys.readouterr().out
+
+
+# ------------------------------------------------------- doubleheaders: distinct slots
+# Kickoffs 41+ min apart are separate slots.  The first slot's own run used to refuse the
+# second slot for its whole window (any workflow_dispatch since window-60 min counted), e.g. a
+# 7:15 + 8:15 PM ET Monday doubleheader lost its second game.  A prior run now blocks only
+# without evidence that it neither processed nor billed a slot game.
+SETUP = dt.timedelta(minutes=15)                         # dispatch -> job_t90 clock
+KA = dt.datetime(2026, 9, 28, 23, 15, tzinfo=UTC)        # Monday 7:15 PM ET
+GA, GB, GC = "2026_03_AAA_BBB", "2026_03_CCC_DDD", "2026_03_EEE_FFF"
+M = lambda n: dt.timedelta(minutes=n)  # noqa: E731
+
+
+def dh_board(kicks):
+    def fetch(url):
+        return json.dumps({"events": [{
+            "id": str(i), "date": pd.iso(k), "status": {"type": {"name": "STATUS_SCHEDULED"}},
+            "competitions": [{"competitors": [
+                {"homeAway": "away", "team": {"abbreviation": g.split("_")[2]}},
+                {"homeAway": "home", "team": {"abbreviation": g.split("_")[3]}}]}]}
+            for i, (g, k) in enumerate(kicks.items())]}).encode()
+    return fetch
+
+
+def prior_run(gh, rid, created, kicks, *, conclusion="success", status="completed", job="t90",
+              lines=None, ended=None):
+    """An earlier dispatch behaving like job_t90: at created+SETUP it processes every game due."""
+    clock = created + SETUP
+    due = [g for g, k in kicks.items() if k - M(90) <= clock < k] if lines is None else lines
+    log = f"gate\tjob={job}\n" + "".join(
+        f"run\t[auto] t90 {g}: 0 voided\n" if not g.endswith("!") else f"run\t[auto] t90 {g[:-1]} FAILED: x\n"
+        for g in due)
+    run = {"id": rid, "status": status, "conclusion": conclusion if status == "completed" else None,
+           "event": "workflow_dispatch", "created_at": pd.iso(created),
+           "updated_at": pd.iso(ended or clock + M(5 + 2 * len(due)))}
+    gh.runs["live-weekly.yml"].append(run)
+    if log is not False:
+        gh.logs[rid] = log
+    return [g for g in due if not g.endswith("!")], run
+
+
+def check_slot(gh, receipt, clock, named, kicks, slot=None):
+    args = ["--season", "2026", "--week", "3", "--game", named, "--kickoff", pd.iso(kicks[named]),
+            "--slot-games", ",".join(slot or [named]), "--expect-sha", SHA,
+            "--receipt-dir", str(receipt), "--check"]
+    code = pd.run(args, runner=gh, fetch=dh_board(kicks), clock=clock, sleep=clock.sleep)
+    return code, {c["name"]: c for c in _receipt(receipt, "check")["checks"]}
+
+
+@pytest.mark.parametrize("sep,a_offset,b_done_by_a", [
+    (41, 1, False), (60, 1, False), (90, 1, False), (100, 1, False),    # A dispatched as its window opens
+    (41, 49, True), (60, 49, True), (90, 49, False), (100, 49, False),   # A's last-tick retry (A - 41 min)
+    (64, 49, True), (65, 49, False),                                     # B due at A's clock: exact edge
+])
+def test_doubleheader_second_slot_dispatches_unless_the_first_run_processed_it(env, sep, a_offset, b_done_by_a):
+    clock, gh, receipt = env
+    kicks = {GA: KA, GB: KA + M(sep)}
+    due, run = prior_run(gh, 600, KA - M(90) + M(a_offset), kicks)
+    assert (GB in due) is b_done_by_a and GA in due
+    set_slot_state(gh, "state-600-1.tar.gz", {g: 4 if g in due else 0 for g in kicks})
+    clock.t = max(kicks[GB] - M(89), pd.parse_utc(run["updated_at"]) + M(1))
+    assert clock.t < kicks[GB] - M(40)                       # still inside B's launch window
+    code, checks = check_slot(gh, receipt, clock, GB, kicks)
+    prior = checks["no_prior_dispatch_this_window"]
+    if b_done_by_a:                                          # repeated slot: never dispatched again
+        assert code == pd.EXIT_NOT_READY and not prior["ok"] and f"processed or attempted {GB}" in prior["detail"]
+        assert pd.ALREADY_PROCESSED in checks["processed_state_guard"]["detail"]
+    else:
+        in_lookback = pd.parse_utc(run["created_at"]) >= kicks[GB] - M(150)
+        assert code == pd.EXIT_OK and prior["ok"], prior
+        assert ("run 600 distinct" if in_lookback else ": none") in prior["detail"], prior
+
+
+def _ended(minutes_before_b_window):
+    return KA + M(60) - M(90) - dt.timedelta(seconds=minutes_before_b_window)
+
+
+@pytest.mark.parametrize("name,run_kw,ok,why", [
+    ("first run still queued", dict(status="queued"), False, "may still process"),
+    ("first run still running", dict(status="in_progress"), False, "may still process"),
+    ("failed, ended 1 s before B's window", dict(conclusion="failure", lines=[f"{GA}!"], ended=_ended(1)), True, "distinct: completed"),
+    ("failed, ended exactly at B's window", dict(conclusion="failure", lines=[f"{GA}!"], ended=_ended(0)), False, "no proof"),
+    ("cancelled inside B's window", dict(conclusion="cancelled", lines=[], ended=_ended(-600)), False, "no proof"),
+    ("success t90 inside B's window, names only A", dict(lines=[GA], ended=_ended(-600)), True, "successful job=t90"),
+    ("success but job=wed inside B's window", dict(job="wed", lines=[], ended=_ended(-600)), False, "no proof"),
+    ("log unreadable (unidentifiable)", dict(lines=[GA], ended=_ended(1)), False, "log unreadable"),
+    ("failed on B itself (attempted)", dict(conclusion="failure", lines=[f"{GB}!"], ended=_ended(1)), False, f"attempted {GB}"),
+])
+def test_prior_run_evidence_table(env, name, run_kw, ok, why):
+    clock, gh, receipt = env
+    kicks = {GA: KA, GB: KA + M(60)}
+    _, run = prior_run(gh, 601, KA - M(89), kicks, **run_kw)
+    if name.startswith("log unreadable"):
+        del gh.logs[601]
+    clock.t = kicks[GB] - M(85)
+    code, checks = check_slot(gh, receipt, clock, GB, kicks)
+    prior = checks["no_prior_dispatch_this_window"]
+    assert prior["ok"] is ok and why in prior["detail"], (name, prior["detail"])
+    if ok:
+        assert code == pd.EXIT_OK
+    else:
+        assert code == pd.EXIT_NOT_READY
+
+
+@pytest.mark.parametrize("old_log,ok,why", [
+    ([GB], False, f"processed or attempted {GB}"),          # processed at the old time: per-game guard
+    ([f"{GB}!"], False, f"processed or attempted {GB}"),    # failed on B at the old time: parent decision
+    ([], True, "distinct: completed"),                      # no-op at the old time
+])
+def test_shifted_kickoff_same_game_id(env, old_log, ok, why):
+    clock, gh, receipt = env
+    old_b, new_b = KA + M(60), KA + M(240)                  # B flexed three hours later
+    prior_run(gh, 602, old_b - M(89), {GB: old_b}, lines=old_log,
+              conclusion="failure" if old_log and old_log[0].endswith("!") else "success")
+    set_slot_state(gh, "state-602-1.tar.gz", {GB: 4 if old_log == [GB] else 0})
+    clock.t = new_b - M(85)
+    gh.runs["live-weekly.yml"][-1]["created_at"] = pd.iso(new_b - M(150))   # inside the lookback
+    code, checks = check_slot(gh, receipt, clock, GB, {GB: new_b})
+    prior = checks["no_prior_dispatch_this_window"]
+    assert prior["ok"] is ok and why in prior["detail"], prior["detail"]
+    assert (code == pd.EXIT_OK) is ok
+    if old_log == [GB]:
+        assert pd.ALREADY_PROCESSED in checks["processed_state_guard"]["detail"]
+
+
+@pytest.mark.parametrize("touch,board_has_gc,ok,why", [
+    ([GA], True, True, "distinct: completed"),
+    ([GA, GC], True, False, f"attempted {GC}"),             # any slot member counts, not only the named game
+    ([GA], False, False, "no proof"),                       # slot member off the board: time rule disabled
+])
+def test_multi_game_slot_uses_every_member(env, touch, board_has_gc, ok, why):
+    clock, gh, receipt = env
+    kicks = {GA: KA, GB: KA + M(60), GC: KA + M(80)}        # B + C share one slot (20 min apart)
+    prior_run(gh, 603, KA - M(89), kicks, lines=touch, conclusion="failure")
+    clock.t = kicks[GC] - M(89)
+    board = kicks if board_has_gc else {GA: KA, GB: kicks[GB]}
+    args = ["--season", "2026", "--week", "3", "--game", GB, "--kickoff", pd.iso(kicks[GB]),
+            "--slot-games", f"{GB},{GC}", "--expect-sha", SHA, "--receipt-dir", str(receipt), "--check"]
+    code = pd.run(args, runner=gh, fetch=dh_board(board), clock=clock, sleep=clock.sleep)
+    prior = next(c for c in _receipt(receipt, "check")["checks"] if c["name"] == "no_prior_dispatch_this_window")
+    assert prior["ok"] is ok and why in prior["detail"], prior["detail"]
+    assert (code == pd.EXIT_OK) is ok

@@ -495,3 +495,75 @@ def test_a_processed_late_read_back_settles_quietly_and_pending_is_bounded(tmp_p
     log2.write_text(json.dumps(pending) + "\n")
     h2.tick("2026-10-09T02:40:00Z")
     assert h2.notes and "read-back still pending" in h2.notes[0][1]
+
+
+# --------------------------------------------------------------------------- whole-season replay
+# The real 2026 regular-season slate (ESPN capture, tests/fixtures/espn_2026_reg_kickoffs.json)
+# replayed tick by tick: each slot dispatches at its first tick with no active production run,
+# no refusing prior run (the wrapper's own prior_run_verdict) and an unprocessed game; a run's
+# job_t90 clock is dispatch + 15 min and it processes every unprocessed game due then.
+SLATE = json.loads((Path(__file__).parent / "fixtures" / "espn_2026_reg_kickoffs.json").read_text())
+
+
+def replay(kicks, refuses, setup_min=15):
+    games = [ps.Game(g, int(g[:4]), int(g[5:7]), k, "x") for g, k in kicks.items()]
+    runs, done, missed = [], {}, []
+    for s in sorted(ps.plan_slots(games), key=lambda s: s.dispatch_at):
+        t, settled = s.dispatch_at, False
+        while t < s.last_launch and not settled:
+            if all(g in done for g in s.games):
+                settled = True
+            elif not any(pd.parse_utc(r["created_at"]) <= t < pd.parse_utc(r["updated_at"]) for r in runs):
+                lookback = s.named_kickoff - dt.timedelta(minutes=150)
+                prior = [r for r in runs if pd.parse_utc(r["created_at"]) >= lookback]
+                if not refuses(prior, tuple(s.games), s.named_kickoff - dt.timedelta(minutes=90)):
+                    created = t + dt.timedelta(minutes=2)
+                    clock = created + dt.timedelta(minutes=setup_min)
+                    due = [g for g, k in kicks.items()
+                           if k - dt.timedelta(minutes=90) <= clock < k and g not in done]
+                    done.update({g: len(runs) for g in due})
+                    runs.append({"id": len(runs), "status": "completed", "conclusion": "success",
+                                 "created_at": pd.iso(created),
+                                 "updated_at": pd.iso(clock + dt.timedelta(minutes=5 + 2 * len(due))),
+                                 "log": "gate\tjob=t90\n" + "".join(f"[auto] t90 {g}: 0 voided\n" for g in due)})
+                    settled = True
+            t += dt.timedelta(minutes=ps.TICK_MINUTES)
+        if not settled:
+            missed.append(s.key)
+    return {"missed": missed, "unprocessed": sorted(set(kicks) - set(done)), "runs": len(runs)}
+
+
+def new_rule(prior, games, window):
+    return any(pd.prior_run_verdict(r, r["log"], games, window)[0] for r in prior)
+
+
+def old_rule(prior, games, window):        # 3795ac7: any dispatch since window - 60 min refuses
+    return bool(prior)
+
+
+def _with_monday_second_games(sep):
+    kicks = {g: pd.parse_utc(k) for g, k, _ in SLATE["games"]}
+    for g, k in list(kicks.items()):
+        if k.weekday() == 1 and k.hour < 3:              # Monday night ET == Tuesday 00-03 UTC
+            kicks[f"{g[:8]}ZZ{g[8:10]}_YY{g[-2:]}"] = k + dt.timedelta(minutes=sep)
+    return kicks
+
+
+@pytest.mark.parametrize("setup_min", [15, 25])
+def test_the_real_2026_slate_replays_with_every_game_processed_once(setup_min):
+    kicks = {g: pd.parse_utc(k) for g, k, _ in SLATE["games"]}
+    assert len(kicks) == 272
+    res = replay(kicks, new_rule, setup_min)
+    assert res["missed"] == [] and res["unprocessed"] == []
+
+
+@pytest.mark.parametrize("sep", [41, 60, 90, 100])
+def test_every_2026_monday_with_a_second_game_replays_without_suppression(sep):
+    kicks = _with_monday_second_games(sep)
+    extra = len(kicks) - 272
+    assert extra >= 17                                   # one injected second game per real Monday night
+    new = replay(kicks, new_rule)
+    assert new["missed"] == [] and new["unprocessed"] == [], new
+    old = replay(kicks, old_rule)
+    if sep <= 60:                                        # the old rule lost every such second game
+        assert len(old["unprocessed"]) == extra
