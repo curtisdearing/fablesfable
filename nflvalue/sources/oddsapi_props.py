@@ -43,6 +43,7 @@ import pandas as pd
 
 from .. import db as dbmod
 from ..freshness import stamp_now
+from . import availability as _av
 from ._http import get_json, get_json_and_headers, get_json_with_headers
 from .availability import normalize_name
 
@@ -293,10 +294,98 @@ PROP_LINE_COLS = ["game_id", "market", "player_id", "point", "over_price",
 MAX_LINE_AGE_HOURS = 60.0
 
 
+#: One row per ANSWERED event call -- an answer with no quotes included, a
+#: failed call never. It is the clock of each game's latest board and the
+#: ledger of the closes a Wednesday pull HOLDS. Created here rather than in
+#: ``db.SCHEMA`` so the odds client owns its own receipts.
+PULLS_DDL = """
+    CREATE TABLE IF NOT EXISTS line_pulls (
+        ts TEXT, game_id TEXT, event_id TEXT, kind TEXT, month TEXT,
+        n_rows INTEGER, books TEXT, markets TEXT,
+        credits_planned REAL, credits_billed REAL, hold_credits REAL, kickoff TEXT,
+        PRIMARY KEY (ts, game_id)
+    )"""
+
+
+def _aware(now: Optional[dt.datetime]) -> dt.datetime:
+    now = now or dt.datetime.now(dt.timezone.utc)
+    return now if now.tzinfo else now.replace(tzinfo=dt.timezone.utc)
+
+
+def _iso(when: Optional[dt.datetime]) -> Optional[str]:
+    return None if when is None else _aware(when).astimezone(
+        dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _parse_clock(value) -> Optional[dt.datetime]:
+    if not value:
+        return None
+    try:
+        return _aware(dt.datetime.fromisoformat(str(value).replace("Z", "+00:00")))
+    except ValueError:
+        return None
+
+
+def _pull_record(ts: str, game_id: str, event_id: str, kind: str, month: str,
+                 rows: List[Dict], payload, planned: float, headers: Optional[Dict],
+                 hold: float, kickoff: Optional[dt.datetime]) -> Dict:
+    return {"ts": ts, "game_id": game_id, "event_id": event_id, "kind": kind, "month": month,
+            "n_rows": len(rows), "books": json.dumps(books_in_payload(payload)),
+            "markets": json.dumps(sorted({r["market"] for r in rows})),
+            "credits_planned": float(planned),
+            "credits_billed": _header_float(headers, "x-requests-last"),
+            "hold_credits": float(hold), "kickoff": _iso(kickoff)}
+
+
+def record_pulls(conn, records: List[Dict]) -> int:
+    """Persist answered-call receipts. Called AFTER the call's quotes are
+    written, so a receipt never claims rows the table does not hold."""
+    conn.execute(PULLS_DDL)
+    return dbmod.upsert(conn, "line_pulls", records, ["ts", "game_id"]) if records else 0
+
+
+def latest_snapshots(conn, game_ids: Optional[List[str]] = None,
+                     now: Optional[dt.datetime] = None,
+                     max_age_hours: float = MAX_LINE_AGE_HOURS) -> Dict[str, Dict]:
+    """Each game's LATEST answered snapshot as of ``now``:
+    ``{game_id: {"ts", "n_rows", "fresh"}}``.
+
+    A snapshot is one answered event call: its ``line_pulls`` receipt (so an
+    answer with no quotes counts) or, for quotes stored before that receipt
+    existed, a distinct ``lines.ts``. A clock after ``now`` is not a snapshot
+    yet. ``fresh`` is False when the latest is older than ``max_age_hours`` --
+    it is reported, never priced."""
+    now = _aware(now)
+    conn.execute(PULLS_DDL)
+    where, params = "WHERE ts <= ?", [_iso(now)]
+    if game_ids:
+        where += f" AND game_id IN ({','.join('?' * len(game_ids))})"
+        params.extend(game_ids)
+    df = dbmod.query_df(conn, f"""
+        SELECT game_id, ts, SUM(n) AS n_rows FROM (
+            SELECT game_id, ts, 1 AS n FROM lines {where}
+            UNION ALL SELECT game_id, ts, 0 AS n FROM line_pulls {where})
+        GROUP BY game_id, ts""", tuple(params) * 2)
+    if df.empty:
+        return {}
+    floor = _iso(now - dt.timedelta(hours=float(max_age_hours)))
+    latest = df.sort_values(["game_id", "ts"]).groupby("game_id").tail(1)
+    return {r.game_id: {"ts": r.ts, "n_rows": int(r.n_rows), "fresh": r.ts >= floor}
+            for r in latest.itertuples(index=False)}
+
+
+def answered_since(conn, game_ids: List[str], now: Optional[dt.datetime] = None,
+                   max_age_hours: float = 1.0) -> Dict[str, str]:
+    """{game_id: ts} for games whose provider ANSWERED within ``max_age_hours``
+    (quotes or none). A re-run uses it to skip a second, duplicate event-call."""
+    snaps = latest_snapshots(conn, game_ids, now=now, max_age_hours=max_age_hours)
+    return {g: s["ts"] for g, s in snaps.items() if s["fresh"]}
+
+
 def load_recent_lines(conn, game_ids: Optional[List[str]] = None,
                       max_age_hours: float = MAX_LINE_AGE_HOURS,
                       now: Optional[dt.datetime] = None) -> List[Dict]:
-    """The most recent stored quote per (game, book, market, player, side).
+    """Each game's board: every quote of its LATEST answered snapshot.
 
     The pipeline used to price a board from ``SELECT * FROM lines WHERE ts=?``
     -- only the rows the CURRENT run had just pulled. Because the rotation
@@ -305,30 +394,232 @@ def load_recent_lines(conn, game_ids: Optional[List[str]] = None,
     the table. (2026-09-09: NE@SEA had DraftKings/BetMGM/HardRock rows from
     2026-09-08T17:56Z and still published with no market.)
 
-    Rows older than ``max_age_hours`` are dropped rather than shown as
-    current: a stale quote priced as live is worse than no quote. Freshness
-    is the caller's to report -- each returned row keeps its own ``ts``.
+    The newest row per (game, book, market, player, side) across pulls was
+    the next mistake: a book or prop missing from the latest answer kept
+    pricing the board from an older pull, an over from one pull paired with
+    an under from another at another point, and a game whose props the books
+    took down was still priced. The latest answer is the board; a game not
+    re-pulled keeps its own latest answer (:func:`latest_snapshots`).
+
+    Snapshots older than ``max_age_hours`` are dropped rather than shown as
+    current: a stale quote priced as live is worse than no quote. Rows stamped
+    after ``now`` are not quotes yet. Each returned row keeps its own ``ts``.
     """
-    now = now or dt.datetime.now(dt.timezone.utc)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=dt.timezone.utc)
-    floor = (now - dt.timedelta(hours=float(max_age_hours))
-             ).strftime("%Y-%m-%dT%H:%M:%SZ")
-    params: List = [floor]
-    where = "WHERE ts >= ?"
-    if game_ids:
-        where += f" AND game_id IN ({','.join('?' * len(game_ids))})"
-        params.extend(game_ids)
-    sql = f"""
-        SELECT l.* FROM lines l
-        JOIN (SELECT game_id, book, market, player_name, side, MAX(ts) AS ts
-                FROM lines {where}
-            GROUP BY game_id, book, market, player_name, side) m
-          ON l.game_id = m.game_id AND l.book = m.book AND l.market = m.market
-         AND l.player_name = m.player_name AND l.side = m.side AND l.ts = m.ts
-    """
-    df = dbmod.query_df(conn, sql, tuple(params))
-    return [] if df.empty else df.to_dict("records")
+    snaps = latest_snapshots(conn, game_ids, now=now, max_age_hours=max_age_hours)
+    keep = {(g, s["ts"]) for g, s in snaps.items() if s["fresh"] and s["n_rows"]}
+    if not keep:
+        return []
+    games = sorted({g for g, _ in keep})
+    clocks = sorted({ts for _, ts in keep})
+    df = dbmod.query_df(conn, f"""
+        SELECT * FROM lines WHERE game_id IN ({','.join('?' * len(games))})
+                              AND ts IN ({','.join('?' * len(clocks))})""",
+                        tuple(games) + tuple(clocks))
+    if df.empty:
+        return []
+    df = df[[(g, ts) in keep for g, ts in zip(df["game_id"], df["ts"])]]
+    return df.to_dict("records")
+
+
+def outstanding_holds(conn, month: str, now: Optional[dt.datetime] = None) -> Dict[str, float]:
+    """{game_id: credits} still HELD for a pre-kick close in ``month``.
+
+    A hold is the latest answered pull of its game carrying ``hold_credits``
+    (the Wednesday entry): any later answer for that game -- its close --
+    releases it, and so does kickoff. It used to live only inside one
+    ``pull_week_props`` call, so the next call (the T-90 pull of a game the
+    Wednesday run rationed) spent the very credits held for other closes."""
+    now = _aware(now)
+    conn.execute(PULLS_DDL)
+    df = dbmod.query_df(conn, "SELECT game_id, ts, month, hold_credits, kickoff "
+                              "FROM line_pulls WHERE ts <= ?", (_iso(now),))
+    out: Dict[str, float] = {}
+    if df.empty:
+        return out
+    for r in df.sort_values(["game_id", "ts"]).groupby("game_id").tail(1).itertuples(index=False):
+        if r.month != month or not r.hold_credits or float(r.hold_credits) <= 0:
+            continue
+        ko = _parse_clock(r.kickoff)
+        if ko is not None and ko <= now:
+            continue
+        out[r.game_id] = float(r.hold_credits)
+    return out
+
+
+#: A listed event is the slate's game only when its commence_time lies within
+#: this many hours of the slate kickoff: wide enough for a flex or a
+#: postponement inside the week (Sunday -> Tuesday), narrow enough that a
+#: rematch listed a week later (Week 18 -> Wild Card) is never this game.
+EVENT_MATCH_WINDOW_HOURS = 96.0
+#: A provider commence_time at least this far from the slate's is a MOVED kickoff.
+KICKOFF_MOVED_MINUTES = 60.0
+
+
+def match_events(events, games, kickoffs: Optional[Dict[str, dt.datetime]] = None,
+                 window_hours: float = EVENT_MATCH_WINDOW_HOURS) -> Dict:
+    """Odds events -> slate games by team pair AND clock.
+
+    ``games``: ``[(game_id, home_abbr, away_abbr)]``. The listing spans more
+    than one week (2026-10-05: Week 5 MNF beside all of Week 6), so a team
+    pair alone is not an identity. Per game, the listed event nearest the
+    slate kickoff within ``window_hours`` wins (same home/away orientation on
+    a tie; a swapped neutral-site designation is accepted and flagged). With
+    no clock on either side only a single same-orientation listing is taken.
+    Returns ``{"event_map": {game_id: event_id}, "games": {game_id: row}}``,
+    each row carrying the event, its commence_time, the signed kickoff delta
+    and, when unmatched, the reason."""
+    by_pair: Dict[tuple, List[Dict]] = {}
+    for ev in events or []:
+        if not isinstance(ev, dict) or not ev.get("id"):
+            continue
+        home = _av.DISPLAY_TO_ABBR.get(ev.get("home_team", ""), "")
+        away = _av.DISPLAY_TO_ABBR.get(ev.get("away_team", ""), "")
+        if home and away:
+            by_pair.setdefault((home, away), []).append(ev)
+    event_map: Dict[str, str] = {}
+    rows: Dict[str, Dict] = {}
+    for game_id, home, away in games:
+        ko = (kickoffs or {}).get(game_id)
+        ko = _aware(ko) if ko is not None else None
+        row = {"event_id": None, "commence_time": None, "kickoff": _iso(ko),
+               "kickoff_delta_minutes": None, "kickoff_moved": False,
+               "home_away_swapped": False, "reason": None}
+        rows[game_id] = row
+        listed = ([(ev, False) for ev in by_pair.get((home, away), [])]
+                  + [(ev, True) for ev in by_pair.get((away, home), [])])
+        if not listed:
+            row["reason"] = "not_in_events_listing"
+            continue
+        timed = []
+        for ev, swapped in listed:
+            ct = _parse_clock(ev.get("commence_time"))
+            if ct is not None and ko is not None:
+                timed.append(((ct - ko).total_seconds() / 60.0, swapped, ev, ct))
+        if timed:
+            near = [t for t in timed if abs(t[0]) <= float(window_hours) * 60.0]
+            if not near:
+                best = min(timed, key=lambda t: abs(t[0]))
+                row.update(reason="event_outside_kickoff_window",
+                           nearest_event_id=best[2]["id"], commence_time=_iso(best[3]),
+                           kickoff_delta_minutes=round(best[0]))
+                continue
+            delta, swapped, ev, ct = min(near, key=lambda t: (abs(t[0]), t[1]))
+            row.update(event_id=ev["id"], commence_time=_iso(ct),
+                       kickoff_delta_minutes=round(delta),
+                       kickoff_moved=abs(delta) >= KICKOFF_MOVED_MINUTES,
+                       home_away_swapped=swapped)
+        else:
+            same = [ev for ev, swapped in listed if not swapped]
+            if len(same) != 1:
+                row["reason"] = "ambiguous_event_without_kickoff"
+                continue
+            row.update(event_id=same[0]["id"],
+                       commence_time=_iso(_parse_clock(same[0].get("commence_time"))))
+        event_map[game_id] = row["event_id"]
+    return {"event_map": event_map, "games": rows}
+
+
+def slate_coverage(game_ids: List[str], cfg: Dict, identity: Optional[Dict] = None,
+                   pull: Optional[Dict] = None, board_rows: Optional[List[Dict]] = None,
+                   prop_lines: Optional[pd.DataFrame] = None,
+                   now: Optional[dt.datetime] = None, conn=None, requested: bool = True,
+                   reason: Optional[str] = None,
+                   max_age_hours: float = MAX_LINE_AGE_HOURS,
+                   under_way: Optional[List[str]] = None) -> Dict:
+    """One row per scheduled game: priced from a real offered quote, or why not.
+
+    ``state`` is ``priced`` (a real two-sided/TD quote reached the prop-line
+    frame) or the honest reason it did not: ``quotes_unmatched``,
+    ``answered_no_quotes``, ``not_in_events_listing``,
+    ``event_outside_kickoff_window``, ``ambiguous_event_without_kickoff``,
+    ``events_listing_failed``, ``started``, ``pull_error``, ``skipped_budget``,
+    ``skipped_cap``, ``stale_quotes_only``, ``no_current_quotes``; or, when no
+    odds were requested, ``reason``. Books and markets missing from the
+    provider's answer are listed per game -- absent, never assumed offered.
+    Built from inputs only; it never touches the forecast."""
+    now = _aware(now)
+    from ..config import prop_markets_internal
+    markets_req = sorted(prop_markets_internal(cfg))
+    books_req = [str(b) for b in (cfg.get("books") or [])]
+    ids = list(dict.fromkeys(game_ids))
+    ident = (identity or {}).get("games") or {}
+    pull = pull or {}
+    rows_by: Dict[str, List[Dict]] = {}
+    for r in board_rows or []:
+        rows_by.setdefault(r.get("game_id"), []).append(r)
+    priced_by: Dict[str, pd.DataFrame] = {}
+    if prop_lines is not None and not prop_lines.empty:
+        priced_by = {g: grp for g, grp in prop_lines.groupby("game_id")}
+    snaps = (latest_snapshots(conn, ids, now=now, max_age_hours=max_age_hours)
+             if conn is not None and requested and ids else {})
+    errors = {e.get("game_id"): e.get("error") for e in pull.get("skipped_error") or []}
+    started = set(pull.get("skipped_started") or []) | set(under_way or [])
+    games: Dict[str, Dict] = {}
+    for gid in ids:
+        rows, grp, idn, snap = rows_by.get(gid, []), priced_by.get(gid), ident.get(gid) or {}, snaps.get(gid)
+        books = sorted({str(r["book"]) for r in rows if r.get("book")})
+        markets = sorted({str(r["market"]) for r in rows if r.get("market")})
+        clocks = sorted({str(r["ts"]) for r in rows if r.get("ts")})
+        quote_clock = clocks[-1] if clocks else (snap or {}).get("ts")
+        if not requested:
+            state = reason or "odds_not_requested"
+        elif grp is not None and len(grp):
+            state = "priced"
+        elif rows:
+            state = "quotes_unmatched"
+        elif gid in started:
+            state = "started"
+        elif (snap and snap["fresh"] and not snap["n_rows"]) or gid in (pull.get("empty") or []):
+            state = "answered_no_quotes"
+        elif idn.get("reason"):
+            state = idn["reason"]
+        elif gid in errors:
+            state = "pull_error"
+        elif gid in (pull.get("skipped_budget") or []):
+            state = "skipped_budget"
+        elif gid in (pull.get("skipped_cap") or []):
+            state = "skipped_cap"
+        elif snap and not snap["fresh"]:
+            state = "stale_quotes_only"
+        else:
+            state = "no_current_quotes"
+        qc = _parse_clock(quote_clock)
+        games[gid] = {
+            "state": state, "event_id": idn.get("event_id"),
+            "commence_time": idn.get("commence_time"), "kickoff": idn.get("kickoff"),
+            "kickoff_delta_minutes": idn.get("kickoff_delta_minutes"),
+            "kickoff_moved": bool(idn.get("kickoff_moved")),
+            "pulled_this_run": gid in (pull.get("pulled") or []), "started": gid in started,
+            "quote_clock": quote_clock,
+            "quote_age_hours": round((now - qc).total_seconds() / 3600.0, 2) if qc else None,
+            "books_offered": books,
+            "books_missing": [b for b in books_req if b not in books] if requested else [],
+            "markets_offered": markets,
+            "markets_missing": [m for m in markets_req if m not in markets] if requested else [],
+            "players_priced": int(grp["player_id"].nunique()) if grp is not None else 0,
+            "lines_priced": int(len(grp)) if grp is not None else 0,
+            "max_books_on_a_line": int(grp["n_books"].max()) if grp is not None and len(grp) else 0,
+            "error": errors.get(gid)}
+    by_state: Dict[str, int] = {}
+    for r in games.values():
+        by_state[r["state"]] = by_state.get(r["state"], 0) + 1
+    n_priced = by_state.get("priced", 0)
+    return {"games": games, "summary": {
+        "n_games": len(games), "priced": n_priced, "missing": len(games) - n_priced,
+        "by_state": by_state, "books_requested": books_req, "markets_requested": markets_req,
+        "sparse_books": sorted(g for g, r in games.items()
+                               if r["state"] == "priced" and r["books_missing"]),
+        "as_of": _iso(now)}}
+
+
+def coverage_text(cov: Dict) -> str:
+    """One sentence of the per-game coverage, for the run log and line note."""
+    s, games = cov["summary"], cov["games"]
+    missing = [f"{g} ({r['state']})" for g, r in games.items() if r["state"] != "priced"]
+    sparse = [f"{g} ({'/'.join(games[g]['books_offered'])} only)" for g in s["sparse_books"]]
+    return (f"Coverage: {s['priced']}/{s['n_games']} game(s) priced from offered quotes"
+            + (f"; not priced: {', '.join(missing)}" if missing else "")
+            + (f"; fewer books than requested: {', '.join(sparse)}" if sparse else "") + ".")
 
 
 def to_prop_lines_frame(rows: List[Dict], sharp_books=("pinnacle",),
@@ -517,17 +808,20 @@ def close_reserve_for(game_id: str, cost_per_event: float,
 
 def credit_plan(budget: CreditBudget, cost_per_event: float, game_ids: List[str],
                 kickoffs: Optional[Dict[str, dt.datetime]] = None,
-                reserve_close: bool = False, cap: Optional[int] = None) -> Dict:
+                reserve_close: bool = False, cap: Optional[int] = None,
+                held: float = 0.0) -> Dict:
     """The credit arithmetic for one pull, BEFORE any credit is spent.
 
     ``game_ids`` is the pull order (started games already removed). Walks it
     the way :func:`pull_week_props` will -- pull cost plus, with
     ``reserve_close``, the hold for that game's close -- and counts how many
-    games the month can afford. Pure: it reads the ledger and touches nothing.
+    games the month can afford. ``held`` is what EARLIER calls still hold for
+    other games' closes (:func:`outstanding_holds`); it is not spendable.
+    Pure: it reads the ledger and touches nothing.
 
     Returned (all numbers are credits)::
 
-        {month, cost_per_event, ceiling, used, spendable, n_games,
+        {month, cost_per_event, ceiling, used, held_earlier, spendable, n_games,
          pull_cost, close_reserve, needed, affordable_games, rationed_games,
          affordable, rationed}
     """
@@ -536,7 +830,7 @@ def credit_plan(budget: CreditBudget, cost_per_event: float, game_ids: List[str]
         ids = ids[:max(int(cap), 0)]
     holds = {g: (close_reserve_for(g, cost_per_event, kickoffs, budget.month)
                  if reserve_close else 0.0) for g in ids}
-    spendable = budget.remaining
+    spendable = max(budget.remaining - float(held), 0.0)
     committed = 0.0
     affordable: List[str] = []
     rationed: List[str] = []
@@ -549,7 +843,8 @@ def credit_plan(budget: CreditBudget, cost_per_event: float, game_ids: List[str]
             rationed.append(g)
     return {
         "month": budget.month, "cost_per_event": float(cost_per_event),
-        "ceiling": budget.ceiling, "used": budget.used, "spendable": spendable,
+        "ceiling": budget.ceiling, "used": budget.used, "held_earlier": float(held),
+        "spendable": spendable,
         "n_games": len(ids), "pull_cost": float(cost_per_event) * len(ids),
         "close_reserve": sum(holds.values()),
         "needed": float(cost_per_event) * len(ids) + sum(holds.values()),
@@ -565,7 +860,10 @@ def plan_text(plan: Dict) -> str:
             + (f" + {plan['close_reserve']:.0f} held for pre-kick closes"
                if plan['close_reserve'] else "")
             + f" = {plan['needed']:.0f} needed; {plan['spendable']:.0f} spendable "
-            f"({plan['used']:.0f} used of {plan['ceiling']:.0f}) -> "
+            f"({plan['used']:.0f} used of {plan['ceiling']:.0f}"
+            + (f", {plan['held_earlier']:.0f} still held for earlier pulls' closes"
+               if plan.get("held_earlier") else "")
+            + ") -> "
             f"{plan['affordable_games']} affordable, {plan['rationed_games']} rationed "
             f"at full per-event billing (the provider bills per market returned, so a "
             f"thin slate can afford more; every call still re-checks the hard stop)")
@@ -684,6 +982,10 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
 
     ordered = rotation_order(conn, list(event_map), kickoffs=kickoffs, now=now)
     started = set(started_games(list(event_map), kickoffs, now=now))
+    # Closes promised by EARLIER calls stay promised: a game of this call
+    # releases its own old hold only when it is answered again below.
+    held = outstanding_holds(conn, budget.month, now=now)
+    held_earlier = sum(v for g, v in held.items() if g not in event_map)
     # Provider quota BEFORE the plan. Required on the real network path; an
     # injected ``fetch`` (offline tests, captured-payload replay) touches no
     # meter and preflights only when handed a ``quota_fetch``.
@@ -699,10 +1001,11 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
                     "credits_planned": 0.0, "priced": [], "empty": [],
                     "close_reserved": 0.0, "budget_remaining": 0.0, "ts": ts,
                     "plan": None, "book_coverage": book_coverage(cfg, {}),
-                    "quota_preflight": preflight}
+                    "quota_preflight": preflight, "credits_held_for_closes": held_earlier}
     # The arithmetic, before the first metered call, in the log and the result.
     plan = credit_plan(budget, cost_per_event, [g for g in ordered if g not in started],
-                       kickoffs=kickoffs, reserve_close=reserve_close, cap=cap)
+                       kickoffs=kickoffs, reserve_close=reserve_close, cap=cap,
+                       held=held_earlier)
     print(f"[oddsapi] {plan_text(plan)}")
     pulled, skipped_budget, skipped_cap = [], [], []
     skipped_started: List[str] = []
@@ -712,6 +1015,7 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
     empty: List[str] = []   # answered with no quote (books not posted yet)
     reserved = 0.0          # closes held for games pulled in THIS call
     books_by_game: Dict[str, List[str]] = {}
+    pull_records: List[Dict] = []
 
     for game_id in ordered:
         # A game already under way cannot be bet from this board; spending a
@@ -725,7 +1029,8 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             continue
         hold = (close_reserve_for(game_id, cost_per_event, kickoffs, budget.month)
                 if reserve_close else 0.0)
-        if not budget.can_spend(cost_per_event + reserved + hold):
+        others_held = sum(v for g, v in held.items() if g != game_id)
+        if not budget.can_spend(cost_per_event + reserved + hold + others_held):
             skipped_budget.append(game_id)
             continue
         params = {"apiKey": cfg.get("odds_api_key", ""),
@@ -764,11 +1069,17 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
         if not rows:
             empty.append(game_id)
         books_by_game[game_id] = books_in_payload(payload)
+        held.pop(game_id, None)       # answered again: its old hold is superseded
+        pull_records.append(_pull_record(
+            ts, game_id, event_map[game_id], "entry" if reserve_close else "pull",
+            budget.month, rows, payload, cost_per_event, headers, hold,
+            (kickoffs or {}).get(game_id)))
 
     written = 0
     if all_rows:
         written = dbmod.upsert(conn, "lines", all_rows,
                                ["ts", "game_id", "book", "market", "player_name", "side"])
+    record_pulls(conn, pull_records)
     coverage = book_coverage(cfg, books_by_game)
     if coverage["absent_from_provider_response"]:
         print(f"[oddsapi] books requested but absent from the provider response: "
@@ -784,23 +1095,26 @@ def pull_week_props(cfg: Dict, event_map: Dict[str, str], conn=None,
             "skipped_budget": skipped_budget, "skipped_cap": skipped_cap,
             "skipped_started": skipped_started, "skipped_error": skipped_error,
             "rows_written": written, **tally.fields(),
-            "close_reserved": reserved,
+            "close_reserved": reserved, "credits_held_for_closes": held_earlier,
             "budget_remaining": budget.remaining, "ts": ts,
             "book_coverage": coverage, "plan": plan, "quota_preflight": preflight}
 
 
 def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
                  fetch: Optional[Callable] = None, ts: Optional[str] = None,
-                 quota_fetch: Optional[Callable] = None) -> Dict:
+                 quota_fetch: Optional[Callable] = None,
+                 budget: Optional[CreditBudget] = None,
+                 now: Optional[dt.datetime] = None) -> Dict:
     """Second snapshot for SPECIFIC games (no rotation, no per-run cap — the
     caller passes exactly the games that already have entry lines and kick
     soon). This is what makes CLV resolvable: entry = Wednesday snapshot,
-    close = this pre-kickoff snapshot. Budget hard-stop still applies."""
+    close = this pre-kickoff snapshot. Budget hard-stop still applies, and a
+    close never spends the credits still HELD for another game's close."""
     fetch = fetch or get_json_with_headers
     conn = conn or dbmod.connect()
     ob = cfg.get("odds_budget") or {}
-    budget = CreditBudget(conn, int(ob.get("monthly_credits", 500)),
-                          int(ob.get("reserve", 50)))
+    budget = budget or CreditBudget(conn, int(ob.get("monthly_credits", 500)),
+                                    int(ob.get("reserve", 50)))
     from ..config import prop_markets_external
     markets = prop_markets_external(cfg)
     regions = str(cfg.get("regions", "us"))
@@ -818,8 +1132,10 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
     pulled, skipped, rows, empty = [], [], [], []
     tally = BillingTally(budget.used)
     books_by_game: Dict[str, List[str]] = {}
+    held = outstanding_holds(conn, budget.month, now=now)
+    pull_records: List[Dict] = []
     for game_id, event_id in sorted(event_map.items()):
-        if not budget.can_spend(cost):
+        if not budget.can_spend(cost + sum(v for g, v in held.items() if g != game_id)):
             skipped.append(game_id)
             continue
         params = {"apiKey": cfg.get("odds_api_key", ""),
@@ -840,8 +1156,12 @@ def resnap_lines(cfg: Dict, event_map: Dict[str, str], conn=None,
         if not game_rows:
             empty.append(game_id)
         books_by_game[game_id] = books_in_payload(payload)
+        held.pop(game_id, None)       # the close is taken: its hold is released
+        pull_records.append(_pull_record(ts, game_id, event_id, "close", budget.month,
+                                         game_rows, payload, cost, headers, 0.0, None))
     written = dbmod.upsert(conn, "lines", rows,
                            ["ts", "game_id", "book", "market", "player_name", "side"]) if rows else 0
+    record_pulls(conn, pull_records)
     coverage = book_coverage(cfg, books_by_game)
     if coverage["absent_from_provider_response"]:
         print(f"[oddsapi] resnap: books requested but absent from the provider response: "

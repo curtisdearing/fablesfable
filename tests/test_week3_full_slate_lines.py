@@ -153,6 +153,7 @@ def test_credit_plan_for_a_full_week_within_budget(conn):
                            reserve_close=True, cap=16)
     assert plan == {
         "month": "2026-09", "cost_per_event": 5.0, "ceiling": 450.0, "used": 225.0,
+        "held_earlier": 0.0,
         "spendable": 225.0, "n_games": 16, "pull_cost": 80.0, "close_reserve": 80.0,
         "needed": 160.0, "affordable_games": 16, "rationed_games": 0,
         "affordable": list(WEEK3), "rationed": [],
