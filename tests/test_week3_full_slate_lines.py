@@ -153,6 +153,7 @@ def test_credit_plan_for_a_full_week_within_budget(conn):
                            reserve_close=True, cap=16)
     assert plan == {
         "month": "2026-09", "cost_per_event": 5.0, "ceiling": 450.0, "used": 225.0,
+        "held_earlier": 0.0,
         "spendable": 225.0, "n_games": 16, "pull_cost": 80.0, "close_reserve": 80.0,
         "needed": 160.0, "affordable_games": 16, "rationed_games": 0,
         "affordable": list(WEEK3), "rationed": [],
@@ -189,15 +190,17 @@ def test_rationing_prices_the_soonest_kickoffs_and_is_enforced(conn, capsys):
     assert "-> 10 affordable, 6 rationed" in out
 
 
-def test_a_close_in_the_next_ledger_month_is_not_held(conn):
-    """The Sep 30 Wednesday (Week 4): its closes fall in October's quota."""
+def test_a_close_in_the_next_calendar_month_is_still_held(conn):
+    """The Sep 30 Wednesday (Week 4): its closes fall in October. The provider's
+    billing cycle is unknown (378 used / 122 left on 2026-10-06), so no fresh
+    quota is assumed at the calendar boundary -- the close is held."""
     budget = oap.CreditBudget(conn, 500, 50, month="2026-09")
     kos = {"2026_04_A_B": dt.datetime(2026, 10, 4, 13, 0, tzinfo=ET)}
-    assert oap.close_reserve_for("2026_04_A_B", COST, kos, "2026-09") == 0.0
+    assert oap.close_reserve_for("2026_04_A_B", COST, kos, "2026-09") == COST
     assert oap.close_reserve_for("2026_03_ATL_GB", COST, _kickoffs(), "2026-09") == COST
     assert oap.close_reserve_for("unknown", COST, kos, "2026-09") == COST
     plan = oap.credit_plan(budget, COST, ["2026_04_A_B"], kickoffs=kos, reserve_close=True)
-    assert plan["close_reserve"] == 0.0 and plan["needed"] == COST
+    assert plan["close_reserve"] == COST and plan["needed"] == 2 * COST
 
 
 def test_no_reserve_reproduces_the_plain_budget_check(conn):

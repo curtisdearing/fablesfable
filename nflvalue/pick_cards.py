@@ -31,11 +31,13 @@ import datetime as dt
 import html
 import math
 from typing import Dict, Iterable, List, Optional
+from zoneinfo import ZoneInfo
 
 VALIDATED_MARKETS: frozenset = frozenset()
 STALE_QUOTE_HOURS = 6.0
 FUTURE_TOLERANCE_MIN = 5.0
 FOOTBALL_ONLY_PREFIX = "ff-football-only-"
+ET = ZoneInfo("America/New_York")
 VALIDATION_NOTE = ("Model probability is NOT validated as calibrated at offered lines: on 2026 "
                    "weeks 1-2 settled exact lines (307 events, 20 games) it scored Brier 0.263 "
                    "vs coin 0.250 and market consensus 0.248.")
@@ -115,11 +117,43 @@ def _starter_block(row: Dict) -> Optional[str]:
     return None
 
 
+def _week_kickoffs(season: int, week: int) -> Dict[str, dt.datetime]:
+    """Return regular-season kickoff clocks from nflverse's Eastern schedule.
+
+    This is a render-time lookup. It never alters an issued row, but keeps an
+    old pregame quote from being presented as executable after kickoff.
+    """
+    from . import ingest
+
+    try:
+        schedules = ingest.load_all_schedules()
+    except Exception:  # noqa: BLE001 -- cards remain readable if schedule storage is unavailable
+        return {}
+    if schedules is None or schedules.empty:
+        return {}
+    games = schedules[(schedules["season"] == season) & (schedules["week"] == week)]
+    if "game_type" in games.columns:
+        games = games[games["game_type"] == "REG"]
+    out: Dict[str, dt.datetime] = {}
+    for game in games.itertuples(index=False):
+        game_id = _s(getattr(game, "game_id", None))
+        gameday = _s(getattr(game, "gameday", None))
+        gametime = _s(getattr(game, "gametime", None)) or "13:00"
+        if not game_id or not gameday:
+            continue
+        try:
+            out[game_id] = dt.datetime.fromisoformat(f"{gameday}T{gametime}").replace(tzinfo=ET)
+        except ValueError:
+            continue
+    return out
+
+
 def build_card(row: Dict, now: dt.datetime) -> Dict:
     side = (_s(row.get("side")) or "").lower()
     line, price = _f(row.get("line")), _f(row.get("price"))
     mean, sd, p = _f(row.get("mean")), _f(row.get("sd")), _f(row.get("p_side"))
     book, quote_ts = _s(row.get("quote_book")), _ts(row.get("quote_ts"))
+    kickoff = _ts(row.get("_kickoff") or row.get("kickoff"))
     age_h = (now - quote_ts).total_seconds() / 3600 if quote_ts else None
     offered = row.get("line_source") == "odds_api"
     version = _s(row.get("forecast_version"))
@@ -141,7 +175,10 @@ def build_card(row: Dict, now: dt.datetime) -> Dict:
         invalid.append("sd missing or non-positive")
     if p is None or not 0.0 <= p <= 1.0:
         invalid.append("model probability missing or outside [0, 1]")
-    if _s(row.get("status")) == "voided":
+    if kickoff is not None and kickoff <= now:
+        status = "research"
+        reasons.append("game under way at decision time; pregame quote no longer executable")
+    elif _s(row.get("status")) == "voided":
         status = "pass"
         reasons.append(f"voided: {_s(row.get('void_reason')) or 'unspecified'}")
     elif invalid:
@@ -268,10 +305,12 @@ def week_cards(conn, season: int, week: int, now: Optional[dt.datetime] = None) 
                  .drop_duplicates(["game_id", "player_id", "market"], keep="last"))
         rows = leans.to_dict("records")
         verify_quotes(conn, rows)
+        kickoffs = _week_kickoffs(season, week)
         from . import factor_integration as fimod
         receipts = fimod.load_receipts(conn, season, week)
         context = fimod.load_context_records(conn, season, week)
         for r in rows:
+            r["_kickoff"] = kickoffs.get(str(r.get("game_id") or ""))
             r["_factor_panel"] = fimod.card_panel(r, receipts, context)
             rc = receipts.get(r.get("run_id")) or {}
             r["_run_publish"] = rc.get("publish")          # None: not recorded -> not executable

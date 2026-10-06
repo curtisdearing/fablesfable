@@ -82,6 +82,44 @@ def _run_checker(site_parent):
         os.chdir(cwd)
 
 
+def test_coverage_keeps_game_lines_in_a_truthful_table_separate_from_player_props():
+    payload = {
+        "season": 2026,
+        "week": 5,
+        "factor_receipts": [{
+            "run_id": "run-1",
+            "clock": "wed",
+            "as_of": "2026-10-07T15:00:00Z",
+            "odds_coverage": {
+                "summary": {"product": "player props", "n_games": 1},
+                "games": {"2026_05_TB_DAL": {"state": "no_current_quotes"}},
+            },
+            "game_lines": {
+                "summary": {"product": "game lines (h2h/spreads/totals)", "n_games": 1},
+                "games": {"2026_05_TB_DAL": {
+                    "state": "priced", "capture_clock": "2026-10-07T15:00:00Z",
+                    "book_clock_min": "2026-10-07T14:59:00Z", "book_clock_max": "2026-10-07T15:00:00Z",
+                    "quote_age_hours": 0.0, "books_by_market": {"h2h": ["draftkings"],
+                                                                    "spreads": ["draftkings"],
+                                                                    "totals": ["draftkings"]},
+                    "markets_offered": ["h2h", "spreads", "totals"], "markets_missing": [],
+                    "books_missing": [], "started": False, "reused_cached_answer": False,
+                }},
+            },
+        }],
+    }
+
+    doc = bps.coverage_doc(payload)
+    run = doc["runs"][0]
+    assert doc["schema"] == "fablesfable.odds_coverage.v2"
+    assert run["props"]["games"]["2026_05_TB_DAL"]["state"] == "no_current_quotes"
+    assert run["game_lines"]["games"]["2026_05_TB_DAL"]["state"] == "priced"
+    page = bps.coverage_page(doc)
+    assert "Player-prop coverage" in page and "Game-line coverage (moneyline / spread / total)" in page
+    assert page.count("<table>") == 2
+    assert "no_current_quotes" in page and "Book clocks" in page and "2026-10-07T14:59:00Z" in page
+
+
 def test_builds_current_week_top_level_and_passes_the_workflow_checker(tmp_path):
     db = _db(tmp_path, [_lean(), _lean(player_id="p2", name="B.Robinson", market="rushing_yards",
                                        line_source="synthetic_trailing_mean", price=None, quote_book=None,
@@ -255,3 +293,83 @@ def test_production_runs_generate_and_one_publisher_deploys():
     assert "cand > live" in site  # never replaces a newer publication with an older one
     assert site.count("actions/deploy-pages@v4") == 1
     assert "group: football-website-publication" in site and "cancel-in-progress: false" in site
+
+
+# ------------------------------------------------------- settled results (results-only job) --
+def _settled_db(tmp_path):
+    """The generator's lean fixture plus a settled issued ledger (the real week-4 Monday final)."""
+    import shutil
+    sys.path.insert(0, str(Path(__file__).parent))
+    import datetime as _dt
+    import test_issued_game_total_settlement as mnf
+    import test_issued_results_loop as loop
+    from nflvalue import issued_results as ir
+    led = tmp_path / "led"
+    led.mkdir()
+    conn = mnf._ledger(led)
+    ir.settle(conn, now=loop.NOW, http=loop.Fetcher())
+    conn.close()
+    db = _db(tmp_path, [_lean()])
+    src = sqlite3.connect(led / "ledger.db")
+    dst = sqlite3.connect(db)
+    for table in ("issued_picks", "issued_pick_events", "issued_results", "result_captures"):
+        ddl = src.execute("SELECT sql FROM sqlite_master WHERE name=?", (table,)).fetchone()[0]
+        dst.execute(ddl)
+        rows = src.execute(f"SELECT * FROM {table}").fetchall()
+        if rows:
+            dst.executemany(f"INSERT INTO {table} VALUES ({','.join('?' * len(rows[0]))})", rows)
+    dst.commit()
+    src.close()
+    dst.close()
+    return db
+
+
+def test_results_page_shows_settled_issued_picks_and_passes_the_publisher_checker(tmp_path):
+    db = _settled_db(tmp_path)
+    out = tmp_path / "site" / "published-site"
+    assert bps.main(["--db", str(db), "--season", "2026", "--week", "3", "--archive", str(_archive(tmp_path)),
+                     "--out", str(out), "--label", "fresh", "--now", "2026-10-06T10:00:00Z"]) == 0
+    _run_checker(out.parent)                                   # website.yml accepts results files
+    m = json.loads((out / "publication.json").read_text())
+    assert {"results.html", "api/results.json"} <= set(m["files"])
+    doc = json.loads((out / "api" / "results.json").read_text())
+    rows = {r["market"]: r for r in doc["sections"]["delivered_historical_import"]["rows"]}
+    assert (rows["passing_yards"]["settlement"], rows["game_total"]["settlement"]) == ("win", "loss")
+    assert m["results_checked_at"] == doc["results_checked_at"] == "2026-10-06T09:40:00Z"
+    page = (out / "results.html").read_text()
+    assert "LOSS</b>" in page and "WIN</b>" in page and "Recorded after kickoff" in page
+    assert "violation" in page and "summary?event=401872979" in page
+    assert 'href="results.html"' in (out / "index.html").read_text()
+
+
+def test_results_label_never_presents_saved_cards_as_a_fresh_forecast(tmp_path):
+    db = _settled_db(tmp_path)
+    out = tmp_path / "site" / "published-site"
+    assert bps.main(["--db", str(db), "--season", "2026", "--week", "3", "--archive", str(_archive(tmp_path)),
+                     "--out", str(out), "--label", "results", "--now", "2026-10-06T10:00:00Z"]) == 0
+    _run_checker(out.parent)
+    m = json.loads((out / "publication.json").read_text())
+    hub = json.loads((out / "api" / "hub.json").read_text())
+    assert m["label"] == hub["label"] == "results"
+    assert m["published_at"] == "2026-10-06T10:00:00+00:00"            # newer than the live site: publishable
+    assert hub["generated_at"] == "2026-09-22T22:35:05+00:00"           # cards rendered at their run clock
+    index = (out / "index.html").read_text()
+    assert "RESULTS UPDATE" in index and "not a new forecast" in index and "FRESH" not in index
+    assert "Generated 2026-09-22T22:35:05+00:00" in index
+
+
+def test_database_without_results_tables_publishes_an_honest_empty_results_page(tmp_path):
+    db = _db(tmp_path, [_lean()])
+    out = tmp_path / "site" / "published-site"
+    assert bps.main(["--db", str(db), "--season", "2026", "--week", "3", "--archive", str(_archive(tmp_path)),
+                     "--out", str(out), "--label", "fresh", "--now", "2026-09-23T00:00:00Z"]) == 0
+    doc = json.loads((out / "api" / "results.json").read_text())
+    assert all(not s["rows"] for s in doc["sections"].values()) and doc["results_checked_at"] is None
+    assert "No settled issued picks" in doc["note"]
+
+
+def test_results_label_without_a_readable_run_clock_publishes_nothing(tmp_path):
+    db = _db(tmp_path, [_lean(created_at="not a clock", as_of=None)])
+    assert bps.main(["--db", str(db), "--season", "2026", "--week", "3", "--archive", str(_archive(tmp_path)),
+                     "--out", str(tmp_path / "o"), "--label", "results", "--now", "2026-10-06T10:00:00Z"]) == 3
+    assert not (tmp_path / "o").exists()

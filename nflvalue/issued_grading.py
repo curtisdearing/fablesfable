@@ -31,7 +31,9 @@ missing that metadata, not final, captured before kickoff, or repeated for one
 game are rejected. Records bind by EXACT game id. Passing attempts are the
 official ``completions/passingAttempts`` (sacks excluded). A player absent from
 the market's box category, a missing key or a non-numeric value is UNRESOLVED
-(zero is not verified). Nothing here refits or writes model adjustments.
+(zero is not verified). Game-level markets (``GAME_MARKETS``) settle on the final
+box header's own team scores; a header without both numeric scores is UNRESOLVED.
+Nothing here refits or writes model adjustments.
 """
 
 from __future__ import annotations
@@ -54,6 +56,8 @@ BOX_STAT = {"passing_yards": ("passing", "passingYards"),
             "rushing_yards": ("rushing", "rushingYards"), "rush_attempts": ("rushing", "rushingAttempts"),
             "receiving_yards": ("receiving", "receivingYards"), "receptions": ("receiving", "receptions")}
 TD_KEYS = (("rushing", "rushingTouchdowns"), ("receiving", "receivingTouchdowns"))
+#: markets settled on the game's final score (no player row): actual = away + home points
+GAME_MARKETS = ("game_total",)
 INTERVAL = 0.80
 ET = ZoneInfo("America/New_York")
 SHOWN = ("published", "delivered")
@@ -97,6 +101,7 @@ def box_game(gp: Dict, captured_at: str, source: str) -> Dict:
         raise ValueError(f"season type {stype!r} is not the regular season (2)")
     teams = {t.get("homeAway"): ALIAS.get(t["team"]["abbreviation"], t["team"]["abbreviation"])
              for t in c.get("competitors") or []}
+    scores = {t.get("homeAway"): _num(t.get("score")) for t in c.get("competitors") or []}
     if set(teams) != {"home", "away"}:
         raise ValueError("box header lacks home/away teams")
     kick = _ts(c.get("date"))
@@ -119,7 +124,8 @@ def box_game(gp: Dict, captured_at: str, source: str) -> Dict:
                 row["cats"][cat["name"]] = dict(zip(cat.get("keys") or [], a.get("stats") or []))
     return {"game_id": f"{year}_{week:02d}_{teams['away']}_{teams['home']}", "season": year, "week": week,
             "season_type": stype, "espn_event": str(event), "home": teams["home"], "away": teams["away"],
-            "kickoff": c.get("date"),
+            "home_score": scores.get("home"), "away_score": scores.get("away"), "kickoff": c.get("date"),
+            "status_name": status.get("name"),
             "final": status.get("name") == "STATUS_FINAL" and bool(status.get("completed")),
             "captured_after_kickoff": cap > kick,
             "athletes": athletes, "captured_at": captured_at, "source": source}
@@ -216,6 +222,16 @@ def box_actual(athlete: Dict, market: str):
     return (v, None) if v is not None else (None, f"box value {raw!r} is not numeric")
 
 
+def game_actual(game: Dict, market: str):
+    """(value, None) or (None, reason) for a game-level market, from the final box header."""
+    if market != "game_total":
+        return None, f"market {market!r} has no game-level definition"
+    home, away = game.get("home_score"), game.get("away_score")
+    if home is None or away is None:
+        return None, "final box header lacks a numeric score for both teams"
+    return float(home + away), None
+
+
 # ------------------------------------------------------------------ records --
 def slate_tag(kickoff: Optional[str]) -> str:
     t = _ts(kickoff)
@@ -260,6 +276,11 @@ def grade_record(r: Dict, games: Dict[str, Dict], id_map=None) -> Dict:
     ident = None
     if not game:
         v = st.Verdict(st.UNRESOLVED, None, None, "no verified official final box for this exact game id")
+    elif r.get("market") in GAME_MARKETS:
+        ident = "game_level_market"
+        actual, why = game_actual(game, r["market"])
+        v = (st.settle(r["market"], r.get("side"), r.get("line"), actual, has_stat_row=True)
+             if why is None else st.Verdict(st.UNRESOLVED, None, None, why))
     else:
         ath, ident = identify(r, game, id_map)
         if ath is None:
@@ -386,8 +407,10 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         kick = _ts(g["kickoff"]) if g else None
         pro = _prospective_events(r, kick)
         stage = max((e["stage"] for e in pro), key=_STAGE_RANK.get, default=None)
-        first = min((_ts(e["recorded_at"]) for e in pro), default=None)
-        info.append({"r": r, "stage": stage, "first_seen": first, "has_game": g is not None})
+        first_ev = min(pro, key=lambda e: _ts(e["recorded_at"]), default=None)
+        first = _ts(first_ev["recorded_at"]) if first_ev else None
+        info.append({"r": r, "stage": stage, "first_seen": first, "first_event": first_ev, "has_game": g is not None,
+                     "kick": kick})
     by_key = defaultdict(list)
     for i in info:
         by_key[i["r"]["pick_key"]].append(i)
@@ -405,7 +428,7 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
                 seen[key]["same_decision_records"].append(i["r"]["record_id"])
                 continue
             unit = {"record": i["r"], "stage": i["stage"], "first_seen": i["first_seen"],
-                    "same_decision_records": []}
+                    "first_event": i["first_event"], "same_decision_records": []}
             seen[key] = unit
             rows.append(unit)
         for u in rows:
@@ -422,18 +445,29 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
         return rows
 
     issued = lambda i: i["r"].get("pick_class") in ("recommendation", "watch")  # noqa: E731
+
+    def delivered_historical(i):
+        # a recommendation the source says was delivered before kickoff, imported after it:
+        # keeps its identity, original issue clock and W/L record; never prospective
+        issued_at = _ts(original_issue_ts(i["r"]))
+        return (i["r"].get("pick_class") == "recommendation" and i["stage"] is None
+                and historical_import(i["r"]) and i["kick"] is not None and issued_at is not None
+                and issued_at < i["kick"])
+
     secs = {
         "recommendations_given": section(lambda i: i["r"].get("pick_class") == "recommendation"
                                          and i["stage"] in SHOWN),
+        "delivered_historical_import": section(delivered_historical),
         "watch_published": section(lambda i: i["r"].get("pick_class") == "watch" and i["stage"] in SHOWN),
         "generated_not_shown": section(lambda i: issued(i) and i["stage"] == "generated"),
-        "retrospective": section(lambda i: issued(i) and i["stage"] is None),
+        "retrospective": section(lambda i: issued(i) and i["stage"] is None and not delivered_historical(i)),
     }
     latest = []
     for lst in by_key.values():
         pro = [i for i in lst if i["stage"] is not None]
         if pro:
             latest.append({"record": pro[-1]["r"], "stage": pro[-1]["stage"], "first_seen": pro[-1]["first_seen"],
+                           "first_event": pro[-1]["first_event"],
                            "same_decision_records": [], "later_records": [], "revises": None})
     secs["latest_pre_kick_snapshot"] = latest
     pol = [policy_of(i["r"]) for i in info]
@@ -444,6 +478,36 @@ def _sections(records: List[Dict], games: Dict[str, Dict]):
               "policy_approved_records": sum(p["policy_class"] == "approved" for p in pol),
               **{k: len(v) for k, v in secs.items()}}
     return secs, counts
+
+
+_RECEIPT_KEYS = ("event_id", "record_id", "stage", "surface", "event_ts", "evidence_json", "recorded_at")
+
+
+def event_receipt(event: Optional[Dict]) -> Optional[str]:
+    """sha256 of one ledger stage event (its evidence and ledger clock): the capture receipt."""
+    if not event:
+        return None
+    return hashlib.sha256(json.dumps({k: event.get(k) for k in _RECEIPT_KEYS}, sort_keys=True,
+                                     default=str).encode()).hexdigest()
+
+
+def original_issue_ts(record: Dict) -> Optional[str]:
+    """The earliest zoned clock of a ``delivered`` stage event: the original issue time."""
+    clocks = sorted((_ts(e.get("event_ts")), e.get("event_ts")) for e in record.get("events") or []
+                    if e.get("stage") == "delivered" and _ts(e.get("event_ts")) is not None)
+    return clocks[0][1] if clocks else None
+
+
+def historical_import(record: Dict) -> bool:
+    """True when any delivery event says the record was imported after the fact."""
+    for e in record.get("events") or []:
+        try:
+            ev = json.loads(e.get("evidence_json") or "{}")
+        except (TypeError, ValueError):
+            continue
+        if isinstance(ev, dict) and ev.get("delivery_evidence_kind") == "retrospective_import":
+            return True
+    return False
 
 
 def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
@@ -463,6 +527,8 @@ def grade(records: List[Dict], boxes: Dict, id_map=None, closes=None,
                 cache[r["record_id"]] = g
             rows.append({**cache[r["record_id"]], **policy_of(r), "section": name, "evidence_stage": u["stage"],
                          "first_seen_in_ledger": u["first_seen"].isoformat() if u["first_seen"] else None,
+                         "capture_receipt_sha256": event_receipt(u.get("first_event")),
+                         "historical_import": historical_import(r), "original_issue_ts": original_issue_ts(r),
                          "same_decision_records": u["same_decision_records"],
                          "later_records": u["later_records"], "revises": u["revises"]})
         rows.sort(key=lambda g: (g["season"], g["week"], g["game_id"] or "", g["pick_key"],

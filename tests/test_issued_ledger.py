@@ -439,6 +439,8 @@ def test_migration_7_is_additive_on_the_production_fixture(tmp_path):
     before = raw.execute("SELECT COUNT(*) FROM leans").fetchone()[0]
     raw.close()
     conn = dbmod.connect(str(tmp_path / "p.db"))
-    assert dbmod.user_version(conn) == 7 and conn.execute("SELECT COUNT(*) FROM leans").fetchone()[0] == before
+    assert dbmod.user_version(conn) == dbmod.SCHEMA_VERSION >= 7
+    assert conn.execute("SELECT COUNT(*) FROM leans").fetchone()[0] == before
+    assert conn.execute("SELECT COUNT(*) FROM issued_results").fetchone()[0] == 0   # nothing settled by migrating
     assert conn.execute("SELECT COUNT(*) FROM issued_picks").fetchone()[0] == 0     # nothing backfilled
     assert conn.execute("SELECT COUNT(*) FROM issued_pick_events").fetchone()[0] == 0

@@ -4,7 +4,8 @@
 #   scripts/install_pregame_scheduler.sh --uninstall
 # Needs: git, python3 (stdlib only) and an authenticated `gh` on PATH. The agent ticks every
 # 5 minutes while you are logged in and the Mac is awake; a slot that passes while the Mac
-# sleeps is announced as MISSED on the next tick.
+# sleeps, is closed or is off is NOT run -- it is announced as MISSED on the next tick, and
+# `pregame_scheduler.py --health` exits 1 until someone has seen it.
 set -euo pipefail
 LABEL=com.fablesfable.pregame-scheduler
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
@@ -44,3 +45,5 @@ launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
 launchctl bootstrap "$DOMAIN" "$PLIST"
 echo "installed $LABEL -> $PLIST (ticks every 5 min; logs in $OPS/logs)"
 "$PY" "$RUNNER/scripts/pregame_scheduler.py" --ops-dir "$OPS" --repo-dir "$RUNNER" --no-sync --dry-run | tail -1
+echo "runner at $(git -C "$RUNNER" rev-parse HEAD); health after the first tick (<= 5 min):"
+echo "  $PY $RUNNER/scripts/pregame_scheduler.py --ops-dir $OPS --health"

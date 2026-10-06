@@ -5,6 +5,7 @@ or a Cowork scheduled task needs ZERO variables.
     python3 scripts/auto_weekly.py --job wed       # Wednesday full run + Discord
     python3 scripts/auto_weekly.py --job t90       # refresh games kicking off soon
     python3 scripts/auto_weekly.py --job tuesday   # grade + CLV + retrain the ML
+    python3 scripts/auto_weekly.py --job results   # settle the issued-pick ledger ONLY
 
 Every job exits cleanly (code 0, one log line) in the offseason or when
 there's nothing to do, so schedules can run year-round untouched. Kickoff
@@ -285,6 +286,56 @@ def job_wed() -> int:
     return 0
 
 
+def closing_resnap(conn, cfg, soon, done, oap, pwmod, now=None) -> dict:
+    """Pre-kick close snapshot for due games that have entry lines and no t90 leans yet.
+
+    Once-only: a game whose provider already answered within
+    ``pipeline_weekly.T90_LINE_FRESH_HOURS`` (the same guard ``run_t90`` applies) is skipped,
+    so a re-fired slot or a retry after one sibling failed never bills a game twice. Every
+    target gets one ``[auto] closing resnap <game>: ...`` receipt line for the scheduler's
+    per-game read-back -- priced, answered without quotes, not answered, no provider event
+    (with the identity reason) or FAILED -- and the answered-call receipts stay in line_pulls."""
+    from nflvalue import db as dbmod
+    have_lines = set(dbmod.query_df(conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
+    targets = [g.game_id for g in soon.itertuples(index=False) if g.game_id in have_lines and g.game_id not in done]
+    fresh_hours = float(getattr(pwmod, "T90_LINE_FRESH_HOURS", 1.0))
+    recent = oap.answered_since(conn, targets, now=now, max_age_hours=fresh_hours) if targets else {}
+    for gid in targets:
+        if gid in recent:
+            print(f"[auto] closing resnap {gid}: skipped, provider answered at {recent[gid]} (no second charge)")
+    todo = [gid for gid in targets if gid not in recent]
+    out = {"targets": targets, "skipped_recent": sorted(recent), "resnapped": todo, "per_game": {}}
+    if not todo:
+        return out
+    try:
+        identity: dict = {}
+        emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(todo)], details=identity)
+        res = oap.resnap_lines(cfg, emap, conn=conn)
+    except Exception as exc:
+        for gid in todo:
+            print(f"[auto] closing resnap {gid} FAILED: {exc}")
+        raise
+    empty = set(res.get("empty") or [])
+    priced = set(res.get("priced") or [g for g in res.get("pulled") or [] if g not in empty])
+    for gid in todo:
+        if gid not in emap:
+            why = ((identity.get("games") or {}).get(gid) or {}).get("reason") or "no event match"
+            line = f"no provider event ({why}); close not priced"
+        elif gid in priced:
+            line = f"answered with quotes (event {emap[gid]}); close priced"
+        elif gid in empty:
+            line = f"answered without quotes (event {emap[gid]}); close not priced"
+        else:
+            line = "not answered (budget, close hold or call failure); close not priced"
+        out["per_game"][gid] = line
+        print(f"[auto] closing resnap {gid}: {line}")
+    print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
+          f"{len(res.get('empty') or [])} with no quotes, "
+          f"{res['rows_written']} rows, {oap.billing_text(res)}, "
+          f"{res['budget_remaining']:.0f} credits left")
+    return {**out, "rows_written": res["rows_written"]}
+
+
 def job_t90() -> int:
     from nflvalue import config as cfgmod, db as dbmod
     import pipeline_weekly as pw
@@ -319,17 +370,7 @@ def job_t90() -> int:
         try:
             from nflvalue.sources import oddsapi_props as oap
             import pipeline_weekly as pwmod
-            have_lines = set(dbmod.query_df(
-                conn, "SELECT DISTINCT game_id FROM lines")["game_id"].tolist())
-            targets = [g.game_id for g in soon.itertuples(index=False)
-                       if g.game_id in have_lines and g.game_id not in done]
-            if targets:
-                emap = pwmod.build_event_map(cfg, soon[soon.game_id.isin(targets)])
-                res = oap.resnap_lines(cfg, emap, conn=conn)
-                print(f"[auto] closing resnap: {len(res['pulled'])} game(s), "
-                      f"{len(res.get('empty') or [])} with no quotes, "
-                      f"{res['rows_written']} rows, {oap.billing_text(res)}, "
-                      f"{res['budget_remaining']:.0f} credits left")
+            closing_resnap(conn, cfg, soon, done, oap, pwmod, now=now.astimezone(dt.timezone.utc))
         except Exception as exc:  # noqa: BLE001
             print(f"[auto] closing resnap failed (CLV close may be stale): {exc}")
     conn.close()
@@ -403,6 +444,73 @@ def job_tuesday() -> int:
     return 0
 
 
+RESULTS_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_EXPORT = "data/issued_results.json"
+EVIDENCE_LEDGER = "data/evidence_ledger.jsonl"   # persisted by scripts/state_store.py
+RESEARCH_STATUS = "data/research_status.json"
+RESULTS_EVIDENCE = "reports/results"
+
+
+def job_results() -> int:
+    """Results-only settlement of the issued-pick ledger after game windows.
+
+    Separate from the Tuesday learning job on purpose: no feed ingest, no odds request, no
+    candidate re-enumeration, no learning-state or ML fit, no Discord. It reads the ledger in the
+    restored production state, settles completed games from official final box scores
+    (``nflvalue.issued_results``) and appends the grades; the frozen issued records are only read.
+    Writes ``data/issued_results.json`` (production state, rendered publicly by
+    ``scripts/build_public_site.py``) and ``reports/results/summary.json``, whose ``written`` count
+    lets the workflow skip saving state and publishing when nothing changed. A refused or failed
+    fetch leaves the game pending for the next run; a ledger/DB failure exits 1 so no partial state
+    is saved.
+    """
+    import json
+    from nflvalue import config as cfgmod, db as dbmod, issued_results as ir
+    root = RESULTS_ROOT
+    evidence = root / RESULTS_EVIDENCE
+    conn = dbmod.connect()
+    try:
+        summary = ir.settle(conn, now=now_et().astimezone(dt.timezone.utc), evidence_dir=str(evidence / "boxes"))
+        doc = ir.export(conn, checked_at=summary["checked_at"])
+        latest = ir.current(conn)
+    except Exception as exc:  # noqa: BLE001 -- never save a half-settled state
+        print(f"[auto] results settlement FAILED; production state not changed: {exc}")
+        return 1
+    finally:
+        conn.close()
+    summary.setdefault("written", 0)
+    # Research evidence loop, strictly AFTER issuance capture and verified final-box grading:
+    # the latest grade per record/section is appended to the sha256-chained ledger (identical
+    # re-reads skip, a stat correction appends a revision). Descriptive only: no fit, no promotion.
+    try:
+        from analysis import evidence_loop as el
+        ledger = str(root / EVIDENCE_LEDGER)
+        appended = el.append_evidence(ledger, el.from_results_rows(latest), recorded_at=summary["checked_at"])
+        research = el.research_status(ledger, checked_at=summary["checked_at"], last_append=appended)
+    except Exception as exc:  # noqa: BLE001 -- the ledger is state: never save a half-written one
+        print(f"[auto] research evidence loop FAILED; production state not changed: {exc}")
+        return 1
+    summary["evidence"] = appended
+    summary["written"] += appended["appended"]
+    cfgmod.save_json(str(root / RESEARCH_STATUS), research)
+    cfgmod.save_json(str(root / RESULTS_EXPORT), doc)
+    evidence.mkdir(parents=True, exist_ok=True)
+    (evidence / "summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True, default=str) + "\n")
+    given = doc["sections"]["recommendations_given"]["counts"]
+    print(f"[auto] results: weeks {summary['weeks']}, {summary['requests']} request(s), "
+          f"{summary['results_written']} new grade(s), {summary['captures']} capture(s), "
+          f"{len(summary['pending'])} pending, errors={summary['errors'] or 'none'}; "
+          f"evidence +{appended['appended']} ({appended['revisions']} revision(s), "
+          f"{appended['skipped_identical']} identical skipped); "
+          f"given-before-kickoff record {given}")
+    detail = (f"Results-only settlement checked {len(summary['weeks'])} week(s): "
+              f"{summary['results_written']} new grade(s), {len(summary['pending'])} pending.")
+    if summary["errors"]:
+        detail += f" Fetch problems (retried next run): {'; '.join(summary['errors'])}."
+    write_pipeline_heartbeat("degraded" if summary["errors"] else "active", detail, "results")
+    return 0
+
+
 def job_deploy() -> int:
     """Refresh public metadata without spending odds credits or notifying.
 
@@ -426,11 +534,11 @@ def job_deploy() -> int:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--job", choices=["deploy", "wed", "t90", "tuesday"], required=True)
+    ap.add_argument("--job", choices=["deploy", "wed", "t90", "tuesday", "results"], required=True)
     args = ap.parse_args()
     ensure_dependencies()
     raise SystemExit({"deploy": job_deploy, "wed": job_wed, "t90": job_t90,
-                      "tuesday": job_tuesday}[args.job]())
+                      "tuesday": job_tuesday, "results": job_results}[args.job]())
 
 
 if __name__ == "__main__":

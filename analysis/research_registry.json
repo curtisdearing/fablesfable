@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "protocol": {
+    "protocol_id": "evidence-loop-v1",
+    "frozen_before": "any QBROLE-TOTAL-v1 or OPPFORM-TOTAL-v1 number was computed; analysis/evidence_loop.py had never been executed on data",
+    "windows": {
+      "retrospective_exploratory": "every season before 2026 and 2026 weeks 1-4 (already read by earlier work; never an untouched holdout)",
+      "prospective_confirmation": "2026 week >= 5, decision clock explicit-offset and strictly before kickoff, immutable capture sha256 present",
+      "excluded_late": "decision clock at/after kickoff: counted, never scored as forecast evidence",
+      "unknown_clock": "no machine decision clock (e.g. hand-graded chat cards): counted, never prospective"
+    },
+    "separations": [
+      "forecast calibration (Brier, log loss, ECE, reliability, per-market n, game-cluster bootstrap)",
+      "performance/point error (settlement grader)",
+      "hypothetical ROI at actual offered prices only (null without a price receipt)",
+      "actual account P/L (null without a ticket ledger)"
+    ],
+    "max_active_candidates": 2,
+    "multiplicity": "Holm across all candidates screened in one run, familywise alpha 0.05, one-sided game-cluster bootstrap p = P(delta Brier >= 0)",
+    "uncertainty": "cluster bootstrap resampling whole games (primary) and season-weeks (protocol paired unit); 4000 reps; seed 20261006; unavailable below 5 clusters",
+    "line_policy": "edge evaluation only at real lines (offered receipts or public consensus closing lines) with native final outcomes; no synthetic line is edge evidence; line-free projection checks are labelled separately",
+    "no_production_effect": "no candidate result changes a production weight, calibration, default, or delivered card; a screening pass only makes a candidate eligible for prospective confirmation",
+    "retirement": "a failed screen retires the candidate as implemented; reopen only with a documented change in mechanism, target, data or access and a new candidate_id"
+  },
+  "freeze": {
+    "criteria_sha256": "456c254d5c0401653cc108ab33ecf325c40c3ee7400c2743dfc8353c6bdff5ca",
+    "frozen_at_utc": "2026-10-06T04:07:37Z"
+  },
+  "candidates": [
+    {
+      "candidate_id": "C1m-opportunity-state",
+      "status": "active_prospective",
+      "owner_protocol": "oct4-shadow-prospective-v3 (frozen 2026-10-05, weeks 5-12); not re-run here",
+      "evidence": "2026-10-05-oct4-postmortem-shadow-challengers: pooled dMAE -0.29% dev, -0.52% [-1.07,+0.03] 2025, gate missed; real lines W1-2 Brier .2656 vs incumbent .2680, market .2475"
+    },
+    {
+      "candidate_id": "C2-allocation-aware-sd",
+      "status": "rejected_as_implemented",
+      "evidence": "2026-10-05-oct4-postmortem-shadow-challengers: CRPS worse on every pooled window, CIs exclude zero"
+    },
+    {
+      "candidate_id": "agentB-recency-window",
+      "status": "rejected_as_implemented",
+      "evidence": "role_opportunity_protocol.json distinct_from_rejected (prereg 20615eb2): recency half-life + prior-team weight failed bias/coverage guards"
+    },
+    {
+      "candidate_id": "role-opportunity-pooling-v1",
+      "status": "shadow_display_only",
+      "evidence": "analysis/role_opportunity_results.json (discovery protocol, frozen 2026-09-23)"
+    },
+    {
+      "candidate_id": "props-sd-conditioning-v1",
+      "status": "registered_not_run",
+      "evidence": "analysis/accuracy_protocol.json preregistered_levers"
+    },
+    {
+      "candidate_id": "opp-factor-serving-parity",
+      "status": "code_parity_repair_merged_not_a_lever",
+      "evidence": "PR41: live as-of opponent factor equals the as-played table (max |delta| 5e-5); its predictive value versus a neutral factor was never measured on real lines"
+    },
+    {
+      "candidate_id": "incumbent-real-line-edge",
+      "status": "rejected_no_edge",
+      "evidence": "2026-09-22 week-2 learning: AUC .500 / Brier .276 on 314 events, -18% ROI on 930 flat bets; 2026-10-05: Brier .2680 vs market .2475 on 307 events"
+    },
+    {
+      "candidate_id": "game-line-sim-product",
+      "status": "rejected_no_edge",
+      "evidence": "52.97% ATS backtest; 2026-09-22 sim vs market worse on Brier, margin MAE, total MAE on 14 games"
+    },
+    {
+      "candidate_id": "QBROLE-TOTAL-v1",
+      "status": "retired_retrospective_fail",
+      "evidence": "analysis/evidence_loop_results.json (run 2026-10-06T04:07Z, criteria_sha256 456c254d...): fit 2024 n=269 beta=+0.047 (wrong sign, S4 fail); eval 2025 n=272 games, 106 exposed, dBrier +0.00096 [-0.00293,+0.00494] game-cluster, Holm p=1.0, dLogLoss +0.0019; 2026 W1-4 descriptive n=49 dBrier +0.0057. No information beyond the closing total.",
+      "status_history": [{"at_utc": "2026-10-06T04:07:46Z", "from": "frozen_not_run", "to": "retired_retrospective_fail"}],
+      "criteria": {
+        "mechanism": "A team entering a game in a QB-role change state (previous game's leading passer differs from the season-to-date primary passer, or the primary is Out/Doubtful on that week's official injury report) produces fewer points than the closing total prices.",
+        "signal": "m1_signal = number of teams in the game in a QB-change state (0, 1, 2); computed only from games strictly before the target game and the pregame injury report",
+        "baseline": "market: P(over) = 0.5 at the real public closing total (nflverse schedules total_line)",
+        "challenger": "P(over) = clip(0.5 + beta * m1_signal, 0.02, 0.98); beta = no-intercept least squares of (y_over - 0.5) on m1_signal over the fit seasons",
+        "outcome": "native final total (home_score + away_score); push = total == total_line, excluded and counted",
+        "splits": {"fit": [2024], "evaluate": [2025], "descriptive_only_2026_weeks": [1, 2, 3, 4]},
+        "screening_gate": {
+          "min_eval_graded": 200,
+          "min_eval_exposed": 50,
+          "alpha_familywise": 0.05,
+          "expected_beta_sign": -1,
+          "rule": "S1 sample AND S2 Holm-adjusted game-cluster p < 0.05 AND S2b season-week-cluster 95% upper bound of dBrier < 0 AND S3 dLogLoss < 0 AND S4 fitted beta has the mechanism sign"
+        },
+        "prospective_gate": "if screened eligible: beta refit on 2024+2025 and frozen; 2026 weeks >= 5 with pre-kickoff captures; >= 150 graded games; same S2/S3 rules; else INCONCLUSIVE",
+        "known_limits": "offseason QB changes before week 1 are not flagged (prior-season leader is both primary and last); Doubtful QBs sometimes play; no price receipt in the source, so ROI is not computed"
+      }
+    },
+    {
+      "candidate_id": "OPPFORM-TOTAL-v1",
+      "status": "retired_retrospective_fail",
+      "evidence": "analysis/evidence_loop_results.json (run 2026-10-06T04:07Z, criteria_sha256 456c254d...): fit 2024 n=253 beta=+0.0008/pt (mechanism sign, magnitude ~0); eval 2025 n=272 dBrier +0.00003 [-0.00029,+0.00034] game-cluster, Holm p=1.0, dLogLoss +0.00005; 2026 W1-4 descriptive n=49 dBrier +0.0005. No information beyond the closing total.",
+      "status_history": [{"at_utc": "2026-10-06T04:07:46Z", "from": "frozen_not_run", "to": "retired_retrospective_fail"}],
+      "criteria": {
+        "mechanism": "As-of opponent-adjusted scoring form (each offence's points scored and the opposing defence's points allowed over their last 8 completed games, shrunk n/(n+4) toward the strictly-prior league mean) carries information the closing total does not.",
+        "signal": "m2_signal = asof_expected_total - total_line (points); asof_expected_total = (off_home + def_away)/2 + (off_away + def_home)/2 from games strictly before kickoff",
+        "baseline": "market: P(over) = 0.5 at the real public closing total",
+        "challenger": "P(over) = clip(0.5 + beta * m2_signal, 0.02, 0.98); beta = no-intercept least squares of (y_over - 0.5) on m2_signal over the fit seasons",
+        "outcome": "native final total; pushes excluded and counted; games without as-of form for both teams are counted as signal_missing",
+        "splits": {"fit": [2024], "evaluate": [2025], "descriptive_only_2026_weeks": [1, 2, 3, 4]},
+        "screening_gate": {
+          "min_eval_graded": 200,
+          "min_eval_exposed": 200,
+          "alpha_familywise": 0.05,
+          "expected_beta_sign": 1,
+          "rule": "S1 sample AND S2 Holm-adjusted game-cluster p < 0.05 AND S2b season-week-cluster 95% upper bound of dBrier < 0 AND S3 dLogLoss < 0 AND S4 fitted beta has the mechanism sign"
+        },
+        "prospective_gate": "if screened eligible: beta refit on 2024+2025 and frozen; 2026 weeks >= 5 with pre-kickoff captures; >= 150 graded games; same S2/S3 rules; else INCONCLUSIVE",
+        "known_limits": "game-level form only (no player opportunity); points include defensive/special-teams scores; no price receipt, so ROI is not computed"
+      }
+    }
+  ]
+}

@@ -22,6 +22,11 @@ STATE_GLOBS = (
     "data/weekly.json",
     "data/weekly_props.json",
     "data/weights.json",
+    # Results-only research loop (analysis/evidence_loop.py): the sha256-chained evidence
+    # ledger is cumulative and append-only, so it must survive between runners; the live
+    # workflow's single concurrency group is its only writer.
+    "data/evidence_ledger.jsonl",
+    "data/research_status.json",
     # The week's rendered document is production state too.  Every run of the
     # live workflow ends by publishing Pages, and scripts/prepare_pages.py
     # will only publish the drop that data/weekly_props.json names when that

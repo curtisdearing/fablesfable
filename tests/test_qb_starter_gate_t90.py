@@ -79,6 +79,9 @@ def _run(monkeypatch, starter_name, official=True):
     monkeypatch.setattr(cfgmod, "load_config", lambda *a, **k: {**real(*a, **k),
                                                                  "odds_api_key": "TEST-DUMMY"})
     quote_ts = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # a live T-90 runs ~90 minutes BEFORE kickoff; the synthetic slate is dated 2023
+    ko = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=90)
+    monkeypatch.setattr(pw, "slate_kickoffs", lambda slate: {g: ko for g in slate["game_id"]})
     conn = dbmod.connect()
     conn.execute("DELETE FROM lines")
     for m, pt in LINES.items():
