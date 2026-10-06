@@ -422,13 +422,15 @@ def load_recent_lines(conn, game_ids: Optional[List[str]] = None,
 
 
 def outstanding_holds(conn, month: str, now: Optional[dt.datetime] = None) -> Dict[str, float]:
-    """{game_id: credits} still HELD for a pre-kick close in ``month``.
+    """{game_id: credits} still HELD for a pre-kick close.
 
     A hold is the latest answered pull of its game carrying ``hold_credits``
     (the Wednesday entry): any later answer for that game -- its close --
     releases it, and so does kickoff. It used to live only inside one
     ``pull_week_props`` call, so the next call (the T-90 pull of a game the
-    Wednesday run rationed) spent the very credits held for other closes."""
+    Wednesday run rationed) spent the very credits held for other closes.
+    Holds carry across calendar-month boundaries: the provider's billing
+    cycle is unknown, so ``month`` no longer releases anything."""
     now = _aware(now)
     conn.execute(PULLS_DDL)
     df = dbmod.query_df(conn, "SELECT game_id, ts, month, hold_credits, kickoff "
@@ -437,7 +439,7 @@ def outstanding_holds(conn, month: str, now: Optional[dt.datetime] = None) -> Di
     if df.empty:
         return out
     for r in df.sort_values(["game_id", "ts"]).groupby("game_id").tail(1).itertuples(index=False):
-        if r.month != month or not r.hold_credits or float(r.hold_credits) <= 0:
+        if not r.hold_credits or float(r.hold_credits) <= 0:
             continue
         ko = _parse_clock(r.kickoff)
         if ko is not None and ko <= now:
@@ -794,16 +796,14 @@ def close_reserve_for(game_id: str, cost_per_event: float,
                       kickoffs: Optional[Dict[str, dt.datetime]], month: str) -> float:
     """Credits to HOLD for this game's pre-kick close when pulling it now.
 
-    The ledger is a calendar-month ledger (:class:`CreditBudget`), so a close
-    that falls in a later month draws on a fresh quota and needs no hold
-    here. A game with no known kickoff is assumed to close this month.
+    Always one event's worth. The provider's billing cycle is UNKNOWN -- it
+    need not be the calendar month the local ledger tallies by -- so a close
+    falling after a month boundary is never assumed to draw on a fresh quota
+    (2026-10-06 the provider reported 378 used / 122 remaining six days into
+    October). The free quota preflight stays the authoritative allowance;
+    ``kickoffs`` and ``month`` remain for the callers' signatures.
     """
-    ko = (kickoffs or {}).get(game_id)
-    if ko is None:
-        return float(cost_per_event)
-    if ko.tzinfo is None:
-        ko = ko.replace(tzinfo=dt.timezone.utc)
-    return float(cost_per_event) if ko.astimezone(dt.timezone.utc).strftime("%Y-%m") == month else 0.0
+    return float(cost_per_event)
 
 
 def credit_plan(budget: CreditBudget, cost_per_event: float, game_ids: List[str],

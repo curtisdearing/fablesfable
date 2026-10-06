@@ -52,6 +52,7 @@ from nflvalue import synthesis as synmod
 from nflvalue.dashboard import write_dashboard
 from nflvalue.freshness import Feed, gate, parse_ts, stamp_now
 from nflvalue.sources import availability as avmod
+from nflvalue.sources import oddsapi_games as ogmod
 from nflvalue.sources import oddsapi_props as oapmod
 from nflvalue.sources import sleeper as slpmod
 
@@ -791,7 +792,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
              inject_feeds: Optional[Dict] = None,
              odds_fetch: Optional[Callable] = None,
              list_events_fn: Optional[Callable] = None,
-             discord_dry_run: bool = True) -> Dict:
+             discord_dry_run: bool = True,
+             game_odds_fetch: Optional[Callable] = None) -> Dict:
     cfg = cfgmod.load_config()
     conn = dbmod.connect()
     inputs = inputs or candmod.build_week_inputs()
@@ -888,10 +890,21 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     odds_coverage = oapmod.slate_coverage(
         list(slate["game_id"]), cfg, requested=False,
         reason="no_odds_api_key" if live_odds else "odds_not_requested")
+    game_lines = ogmod.game_line_coverage(
+        list(slate["game_id"]), cfg, requested=False,
+        reason="no_odds_api_key" if live_odds else "odds_not_requested")
     if live_odds and cfg.get("odds_api_key"):
         identity: Dict = {}
         event_map = build_event_map(cfg, slate, list_events_fn=list_events_fn, details=identity)
         kickoffs = slate_kickoffs(slate)
+        # ALL-EVENT GAME LINES first: one bulk call (3 credits at most) puts an
+        # offered moneyline/spread/total on every listed game. A different
+        # product from the props below -- neither stands in for the other. An
+        # offline run that injects only the prop fetch makes no network call.
+        gl_pull = (ogmod.pull_game_lines(cfg, identity, conn=conn, fetch=game_odds_fetch,
+                                         kickoffs=kickoffs)
+                   if game_odds_fetch is not None or odds_fetch is None
+                   else {"refused": "offline run: prop fetch injected without a game-odds fetch"})
         # Every scheduled game, soonest kickoff first, and each game pulled
         # holds the credits for its own pre-kick close (#26; credit_plan).
         pull = oapmod.pull_week_props(cfg, event_map, conn=conn, fetch=odds_fetch,
@@ -906,9 +919,12 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         # run; reading only `ts = pull["ts"]` threw away every earlier pull and
         # published NO_MARKET for games whose real lines were already stored.
         snap_rows = oapmod.load_recent_lines(conn, game_ids=list(slate["game_id"]))
-        # games already under way are FLAGGED on their coverage row ("started"):
-        # a stored pregame quote can still reach their board (see handoff gate)
-        under_way = set(oapmod.started_games(list(slate["game_id"]), kickoffs))
+        # LIVE decision clock: a pregame quote is not executable once its game is
+        # under way. Its stored rows stay (research, CLV, grading); they never
+        # price this live board. A historical replay keeps its own as-of clock.
+        under_way = (set(oapmod.started_games(list(slate["game_id"]), kickoffs,
+                                              now=parse_ts(as_of))) if mode == "live" else set())
+        snap_rows = [r for r in snap_rows if r["game_id"] not in under_way]
         line_rows, pulled_games = snap_rows, list(pull["pulled"])
         rows = oapmod.match_player_ids(
             snap_rows, _players_frame(cands).rename(columns={"player_name": "name"}),
@@ -920,6 +936,9 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                                               prop_lines=prop_lines, conn=conn,
                                               under_way=under_way)
         print(f"[pipeline] {oapmod.coverage_text(odds_coverage)}")
+        game_lines = ogmod.game_line_coverage(list(slate["game_id"]), cfg, pull=gl_pull,
+                                              conn=conn, under_way=under_way)
+        print(f"[pipeline] {ogmod.coverage_text(game_lines)}")
         carried = sorted({r["game_id"] for r in snap_rows} - set(pull["pulled"]))
         line_note = (f"Odds pull: {len(pull['pulled'])} game(s) pulled "
                      f"({', '.join(pull['pulled']) or 'none'}); "
@@ -936,7 +955,8 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
                      + (oapmod.plan_text(pull["plan"]) + "." if pull.get("plan") else "")
                      + (f" NO odds pulled: {pull['quota_preflight']['reason']}."
                         if (pull.get("quota_preflight") or {}).get("ok") is False else "")
-                     + " " + oapmod.coverage_text(odds_coverage))
+                     + " " + oapmod.coverage_text(odds_coverage)
+                     + " " + ogmod.coverage_text(game_lines))
         if not prop_lines.empty:
             cands = candmod.enumerate_candidates(
                 season, week, inputs=inputs,
@@ -1042,6 +1062,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
     result["roster_gate"] = {k: v for k, v in roster_gate.items()}
     result["roster_eligibility"] = roster_diag
     result["odds_coverage"] = odds_coverage
+    result["game_lines"] = game_lines
     if mode == "live":
         from nflvalue.game_notes import attach_notes
         attach_notes(result["games"], cands, inputs.schedules, season, week)
@@ -1080,7 +1101,7 @@ def run_week(season: int, week: int, mode: str = "historical", clock: str = "wed
         as_of=result["as_of"], game_ids=list(slate["game_id"]), ran=stage_ran, reasons=stage_why,
         ordering_component=ordering, ordering_features=ml_feats, shadow=shadow,
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
-               "odds_coverage": odds_coverage,
+               "odds_coverage": odds_coverage, "game_lines": game_lines,
                # the run's own publication decision: cards from a held run are never executable
                "publish": bool(publish), "publish_reasons": list(publish_reasons or []),
                "qb_starter_gate": _starter_diagnostics(qb_ctx, starter_gate, cands, result["games"]),
@@ -1150,6 +1171,9 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
     odds_coverage = oapmod.slate_coverage(
         [game_id], cfg, requested=False,
         reason="no_odds_api_key" if mode == "live" else "odds_not_requested")
+    game_lines = ogmod.game_line_coverage(
+        [game_id], cfg, requested=False,
+        reason="no_odds_api_key" if mode == "live" else "odds_not_requested")
     if mode == "live" and cfg.get("odds_api_key"):
         slate_all = candmod.games_for_week(season, week, inputs.schedules)
         one = slate_all[slate_all["game_id"] == game_id]
@@ -1182,7 +1206,10 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                 t90_line_note = f"T-90 odds pull failed ({type(exc).__name__}: {exc})"
                 print(f"[t90] odds pull failed for {game_id}: {exc}")
         line_rows = oapmod.load_recent_lines(conn, game_ids=[game_id])
-        under_way = set(oapmod.started_games([game_id], slate_kickoffs(one)))
+        # LIVE decision clock (see run_week): never price a game under way from a pregame quote
+        under_way = set(oapmod.started_games([game_id], slate_kickoffs(one), now=parse_ts(as_of)))
+        line_rows = [r for r in line_rows if r["game_id"] not in under_way]
+        game_lines = ogmod.game_line_coverage([game_id], cfg, conn=conn, under_way=under_way)
         rows = oapmod.match_player_ids(
             line_rows, _players_frame(cands).rename(columns={"player_name": "name"}),
             game_teams=_game_teams(one))
@@ -1374,7 +1401,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
         game_ids=[game_id], ran=stage_ran, reasons=stage_why, ordering_component=ordering,
         ordering_features=ml_feats, shadow=shadow,
         extra={"lines": fimod.lines_provenance(line_rows, pulled_games),
-               "odds_coverage": odds_coverage,
+               "odds_coverage": odds_coverage, "game_lines": game_lines,
                "inactives_state": inactives_state,
                "inactives_reason": live.get("inactives_reason") or None,
                "publish": bool(g["publish"]), "publish_reasons": list(g["reasons"] or []),
@@ -1390,7 +1417,7 @@ def run_t90(season: int, week: int, game_id: str, mode: str = "live",
                "mode": mode, "games": games, "contexts": contexts,
                "voided": voided, "md_path": md_path,
                "roster_gate": dict(roster_gate), "roster_eligibility": roster_diag,
-               "line_note": t90_line_note, "odds_coverage": odds_coverage,
+               "line_note": t90_line_note, "odds_coverage": odds_coverage, "game_lines": game_lines,
                "inactives_state": inactives_state,
                "inactives_banner": inactives_banner, "factor_receipt": receipt}
     from nflvalue.document import write_drop

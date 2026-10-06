@@ -369,9 +369,9 @@ def test_run_week_flags_a_game_under_way_and_spends_nothing_on_it(env, monkeypat
     res = _run_live(calls)
     row = res["odds_coverage"]["games"][GAME]
     assert calls == [], "no credit on a game in progress"
-    # a stored pregame quote still reaches this board (existing behaviour other
-    # tests rely on); the row must say so rather than pass it off as pregame
-    assert row["started"] is True and row["quote_clock"] == stored
+    # the live decision clock refuses the stored pregame quote; the row keeps its clock
+    assert row["started"] is True and row["state"] == "started" and row["quote_clock"] == stored
+    assert not [l for g in res["games"] for l in g["leans"] if l.get("line_source") == "odds_api"]
 
 
 def test_run_week_without_odds_still_lists_every_game(env):
