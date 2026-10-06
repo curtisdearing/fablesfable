@@ -428,3 +428,84 @@ def test_fallback_refused_when_state_already_processed(env):
     gh.set_state("state-102-1.tar.gz", t90_rows=1)
     assert go(base_args("--fallback-after", str(rid), receipt=receipt), clock, gh) == pd.EXIT_NOT_READY
     assert gh.dispatches == []
+
+
+# ------------------------------------------------------- whole-slot dispatch
+# One job_t90 run serves every game in the scheduler's slot (e.g. the eight 1 PM ET games of
+# 2026 week 5), so the slot is done only when EVERY member game is read back.
+GAME2 = "2026_03_DET_ARI"
+
+
+def set_slot_state(gh, asset, t90_by_game, line_rows=3):
+    n = len(list(gh.tmp.glob("slot-*")))                 # unique per call, apart from make_state's
+    root = gh.tmp / f"slot-{n}" / "root"
+    (root / "data").mkdir(parents=True)
+    conn = sqlite3.connect(root / "data" / "nfl_props.db")
+    conn.execute("CREATE TABLE leans (game_id TEXT, clock TEXT)")
+    conn.execute("CREATE TABLE lines (game_id TEXT)")
+    for g, n in t90_by_game.items():
+        conn.executemany("INSERT INTO leans VALUES (?, ?)", [(g, "wed")] + [(g, "t90")] * n)
+        conn.executemany("INSERT INTO lines VALUES (?)", [(g,)] * line_rows)
+    conn.commit()
+    conn.close()
+    archive = gh.tmp / f"slot-{n}" / asset
+    meta = state_store.pack(archive, root=root)
+    gh.assets[asset] = archive
+    gh.pointer = {"schema_version": 1, "asset": asset, "sha256": meta["sha256"]}
+
+
+def _receipt(receipt, mode):
+    (f,) = sorted(receipt.glob(f"{mode}-*.json"))[-1:]
+    return json.loads(f.read_text())
+
+
+def test_readback_is_not_processed_until_every_slot_game_is(env):
+    clock, gh, receipt = env
+    gh.successful_run()                                  # logs and processes the named game only
+    rid = gh.next_id - 1
+    set_slot_state(gh, f"state-{rid}-1.tar.gz", {GAME: 4, GAME2: 0})
+    slot = ["--slot-games", f"{GAME},{GAME2}"]
+    assert go(base_args("--readback", str(rid), *slot, receipt=receipt), clock, gh) == pd.EXIT_FAILED
+    rb = _receipt(receipt, "readback")["readback"]
+    assert rb["verdict"] == "not-processed" and rb["unprocessed_games"] == [GAME2]
+    assert rb["games"][GAME] == {"processed_line": True, "failed_line": False, "voided": 0,
+                                 "t90_leans": 4, "stored_lines": 3, "processed": True}
+    assert rb["games"][GAME2]["processed_line"] is False and rb["games"][GAME2]["t90_leans"] == 0
+    # The same run once the second game's line and leans exist: processed.
+    gh.logs[rid] += f"run\t[auto] t90 {GAME2}: 1 voided\n"
+    set_slot_state(gh, f"state-{rid}-1.tar.gz", {GAME: 4, GAME2: 2})
+    clock.sleep(1)
+    assert go(base_args("--readback", str(rid), *slot, receipt=receipt), clock, gh) == pd.EXIT_OK
+    assert _receipt(receipt, "readback")["readback"]["games"][GAME2]["voided"] == 1
+
+
+def test_execute_for_a_slot_names_the_unprocessed_games_in_its_decision(env):
+    clock, gh, receipt = env
+    def run_processing_only_the_named_game():
+        gh.successful_run()
+        set_slot_state(gh, f"state-{gh.next_id - 1}-1.tar.gz", {GAME: 4, GAME2: 0})
+    gh.on_dispatch = run_processing_only_the_named_game
+    code = go(base_args("--execute", "--slot-games", f"{GAME},{GAME2}", receipt=receipt), clock, gh)
+    assert code == pd.EXIT_FAILED and len(gh.dispatches) == 1
+    assert _receipt(receipt, "execute")["decision"].endswith(f"did NOT process {GAME2}")
+
+
+def test_processed_guard_covers_the_slot_not_only_the_named_game(env):
+    clock, gh, receipt = env
+    slot = ["--slot-games", f"{GAME},{GAME2}"]
+    # The named game was processed by another run; GAME2 was not: dispatching is still needed
+    # (job_t90 skips and does not resnap processed games, so nothing is pulled twice).
+    set_slot_state(gh, "state-101-1.tar.gz", {GAME: 2, GAME2: 0})
+    assert go(base_args("--check", *slot, receipt=receipt), clock, gh) == pd.EXIT_OK
+    # Every slot game processed: not ready, and the detail says so for the scheduler.
+    set_slot_state(gh, "state-102-1.tar.gz", {GAME: 2, GAME2: 5})
+    assert go(base_args("--execute", *slot, receipt=receipt), clock, gh) == pd.EXIT_NOT_READY
+    assert gh.dispatches == []
+    guard = next(c for c in _receipt(receipt, "execute")["checks"] if c["name"] == "processed_state_guard")
+    assert not guard["ok"] and pd.ALREADY_PROCESSED in guard["detail"]
+
+
+@pytest.mark.parametrize("bad", ["2026_04_DET_ARI", "2025_03_DET_ARI", "DET_ARI"])
+def test_slot_games_from_another_week_are_refused(no_network, bad, capsys):
+    assert pd.run(base_args("--slot-games", f"{GAME},{bad}")) == pd.EXIT_REFUSED
+    assert "slot game" in capsys.readouterr().out

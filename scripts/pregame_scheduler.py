@@ -27,6 +27,12 @@ One tick (run every 5 minutes by launchd / cron, see ``docs/PREGAME_DISPATCH.md`
 Every guard the wrapper applies (exact released SHA, green CI on it, no active production run,
 no prior dispatch this window, processed-state guard, official kickoff) still applies; this
 script decides only WHEN to ask.  Standard library only.
+
+Each slot's plan is persisted, so a slot is accounted for even after its games leave the
+scoreboard (kicked off while the Mac slept, or ESPN rolled to the next week): it ends as
+processed, already processed, superseded (regrouped / postponed) or MISSED -- never silently
+dropped.  Every tick writes ``state/heartbeat.json``; ``--health`` reads it (no network, no
+writes) and exits 1 on a stale heartbeat, an unusable scoreboard or an unresolved slot.
 """
 from __future__ import annotations
 
@@ -35,6 +41,7 @@ import datetime as dt
 import fcntl
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.request
@@ -55,8 +62,21 @@ GROUP_SPAN_MINUTES = 40
 #: (state download, API reads) take a few minutes and it re-checks timing afterwards.
 LAUNCH_MARGIN_MINUTES = 5
 NFLVERSE_ABBR = {espn: nv for nv, espn in pd.ESPN_ABBR.items()}   # WSH -> WAS, LAR -> LA
+#: How a launched wrapper appears in ``ps`` (see the command built in :func:`tick`).
+WRAPPER_CMD = re.compile(r"(^|\s)\S*scripts/pregame_dispatch\.py\s+--execute(\s|$)")
 
 TICK_MINUTES = 5
+#: --health calls the heartbeat stale after this long without a tick (three missed ticks).
+STALE_AFTER_MINUTES = 3 * TICK_MINUTES
+#: --health reports finished slots whose last kickoff is at most this old.
+RECENT_DAYS = 8
+#: A dispatched slot may still be waiting on its run's read-back this long after last_launch.
+READBACK_HOURS = 3
+#: ESPN statuses of a game that will not be played at its listed time.
+NOT_PLAYED = {"STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_CANCELLED", "STATUS_SUSPENDED",
+              "STATUS_FORFEIT"}
+#: Terminal slot outcomes that need nobody's attention.
+OK_FINALS = ("dispatched and processed", "already processed", "superseded")
 assert GROUP_SPAN_MINUTES + 2 * TICK_MINUTES <= (
     pd.T90_DUE_MINUTES - pd.DEFAULT_MIN_LEAD_MINUTES - LAUNCH_MARGIN_MINUTES)
 
@@ -68,6 +88,19 @@ class Game:
     week: int
     kickoff: dt.datetime
     espn_event: str
+    status: str = "STATUS_SCHEDULED"
+
+
+class ScoreboardInvalid(ValueError):
+    """The payload is not a usable week scoreboard: it must never read as 'no games'."""
+
+
+@dataclass
+class Board:
+    season: Optional[int]
+    stype: Optional[int]
+    week: Optional[int]
+    games: List[Game]              # every regular-season event on the board, any status
 
 
 @dataclass
@@ -95,25 +128,69 @@ def game_id(season: int, week: int, away: str, home: str) -> str:
     return f"{season}_{week:02d}_{a}_{h}"
 
 
-def games_from_scoreboard(body: Dict) -> List[Game]:
-    """Scheduled regular-season games on one ESPN week scoreboard."""
-    out: List[Game] = []
-    season = (body.get("season") or {}).get("year")
-    stype = (body.get("season") or {}).get("type")
-    week = (body.get("week") or {}).get("number")
-    if stype != 2 or not season or not week:
-        return out
-    for ev in body.get("events") or []:
-        if ((ev.get("status") or {}).get("type") or {}).get("name") != "STATUS_SCHEDULED":
+def _int(v) -> Optional[int]:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _season_type(v) -> Optional[int]:
+    """ESPN gives the season type as ``2`` at the root but ``{"type": 2, ...}`` under leagues[0]."""
+    return _int(v.get("type", v.get("id")) if isinstance(v, dict) else v)
+
+
+def parse_board(body) -> Board:
+    """Validate one ESPN week scoreboard and return its regular-season games (any status).
+
+    Season / type / week are read from the root, else ``leagues[0].season``, else each event's
+    own ``season`` / ``week`` (ESPN has served each of these shapes).  Anything that cannot be
+    resolved raises :class:`ScoreboardInvalid`; only a well-formed board with no events is an
+    empty week.
+    """
+    if not isinstance(body, dict) or not isinstance(body.get("events"), list):
+        raise ScoreboardInvalid("no events list")
+    root = body.get("season") if isinstance(body.get("season"), dict) else {}
+    leagues = body.get("leagues") if isinstance(body.get("leagues"), list) else []
+    league = (leagues[0] or {}).get("season") or {} if leagues and isinstance(leagues[0], dict) else {}
+    season = _int(root.get("year")) or _int(league.get("year"))
+    stype = _season_type(root.get("type")) or _season_type(league.get("type"))
+    week = _int((body.get("week") or {}).get("number") if isinstance(body.get("week"), dict) else None)
+    if not body["events"] and (season is None or stype is None):
+        raise ScoreboardInvalid("no events and no season metadata")
+    games: List[Game] = []
+    for ev in body["events"]:
+        ev = ev if isinstance(ev, dict) else {}
+        eid = ev.get("id")
+        es = ev.get("season") if isinstance(ev.get("season"), dict) else {}
+        e_season, e_type = _int(es.get("year")) or season, _season_type(es.get("type")) or stype
+        e_week = _int((ev.get("week") or {}).get("number")) or week
+        if e_season is None or e_type is None:
+            raise ScoreboardInvalid(f"event {eid}: season/type not resolvable")
+        if e_type != 2:
             continue
-        comp = (ev.get("competitions") or [{}])[0]
+        comp = (ev.get("competitions") or [{}])[0] or {}
         sides = {c.get("homeAway"): (c.get("team") or {}).get("abbreviation")
-                 for c in comp.get("competitors") or []}
-        if not sides.get("away") or not sides.get("home"):
-            continue
-        out.append(Game(game_id(int(season), int(week), sides["away"], sides["home"]),
-                        int(season), int(week), pd.parse_utc(ev["date"]), str(ev.get("id"))))
-    return out
+                 for c in comp.get("competitors") or [] if isinstance(c, dict)}
+        if e_week is None or not sides.get("away") or not sides.get("home") or not ev.get("date"):
+            raise ScoreboardInvalid(f"event {eid}: week, teams or date missing")
+        try:
+            kickoff = pd.parse_utc(str(ev["date"]))
+        except ValueError as exc:
+            raise ScoreboardInvalid(f"event {eid}: bad date {ev.get('date')!r}") from exc
+        status = ((ev.get("status") or {}).get("type") or {}).get("name") or "STATUS_UNKNOWN"
+        games.append(Game(game_id(e_season, e_week, sides["away"], sides["home"]), e_season,
+                          e_week, kickoff, str(eid), status))
+    if games:   # board metadata missing at the root: take it from the events
+        season = season or games[0].season
+        stype = stype or 2
+        week = week or max(g.week for g in games)
+    return Board(season, stype, week, games)
+
+
+def games_from_scoreboard(body: Dict) -> List[Game]:
+    """Scheduled regular-season games on one ESPN week scoreboard (raises if invalid)."""
+    return [g for g in parse_board(body).games if g.status == "STATUS_SCHEDULED"]
 
 
 def plan_slots(games: Iterable[Game]) -> List[Slot]:
@@ -180,27 +257,48 @@ def pid_alive(pid: Optional[int]) -> bool:
         return False
     except PermissionError:
         return True
-    try:   # a zombie child of an earlier tick is not alive
-        out = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True,
-                             timeout=5).stdout.strip()
-        return bool(out) and not out.startswith("Z")
+    try:   # a zombie child of an earlier tick is not alive; after a restart the PID may
+        # belong to an unrelated program, which must not hold the slot "running" forever
+        out = subprocess.run(["ps", "-o", "stat=,command=", "-p", str(pid)], capture_output=True,
+                             text=True, timeout=5).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return True
+    stat, _, cmd = out.partition(" ")
+    return bool(out) and not stat.startswith("Z") and bool(WRAPPER_CMD.search(cmd))
 
 
-def last_decision(log: Optional[str]) -> Optional[str]:
-    """The wrapper's final ``decision`` from its JSON report in a log, else its last line."""
+def last_report(log: Optional[str]) -> Optional[Dict]:
+    """The wrapper's final JSON report in a log, if it wrote one."""
     if not log or not os.path.isfile(log):
         return None
     text = Path(log).read_text(errors="replace")
     start = text.rfind("\n{")
     for chunk in ([text[start + 1:]] if start >= 0 else []) + ([text] if text.startswith("{") else []):
         try:
-            return str(json.loads(chunk).get("decision"))
-        except (ValueError, AttributeError):
+            body = json.loads(chunk)
+        except ValueError:
             continue
-    lines = [ln for ln in text.splitlines() if ln.strip()]
+        if isinstance(body, dict):
+            return body
+    return None
+
+
+def last_decision(log: Optional[str]) -> Optional[str]:
+    """The wrapper's final ``decision`` from its JSON report in a log, else its last line."""
+    rep = last_report(log)
+    if rep is not None:
+        return str(rep.get("decision"))
+    if not log or not os.path.isfile(log):
+        return None
+    lines = [ln for ln in Path(log).read_text(errors="replace").splitlines() if ln.strip()]
     return lines[-1][:300] if lines else None
+
+
+def already_processed(log: Optional[str]) -> bool:
+    """The wrapper found every slot game already processed: nothing is left to dispatch."""
+    rep = last_report(log) or {}
+    return any(c.get("name") == "processed_state_guard" and pd.ALREADY_PROCESSED in str(c.get("detail"))
+               for c in rep.get("checks") or [] if isinstance(c, dict))
 
 
 @dataclass
@@ -209,6 +307,54 @@ class TickResult:
     expect_sha: Optional[str]
     slots: List[Dict] = field(default_factory=list)
     actions: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+
+
+def _load_json(path: Path, res: Optional[TickResult] = None) -> Dict:
+    if not path.is_file():
+        return {}
+    try:
+        body = json.loads(path.read_text())
+        return body if isinstance(body, dict) else {}
+    except ValueError:
+        if res is not None:   # keep the evidence, start clean rather than crash every tick
+            aside = path.with_name(f"{path.name}.corrupt-{res.now.replace(':', '')}")
+            os.replace(path, aside)
+            res.errors.append(f"{path.name} unreadable; moved to {aside.name}")
+        return {}
+
+
+def _write_json(path: Path, body: Dict) -> None:
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(body, indent=2, sort_keys=True, default=str) + "\n")
+    os.replace(tmp, path)
+
+
+def _finish(key: str, st: Dict, games: List[str], notify: Notify, res: TickResult) -> None:
+    """The wrapper dispatched (its lock exists) and has exited: record its read-back once."""
+    dec = last_decision(st.get("log")) or "dispatched (decision not recorded)"
+    st["notified"], st["final"] = True, dec
+    if dec != "dispatched and processed":
+        notify("fablesfable T-90", f"{key} ({', '.join(games)}): {dec}")
+    res.actions.append(f"{key}: finished -> {dec}")
+
+
+def _missed(key: str, st: Dict, games: List[str], why: str, notify: Notify, res: TickResult) -> None:
+    st["notified"], st["final"] = True, f"MISSED: {why}"
+    notify("fablesfable T-90 MISSED", f"{key} ({', '.join(games)}): {why}")
+    res.actions.append(f"{key}: missed -> {why}")
+
+
+def _never_attempted(st: Dict, prev_tick: Optional[str], now: dt.datetime) -> str:
+    if st.get("attempts"):
+        return (f"{st['attempts']} attempt(s), last at {st.get('last_attempt')}; the wrapper left "
+                f"no decision in {st.get('log')}")
+    if st.get("window_ticks"):
+        return f"never attempted: {st.get('skip') or 'no launch was possible'}"
+    return (f"never attempted (scheduler not running in window): no tick between "
+            f"{st.get('dispatch_at')} and {st.get('last_launch')}; previous tick "
+            f"{prev_tick or 'not recorded'}, this tick {pd.iso(now)} -- host asleep/off or "
+            f"agent not loaded")
 
 
 def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.datetime,
@@ -219,49 +365,73 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
         notify = lambda title, text: None  # noqa: E731 -- a plan announces nothing
     receipts, logs = ops_dir / "receipts", ops_dir / "logs"
     state_path = ops_dir / "state" / "scheduler.json"
+    beat_path = ops_dir / "state" / "heartbeat.json"
     state_path.parent.mkdir(parents=True, exist_ok=True)
-    state: Dict[str, Dict] = json.loads(state_path.read_text()) if state_path.is_file() else {}
     res = TickResult(pd.iso(now), expect_sha)
+    state: Dict[str, Dict] = _load_json(state_path, None if dry_run else res)
+    prev_tick = _load_json(beat_path).get("tick_at")
 
-    body = json.loads(fetch(SCOREBOARD))
-    games: List[Game] = games_from_scoreboard(body)
-    season, week = (body.get("season") or {}).get("year"), (body.get("week") or {}).get("number")
-    if season and week and (body.get("season") or {}).get("type") == 2:
-        nxt = f"{SCOREBOARD}?seasontype=2&week={int(week) + 1}&dates={int(season)}"
-        try:
-            games += games_from_scoreboard(json.loads(fetch(nxt)))
-        except Exception as exc:  # noqa: BLE001 -- the current week still schedules
-            res.actions.append(f"next-week scoreboard unavailable ({type(exc).__name__})")
+    # 1. Official schedule: current + next week, validated.  An unusable board is an error,
+    #    never "no games"; persisted slots are still accounted for below.
+    games: List[Game] = []
+    boards: List[Dict] = []
+    try:
+        cur = parse_board(json.loads(fetch(SCOREBOARD)))
+        games += cur.games
+        boards.append({"week": cur.week, "events": len(cur.games)})
+        if cur.season and cur.week and cur.stype == 2:
+            nxt = f"{SCOREBOARD}?seasontype=2&week={int(cur.week) + 1}&dates={int(cur.season)}"
+            try:
+                nb = parse_board(json.loads(fetch(nxt)))
+                games += nb.games
+                boards.append({"week": nb.week, "events": len(nb.games)})
+            except Exception as exc:  # noqa: BLE001 -- the current week still schedules
+                res.actions.append(f"next-week scoreboard unavailable ({type(exc).__name__})")
+                res.errors.append(f"next-week scoreboard unusable: {type(exc).__name__}: {exc}"[:300])
+    except Exception as exc:  # noqa: BLE001 -- persisted slots are still accounted for
+        res.errors.append(f"current scoreboard unusable: {type(exc).__name__}: {exc}"[:300])
+        res.actions.append("current scoreboard unusable; nothing launched this tick")
+    status = {g.game_id: g.status for g in games}
+    fresh = plan_slots([g for g in games if g.status == "STATUS_SCHEDULED"])
+    on_plan = {g for s in fresh for g in s.games}
 
-    for s in plan_slots(games):
+    # 2. Slots on the current plan: launch when due, record what happened.
+    for s in fresh:
         st = state.setdefault(s.key, {"games": s.games, "attempts": 0})
+        if not st.get("final"):   # kickoffs may move (flex): keep the latest official plan
+            st.update(games=s.games, kickoffs=s.kickoffs, season=s.season, week=s.week,
+                      named_game=s.named_game, named_kickoff=pd.iso(s.named_kickoff),
+                      dispatch_at=pd.iso(s.dispatch_at), last_launch=pd.iso(s.last_launch))
         phase = s.phase(now)
         lock = receipts / f"dispatch-{s.named_game}.lock"
-        row = {"slot": s.key, "games": s.games, "dispatch_at": pd.iso(s.dispatch_at),
-               "last_launch": pd.iso(s.last_launch), "phase": phase, "dispatched": lock.exists()}
-        res.slots.append(row)
         running = alive(st.get("pid"))
-        if lock.exists() and not running and not st.get("notified"):
-            dec = last_decision(st.get("log")) or "dispatched (decision not recorded)"
-            st["notified"], st["final"] = True, dec
-            if dec != "dispatched and processed":
-                notify("fablesfable T-90", f"{s.key}: {dec}")
-            res.actions.append(f"{s.key}: finished -> {dec}")
+        res.slots.append({"slot": s.key, "games": s.games, "dispatch_at": pd.iso(s.dispatch_at),
+                          "last_launch": pd.iso(s.last_launch), "phase": phase,
+                          "dispatched": lock.exists(), "final": st.get("final")})
+        if st.get("final") or running:
             continue
-        if phase != "due" or lock.exists() or running:
-            if phase == "closed" and not lock.exists() and not running and not st.get("notified"):
-                dec = last_decision(st.get("log")) or "never attempted (scheduler not running in window)"
-                st["notified"], st["final"] = True, f"MISSED: {dec}"
-                notify("fablesfable T-90 MISSED", f"{s.key} ({', '.join(s.games)}): {dec}")
-                res.actions.append(f"{s.key}: missed -> {dec}")
+        if lock.exists():
+            _finish(s.key, st, s.games, notify, res)
             continue
+        if already_processed(st.get("log")):
+            st["notified"], st["final"] = True, "already processed: every slot game has t90 leans"
+            res.actions.append(f"{s.key}: {st['final']}")
+            continue
+        if phase == "closed":
+            _missed(s.key, st, s.games, last_decision(st.get("log")) or _never_attempted(st, prev_tick, now),
+                    notify, res)
+            continue
+        if phase != "due":
+            continue
+        st["window_ticks"] = st.get("window_ticks", 0) + 1
         if not expect_sha:
+            st["skip"] = "remote main SHA unknown"
             res.actions.append(f"{s.key}: due but remote main SHA unknown; not launched")
             continue
         cmd = [python, str(repo_dir / "scripts" / "pregame_dispatch.py"), "--execute",
                "--season", str(s.season), "--week", str(s.week), "--game", s.named_game,
                "--kickoff", pd.iso(s.named_kickoff), "--expect-sha", expect_sha,
-               "--receipt-dir", str(receipts)]
+               "--receipt-dir", str(receipts), "--slot-games", ",".join(s.games)]
         if dry_run:
             res.actions.append(f"{s.key}: would launch {' '.join(cmd)}")
             continue
@@ -270,11 +440,89 @@ def tick(*, ops_dir: Path, repo_dir: Path, expect_sha: Optional[str], now: dt.da
                   last_attempt=pd.iso(now))
         res.actions.append(f"{s.key}: launched attempt {st['attempts']} (games {', '.join(s.games)})")
 
+    # 3. Persisted slots no longer on the plan (kicked off while the host slept, ESPN rolled
+    #    the week, board unusable, kickoff moved or game postponed): settle each one explicitly.
+    planned = {s.key for s in fresh}
+    for key, st in state.items():
+        if key in planned or st.get("final") or not st.get("last_launch"):
+            continue
+        members = list(st.get("games") or [])
+        if alive(st.get("pid")):
+            continue
+        if (receipts / f"dispatch-{st.get('named_game', key)}.lock").exists():
+            _finish(key, st, members, notify, res)
+        elif already_processed(st.get("log")):
+            st["notified"], st["final"] = True, "already processed: every slot game has t90 leans"
+            res.actions.append(f"{key}: {st['final']}")
+        elif members and all(g in on_plan or status.get(g) in NOT_PLAYED for g in members):
+            moved = [g for g in members if g in on_plan]
+            off = [f"{g} {status[g]}" for g in members if g not in on_plan]
+            st["notified"], st["final"] = True, ("superseded: " + "; ".join(
+                ([f"regrouped (kickoff changed): {', '.join(moved)}"] if moved else []) + off))
+            if off:
+                notify("fablesfable T-90", f"{key}: {st['final']}")
+            res.actions.append(f"{key}: {st['final']}")
+        elif now >= pd.parse_utc(st["last_launch"]):
+            seen = ", ".join(f"{g} {status.get(g, 'not on board')}" for g in members)
+            why = last_decision(st.get("log")) or _never_attempted(st, prev_tick, now)
+            _missed(key, st, members, f"{why} [now: {seen}]", notify, res)
+
     if not dry_run:
-        tmp = state_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
-        os.replace(tmp, state_path)
+        _write_json(state_path, state)
+        upcoming = sorted((st for st in state.values() if not st.get("final") and st.get("dispatch_at")),
+                          key=lambda st: st["dispatch_at"])
+        _write_json(beat_path, {
+            "tick_at": res.now, "previous_tick_at": prev_tick, "expect_sha": expect_sha,
+            "boards": boards, "errors": res.errors, "scheduled_games": len(on_plan),
+            "next_slots": [{k: st.get(k) for k in ("named_game", "games", "dispatch_at",
+                                                   "last_launch", "attempts")}
+                           for st in upcoming[:3]]})
     return res
+
+
+def health(ops_dir: Path, now: dt.datetime) -> Dict:
+    """Read-only health: heartbeat age, last tick's board errors, unresolved slots, next slots."""
+    state = _load_json(ops_dir / "state" / "scheduler.json")
+    beat = _load_json(ops_dir / "state" / "heartbeat.json")
+    problems: List[str] = []
+    if not beat.get("tick_at"):
+        problems.append("no heartbeat: the scheduler has not ticked with heartbeat support")
+    else:
+        age = (now - pd.parse_utc(beat["tick_at"])).total_seconds()
+        if age < -60:
+            problems.append(f"heartbeat {beat['tick_at']} is in the future: host clock skew")
+        elif age > STALE_AFTER_MINUTES * 60:
+            problems.append(f"stale heartbeat: last tick {beat['tick_at']} ({age / 60:.0f} min ago); "
+                            f"host asleep/off or agent not running")
+        problems += [f"last tick: {e}" for e in beat.get("errors") or []]
+        if not beat.get("expect_sha"):
+            problems.append("last tick could not resolve the remote main SHA")
+    recent, upcoming = [], []
+    for key, st in sorted(state.items(), key=lambda kv: kv[1].get("dispatch_at") or ""):
+        if not st.get("last_launch"):
+            continue
+        row = {"slot": key, "games": st.get("games"), "dispatch_at": st.get("dispatch_at"),
+               "last_launch": st.get("last_launch"), "attempts": st.get("attempts", 0),
+               "final": st.get("final")}
+        if st.get("final"):
+            if now - pd.parse_utc(st["last_launch"]) <= dt.timedelta(days=RECENT_DAYS):
+                recent.append(row)
+                if not str(st["final"]).startswith(OK_FINALS):
+                    problems.append(f"{key}: {st['final']}")
+        elif now >= pd.parse_utc(st["last_launch"]):
+            recent.append(row)
+            locked = (ops_dir / "receipts" / f"dispatch-{st.get('named_game', key)}.lock").exists()
+            if locked and now - pd.parse_utc(st["last_launch"]) <= dt.timedelta(hours=READBACK_HOURS):
+                row["final"] = "dispatched; read-back pending"
+            else:
+                problems.append(f"{key}: window closed {st['last_launch']} with no recorded outcome yet")
+        else:
+            upcoming.append(row)
+    return {"now": pd.iso(now), "healthy": not problems, "problems": problems,
+            "last_tick": beat.get("tick_at"), "expect_sha": beat.get("expect_sha"),
+            "next_slots": upcoming[:4], "recent_slots": recent,
+            "limits": "ticks only while the Mac is awake and the user is logged in; a sleeping, "
+                      "closed-lid or powered-off Mac misses windows (reported as MISSED on the next tick)"}
 
 
 def sync_repo(repo_dir: Path) -> Optional[str]:
@@ -298,9 +546,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="the scheduler's own checkout (fast-forwarded to origin/main each tick)")
     ap.add_argument("--no-sync", action="store_true", help="do not fetch/advance the checkout")
     ap.add_argument("--dry-run", action="store_true", help="plan and print; launch nothing")
+    ap.add_argument("--health", action="store_true",
+                    help="read-only health from the last heartbeat and slot state; exit 1 if unhealthy")
     a = ap.parse_args(argv)
     ops = Path(a.ops_dir).expanduser().resolve()
     repo = Path(a.repo_dir).expanduser().resolve()
+    if a.health:   # no lock, no sync, no network, no writes
+        rep = health(ops, dt.datetime.now(UTC))
+        print(json.dumps(rep, indent=2, default=str))
+        return 0 if rep["healthy"] else 1
     if ops == repo or repo in ops.parents:
         print("REFUSED: --ops-dir must be outside the checkout")
         return 2
@@ -317,8 +571,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                                  capture_output=True, text=True).stdout.strip() or None
         res = tick(ops_dir=ops, repo_dir=repo, expect_sha=sha, now=dt.datetime.now(UTC),
                    dry_run=a.dry_run)
-    due = [r["slot"] for r in res.slots if r["phase"] == "due"]
-    if res.actions or due:
+    due = [r["slot"] for r in res.slots if r["phase"] == "due" and not r["final"]]
+    if res.actions or due or res.errors:
         print(json.dumps(asdict(res), default=str))
     else:   # a quiet tick: one line, so the launchd log stays small
         nxt = min((r["dispatch_at"] for r in res.slots if r["phase"] == "future"), default=None)

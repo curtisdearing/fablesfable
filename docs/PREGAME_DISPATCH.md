@@ -95,8 +95,50 @@ still applies. Each tick (every 5 minutes):
   (latest kickoff - 90 min) until `last_launch` (earliest kickoff - 40 min), unless the
   wrapper's lock already exists or an attempt is still running. Refused and not-ready attempts
   retry on the next tick;
+- passes the whole slot to the wrapper (`--slot-games`): readiness and read-back cover every
+  member game, and the slot counts as processed only when each game has its own
+  `[auto] t90 <game>: N voided` line, no `FAILED` line and `t90` leans in the state this run
+  published. The processed-state guard refuses only when *every* slot game already has `t90`
+  leans (reported as `already processed`, not as a miss); `job_t90` skips processed games and
+  resnaps only unprocessed ones, so a partially processed slot is never pulled twice;
+- validates the ESPN payload: season/type/week from the root, else `leagues[0].season`
+  (`type` is an object there), else each event's own `season`/`week`. A payload that cannot
+  be resolved is an error in the heartbeat, never an empty week;
+- persists every slot's plan, so a slot is settled even after its games leave the
+  scoreboard (kicked off while the Mac slept, ESPN rolled the week, scoreboard unreadable):
+  `dispatched and processed`, `already processed`, `superseded` (kickoff moved into another
+  slot, or postponed/canceled), or `MISSED` with the evidence (the last decision, or "no tick
+  between dispatch_at and last_launch; previous tick ...");
 - notifies once per slot when a dispatch did not process, or the slot closed undispatched
-  (including "never attempted" when the machine was asleep or off).
+  (including "never attempted" when the machine was asleep or off);
+- treats a stored PID as the running wrapper only if that PID's command is
+  `pregame_dispatch.py` (after a restart the PID may belong to something else);
+- writes `state/heartbeat.json` (tick time, previous tick, released SHA, board errors, next
+  slots).
+
+Health, read-only (no lock, no sync, no network, no writes); exit 1 on a stale heartbeat
+(> 15 min), a future heartbeat (clock skew), a board error on the last tick, an unknown SHA, or
+a slot in the last 8 days that ended in anything but processed / already processed /
+superseded:
+
+    python3 ~/fablesfable-ops/runner/scripts/pregame_scheduler.py --ops-dir ~/fablesfable-ops --health
+
+### Host limits
+
+The scheduler is a LaunchAgent: it ticks only while the user is logged in and the Mac is
+awake. A sleeping, closed-lid or powered-off Mac runs nothing; launchd coalesces the missed
+intervals into one tick on wake, and that tick reports every slot whose window passed as
+`MISSED`. Nothing here wakes the Mac. If a window must be covered, keep the Mac awake and on
+power through it (for example `caffeinate -s` in a terminal, or a one-off
+`sudo pmset schedule wake "MM/DD/YY HH:MM:SS"` before `dispatch_at`; both are operator
+choices, not installed by this script). A healthy installed agent is not evidence that a
+future slot will be processed: only the slot's read-back is.
+
+Known limit: kickoffs 41-100 minutes apart (e.g. a 7:15 + 8:15 PM ET Monday doubleheader)
+form separate slots, and the wrapper's `no_prior_dispatch_this_window` check (any
+`workflow_dispatch` since one hour before the window) refuses the second one after the first
+dispatch; the second slot then ends `MISSED` and must be dispatched by hand. Weeks 5-6 of 2026
+have no such pair.
 
 Install on macOS as a LaunchAgent: `scripts/install_pregame_scheduler.sh` (default ops
 directory `~/fablesfable-ops`: `runner/` checkout fast-forwarded to `origin/main` each tick,

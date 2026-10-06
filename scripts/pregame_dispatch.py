@@ -81,6 +81,9 @@ GAME_ID = re.compile(r"^(\d{4})_(\d{2})_([A-Z]{2,3})_([A-Z]{2,3})$")
 STATE_ASSET = re.compile(r"^(state|pubstate)-([0-9]+)-([0-9]+)\.tar\.gz$")
 
 EXIT_OK, EXIT_REFUSED, EXIT_NOT_READY, EXIT_FAILED = 0, 2, 3, 4
+#: processed_state_guard detail when every slot game already has t90 leans: nothing is left
+#: to dispatch for (the scheduler reads it as a terminal "already processed", not a miss).
+ALREADY_PROCESSED = "ALREADY PROCESSED: every slot game has t90 lean rows"
 
 Runner = Callable[[list], "tuple[int, str, str]"]
 Fetcher = Callable[[str], bytes]
@@ -98,6 +101,12 @@ class Target:
     kickoff: dt.datetime
     early_minutes: int = DEFAULT_EARLY_MINUTES
     min_lead_minutes: int = DEFAULT_MIN_LEAD_MINUTES
+    #: Every game the dispatch is for (the scheduler's slot); the named game is always first.
+    slot_games: tuple = ()
+
+    @property
+    def games(self) -> tuple:
+        return tuple(dict.fromkeys((self.game_id, *self.slot_games)))
 
     @property
     def away(self) -> str:
@@ -156,6 +165,10 @@ def validate_target(t: Target) -> None:
         raise Refused(f"game id {t.game_id!r} is not SEASON_WW_AWAY_HOME")
     if int(m.group(1)) != t.season or int(m.group(2)) != t.week:
         raise Refused(f"game id {t.game_id} does not belong to season {t.season} week {t.week}")
+    for g in t.slot_games:
+        sm = GAME_ID.match(g)
+        if not sm or int(sm.group(1)) != t.season or int(sm.group(2)) != t.week:
+            raise Refused(f"slot game {g!r} is not a season {t.season} week {t.week} game id")
     if t.kickoff.tzinfo is None:
         raise Refused("kickoff must be timezone-aware")
     if not 0 <= t.early_minutes <= 35:
@@ -178,8 +191,9 @@ def timing_refusal(t: Target, now: dt.datetime) -> str | None:
 
 
 def activation_command(t: Target, expect_sha: str, receipt_dir: str) -> str:
+    slot = f"--slot-games {','.join(t.games)} " if t.slot_games else ""
     return (f"python scripts/pregame_dispatch.py --season {t.season} --week {t.week} "
-            f"--game {t.game_id} --kickoff {iso(t.kickoff)} --expect-sha {expect_sha} "
+            f"--game {t.game_id} --kickoff {iso(t.kickoff)} {slot}--expect-sha {expect_sha} "
             f"--receipt-dir {receipt_dir} --execute")
 
 
@@ -247,10 +261,10 @@ class GitHub:
         self._gh("workflow", "run", WORKFLOW, "-R", self.repo, "--ref", "main", "-f", "job=t90")
 
 
-def state_evidence(gh: GitHub, game_id: str) -> dict:
+def state_evidence(gh: GitHub, game_id: str, games: tuple = ()) -> dict:
     """Restore the CURRENT production state into a private temp dir (checksum
     verified, safe members only) and read the processed-state guard for the
-    game. Never writes into this checkout."""
+    game and every other slot game (``games``). Never writes into this checkout."""
     from scripts import state_store
     pointer = gh.state_pointer()
     asset, sha = pointer.get("asset", ""), pointer.get("sha256", "")
@@ -265,14 +279,17 @@ def state_evidence(gh: GitHub, game_id: str) -> dict:
         if not db.exists():
             raise RuntimeError("production state has no data/nfl_props.db")
         conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        per = {}
         try:
-            t90 = conn.execute("SELECT COUNT(*) FROM leans WHERE clock='t90' AND game_id=?",
-                               (game_id,)).fetchone()[0]
-            lines = conn.execute("SELECT COUNT(*) FROM lines WHERE game_id=?",
-                                 (game_id,)).fetchone()[0]
+            for g in dict.fromkeys((game_id, *games)):
+                t90 = conn.execute("SELECT COUNT(*) FROM leans WHERE clock='t90' AND game_id=?",
+                                   (g,)).fetchone()[0]
+                lines = conn.execute("SELECT COUNT(*) FROM lines WHERE game_id=?",
+                                     (g,)).fetchone()[0]
+                per[g] = {"t90_leans": int(t90), "stored_lines": int(lines)}
         finally:
             conn.close()
-    return {"asset": asset, "sha256": sha, "t90_leans": int(t90), "stored_lines": int(lines)}
+    return {"asset": asset, "sha256": sha, **per[game_id], "games": per}
 
 
 def official_kickoff(fetch: Fetcher, t: Target) -> dict:
@@ -325,10 +342,14 @@ def readiness(gh: GitHub, fetch: Fetcher, t: Target, expect_sha: str,
         f"workflow_dispatch runs since {iso(t.earliest - dt.timedelta(minutes=60))}: {prior or 'none'}")
 
     try:
-        st = state_evidence(gh, t.game_id)
-        add("processed_state_guard", st["t90_leans"] == 0,
-            f"{st['asset']}: {st['t90_leans']} t90 lean rows, {st['stored_lines']} stored line rows "
-            f"({'closing resnap, <=5 credits' if st['stored_lines'] else 'own one-game pull'})")
+        st = state_evidence(gh, t.game_id, t.games)
+        todo = [g for g in t.games if st["games"][g]["t90_leans"] == 0]
+        detail = "; ".join(
+            f"{g}: {v['t90_leans']} t90 lean rows, {v['stored_lines']} stored line rows "
+            f"({'closing resnap, <=5 credits' if v['stored_lines'] else 'own one-game pull'})"
+            for g, v in st["games"].items())
+        add("processed_state_guard", bool(todo),
+            f"{st['asset']}: {detail}" + ("" if todo else f"; {ALREADY_PROCESSED}"))
     except Exception as exc:  # noqa: BLE001 -- unreadable state is not-ready, not a crash
         add("processed_state_guard", False, f"could not read production state: {exc}")
 
@@ -365,16 +386,30 @@ def readback(gh: GitHub, run_id: int, t: Target, expect_sha: str | None) -> dict
     resnap = re.search(r"\[auto\] closing resnap: .*", log)
     out["resnap_line"] = resnap.group(0)[:300] if resnap else None
     try:
-        st = state_evidence(gh, t.game_id)
+        st = state_evidence(gh, t.game_id, t.games)
         out["state"] = st
         want = f"state-{run_id}-{info.get('run_attempt')}.tar.gz"
         out["pointer_is_this_run"] = st["asset"] == want
     except Exception as exc:  # noqa: BLE001
         out["state"] = {"error": str(exc)}
         out["pointer_is_this_run"] = False
+    # One run serves the whole slot, so the slot is processed only when EVERY member game
+    # has its own log line (with its availability voids), no FAILED line and t90 leans in
+    # the state this run published.  A run that processed only the named game is not done.
+    games = {}
+    for g in t.games:
+        line = re.search(rf"\[auto\] t90 {re.escape(g)}: (\d+) voided", log)
+        st_g = (out["state"].get("games") or {}).get(g, {})
+        games[g] = {"processed_line": f"[auto] t90 {g}:" in log,
+                    "failed_line": f"[auto] t90 {g} FAILED" in log,
+                    "voided": int(line.group(1)) if line else None,
+                    "t90_leans": st_g.get("t90_leans"), "stored_lines": st_g.get("stored_lines")}
+        games[g]["processed"] = (games[g]["processed_line"] and not games[g]["failed_line"]
+                                 and (st_g.get("t90_leans") or 0) > 0)
+    out["games"] = games
+    out["unprocessed_games"] = [g for g, v in games.items() if not v["processed"]]
     good = (info.get("conclusion") == "success" and out["sha_matches"] and out["gate_job_t90"]
-            and out["game_processed_line"] and not out["game_failed_line"]
-            and out["pointer_is_this_run"] and out["state"].get("t90_leans", 0) > 0)
+            and out["pointer_is_this_run"] and not out["unprocessed_games"])
     out["verdict"] = "processed" if good else "not-processed"
     return out
 
@@ -425,6 +460,9 @@ def run(argv: list | None = None, *, runner: Runner | None = None, fetch: Fetche
     ap.add_argument("--week", type=int, required=True)
     ap.add_argument("--game", required=True, help="nflverse game id, e.g. 2026_03_ATL_GB")
     ap.add_argument("--kickoff", required=True, help="official kickoff, ISO-8601 with Z/offset")
+    ap.add_argument("--slot-games", default="",
+                    help="comma-separated game ids the one run must process (the scheduler's "
+                         "slot); readiness and read-back cover every one of them")
     ap.add_argument("--expect-sha", help="remote main SHA the parent released (check/execute)")
     ap.add_argument("--receipt-dir", help="receipt/lock directory OUTSIDE this checkout")
     ap.add_argument("--repo", default=REPO)
@@ -445,7 +483,8 @@ def run(argv: list | None = None, *, runner: Runner | None = None, fetch: Fetche
 
     try:
         t = Target(a.season, a.week, a.game, parse_utc(a.kickoff), a.early_minutes,
-                   a.min_lead_minutes)
+                   a.min_lead_minutes,
+                   tuple(g.strip() for g in a.slot_games.split(",") if g.strip()))
         validate_target(t)
     except (Refused, ValueError) as exc:
         print(f"REFUSED: {exc}")
@@ -555,7 +594,9 @@ def run(argv: list | None = None, *, runner: Runner | None = None, fetch: Fetche
     rep.readback = rb
     rep.decision = {"processed": "dispatched and processed",
                     "pending": f"dispatched; run {run_id} still running, use --readback {run_id}"
-                    }.get(rb["verdict"], f"dispatched; run {run_id} did NOT process the game")
+                    }.get(rb["verdict"], f"dispatched; run {run_id} did NOT process "
+                          + (f"{', '.join(rb['unprocessed_games'])}" if rb.get("unprocessed_games")
+                             else "the game"))
     return emit(EXIT_OK if rb["verdict"] == "processed" else EXIT_FAILED)
 
 
