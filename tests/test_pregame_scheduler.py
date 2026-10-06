@@ -348,7 +348,9 @@ def test_a_reused_pid_after_restart_does_not_count_as_the_running_wrapper():
     assert ps.pid_alive(None) is False             # pytest's argv names test_pregame_dispatch.py)
     assert ps.WRAPPER_CMD.search("/usr/bin/python3 /x/runner/scripts/pregame_dispatch.py --execute "
                                  "--season 2026")
+    assert ps.WRAPPER_CMD.search("python3 /x/runner/scripts/pregame_dispatch.py --readback 77 --season 2026")
     assert not ps.WRAPPER_CMD.search("python -m pytest tests/test_pregame_dispatch.py --execute")
+    assert not ps.WRAPPER_CMD.search("python3 /x/scripts/pregame_dispatch.py --check --season 2026")
 
 
 def test_corrupt_state_is_set_aside_instead_of_crashing_every_tick(tmp_path):

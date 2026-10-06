@@ -62,8 +62,8 @@ GROUP_SPAN_MINUTES = 40
 #: (state download, API reads) take a few minutes and it re-checks timing afterwards.
 LAUNCH_MARGIN_MINUTES = 5
 NFLVERSE_ABBR = {espn: nv for nv, espn in pd.ESPN_ABBR.items()}   # WSH -> WAS, LAR -> LA
-#: How a launched wrapper appears in ``ps`` (see the command built in :func:`tick`).
-WRAPPER_CMD = re.compile(r"(^|\s)\S*scripts/pregame_dispatch\.py\s+--execute(\s|$)")
+#: How a launched wrapper (dispatch or follow-up read-back, built in :func:`tick`) appears in ``ps``.
+WRAPPER_CMD = re.compile(r"(^|\s)\S*scripts/pregame_dispatch\.py\s+--(execute|readback)(\s|$)")
 
 TICK_MINUTES = 5
 #: --health calls the heartbeat stale after this long without a tick (three missed ticks).
