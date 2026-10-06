@@ -22,6 +22,10 @@ FIX = Path(__file__).parent / "fixtures" / "club_report_packers_2026w3.html"
 URL = ("https://www.packers.com/news/"
        "packers-rule-out-four-list-two-questionable-vs-falcons-week-3-injury-report-2026")
 GID = "2026_03_ATL_GB"
+# The run's capture clock, pinned between the report's publication (2026-09-23T20:00Z) and
+# kickoff (2026-09-25T00:15Z).  Left to the wall clock, the report ages past the team-news
+# freshness window and the "persist as verified" assertion fails on any date after it.
+RUN_CLOCK = "2026-09-24T12:00:00Z"
 
 
 def _board(week):
@@ -44,6 +48,12 @@ def live_run(monkeypatch, tmp_path):
             return 200, {}, FIX.read_bytes()
         return 404, {}, b""
     monkeypatch.setattr(lfc, "default_http", http)
+    real_build = lfc.build_live_context
+
+    def pinned_build(*args, **kwargs):
+        kwargs["captured_at"] = kwargs.get("captured_at") or RUN_CLOCK
+        return real_build(*args, **kwargs)
+    monkeypatch.setattr(lfc, "build_live_context", pinned_build)
     ctx = tmp_path / "2026-w03.json"
     stale = {"story_id": f"club_status:{GID}:GB:old_capture", "source_tier": "team_official",
              "game_id": GID, "claim": "stale capture from an earlier run"}
