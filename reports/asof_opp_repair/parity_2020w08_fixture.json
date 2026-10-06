@@ -1,0 +1,82 @@
+{
+  "commit": "2398d517b7fd5c3188b831964ab7a9b7c12d94ac",
+  "worktree_dirty_tracked_files": [],
+  "code_sha256": {
+    "nflvalue/features.py": "b28472da56c9ee4b6ae9d71e516bde3152d681361bfb5fbff9a96ade2c997559",
+    "nflvalue/candidates.py": "b1c394fa2137b91bd2087b51f9c15fdc71ecfc397fdc44b264ee2b5b0124311e",
+    "nflvalue/projection.py": "b4c87443f3a3d7908521a514f182fffd03c858a46262c18ce26d3ebc3aad7321",
+    "analysis/asof_opp_parity_receipt.py": "2685065e9d07b63bf8148c59753b0b0605e1ce2cf1880d3993ba6d0231bfb86e"
+  },
+  "input_sha256": {
+    "tests/fixtures/pbp_2019_2020.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-repair/tests/fixtures/pbp_2019_2020.parquet",
+      "sha256": "c58e1a2b548139fe6d6a0a6697a7c0bd8221825dd40d871ae8a8f0ee62aa5bae"
+    },
+    "tests/fixtures/schedules_2019_2020.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-repair/tests/fixtures/schedules_2019_2020.parquet",
+      "sha256": "7b9a25fd434d515591d94db9bd9f3a97b932659040a1aa8fbf460e0c2e5b24b4"
+    }
+  },
+  "season": 2020,
+  "week": 8,
+  "first_completed_game": "2020_08_ATL_CAR",
+  "scenarios": {
+    "wholly_unplayed": {
+      "all_rows": {
+        "asof_informed": 314,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 314,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 314,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "after_first_completed_game": {
+      "all_rows": {
+        "asof_informed": 293,
+        "played": 21,
+        "yards_rows": 314,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 293,
+        "yards_rows": 293,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 314,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "fully_played": {
+      "all_rows": {
+        "played": 192,
+        "yards_rows": 192,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "played": 192,
+        "yards_rows": 192,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 192,
+        "max_abs_diff": 4.893298020813841e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    }
+  },
+  "required_invariant": "adding a completed game never removes as-of factors from unplayed games; every present factor equals the as-played table",
+  "required_invariant_passes": true
+}

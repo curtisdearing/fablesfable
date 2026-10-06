@@ -1,0 +1,100 @@
+{
+  "commit": "2398d517b7fd5c3188b831964ab7a9b7c12d94ac",
+  "worktree_dirty_tracked_files": [
+    "M reports/asof_opp_repair/parity_2020w08_fixture.json"
+  ],
+  "code_sha256": {
+    "nflvalue/features.py": "b28472da56c9ee4b6ae9d71e516bde3152d681361bfb5fbff9a96ade2c997559",
+    "nflvalue/candidates.py": "b1c394fa2137b91bd2087b51f9c15fdc71ecfc397fdc44b264ee2b5b0124311e",
+    "nflvalue/projection.py": "b4c87443f3a3d7908521a514f182fffd03c858a46262c18ce26d3ebc3aad7321",
+    "analysis/asof_opp_parity_receipt.py": "2685065e9d07b63bf8148c59753b0b0605e1ce2cf1880d3993ba6d0231bfb86e"
+  },
+  "input_sha256": {
+    "historical/historical_pbp.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-shadow/historical/historical_pbp.parquet",
+      "sha256": "b5e4ed9316ea1c9701167f660e526aa1cd932d7a3e9fe2f1509c63b14ea559a4"
+    },
+    "historical/pbp_2024.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-shadow/historical/pbp_2024.parquet",
+      "sha256": "b9fee1bd847e7474bf1047dc3154aa07f17469e789473da19506f9241b10b9cd"
+    },
+    "historical/pbp_2025.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-shadow/historical/pbp_2025.parquet",
+      "sha256": "5abe85aee86118130ff0b20ceb87009afc9a22f2771e71729079384ea67d94d2"
+    },
+    "historical/pbp_2026.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-shadow/historical/pbp_2026.parquet",
+      "sha256": "3911a7ccabfbd2ca01a19762fb23cdea5e6e70a7f5a3cda48c0ba355a14558dd"
+    },
+    "historical_lines.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-repair/historical_lines.parquet",
+      "sha256": "fa82f7b7548c057c61b90e56cfee2c3dde3ee80320a7beb5cb271e7410d81bbb"
+    },
+    "historical/lines_extra.parquet": {
+      "resolved_path": "/private/tmp/claude-501/-Users-curtisdearing/586d250f-3391-4ef4-8137-37fa72eb14bf/scratchpad/ff-shadow/historical/lines_extra.parquet",
+      "sha256": "ad7a3eb79ac07e6405d2e78d147b0dcf653b371c62b40072826d1c3c9fb6dc42"
+    }
+  },
+  "season": 2026,
+  "week": 4,
+  "first_completed_game": "2026_04_PIT_CLE",
+  "scenarios": {
+    "wholly_unplayed": {
+      "all_rows": {
+        "asof_informed": 600,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 600,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 523,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "after_first_completed_game": {
+      "all_rows": {
+        "asof_informed": 564,
+        "played": 36,
+        "yards_rows": 600,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "asof_informed": 564,
+        "yards_rows": 564,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 523,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    },
+    "fully_played": {
+      "all_rows": {
+        "played": 193,
+        "yards_rows": 193,
+        "factor_eq_1": 0
+      },
+      "remaining_games": {
+        "played": 193,
+        "yards_rows": 193,
+        "factor_eq_1": 0
+      },
+      "parity_vs_as_played": {
+        "rows_compared": 193,
+        "max_abs_diff": 4.9639945778667816e-05
+      },
+      "missing_reasons": [],
+      "neutral_coldstart_keys": []
+    }
+  },
+  "required_invariant": "adding a completed game never removes as-of factors from unplayed games; every present factor equals the as-played table",
+  "required_invariant_passes": true
+}

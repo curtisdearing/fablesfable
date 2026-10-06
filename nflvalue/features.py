@@ -467,7 +467,21 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
                         "epa_allowed_sum", "plays_faced"]])
     opp = pd.concat(rows, ignore_index=True)
     opp = opp.sort_values(["defteam", "role", "season", "week"]).reset_index(drop=True)
+    return _add_rolling_opp_features(opp)
 
+
+#: raw per-(season, week, defteam, role) columns ``build_opp_pos_def`` keeps;
+#: ``asof_opp_pos_def`` re-rolls exactly these.
+OPP_RAW_COLS = ["targets_allowed", "rec_yards_allowed", "carries_allowed", "rush_yards_allowed",
+                "pass_yards_allowed", "epa_allowed_sum", "plays_faced"]
+
+
+def _add_rolling_opp_features(opp: pd.DataFrame) -> pd.DataFrame:
+    """Attach the rolling, PRIOR-WEEKS-ONLY defense-vs-role factors to a raw
+    (season, week, defteam, role) frame. Shared verbatim by ``build_opp_pos_def``
+    and ``asof_opp_pos_def``; ``opp`` must already be sorted by
+    (defteam, role, season, week)."""
+    opp = opp.copy()
     opp["_ypp"] = _safe_ratio(
         opp["pass_yards_allowed"].where(opp["role"].isin(["QB", "WR", "TE"]), opp["rush_yards_allowed"]),
         opp["plays_faced"],
@@ -518,6 +532,39 @@ def build_opp_pos_def(pbp: Optional[pd.DataFrame] = None, rosters: Optional[pd.D
         "roll_epa_allowed_factor",
     ]
     return opp[keep].reset_index(drop=True)
+
+
+def asof_opp_pos_def(opd: pd.DataFrame, season: int, week: int,
+                     defteams: Optional[Sequence[str]] = None) -> pd.DataFrame:
+    """Defense-vs-role factor rows as of the START of (season, week).
+
+    ``build_opp_pos_def`` only has rows for weeks that have been PLAYED, so a
+    live week had no opponent row and ``projection.project`` silently used
+    ``opp_factor = 1.0`` -- while every backtest applied the prior-weeks-only
+    factor. Same defect class as the live team-week row (``asof_team_week``),
+    same repair: a placeholder row per (defteam, role) at the target week with
+    NaN raw stats (never 0), run through the identical rolling machinery.
+    Derived from an existing ``opp_pos_def`` table (its raw columns are kept),
+    so the live path needs no play-by-play reload. Rows strictly before the
+    target week are the only history used; the placeholder's NaN stats enter
+    no league mean for that week (shift(1) before expanding).
+    """
+    hist = _prior_rows(opd, season, week)
+    raw = hist[["season", "week", "defteam", "role"] + OPP_RAW_COLS].copy()
+    cols = ["season", "week", "defteam", "role", "roll_games",
+            "roll_ypt_allowed_factor", "roll_ypc_allowed_factor", "roll_ypa_allowed_factor",
+            "roll_epa_allowed_factor"]
+    if raw.empty:
+        return pd.DataFrame(columns=cols)
+    teams = sorted(set(defteams) if defteams is not None else set(raw["defteam"]))
+    ph = pd.DataFrame([{"season": season, "week": week, "defteam": t, "role": role,
+                        **{c: np.nan for c in OPP_RAW_COLS}}
+                       for t in teams for role in ("QB", "WR", "TE", "RB")])
+    opp = pd.concat([raw, ph], ignore_index=True)
+    opp = opp.sort_values(["defteam", "role", "season", "week"]).reset_index(drop=True)
+    opp = _add_rolling_opp_features(opp)
+    out = opp[(opp["season"] == season) & (opp["week"] == week)]
+    return out[cols].reset_index(drop=True)
 
 
 def _add_rolling_team_features(tw: pd.DataFrame) -> pd.DataFrame:
