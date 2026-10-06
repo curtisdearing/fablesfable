@@ -18,7 +18,8 @@ on:
         default: wed
         type: choice
         # wed-early: the one-time 2026-09-23 early Wednesday run (see the gate job)
-        options: [deploy, wed, t90, tuesday, wed-early]
+        # results: settle the issued-pick ledger only (no feeds, odds, fitting or Discord)
+        options: [deploy, wed, t90, tuesday, wed-early, results]
   # GitHub Actions evaluates cron in UTC and `on.schedule` has no timezone
   # field, so Eastern kickoffs are expressed twice: EDT months (Sep-Oct,
   # UTC-4) and EST months (Nov-Jan, UTC-5; DST ends 2026-11-01). The T-90
@@ -45,6 +46,14 @@ on:
     - cron: "20 20 * 11,12,1 0,4,5"  # Sun/Thu/Fri 15:20 ET (16:05 / 16:25 / 16:30)
     - cron: "50 20 * 11,12,1 6"      # Sat 15:50 ET  (17:00)
     - cron: "15 0 * 11,12,1 *"       # every day 19:15 ET previous evening (night games)
+    # -- Results-only settlement of issued picks (after game windows) --------
+    # Slate-agnostic and cheap: it reads the ledger, then ESPN's public scoreboard only for weeks
+    # with issued picks; nothing final -> nothing fetched. Daily 05:40Z (01:40 ET EDT / 00:40 ET
+    # EST) follows every Thu/Fri/Sat/Sun/Mon night game; the two Sunday slots follow the 13:00
+    # and 16:05/16:25 ET windows. GitHub starts these late; a late start is still a valid run.
+    - cron: "40 5 * 9,10,11,12,1 *"   # daily, after night games (TNF, SNF, MNF, Saturday)
+    - cron: "40 21 * 9,10,11,12,1 0"  # Sun 17:40 ET EDT / 16:40 EST, after the early window
+    - cron: "40 1 * 9,10,11,12,1 1"   # Sun 21:40 ET EDT / 20:40 EST, after the late window
     # -- ONE-TIME early Wednesday run, 2026-09-23 only ------------------------
     # Owner request: the Week-3 fresh run inside 05:00-07:00 ET (09:00-11:00Z).
     # Scheduled runs here have started 2-4 h after their cron time, so these are
@@ -112,6 +121,7 @@ jobs:
           elif [[ "$SCHED" == *" 23 9 *" ]]; then job=wed-early
           elif [[ "$SCHED" == "23 14 * 9,10 2" || "$SCHED" == "23 15 * 11,12,1 2" ]]; then job=tuesday
           elif [[ "$SCHED" == "17 14 * 9,10 3" || "$SCHED" == "17 15 * 11,12,1 3" ]]; then job=wed
+          elif [[ "$SCHED" == "40 5 * 9,10,11,12,1 *" || "$SCHED" == "40 21 * 9,10,11,12,1 0" || "$SCHED" == "40 1 * 9,10,11,12,1 1" ]]; then job=results
           else job=t90; fi
           if [[ "$job" == "wed-early" ]]; then
             start=$(date -u -d "${DAY}T09:00:00Z" +%s); last=$(date -u -d "${DAY}T10:25:00Z" +%s)
@@ -221,12 +231,28 @@ jobs:
       - name: Run weekly job
         run: python scripts/auto_weekly.py --job "${{ steps.select.outputs.job }}"
 
+      # The results-only job reports how many grade/capture rows it appended. Nothing new ->
+      # the state steps below keep the previous pointer (checked inside their scripts, so they
+      # keep step-level success-only semantics) and no site is built: a quiet run cannot churn
+      # the rollback depth or republish.
+      - name: Read results-only summary
+        id: results
+        if: steps.select.outputs.job == 'results'
+        shell: bash
+        run: echo "written=$(jq -er .written reports/results/summary.json)" >> "$GITHUB_OUTPUT"
+
       # No `always()`: a failed/partial run must never become the next state.
       # The versioned archive is uploaded first and the release body is changed
       # last, so a failed upload leaves the previous pointer restorable.
       - name: Publish successful production state
         shell: bash
+        env:
+          JOB: ${{ steps.select.outputs.job }}
+          RESULTS_WRITTEN: ${{ steps.results.outputs.written }}
         run: |
+          if [[ "$JOB" == "results" && "$RESULTS_WRITTEN" == "0" ]]; then
+            echo "results-only run appended nothing; the previous state pointer stays current"; exit 0
+          fi
           asset="state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
           archive="$RUNNER_TEMP/$asset"
           python scripts/state_store.py pack --archive "$archive"
@@ -259,7 +285,11 @@ jobs:
       # publication-ingest's pubstate-* archives (which that workflow prunes itself).
       - name: Keep the eight newest state archives
         shell: bash
+        env:
+          JOB: ${{ steps.select.outputs.job }}
+          RESULTS_WRITTEN: ${{ steps.results.outputs.written }}
         run: |
+          if [[ "$JOB" == "results" && "$RESULTS_WRITTEN" == "0" ]]; then exit 0; fi
           gh release view "$STATE_TAG" --json assets --jq '.assets | sort_by(.createdAt) | reverse | map(select(.name | test("^state-[0-9]+-[0-9]+\\.tar\\.gz$"))) | .[8:] | .[].name' |
           while read -r old_asset; do
             [[ -z "$old_asset" ]] || gh release delete-asset "$STATE_TAG" "$old_asset" --yes
@@ -282,19 +312,27 @@ jobs:
             data/*.json
 
       # The public site for the current week, built from THIS run's database.
-      # Only wed/t90 runs produce one, and only after the production state was
-      # saved above (success-only step semantics). Exit 3 = nothing stored for
-      # the current week -> no artifact, the live site stays as it is; any
-      # other non-zero fails the run, and website.yml (the single Pages
-      # deployer) publishes only artifacts from successful runs.
+      # Only wed/t90 runs, and results runs that appended a grade, produce one,
+      # and only after the production state was saved above (success-only step
+      # semantics). A results run labels the site `results`: the week's cards are
+      # rendered at their own run clock and never presented as a fresh forecast;
+      # only results.html / api/results.json carry the new settlement clock.
+      # Exit 3 = nothing stored for the current week -> no artifact, the live
+      # site stays as it is; any other non-zero fails the run, and website.yml
+      # (the single Pages deployer) publishes only artifacts from successful runs.
       - name: Build public site from this run
         id: site
-        if: contains(fromJSON('["wed","t90"]'), steps.select.outputs.job)
+        if: contains(fromJSON('["wed","t90"]'), steps.select.outputs.job) || (steps.select.outputs.job == 'results' && steps.results.outputs.written != '0')
         shell: bash
         run: |
           set +e
-          python scripts/build_public_site.py --current --db data/nfl_props.db \
-            --archive published-site --out "$RUNNER_TEMP/public-site" --label fresh
+          if [[ "${{ steps.select.outputs.job }}" == "results" ]]; then
+            python scripts/build_public_site.py --current --db data/nfl_props.db \
+              --archive published-site --out "$RUNNER_TEMP/public-site" --label results
+          else
+            python scripts/build_public_site.py --current --db data/nfl_props.db \
+              --archive published-site --out "$RUNNER_TEMP/public-site" --label fresh
+          fi
           rc=$?
           set -e
           if [[ $rc -eq 0 ]]; then echo "built=true" >> "$GITHUB_OUTPUT"

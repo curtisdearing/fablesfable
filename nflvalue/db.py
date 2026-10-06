@@ -226,7 +226,7 @@ SCHEMA = {
 #   * Every statement must be idempotent or guarded, because a migration may
 #     be re-attempted after a partial failure.
 #   * Bump SCHEMA_VERSION to match the highest key.
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 ISSUED_PICKS_DDL = """
     CREATE TABLE IF NOT EXISTS issued_picks (
@@ -251,6 +251,27 @@ ISSUED_PICK_EVENTS_DDL = """
         stage TEXT,                      -- generated | published | delivered
         surface TEXT, event_ts TEXT,     -- the stage's own clock (publication / delivery time)
         evidence_json TEXT, recorded_at TEXT   -- when the ledger learned of it (wall clock)
+    )
+"""
+
+
+ISSUED_RESULTS_DDL = """
+    CREATE TABLE IF NOT EXISTS issued_results (
+        result_id TEXT PRIMARY KEY,      -- sha256(record_id, section, settlement, actual, hit)
+        record_id TEXT, section TEXT, season INTEGER, week INTEGER, game_id TEXT,
+        settlement TEXT, hit INTEGER, actual REAL,
+        actuals_url TEXT, actuals_sha256 TEXT, actuals_captured_at TEXT,
+        supersedes TEXT,                 -- the earlier result for (record_id, section) this revises
+        row_json TEXT, graded_at TEXT
+    )
+"""
+
+RESULT_CAPTURES_DDL = """
+    CREATE TABLE IF NOT EXISTS result_captures (
+        capture_id TEXT PRIMARY KEY,     -- sha256(game_id, url, sha256, captured_at)
+        game_id TEXT, espn_event TEXT, url TEXT, captured_at TEXT, sha256 TEXT,
+        status_name TEXT, accepted INTEGER, reason TEXT,
+        away_score REAL, home_score REAL, recorded_at TEXT
     )
 """
 
@@ -309,6 +330,23 @@ MIGRATIONS: "dict[int, tuple]" = {
         "BEGIN SELECT RAISE(ABORT, 'issued_pick_events is append-only'); END",
         "CREATE TRIGGER IF NOT EXISTS issued_pick_events_no_delete BEFORE DELETE ON issued_pick_events "
         "BEGIN SELECT RAISE(ABORT, 'issued_pick_events is append-only'); END",
+    ]),
+    # Results-only settlement of the issued ledger (nflvalue/issued_results.py): every final-box
+    # capture it read, and every grade it reached. A stat correction is a NEW result row naming
+    # the one it supersedes; issued_picks (the frozen predictions) is never touched.
+    8: ("issued_results + result_captures: append-only issued-pick settlement (2026-10-06)", [
+        ISSUED_RESULTS_DDL,
+        "CREATE INDEX IF NOT EXISTS issued_results_record ON issued_results (record_id, section)",
+        "CREATE TRIGGER IF NOT EXISTS issued_results_no_update BEFORE UPDATE ON issued_results "
+        "BEGIN SELECT RAISE(ABORT, 'issued_results is append-only'); END",
+        "CREATE TRIGGER IF NOT EXISTS issued_results_no_delete BEFORE DELETE ON issued_results "
+        "BEGIN SELECT RAISE(ABORT, 'issued_results is append-only'); END",
+        RESULT_CAPTURES_DDL,
+        "CREATE INDEX IF NOT EXISTS result_captures_game ON result_captures (game_id, captured_at)",
+        "CREATE TRIGGER IF NOT EXISTS result_captures_no_update BEFORE UPDATE ON result_captures "
+        "BEGIN SELECT RAISE(ABORT, 'result_captures is append-only'); END",
+        "CREATE TRIGGER IF NOT EXISTS result_captures_no_delete BEFORE DELETE ON result_captures "
+        "BEGIN SELECT RAISE(ABORT, 'result_captures is append-only'); END",
     ]),
 }
 

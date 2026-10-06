@@ -31,7 +31,9 @@ missing that metadata, not final, captured before kickoff, or repeated for one
 game are rejected. Records bind by EXACT game id. Passing attempts are the
 official ``completions/passingAttempts`` (sacks excluded). A player absent from
 the market's box category, a missing key or a non-numeric value is UNRESOLVED
-(zero is not verified). Nothing here refits or writes model adjustments.
+(zero is not verified). Game-level markets (``GAME_MARKETS``) settle on the final
+box header's own team scores; a header without both numeric scores is UNRESOLVED.
+Nothing here refits or writes model adjustments.
 """
 
 from __future__ import annotations
@@ -54,6 +56,8 @@ BOX_STAT = {"passing_yards": ("passing", "passingYards"),
             "rushing_yards": ("rushing", "rushingYards"), "rush_attempts": ("rushing", "rushingAttempts"),
             "receiving_yards": ("receiving", "receivingYards"), "receptions": ("receiving", "receptions")}
 TD_KEYS = (("rushing", "rushingTouchdowns"), ("receiving", "receivingTouchdowns"))
+#: markets settled on the game's final score (no player row): actual = away + home points
+GAME_MARKETS = ("game_total",)
 INTERVAL = 0.80
 ET = ZoneInfo("America/New_York")
 SHOWN = ("published", "delivered")
@@ -97,6 +101,7 @@ def box_game(gp: Dict, captured_at: str, source: str) -> Dict:
         raise ValueError(f"season type {stype!r} is not the regular season (2)")
     teams = {t.get("homeAway"): ALIAS.get(t["team"]["abbreviation"], t["team"]["abbreviation"])
              for t in c.get("competitors") or []}
+    scores = {t.get("homeAway"): _num(t.get("score")) for t in c.get("competitors") or []}
     if set(teams) != {"home", "away"}:
         raise ValueError("box header lacks home/away teams")
     kick = _ts(c.get("date"))
@@ -119,7 +124,8 @@ def box_game(gp: Dict, captured_at: str, source: str) -> Dict:
                 row["cats"][cat["name"]] = dict(zip(cat.get("keys") or [], a.get("stats") or []))
     return {"game_id": f"{year}_{week:02d}_{teams['away']}_{teams['home']}", "season": year, "week": week,
             "season_type": stype, "espn_event": str(event), "home": teams["home"], "away": teams["away"],
-            "kickoff": c.get("date"),
+            "home_score": scores.get("home"), "away_score": scores.get("away"), "kickoff": c.get("date"),
+            "status_name": status.get("name"),
             "final": status.get("name") == "STATUS_FINAL" and bool(status.get("completed")),
             "captured_after_kickoff": cap > kick,
             "athletes": athletes, "captured_at": captured_at, "source": source}
@@ -216,6 +222,16 @@ def box_actual(athlete: Dict, market: str):
     return (v, None) if v is not None else (None, f"box value {raw!r} is not numeric")
 
 
+def game_actual(game: Dict, market: str):
+    """(value, None) or (None, reason) for a game-level market, from the final box header."""
+    if market != "game_total":
+        return None, f"market {market!r} has no game-level definition"
+    home, away = game.get("home_score"), game.get("away_score")
+    if home is None or away is None:
+        return None, "final box header lacks a numeric score for both teams"
+    return float(home + away), None
+
+
 # ------------------------------------------------------------------ records --
 def slate_tag(kickoff: Optional[str]) -> str:
     t = _ts(kickoff)
@@ -260,6 +276,11 @@ def grade_record(r: Dict, games: Dict[str, Dict], id_map=None) -> Dict:
     ident = None
     if not game:
         v = st.Verdict(st.UNRESOLVED, None, None, "no verified official final box for this exact game id")
+    elif r.get("market") in GAME_MARKETS:
+        ident = "game_level_market"
+        actual, why = game_actual(game, r["market"])
+        v = (st.settle(r["market"], r.get("side"), r.get("line"), actual, has_stat_row=True)
+             if why is None else st.Verdict(st.UNRESOLVED, None, None, why))
     else:
         ath, ident = identify(r, game, id_map)
         if ath is None:

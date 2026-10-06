@@ -5,6 +5,7 @@ or a Cowork scheduled task needs ZERO variables.
     python3 scripts/auto_weekly.py --job wed       # Wednesday full run + Discord
     python3 scripts/auto_weekly.py --job t90       # refresh games kicking off soon
     python3 scripts/auto_weekly.py --job tuesday   # grade + CLV + retrain the ML
+    python3 scripts/auto_weekly.py --job results   # settle the issued-pick ledger ONLY
 
 Every job exits cleanly (code 0, one log line) in the offseason or when
 there's nothing to do, so schedules can run year-round untouched. Kickoff
@@ -403,6 +404,54 @@ def job_tuesday() -> int:
     return 0
 
 
+RESULTS_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_EXPORT = "data/issued_results.json"
+RESULTS_EVIDENCE = "reports/results"
+
+
+def job_results() -> int:
+    """Results-only settlement of the issued-pick ledger after game windows.
+
+    Separate from the Tuesday learning job on purpose: no feed ingest, no odds request, no
+    candidate re-enumeration, no learning-state or ML fit, no Discord. It reads the ledger in the
+    restored production state, settles completed games from official final box scores
+    (``nflvalue.issued_results``) and appends the grades; the frozen issued records are only read.
+    Writes ``data/issued_results.json`` (production state, rendered publicly by
+    ``scripts/build_public_site.py``) and ``reports/results/summary.json``, whose ``written`` count
+    lets the workflow skip saving state and publishing when nothing changed. A refused or failed
+    fetch leaves the game pending for the next run; a ledger/DB failure exits 1 so no partial state
+    is saved.
+    """
+    import json
+    from nflvalue import config as cfgmod, db as dbmod, issued_results as ir
+    root = RESULTS_ROOT
+    evidence = root / RESULTS_EVIDENCE
+    conn = dbmod.connect()
+    try:
+        summary = ir.settle(conn, now=now_et().astimezone(dt.timezone.utc), evidence_dir=str(evidence / "boxes"))
+        doc = ir.export(conn, checked_at=summary["checked_at"])
+    except Exception as exc:  # noqa: BLE001 -- never save a half-settled state
+        print(f"[auto] results settlement FAILED; production state not changed: {exc}")
+        return 1
+    finally:
+        conn.close()
+    summary.setdefault("written", 0)
+    cfgmod.save_json(str(root / RESULTS_EXPORT), doc)
+    evidence.mkdir(parents=True, exist_ok=True)
+    (evidence / "summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True, default=str) + "\n")
+    given = doc["sections"]["recommendations_given"]["counts"]
+    print(f"[auto] results: weeks {summary['weeks']}, {summary['requests']} request(s), "
+          f"{summary['results_written']} new grade(s), {summary['captures']} capture(s), "
+          f"{len(summary['pending'])} pending, errors={summary['errors'] or 'none'}; "
+          f"given-before-kickoff record {given}")
+    detail = (f"Results-only settlement checked {len(summary['weeks'])} week(s): "
+              f"{summary['results_written']} new grade(s), {len(summary['pending'])} pending.")
+    if summary["errors"]:
+        detail += f" Fetch problems (retried next run): {'; '.join(summary['errors'])}."
+    write_pipeline_heartbeat("degraded" if summary["errors"] else "active", detail, "results")
+    return 0
+
+
 def job_deploy() -> int:
     """Refresh public metadata without spending odds credits or notifying.
 
@@ -426,11 +475,11 @@ def job_deploy() -> int:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--job", choices=["deploy", "wed", "t90", "tuesday"], required=True)
+    ap.add_argument("--job", choices=["deploy", "wed", "t90", "tuesday", "results"], required=True)
     args = ap.parse_args()
     ensure_dependencies()
     raise SystemExit({"deploy": job_deploy, "wed": job_wed, "t90": job_t90,
-                      "tuesday": job_tuesday}[args.job]())
+                      "tuesday": job_tuesday, "results": job_results}[args.job]())
 
 
 if __name__ == "__main__":

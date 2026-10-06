@@ -73,6 +73,36 @@ python scripts/pick_delivery.py grade --db <ledger db> --season 2026 --week 3 \
 - To regrade after a stat correction, capture again and pass `--prior` to
   `scripts/grade_issued_picks.py`. Corrections are reported beside the originals.
 
+### Scheduled results-only settlement (`--job results`, 2026-10-06)
+
+The manual steps above are also run by the production loop, separately from the Tuesday
+learning job: `python scripts/auto_weekly.py --job results` (live-weekly.yml crons daily at
+05:40Z, Sunday 21:40Z and Monday 01:40Z, Sep-Jan, or `workflow_dispatch job=results`).
+It restores the production state, reads ESPN's public scoreboard only for weeks with issued
+records recorded in the last 9 days, fetches the summary of each `STATUS_FINAL` game, grades
+with `issued_grading` and appends to `issued_results` / `result_captures` (db migration 8;
+append-only triggers). No feed ingest, odds request, fitting, retraining or Discord.
+
+- Pending (never zeroed or voided): scheduled, live, postponed or canceled games, games not on
+  the scoreboard, refused boxes and failed fetches. A missing player in a final box stays
+  `unresolved`. `game_total` settles on the box header's two final scores.
+- Idempotent: an unchanged grade writes nothing. A final is re-read at most every 20 h and only
+  within 4 days of kickoff; a changed stat appends a row that supersedes the earlier one, and
+  `results.html` shows both. `issued_picks` (the issued lines, prices, probabilities, clocks) is
+  only read.
+- Bounded: 40 requests per run, each retried at most twice.
+- `reports/results/summary.json` `written` = new grade + capture rows. Zero: the run keeps the
+  previous state pointer and publishes nothing. Otherwise the state is saved and the current
+  week's site is rebuilt with `--label results`. Cards render at their own run clock with a
+  RESULTS UPDATE banner, never as a fresh forecast; `results.html` / `api/results.json` carry the
+  settlement clock.
+- Sections are never pooled. Picks given before kickoff, retrospective imports (for example a
+  chat card recorded after the game), watch cards and generated-not-shown cards are reported
+  separately. Policy-violating sent picks keep `policy_class=violation`.
+- Readback after a dispatch: in the run log, the `[auto] results:` line and the uploaded
+  `reports/results/summary.json`. Then compare the live `api/results.json` `results_checked_at`
+  with that run's `checked_at`.
+
 ## 4. Sunday readiness checklist
 
 1. Run the scheduled pipeline for the slate and confirm the run published (`publish=True`
