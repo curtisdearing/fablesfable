@@ -7,9 +7,9 @@ T-90 refresh inside `[kickoff - 90 min, kickoff)`. The dependable trigger is a
 `scripts/pregame_dispatch.py` sends exactly one such dispatch, for exactly one
 named game, and reads the result back.
 
-Nothing here installs a scheduler. Someone, a person or an agent that is awake
-on a machine with an authenticated `gh`, has to run the command inside the
-window.
+`pregame_dispatch.py` installs no scheduler; `scripts/pregame_scheduler.py` is the
+one that runs it (see "Scheduler" below). Whatever runs it must be awake on a machine
+with an authenticated `gh` inside the window.
 
 ## Modes
 
@@ -81,3 +81,24 @@ These can only be verified at run time:
 - the published site.
 
 A processed T-90 run does not by itself make every card executable.
+
+## Scheduler
+
+`scripts/pregame_scheduler.py` decides only *when* to call `--execute`; every check above
+still applies. Each tick (every 5 minutes):
+
+- reads the ESPN scoreboard for the current and next regular-season week (scheduled games only);
+- groups kickoffs at most 40 min apart into one slot, since one `job_t90` run processes every
+  game due within 90 minutes and the wrapper refuses a second dispatch within an hour of a
+  window. Sunday 4:05 + 4:25 ET is one dispatch, sent when the 4:25 window opens;
+- launches the wrapper, detached, for the slot's earliest game from `dispatch_at`
+  (latest kickoff - 90 min) until `last_launch` (earliest kickoff - 40 min), unless the
+  wrapper's lock already exists or an attempt is still running. Refused and not-ready attempts
+  retry on the next tick;
+- notifies once per slot when a dispatch did not process, or the slot closed undispatched
+  (including "never attempted" when the machine was asleep or off).
+
+Install on macOS as a LaunchAgent: `scripts/install_pregame_scheduler.sh` (default ops
+directory `~/fablesfable-ops`: `runner/` checkout fast-forwarded to `origin/main` each tick,
+`receipts/`, `logs/`, `state/`). Remove with `--uninstall`. Plan without launching:
+`python3 scripts/pregame_scheduler.py --no-sync --dry-run`.
