@@ -143,6 +143,7 @@ def _issued_row(g: Dict, section: str) -> Dict:
         "outcome": _outcome(g.get("settlement")), "actual": g.get("actual"),
         "actuals_sha256": g.get("actuals_sha256"),
         "price_decimal": float(price) if price else None, "book": g.get("quote_book"),
+        "factor_panel": g.get("factor_panel"),
         "p": {"issued": g.get("model_p_side")}}
 
 
@@ -326,6 +327,71 @@ def cluster_boot(values: np.ndarray, clusters: np.ndarray, n_boot: int, seed: in
     return {"point": point, "low": float(np.quantile(means, 0.025)), "high": float(np.quantile(means, 0.975)),
             "p_ge_0": float((np.sum(means >= 0) + 1) / (n_boot + 1)), "n_clusters": int(k),
             "method": "cluster bootstrap"}
+
+
+def issued_confidence_diagnostic(rows: Sequence[Dict], n_boot: int = 2000, seed: int = 20261006) -> Dict:
+    """Descriptive reliability of the frozen issued probabilities by market (game-cluster bootstrap).
+
+    Reads only section, outcome, market, game_id, p.issued and factor_panel -- never a price -- and fits nothing."""
+    exclusions = {"not_recommendation": 0, "untrusted_capture": 0, "outside_frozen_prospective_window": 0,
+                  "missing_game_cluster": 0, "non_win_loss": 0, "missing_or_invalid_probability": 0}
+    panels = {"recorded": 0, "absent": 0, "withheld": 0}
+    status_counts: Dict[str, int] = {}
+    kept: Dict[str, List[Dict]] = {}
+    included = 0
+
+    def panel_status(panel: object) -> tuple[str, Optional[Dict[str, int]]]:
+        if not isinstance(panel, dict):
+            return "absent", None
+        status, counts = panel.get("status"), panel.get("counts")
+        if status in ("absent", "withheld") and counts is None:
+            return status, None
+        if (status == "recorded" and isinstance(counts, dict) and
+                all(isinstance(k, str) and k and isinstance(v, int) and not isinstance(v, bool) and v >= 0
+                    for k, v in counts.items())):
+            return status, counts
+        return "malformed", None
+
+    for r in rows:
+        if r.get("section") != "recommendations_given":
+            exclusions["not_recommendation"] += 1
+            continue
+        window = window_of(r)
+        if window in ("unknown_clock", "excluded_late"):
+            exclusions["outside_frozen_prospective_window"] += 1
+        elif not trusted_capture(r):
+            exclusions["untrusted_capture"] += 1
+        elif window != "prospective_confirmation":
+            exclusions["outside_frozen_prospective_window"] += 1
+        elif not r.get("game_id"):
+            exclusions["missing_game_cluster"] += 1
+        elif r.get("outcome") not in ("win", "loss"):
+            exclusions["non_win_loss"] += 1
+        elif _p((r.get("p") or {}).get("issued")) is None:
+            exclusions["missing_or_invalid_probability"] += 1
+        else:
+            status, counts = panel_status(r.get("factor_panel"))
+            panels[status] = panels.get(status, 0) + 1
+            for k, v in (counts or {}).items():
+                status_counts[k] = status_counts.get(k, 0) + v
+            kept.setdefault(str(r.get("market")), []).append(r)
+            included += 1
+    by_market = {}
+    for market in sorted(kept):
+        part = kept[market]
+        p = np.array([_p(r["p"]["issued"]) for r in part])
+        y = np.array([1.0 if r["outcome"] == "win" else 0.0 for r in part])
+        games = np.array([str(r["game_id"]) for r in part])
+        loss = _losses(p, y)
+        by_market[market] = {
+            "n": len(part), "game_clusters": int(len(np.unique(games))),
+            "brier": cluster_boot(loss["brier"], games, n_boot, seed),
+            "logloss": float(loss["logloss"].mean()),
+            "reliability": binary_calibration(y, p)}
+    return {"included": included, "exclusions": exclusions, "by_market": by_market,
+            "factor_panels": {**panels, "status_counts": status_counts},
+            "statement": "descriptive reliability of frozen issued probabilities only; no refit, no promotion",
+            "promotion": False, "refit": False}
 
 
 def flat_roi(rows: Sequence[Dict], arm: str) -> Dict:
@@ -624,6 +690,7 @@ def research_status(ledger_path: str, registry_path: str = REGISTRY_PATH, checke
         "windows": dict(sorted(Counter(f"{r.get('section')}|{window_of(r)}" for r in rows).items())),
         "historical_imports": sum(bool(r.get("historical_import")) for r in rows),
         "sections": sections,
+        "issued_confidence": issued_confidence_diagnostic(rows),
         "prospective": {"settled_scored": len(scored), "unused_since_freeze": len(unused), "game_clusters": len(games)},
         "candidates": [{"candidate_id": c["candidate_id"], "status": c["status"]} for c in reg["candidates"]],
         "promotion": {"passed_predeclared_gate": [], "production_weights_or_defaults_changed": False,
