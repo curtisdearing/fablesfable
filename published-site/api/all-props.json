@@ -49,7 +49,8 @@
       "outcome": {
         "score": "TB 24, DAL 16",
         "label": "Final \u2014 archived result, not a prospective recommendation."
-      }
+      },
+      "no_pick_reason": "Completed game \u2014 see the archive."
     },
     {
       "event_id": "401872981",
@@ -142,7 +143,8 @@
           ]
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: I do not have a reliable current player line and price for this game."
     },
     {
       "event_id": "401872990",
@@ -298,7 +300,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Rome Odunze is active and the displayed 40.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (14 REC, 233 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -317,10 +319,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872984",
@@ -476,7 +483,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Dalton Schultz is active and the displayed 34.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (21 REC, 214 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -495,10 +502,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872982",
@@ -654,7 +666,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Malik Washington is active and the displayed 45.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (17 REC, 219 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -673,10 +685,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872986",
@@ -832,7 +849,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Tre Tucker is active and the displayed 40.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (15 REC, 233 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -851,10 +868,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872987",
@@ -1010,7 +1032,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Chris Olave is active and the displayed 81.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (35 REC, 491 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -1029,10 +1051,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872983",
@@ -1188,7 +1215,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Denzel Boston is active and the displayed 47.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (13 REC, 284 YDS, 2 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -1207,10 +1234,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872985",
@@ -1366,7 +1398,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Jaylen Warren is active and the displayed 61.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season rushingYards leader (55 CAR, 309 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -1385,10 +1417,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872988",
@@ -1544,7 +1581,7 @@
           "model_probability": null,
           "calibrated_probability": null,
           "model_run_as_of": null,
-          "status": "analyst_lean",
+          "status": "research",
           "rationale": "Conditional over only if Cam Skattebo is active and the displayed 55.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season rushingYards leader (68 CAR, 235 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
           "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
           "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
@@ -1563,10 +1600,15 @@
               "title": "ESPN event summary",
               "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
             }
-          ]
+          ],
+          "display_status": "pass",
+          "display_why": "",
+          "display_risk": "",
+          "editorial_correction": "Withdrawn from the picks list: a season average above the line, without a supported current workload/matchup case, is not enough evidence of an edge. Original issued text is preserved in game_cards.before-clarity-cleanup.json."
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: the current evidence does not give me a strong enough reason to call a listed line wrong."
     },
     {
       "event_id": "401872989",
@@ -1620,7 +1662,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
             }
-          ]
+          ],
+          "display_tier": "secondary",
+          "display_why": "His rushing totals have been 2, 6, 7 and 10 yards, all below 13.5. That supports an under lean rather than assuming he will produce meaningful rushing yards.",
+          "display_risk": "One scramble can beat this low line. A change in play-calling makes the recent pattern less dependable."
         },
         {
           "player": "RJ Harvey",
@@ -1647,7 +1692,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
             }
-          ]
+          ],
+          "display_tier": "preferred",
+          "display_why": "The 27.5-yard line looks low compared with his recent receiving workload. In his last two games, he was targeted 7 and 10 times and finished with 41 and 68 receiving yards. That gives the over a clearer case than relying on one long catch.",
+          "display_risk": "Denver could get ahead and run more. Sean Payton is taking back play-calling, so Harvey\u2019s recent target volume may change."
         }
       ],
       "outcome": null
@@ -1704,7 +1752,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
             }
-          ]
+          ],
+          "display_tier": "secondary",
+          "display_why": "He needs 8 catches. His totals are 9, 8, 9 and 7, with at least 10 targets in each game. With Marvin Harrison Jr. reported out, McBride could remain a focal point of Arizona\u2019s passing game.",
+          "display_risk": "Eight catches is still a demanding threshold, and -140 is expensive. Extra defensive attention or fewer Arizona plays could keep him under."
         },
         {
           "player": "Amon-Ra St. Brown",
@@ -1731,7 +1782,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
             }
-          ]
+          ],
+          "display_tier": "preferred",
+          "display_why": "The line requires 8 catches. He has caught 10, 9, 4 and 8 passes in his four games, with 14, 13, 8 and 11 targets. The repeated opportunities are why I lean over 7.5, especially at the listed +102 price.",
+          "display_risk": "A comfortable Detroit lead could mean fewer passes. Gibbs and LaPorta also compete for targets."
         },
         {
           "player": "Jahmyr Gibbs",
@@ -1758,7 +1812,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
             }
-          ]
+          ],
+          "display_tier": "preferred",
+          "display_why": "Five catches beats this line. Gibbs has caught 5, 6, 7 and 4 passes, and he was targeted 8, 8 and 7 times in his last three games. I prefer his receiving workload to betting on a touchdown or a big rushing total.",
+          "display_risk": "Detroit could run more while protecting a lead. Targets do not guarantee catches; he had 7 targets but only 4 catches last game."
         }
       ],
       "outcome": null
@@ -1815,7 +1872,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/49ers-vs-seahawks/"
             }
-          ]
+          ],
+          "display_tier": "secondary",
+          "display_why": "The 6.5 line requires 7 catches. His last two full games with Sam Darnold produced 10 and 5 catches on 14 and 6 targets. I lean over because the higher-volume game shows the opportunity, but this is a weaker case than the preferred picks.",
+          "display_risk": "Seattle could lead and throw less. His recent target count swung sharply; the earlier games with Drew Lock do not establish a Darnold trend."
         },
         {
           "player": "Christian McCaffrey",
@@ -1842,7 +1902,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/49ers-vs-seahawks/"
             }
-          ]
+          ],
+          "display_tier": "secondary",
+          "display_why": "The under wins at 4 catches or fewer. McCaffrey has finished with 4, 4 and 3 catches in his last three games, which supports the under at the listed +105 price.",
+          "display_risk": "If San Francisco falls behind, more short passes to McCaffrey could push him to 5 catches or more."
         },
         {
           "player": "George Kittle",
@@ -1869,7 +1932,10 @@
               "title": "Secondary published listing",
               "url": "https://legionreport.com/49ers-vs-seahawks/"
             }
-          ]
+          ],
+          "display_tier": "secondary",
+          "display_why": "The 54.5-yard line is below his last three receiving totals: 80, 82 and 70. He reached those totals on 4, 6 and 4 catches, so I prefer his yardage over to requiring a high catch count.",
+          "display_risk": "This depends partly on gaining substantial yards per catch. Seattle could limit those gains or force targets elsewhere."
         }
       ],
       "outcome": null
@@ -1965,7 +2031,8 @@
           ]
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: I do not have a reliable current player line and price for this game."
     },
     {
       "event_id": "401872994",
@@ -2058,7 +2125,8 @@
           ]
         }
       ],
-      "outcome": null
+      "outcome": null,
+      "no_pick_reason": "No pick: I do not have a reliable current player line and price for this game."
     }
   ],
   "rows": [

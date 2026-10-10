@@ -54,7 +54,7 @@ def test_integrate_full_schedule_preserves_late_raw_rows_and_marks_actual_covera
     assert manifest["raw_market_rows"] == 1 and manifest["outcome_rows"] == 2
 
 
-def test_rendered_board_labels_secondary_listings_and_renders_winner_context_and_sources():
+def test_rendered_board_shows_clean_pick_card_without_research_inventory():
     payload = {"schema": "fablesfable.all_props.v1", "state": "ready", "counts": {"games": 1, "raw_market_rows": 1,
                "outcome_rows": 1, "quote_rows": 1, "unique_athletes": 1, "model_priced": 0,
                "qualitatively_reviewed": 1, "unavailable_or_unsupported": 0}, "errors": [],
@@ -62,7 +62,12 @@ def test_rendered_board_labels_secondary_listings_and_renders_winner_context_and
                           "kickoff": "2026-10-11T20:05:00Z", "source_as_of": "2026-10-10T16:13:21Z", "status": "upcoming",
                           "preview": "Readable analysis", "winner_lean": "No winner lean issued.",
                           "context": {"venue": "Test Stadium"}, "coverage": {"state": "captured"},
-                          "sources": [{"title": "Source", "url": "https://example.test/source"}], "picks": []}],
+                          "sources": [{"title": "Source", "url": "https://example.test/source"}], "picks": [{
+                              "player": "Test Receiver", "market": "receiving_yards", "side": "over", "line": 27.5,
+                              "book": "FanDuel", "odds": -114, "status": "analyst_lean",
+                              "display_why": "The line is low for his role.", "display_risk": "Volume could fall.",
+                              "sources": [{"title": "Source", "url": "https://example.test/source"}],
+                          }]}],
                "rows": [{"event_id": "1", "game_id": "2026_05_DEN_LAC", "player": "Test", "team": "DEN",
                          "market": "receiving_yards", "side": "over", "period": "full_game", "status": "analyst_lean",
                          "disposition": "reviewed", "line": 27.5, "odds": -114, "book": "FanDuel",
@@ -70,9 +75,12 @@ def test_rendered_board_labels_secondary_listings_and_renders_winner_context_and
                          "offer_label": "Published secondary listing — not sportsbook-verified", "sources": []}]}
     from nflvalue import all_props
     page = all_props.render_page(payload)
-    assert "Published secondary listing — not sportsbook-verified" in page
-    assert "No winner lean issued" in page and "Test Stadium" in page
+    assert "Test Receiver OVER 27.5 Receiving yards" in page
+    assert "FanDuel -114" in page
+    assert "The line is low for his role." in page and "Risk:" in page
     assert 'href="https://example.test/source"' in page
+    assert "No winner lean issued" not in page and "Test Stadium" not in page
+    assert "<table" not in page
 
 
 def test_integrate_merges_typed_card_and_row_extras_without_saved_native_picks(tmp_path):

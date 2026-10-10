@@ -78,7 +78,13 @@ CSS = ("body{font:15px system-ui;max-width:900px;margin:auto;padding:1em}"
        "details{border:1px solid #d5dce6;border-radius:8px;margin:8px 0}details[open]>summary{border-bottom:1px solid #d5dce6}"
        ".game-jumps a{border:1px solid #d5dce6;border-radius:8px;padding:4px 10px;text-decoration:none}"
        "section{scroll-margin-top:8px}.banner{padding:0}.banner .provenance{padding:10px}"
-       "h1{font-size:24px}h2{font-size:19px}section .card{border:0;margin:0}")
+       "h1{font-size:24px}h2{font-size:19px}section .card{border:0;margin:0}"
+       ".board-caveat{max-width:72ch}.picks-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}"
+       ".pick-card,.ap-game{border:1px solid #d5dce6;border-radius:10px;padding:16px;background:#fff}"
+       ".pick-card h3,.ap-game h3{margin:.2em 0}.pick-game,.game-time,.pick-price,.no-pick{margin:.25em 0;color:#4a596d}"
+       ".pick-price{font-weight:700;color:#182233}.pick-risk{border-left:3px solid #9b4d00;padding-left:10px}"
+       ".game-jumps{margin:10px 0 16px}.game-jumps a{border-radius:999px}.ap-game{margin:10px 0}"
+       ".research-download{margin:24px 0}@media(max-width:540px){.pick-card,.ap-game{padding:14px}.picks-grid{grid-template-columns:minmax(0,1fr)}}")
 
 
 class Refused(Exception):
