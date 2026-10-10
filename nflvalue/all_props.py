@@ -100,8 +100,10 @@ def _card_error(card, n):
 
 def _has_offer(row):
     """Only an exact player-market quote may be labelled as a captured offer."""
-    return (row.get("line") is not None and row.get("odds") is not None and _text(row.get("book"))
-            and _text(row.get("captured_at")))
+    return ((row.get("line") is not None or row.get("side") == "yes")
+            and row.get("odds") is not None and _text(row.get("book"))
+            and _text(row.get("captured_at"))
+            and row.get("raw_market_row_type") not in {"family_availability", "coverage_gap"})
 
 
 def _normalise_row(row):
@@ -121,7 +123,8 @@ def _normalise_row(row):
 
 
 def _counts(cards, rows):
-    athletes = {str(r["player"]).strip() for r in rows if _text(r.get("player"))}
+    athletes = {str(r["player"]).strip() for r in rows if _text(r.get("player"))
+                and r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"}}
     qualitative = sum(1 for r in rows if r.get("disposition") == "reviewed")
     return {
         "games": len(cards),
@@ -172,6 +175,20 @@ def _status(value):
     return _e(str(value).replace("_", " ").upper())
 
 
+def _kickoff(value):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(ZoneInfo('America/New_York')).strftime('%a %b %d, %-I:%M %p ET')
+    except (ValueError, TypeError, AttributeError):
+        return str(value)
+
+
+def _source_url(value):
+    from urllib.parse import urlsplit
+    return isinstance(value, str) and urlsplit(value).scheme in {'https', 'http'}
+
+
 def render_page(payload):
     """Portable static all-player browser with local filters and disclosure details."""
     state = payload.get("state")
@@ -207,12 +224,12 @@ def render_page(payload):
                 prob=_e(p.get("calibrated_probability") if p.get("calibrated_probability") is not None else (p.get("model_probability") if p.get("model_probability") is not None else "Unavailable")))
             for p in picks)
         sources = " ".join(f'<a href="{_e(s.get("url"))}" rel="noopener noreferrer">{_e(s.get("title") or "Source")}</a>'
-                          for s in card.get("sources", []) if isinstance(s, dict) and _text(s.get("url"))) or "No source URL supplied."
+                          for s in card.get("sources", []) if isinstance(s, dict) and _source_url(s.get("url"))) or "No source URL supplied."
         context = "; ".join(f"{_e(k.replace('_', ' '))}: {_e(v)}" for k, v in (card.get("context") or {}).items() if v is not None) or "No additional context supplied."
         outcome = card.get("outcome") or {}
         outcome_text = (f"<p><b>{_e(outcome.get('label'))}</b> {_e(outcome.get('score'))}</p>" if outcome else "")
         cards.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'><h2>{_e(card.get('away'))} @ {_e(card.get('home'))}</h2>"
-                     f"<p>Kickoff { _e(card.get('kickoff'))}; status {_status(card.get('status'))}; source as of {_e(card.get('source_as_of'))}.</p>"
+                     f"<p>Kickoff {_e(_kickoff(card.get('kickoff')))}; status {_status(card.get('status'))}; source as of {_e(card.get('source_as_of'))}.</p>"
                      f"<p><b>Winner outlook:</b> {_e(card.get('winner_lean') or 'Unavailable')}<br><b>Context:</b> {context}<br><b>Coverage:</b> {_e((card.get('coverage') or {}).get('detail') or (card.get('coverage') or {}).get('state') or 'Unavailable')}<br><b>Sources:</b> {sources}</p>"
                      f"{outcome_text}<p>{_e(card.get('preview'))}</p><ol>{picks_html or '<li>No ranked selections supplied.</li>'}</ol></section>")
     rows = []
@@ -228,8 +245,10 @@ def render_page(payload):
                         line=_e(row.get("line")), book=_e(row.get("book")), odds=_e(row.get("odds")),
                         offer=_e(row.get("offer_label")), reason=_e(row.get("reason")),
                         captured=_e(row.get("captured_at")), provider=_e(row.get("provider_updated_at"))))
-    script = """<script>(function(){const rows=[...document.querySelectorAll('#ap-table tbody tr')];const fields=['status','disposition','period'];for(const f of fields){const s=document.getElementById('ap-'+f);[...new Set(rows.map(r=>r.dataset[f]).filter(Boolean))].sort().forEach(v=>s.add(new Option(v,v)));}function run(){const q=document.getElementById('ap-search').value.toLowerCase();rows.forEach(r=>r.hidden=!!(q&&!r.dataset.search.includes(q))||fields.some(f=>{const v=document.getElementById('ap-'+f).value;return v&&r.dataset[f]!==v;});}document.querySelectorAll('#ap-search,#ap-status,#ap-disposition,#ap-period').forEach(n=>n.addEventListener('input',run));})();</script>"""
-    return ("<h1>All player props</h1><p><b>Research view, not wager approval.</b> A row is a captured priced market only when exact line, book, odds and capture clock are present.</p>"
-            + summary + filters + "<h2>Game browser & ranked rationales</h2>" + "".join(cards)
+    script = """<script>(function(){const rows=[...document.querySelectorAll('#ap-table tbody tr')];const fields=['status','disposition','period'];for(const f of fields){const s=document.getElementById('ap-'+f);[...new Set(rows.map(r=>r.dataset[f]).filter(Boolean))].sort().forEach(v=>s.add(new Option(v,v)));}function run(){const q=document.getElementById('ap-search').value.toLowerCase();rows.forEach(r=>r.hidden=!!(q&&!r.dataset.search.includes(q))||fields.some(f=>{const v=document.getElementById('ap-'+f).value;return v&&r.dataset[f]!==v;}));}document.querySelectorAll('#ap-search,#ap-status,#ap-disposition,#ap-period').forEach(n=>n.addEventListener('input',run));})();</script>"""
+    jumps = '<nav class="game-jumps" aria-label="Jump to game">' + ' · '.join(
+        f'<a href="#game-{_e(c.get("event_id"))}">{_e(c.get("away"))} @ {_e(c.get("home"))}</a>' for c in payload['cards']) + '</nav>'
+    return ("<h1>Week 5 — all games & player props</h1><p><b>Conditional analyst leans, not model-approved bets.</b> Published secondary prices require sportsbook confirmation. Early-game inventory is captured, not fully reviewed; pending rows are not picks. Missing markets remain explicit gaps.</p>"
+            + summary + jumps + filters + "<h2>Game browser & ranked rationales</h2>" + "".join(cards)
             + "<h2>Complete captured/rejected market rows</h2><div style='overflow:auto'><table id='ap-table'><thead><tr><th>Game</th><th>Player</th><th>Market</th><th>Side / line</th><th>Period</th><th>Price</th><th>Status</th><th>Disposition</th><th>Research</th></tr></thead><tbody>"
             + "".join(rows) + "</tbody></table></div>" + script)

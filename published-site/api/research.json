@@ -1,0 +1,170 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "C1m-opportunity-state",
+      "status": "active_prospective"
+    },
+    {
+      "candidate_id": "C2-allocation-aware-sd",
+      "status": "rejected_as_implemented"
+    },
+    {
+      "candidate_id": "agentB-recency-window",
+      "status": "rejected_as_implemented"
+    },
+    {
+      "candidate_id": "role-opportunity-pooling-v1",
+      "status": "shadow_display_only"
+    },
+    {
+      "candidate_id": "props-sd-conditioning-v1",
+      "status": "registered_not_run"
+    },
+    {
+      "candidate_id": "opp-factor-serving-parity",
+      "status": "code_parity_repair_merged_not_a_lever"
+    },
+    {
+      "candidate_id": "incumbent-real-line-edge",
+      "status": "rejected_no_edge"
+    },
+    {
+      "candidate_id": "game-line-sim-product",
+      "status": "rejected_no_edge"
+    },
+    {
+      "candidate_id": "QBROLE-TOTAL-v1",
+      "status": "retired_retrospective_fail"
+    },
+    {
+      "candidate_id": "OPPFORM-TOTAL-v1",
+      "status": "retired_retrospective_fail"
+    }
+  ],
+  "checked_at": "2026-10-09T12:06:13Z",
+  "historical_imports": 0,
+  "issued_confidence": {
+    "by_market": {},
+    "exclusions": {
+      "missing_game_cluster": 0,
+      "missing_or_invalid_probability": 0,
+      "non_win_loss": 0,
+      "not_recommendation": 59,
+      "outside_frozen_prospective_window": 0,
+      "untrusted_capture": 0
+    },
+    "factor_panels": {
+      "absent": 0,
+      "recorded": 0,
+      "status_counts": {},
+      "withheld": 0
+    },
+    "included": 0,
+    "promotion": false,
+    "refit": false,
+    "statement": "descriptive reliability of frozen issued probabilities only; no refit, no promotion"
+  },
+  "ledger": {
+    "entries": 111,
+    "head_entry_sha256": "514aad622e95191771666bfacb4b012dfaf2268f65c8c4ac628762bd32c74a2b",
+    "last_append": {
+      "appended": 7,
+      "revisions": 0,
+      "skipped_identical": 52
+    },
+    "records": 59,
+    "revisions": 52
+  },
+  "missing_data_gates": [
+    "prospective confirmation: 0 settled 2026 week>=5 given-before-kickoff recommendations with a trusted pre-kickoff ledger capture, an offered price and an issued probability",
+    "game clusters: 0 of the 5 needed for any clustered interval",
+    "untouched confirmation for challengers frozen at 2026-10-06T04:07:37Z: 0 rows captured after the freeze",
+    "account P/L: unknown (no ticket/stake ledger exists; hypothetical flat-stake ROI is not P/L)",
+    "totals CLV/ROI: no entry/close over-under price receipts for the retrospective totals screens",
+    "prop opponent-factor ablation: capture rows do not record opp_factor/opp_source"
+  ],
+  "promotion": {
+    "market_blend": false,
+    "passed_predeclared_gate": [],
+    "production_weights_or_defaults_changed": false,
+    "refit_on_latest_results": false,
+    "statement": "No candidate has passed a predeclared prospective gate, so nothing was promoted. Sections are graded separately and never pooled; losses are kept. Model probabilities are confidence diagnostics, not a demonstrated edge."
+  },
+  "prospective": {
+    "game_clusters": 0,
+    "settled_scored": 0,
+    "unused_since_freeze": 0
+  },
+  "protocol": "evidence-loop-v1",
+  "registry_criteria_sha256": "456c254d5c0401653cc108ab33ecf325c40c3ee7400c2743dfc8353c6bdff5ca",
+  "registry_frozen_at": "2026-10-06T04:07:37Z",
+  "schema": "fablesfable.research_status.v1",
+  "sections": {
+    "delivered_historical_import": {
+      "by_policy_class": {},
+      "n": 0,
+      "outcomes": {
+        "loss": 0,
+        "pending": 0,
+        "push": 0,
+        "void": 0,
+        "win": 0
+      }
+    },
+    "recommendations_given": {
+      "by_policy_class": {},
+      "n": 0,
+      "outcomes": {
+        "loss": 0,
+        "pending": 0,
+        "push": 0,
+        "void": 0,
+        "win": 0
+      }
+    },
+    "retrospective": {
+      "by_policy_class": {
+        "unrecorded": {
+          "loss": 10,
+          "pending": 0,
+          "push": 0,
+          "void": 0,
+          "win": 12
+        }
+      },
+      "n": 22,
+      "outcomes": {
+        "loss": 10,
+        "pending": 0,
+        "push": 0,
+        "void": 0,
+        "win": 12
+      }
+    },
+    "watch_published": {
+      "by_policy_class": {
+        "unrecorded": {
+          "loss": 10,
+          "pending": 2,
+          "push": 0,
+          "void": 0,
+          "win": 25
+        }
+      },
+      "n": 37,
+      "outcomes": {
+        "loss": 10,
+        "pending": 2,
+        "push": 0,
+        "void": 0,
+        "win": 25
+      }
+    }
+  },
+  "windows": {
+    "retrospective|excluded_late": 4,
+    "retrospective|retrospective_exploratory": 18,
+    "watch_published|prospective_confirmation": 7,
+    "watch_published|retrospective_exploratory": 30
+  }
+}

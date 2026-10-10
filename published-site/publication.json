@@ -5,18 +5,20 @@
   "label": "research_snapshot",
   "season": 2026,
   "week": 5,
-  "published_at": "2026-10-10T21:23:00Z",
+  "published_at": "2026-10-10T17:54:30Z",
   "approved_bets": 0,
   "model_candidates": 0,
   "all_props": {
     "games": 15,
-    "raw_market_rows": 250,
-    "outcome_rows": 418,
-    "quote_rows": 336,
-    "unique_athletes": 77,
+    "raw_market_rows": 919,
+    "outcome_rows": 1557,
+    "quote_rows": 1557,
+    "unique_athletes": 292,
     "model_priced": 0,
     "qualitatively_reviewed": 8,
-    "unavailable_or_unsupported": 1
+    "unavailable_or_unsupported": 25,
+    "coverage_family_rows": 18,
+    "coverage_gap_rows": 24
   },
   "integration": {
     "schema": "fablesfable.week5.integration.v1",
@@ -25,22 +27,34 @@
     "games": 15,
     "upcoming_games": 14,
     "completed_games": 1,
-    "raw_market_rows": 250,
-    "outcome_rows": 418,
+    "raw_market_rows": 919,
+    "outcome_rows": 1557,
+    "coverage_family_rows": 18,
+    "coverage_gap_rows": 24,
+    "all_row_records": 1599,
     "sources": {
       "scoreboard": "data/research_snapshots/2026-week-5/scoreboard.json",
       "saved_source_cards": "data/research_snapshots/2026-week-5/saved-source-cards.json",
       "late_markets": "data/research_snapshots/2026-week-5/late-screened-markets.json",
-      "extra": []
+      "extra": [
+        "../early/game_cards.json",
+        "../early/market_rows.json",
+        "../extra/game_cards.json",
+        "../extra/market_rows.json"
+      ]
     }
   },
   "files": {
-    "README.txt": "9e162ea118f8ce587d46c34e4ba161b0e8d58fbbeb2f66dfe2ce1a591ad1249e",
-    "all-props.html": "bb008f09e18345b397b0107978b1a402b21da0b62155401a0b699fe2e10df1b0",
-    "api/all-props.json": "2d6ed59534cc29f8973c6880735a7c483235b8725dd791c9e480f12ec4744149",
-    "api/hub.json": "d4daf90eb68e0f47b1c1ddedfc3ecb2301813a902e42e7d94191d914b0488dab",
+    "README.txt": "b7f430d658823a5f3026f5fbcbaeb75064dd64ca1d4d747c909406a4fc8a57b7",
+    "all-props.html": "8f1143b55c3120f76cf8bdabf33a3625ee5c4114a785f2efd3ea39fb855089d5",
+    "api/all-props.json": "41bbb961ad10db70d20dcb0317aff62ce6bc466395e3a9dbcdd8e0baa04cd174",
+    "api/coverage.json": "c4ee413cda7283b5add246f28a90d0e9df52e4a98b1988227ec4eb9f2360a3ec",
+    "api/hub.json": "38e96eb53525ffd6885d907e046119a14dbaf047e7408b9eeb0c840149808017",
+    "api/research.json": "23d7e6aaa89b8b734993a4fc84e184f73f212d78ee1da165ba619c83d9674ab2",
+    "api/results.json": "baf228b5b0cfb2613c49b49247da7cb2e65cef9b8367c9816b709f34a0299e0c",
     "assets/hub-scroll.js": "501efcfc177f91ffccb23687508d31d8f47b10f7c5d409f5a6e7e034d313ad5f",
-    "best-bets.html": "b551a42c6aafb0d66ba4bec056d386bd3d59f4aad8c8618eed8e9c8e2253ff47",
+    "best-bets.html": "70ac67cd6e7051955404357d7fbccfcd9be5b25459ec0f16515cff0e86b3532a",
+    "coverage.html": "6a7ff0a9956d636f8aabf7c01883c02fb60168a5804a2f138ae2e15eade76987",
     "dashboard.html": "e91ac59ab45f1ab4c2dc35e727f2d5b05ed489d714e7532d55207bc6b8bf3279",
     "games/2026_01_ARI_LAC.html": "0b714c7aaa940bbc77e33aaae01be87257a1eb862c1a822fe5ebd79334dbd7b9",
     "games/2026_01_ATL_PIT.html": "1923689d64369529ed8feaff31e48b6def2eb3ef3705a19194b73700c840e647",
@@ -61,11 +75,14 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "94076c4fbeea5ce941ff1af22c70f832a9b46aae0c7d9d58ab3a052bfc1c1f2f",
-    "index.html": "bb008f09e18345b397b0107978b1a402b21da0b62155401a0b699fe2e10df1b0",
-    "model-cards.html": "4fdb5e1b0b32942a83f1bdc97056aa1a86edb33ebc66546577e3d0f77375c2a2",
+    "index.html": "8f1143b55c3120f76cf8bdabf33a3625ee5c4114a785f2efd3ea39fb855089d5",
+    "model-cards.html": "a6d2b06ae993bb1e5ad34d6481e79e1a1133fc6a71774435894ee6d5f8c5a6f3",
     "reports/2026/week-1.html": "d1cd5c467b9961a1ba4022f91b58578e1926abc92dd2084949ef8b54da717a1d",
     "reports/2026/week-3.html": "2f61dfce3d0c68556a827599058d8a3a2cf2509405191939cea6e15a0ac6642f",
-    "reports/index.json": "ac2b850639220d9f01ed530900c40ff3a02811bc3f42b0282de93c5f3f12565a",
-    "reports/latest.html": "952069f3f56bf38484e1c77296bfc34786036d66cafe7e955edec60da70182f5"
+    "reports/2026/week-5.html": "37b78e6335d966b81aaac8d943ca5ce554783029497f11c538cf017ee47a0fba",
+    "reports/index.json": "6e42d66d6c0f0c44ee7d7c06d8200933dae62f3729495b55f0ed5a656c61aeb4",
+    "reports/latest.html": "1a039573226eb6aea37c79dd7f69fa58e59dfe56c0e4f14c4fcf010f5e2edeaa",
+    "research.html": "58c1803c7f8b98b317d490a0bf60d6d08f4b947720e7825fb8483d747dc9adb8",
+    "results.html": "a17e163f89fddc57d8e2ee71be9c8e4c732f45bae319163106a9a6bcbaf556ae"
   }
 }

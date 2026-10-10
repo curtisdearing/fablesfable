@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset='utf-8'><title>Research status</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{font:15px system-ui;max-width:900px;margin:auto;padding:1em}.card{border:1px solid #ccc;border-radius:8px;padding:.8em;margin:.8em 0}.s{font-weight:700;text-transform:uppercase}.muted{color:#555;font-size:13px}.banner{background:#eef5ff;border:1px solid #9ab;padding:.7em;margin:.6em 0}nav a{margin-right:1em}.fe-panel{border-top:1px dashed #bbb;margin-top:.5em;padding-top:.4em;font-size:13px}.fe-head,.fe-cat{font-weight:600}.fe-panel ul{margin:.2em 0 .4em 1.1em;padding:0}.fe-d,.fe-s,.fe-c,.fe-m,.fe-r{color:#555}.fe-c{color:#8a4b00}*{box-sizing:border-box}body{line-height:1.5;color:#182233;overflow-wrap:anywhere}nav{display:flex;flex-wrap:wrap;gap:4px 10px}nav a{display:inline-flex;align-items:center;min-height:44px}a{color:#17529c}summary{cursor:pointer;min-height:44px;padding:10px;font-weight:600}details{border:1px solid #d5dce6;border-radius:8px;margin:8px 0}details[open]>summary{border-bottom:1px solid #d5dce6}.game-jumps a{border:1px solid #d5dce6;border-radius:8px;padding:4px 10px;text-decoration:none}section{scroll-margin-top:8px}.banner{padding:0}.banner .provenance{padding:10px}h1{font-size:24px}h2{font-size:19px}section .card{border:0;margin:0}</style></head><body><nav><a href="index.html">This week</a><a href="best-bets.html">Watch list</a><a href="model-cards.html">Model cards</a><a href="reports/latest.html">Full report</a><a href="results.html">Results</a><a href="research.html">Research</a><a href="coverage.html">Coverage</a><a href="history.html">Archive</a></nav><h1>Research status</h1><p>Evidence loop checked 2026-10-09T12:06:13Z. No candidate has passed a predeclared prospective gate, so nothing was promoted. Sections are graded separately and never pooled; losses are kept. Model probabilities are confidence diagnostics, not a demonstrated edge.</p><p>Prospective confirmation rows settled: 0 (0 untouched since the registry freeze 2026-10-06T04:07:37Z; 0 game clusters). Historical/postgame imports: 0 (never confirmation).</p><h2>Given before kickoff</h2><p>0 record(s): 0 won, 0 lost, 0 pushed, 0 void, 0 pending. By policy class: none</p><h2>Delivered recommendations imported after the game (historical: original pregame issue clock kept; graded; not prospective confirmation)</h2><p>0 record(s): 0 won, 0 lost, 0 pushed, 0 void, 0 pending. By policy class: none</p><h2>Watch list (not recommendations)</h2><p>37 record(s): 25 won, 10 lost, 0 pushed, 0 void, 2 pending. By policy class: unrecorded 25-10</p><h2>Recorded after kickoff (retrospective; not a prospective record)</h2><p>22 record(s): 12 won, 10 lost, 0 pushed, 0 void, 0 pending. By policy class: unrecorded 12-10</p><h2>Missing-data gates</h2><ul><li>prospective confirmation: 0 settled 2026 week&gt;=5 given-before-kickoff recommendations with a trusted pre-kickoff ledger capture, an offered price and an issued probability</li><li>game clusters: 0 of the 5 needed for any clustered interval</li><li>untouched confirmation for challengers frozen at 2026-10-06T04:07:37Z: 0 rows captured after the freeze</li><li>account P/L: unknown (no ticket/stake ledger exists; hypothetical flat-stake ROI is not P/L)</li><li>totals CLV/ROI: no entry/close over-under price receipts for the retrospective totals screens</li><li>prop opponent-factor ablation: capture rows do not record opp_factor/opp_source</li></ul><h2>Candidates</h2><ul><li>C1m-opportunity-state: active_prospective</li><li>C2-allocation-aware-sd: rejected_as_implemented</li><li>agentB-recency-window: rejected_as_implemented</li><li>role-opportunity-pooling-v1: shadow_display_only</li><li>props-sd-conditioning-v1: registered_not_run</li><li>opp-factor-serving-parity: code_parity_repair_merged_not_a_lever</li><li>incumbent-real-line-edge: rejected_no_edge</li><li>game-line-sim-product: rejected_no_edge</li><li>QBROLE-TOTAL-v1: retired_retrospective_fail</li><li>OPPFORM-TOTAL-v1: retired_retrospective_fail</li></ul><script>/* FablesFable hub scroll bridge.
+ * When this page is embedded by the Dearing Football hub, report the page's
+ * scroll position (numbers only) so the hub can tuck its header away on small
+ * screens while the reader scrolls. Does nothing when opened directly or when
+ * embedded by any other site. The hub says hello from its own origin; only an
+ * allowlisted parent window receives messages, never '*'. */
+(function () {
+  'use strict';
+  if (window.parent === window) return;
+  var ALLOWED = /^(?:https:\/\/(?:www\.)?dearing-wedding\.com|http:\/\/(?:localhost|127\.0\.0\.1)(?::\d{1,5})?)$/;
+  var target = null;
+  var queued = false;
+
+  function send() {
+    queued = false;
+    if (!target) return;
+    var doc = document.scrollingElement || document.documentElement;
+    var y = Math.max(0, Math.round(window.scrollY || doc.scrollTop || 0));
+    var max = Math.max(0, Math.round(doc.scrollHeight - window.innerHeight));
+    window.parent.postMessage({ type: 'dearing-hub:scroll', v: 1, y: y, max: max }, target);
+  }
+  function schedule() {
+    if (!queued) { queued = true; window.requestAnimationFrame(send); }
+  }
+
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (e.source !== window.parent || !ALLOWED.test(e.origin)) return;
+    if (!d || d.type !== 'dearing-hub:hello') return;
+    target = e.origin;
+    schedule();
+  });
+  window.addEventListener('scroll', schedule, { passive: true });
+})();
+</script></body></html>
