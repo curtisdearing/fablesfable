@@ -189,8 +189,89 @@ def _source_url(value):
     return isinstance(value, str) and urlsplit(value).scheme in {'https', 'http'}
 
 
+MARKET_LABELS = {
+    "passing_yards": "Passing yards",
+    "rushing_yards": "Rushing yards",
+    "receiving_yards": "Receiving yards",
+    "receptions": "Receptions",
+    "anytime_td": "Anytime touchdown",
+    "anytime_touchdown": "Anytime touchdown",
+    "longest_reception": "Longest reception",
+    "longest_rush": "Longest rush",
+}
+
+
+def _display_text(value):
+    """Accept only authored reader copy; never stringify arbitrary payload objects."""
+    return value.strip() if isinstance(value, str) and value.strip() else ""
+
+
+def _market_label(value):
+    text = _display_text(value)
+    return MARKET_LABELS.get(text, text.replace("_", " ").title())
+
+
+def _signed_odds(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return ""
+    return f"{value:+g}"
+
+
+def _pick_is_displayable(pick):
+    """Keep unsupported/pass placeholders and incomplete offers off the picks board."""
+    if not isinstance(pick, dict):
+        return False
+    if str(pick.get("status") or "").lower() not in {"analyst_lean", "model_approved"}:
+        return False
+    if str(pick.get("display_status") or pick.get("status") or "").lower() == "pass":
+        return False
+    player = _display_text(pick.get("player"))
+    if not player or player.lower().startswith("no named player"):
+        return False
+    return (str(pick.get("side") or "").lower() in {"over", "under"}
+            and isinstance(pick.get("line"), (int, float)) and not isinstance(pick.get("line"), bool)
+            and _display_text(pick.get("book")) and bool(_signed_odds(pick.get("odds"))))
+
+
+def _tier(pick):
+    value = _display_text(pick.get("display_tier") or pick.get("tier")).lower()
+    if value in {"preferred", "preferred_pick", "preferred pick"}:
+        return "preferred"
+    if value in {"other", "other_lean", "other lean", "secondary"}:
+        return "other"
+    return ""
+
+
+def _pick_card(pick, game, number):
+    """Render one reader-facing selection without exposing implementation payload fields."""
+    side = str(pick["side"]).upper()
+    why = _display_text(pick.get("display_why")) or _display_text(pick.get("rationale"))
+    risk = _display_text(pick.get("display_risk")) or _display_text(pick.get("counterargument"))
+    quote_clock = _display_text(pick.get("retrieved_at"))
+    source_clock = _display_text(game.get("source_as_of"))
+    clock = quote_clock or source_clock
+    source_links = []
+    for source in pick.get("sources") or []:
+        if isinstance(source, dict) and _source_url(source.get("url")):
+            source_links.append('<a href="{}" rel="noopener noreferrer">{}</a>'.format(
+                _e(source["url"]), _e(_display_text(source.get("title")) or _display_text(source.get("provider")) or "Source")))
+    detail = []
+    if clock:
+        detail.append(f"<p><b>Captured:</b> {_e(_kickoff(clock))}</p>")
+    if source_links:
+        detail.append(f"<p><b>Source:</b> {' · '.join(source_links)}</p>")
+    details = ("<details><summary>Source and timing</summary>" + "".join(detail) + "</details>") if detail else ""
+    risk_html = f"<p class='pick-risk'><b>Risk:</b> {_e(risk)}</p>" if risk else ""
+    why_html = f"<p>{_e(why)}</p>" if why else ""
+    return (f"<article class='pick-card' id='pick-{_e(game.get('event_id'))}-{number}'>"
+            f"<p class='pick-game'>{_e(game.get('away'))} at {_e(game.get('home'))}</p>"
+            f"<h3>{_e(pick['player'])} {side} {_e(pick['line'])} {_e(_market_label(pick.get('market')))}</h3>"
+            f"<p class='pick-price'>{_e(_display_text(pick.get('book')))} {_e(_signed_odds(pick.get('odds')))}</p>"
+            f"{why_html}{risk_html}{details}</article>")
+
+
 def render_page(payload):
-    """Portable static all-player browser with local filters and disclosure details."""
+    """Render a picks-first public board; full research remains available as JSON."""
     state = payload.get("state")
     if state != "ready":
         errors = "".join(f"<li>{_e(error)}</li>" for error in payload.get("errors") or [])
@@ -199,56 +280,42 @@ def render_page(payload):
                 f"{_e(payload.get('message') or 'No research payload has been supplied yet.')} "
                 "No player props or picks are shown until separate game_cards.json and market_rows.json "
                 f"pass validation.</p>{detail}")
-    c = payload["counts"]
-    filters = ("<label>Search <input id='ap-search' type='search' placeholder='player, team, market'></label> "
-               "<label>Status <select id='ap-status'><option value=''>All</option></select></label> "
-               "<label>Disposition <select id='ap-disposition'><option value=''>All</option></select></label> "
-               "<label>Period <select id='ap-period'><option value=''>All</option></select></label>")
-    summary = (f"<p>{c['games']} games · {c.get('raw_market_rows', 0)} raw market rows · {c.get('outcome_rows', 0)} outcome rows · "
-               f"{c['quote_rows']} published secondary listings (not sportsbook-verified) · {c['unique_athletes']} athletes · "
-               f"{c['model_priced']} model-priced · {c['qualitatively_reviewed']} qualitatively reviewed · "
-               f"{c['unavailable_or_unsupported']} unavailable/unsupported.</p>")
-    cards = []
+    visible = [(card, pick) for card in payload["cards"] for pick in card.get("picks") or []
+               if _pick_is_displayable(pick)]
+    tiered = bool(visible) and all(_tier(pick) for _card, pick in visible)
+    pick_numbers = {id(pick): n for n, (_card, pick) in enumerate(visible, 1)}
+    rendered = []
+    if tiered:
+        for label, key in (("Preferred picks", "preferred"), ("Other leans", "other")):
+            choices = [(card, pick) for card, pick in visible if _tier(pick) == key]
+            if choices:
+                rendered.append(f"<h2>{label}</h2><div class='picks-grid'>" + "".join(
+                    _pick_card(pick, card, pick_numbers[id(pick)]) for card, pick in choices) + "</div>")
+    elif visible:
+        rendered.append("<div class='picks-grid'>" + "".join(
+            _pick_card(pick, card, pick_numbers[id(pick)]) for card, pick in visible) + "</div>")
+    else:
+        rendered.append("<p class='no-pick'>No picks are available.</p>")
+    jumps = '<nav class="game-jumps" aria-label="Jump to a game">' + "".join(
+        f'<a href="#game-{_e(card.get("event_id"))}">{_e(card.get("away"))} at {_e(card.get("home"))}</a>'
+        for card in payload["cards"]) + "</nav>"
+    games = []
     for card in payload["cards"]:
-        picks = card.get("picks") or []
-        picks_html = "".join(
-            "<li><b>{player}</b> — {market} {side} {line}; <span class='status'>{status}</span>. "
-            "{rationale}<details><summary>Why / risk / clock</summary><p><b>Counterargument:</b> {counter}. "
-            "<b>Invalidation:</b> {invalid}. <b>Rank basis:</b> {basis}. <b>Quote:</b> {book} {odds}, "
-            "updated {updated}; retrieved {retrieved}. <b>Model probability:</b> {prob}.</p></details></li>".format(
-                player=_e(p.get("player")), market=_e(p.get("market")), side=_e(p.get("side")),
-                line=_e(p.get("line")), status=_status(p.get("status")), rationale=_e(p.get("rationale")),
-                counter=_e(p.get("counterargument")), invalid=_e(p.get("invalidation")),
-                basis=_e(p.get("rank_basis")), book=_e(p.get("book")), odds=_e(p.get("odds")),
-                updated=_e(p.get("quote_updated_at")), retrieved=_e(p.get("retrieved_at")),
-                prob=_e(p.get("calibrated_probability") if p.get("calibrated_probability") is not None else (p.get("model_probability") if p.get("model_probability") is not None else "Unavailable")))
-            for p in picks)
-        sources = " ".join(f'<a href="{_e(s.get("url"))}" rel="noopener noreferrer">{_e(s.get("title") or "Source")}</a>'
-                          for s in card.get("sources", []) if isinstance(s, dict) and _source_url(s.get("url"))) or "No source URL supplied."
-        context = "; ".join(f"{_e(k.replace('_', ' '))}: {_e(v)}" for k, v in (card.get("context") or {}).items() if v is not None) or "No additional context supplied."
-        outcome = card.get("outcome") or {}
-        outcome_text = (f"<p><b>{_e(outcome.get('label'))}</b> {_e(outcome.get('score'))}</p>" if outcome else "")
-        cards.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'><h2>{_e(card.get('away'))} @ {_e(card.get('home'))}</h2>"
-                     f"<p>Kickoff {_e(_kickoff(card.get('kickoff')))}; status {_status(card.get('status'))}; source as of {_e(card.get('source_as_of'))}.</p>"
-                     f"<p><b>Winner outlook:</b> {_e(card.get('winner_lean') or 'Unavailable')}<br><b>Context:</b> {context}<br><b>Coverage:</b> {_e((card.get('coverage') or {}).get('detail') or (card.get('coverage') or {}).get('state') or 'Unavailable')}<br><b>Sources:</b> {sources}</p>"
-                     f"{outcome_text}<p>{_e(card.get('preview'))}</p><ol>{picks_html or '<li>No ranked selections supplied.</li>'}</ol></section>")
-    rows = []
-    for row in payload["rows"]:
-        search = " ".join(str(row.get(k) or "") for k in ("game_id", "player", "team", "market", "book", "side"))
-        rows.append("<tr data-search='{search}' data-status='{status}' data-disposition='{disposition}' data-period='{period}'>"
-                    "<td>{game}</td><td>{player} ({team})</td><td>{market}</td><td>{side} {line}</td><td>{period}</td>"
-                    "<td>{book} {odds}<br><small>{offer}</small></td><td>{status}</td><td>{disposition}</td>"
-                    "<td><details><summary>Reason & clocks</summary>{reason}<br><small>Captured {captured}; provider {provider}</small></details></td></tr>".format(
-                        search=_e(search.lower()), status=_e(row.get("status")), disposition=_e(row.get("disposition")),
-                        period=_e(row.get("period")), game=_e(row.get("game_id")), player=_e(row.get("player")),
-                        team=_e(row.get("team")), market=_e(row.get("market")), side=_e(row.get("side")),
-                        line=_e(row.get("line")), book=_e(row.get("book")), odds=_e(row.get("odds")),
-                        offer=_e(row.get("offer_label")), reason=_e(row.get("reason")),
-                        captured=_e(row.get("captured_at")), provider=_e(row.get("provider_updated_at"))))
-    script = """<script>(function(){const rows=[...document.querySelectorAll('#ap-table tbody tr')];const fields=['status','disposition','period'];for(const f of fields){const s=document.getElementById('ap-'+f);[...new Set(rows.map(r=>r.dataset[f]).filter(Boolean))].sort().forEach(v=>s.add(new Option(v,v)));}function run(){const q=document.getElementById('ap-search').value.toLowerCase();rows.forEach(r=>r.hidden=!!(q&&!r.dataset.search.includes(q))||fields.some(f=>{const v=document.getElementById('ap-'+f).value;return v&&r.dataset[f]!==v;}));}document.querySelectorAll('#ap-search,#ap-status,#ap-disposition,#ap-period').forEach(n=>n.addEventListener('input',run));})();</script>"""
-    jumps = '<nav class="game-jumps" aria-label="Jump to game">' + ' · '.join(
-        f'<a href="#game-{_e(c.get("event_id"))}">{_e(c.get("away"))} @ {_e(c.get("home"))}</a>' for c in payload['cards']) + '</nav>'
-    return ("<h1>Week 5 — all games & player props</h1><p><b>Conditional analyst leans, not model-approved bets.</b> Published secondary prices require sportsbook confirmation. Early-game inventory is captured, not fully reviewed; pending rows are not picks. Missing markets remain explicit gaps.</p>"
-            + summary + jumps + filters + "<h2>Game browser & ranked rationales</h2>" + "".join(cards)
-            + "<h2>Complete captured/rejected market rows</h2><div style='overflow:auto'><table id='ap-table'><thead><tr><th>Game</th><th>Player</th><th>Market</th><th>Side / line</th><th>Period</th><th>Price</th><th>Status</th><th>Disposition</th><th>Research</th></tr></thead><tbody>"
-            + "".join(rows) + "</tbody></table></div>" + script)
+        picks = [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)]
+        if picks:
+            links = " · ".join(f'<a href="#pick-{_e(card.get("event_id"))}-{n}">{_e(_pick.get("player"))}</a>'
+                              for n, (game, _pick) in enumerate(visible, 1) if game is card)
+            content = f"<p>{links}</p>"
+        else:
+            reason = _display_text(card.get("no_pick_reason"))
+            if reason and not reason.lower().startswith(('no pick', 'completed')):
+                reason = 'No pick. ' + reason
+            content = f"<p class='no-pick'>{_e(reason) if reason else 'No pick.'}</p>"
+        games.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'>"
+                     f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
+                     f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}</section>")
+    return ("<h1>Week 5 player props</h1>"
+            "<p class='board-caveat'>Conditional analyst leans; confirm every listed price before acting.</p>"
+            "<h2>Picks</h2>" + "".join(rendered)
+            + "<h2>All games</h2>" + jumps + "".join(games)
+            + "<p class='research-download'><a href='api/all-props.json' download>Download research data (JSON)</a></p>")
