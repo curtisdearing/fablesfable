@@ -1,0 +1,2059 @@
+[
+  {
+    "event_id": "401872980",
+    "game_id": "2026_05_TB_DAL",
+    "away": "TB",
+    "home": "DAL",
+    "kickoff": "2026-10-09T00:15Z",
+    "source_as_of": "2026-10-09T00:00:00Z",
+    "status": "completed",
+    "preview": "Archive only. Tampa Bay beat Dallas 24-16. This card contains no prospective recommendation and does not regrade or rewrite the issued card.",
+    "winner_lean": {
+      "team": "DAL",
+      "type": "archived pregame analyst lean",
+      "result": "LOSS",
+      "not_a_current_pick": true
+    },
+    "context": {
+      "venue": "AT&T Stadium",
+      "indoor": true,
+      "broadcast": null,
+      "result": {
+        "TB": 24,
+        "DAL": 16
+      },
+      "verified_box_context": "Tampa Bay: 419 yards, 241 rushing yards, 39:21 possession; Dallas: 366 yards, 50 rushing yards, 3 turnovers. Dallas generated 6.7 yards/play to Tampa Bay\u2019s 6.4 in ESPN rounded fields.",
+      "archival_disclosure": "Dallas prior winner lean LOSS; game wager PASS. Research-only unders went 3-1 and are not represented as endorsed wager results. Lamb exited with a quadriceps injury; that is context, not a retrospective excuse."
+    },
+    "coverage": {
+      "archival_only": true,
+      "research_unders": "3-1 not endorsed",
+      "issued_game_wager": "PASS"
+    },
+    "sources": [
+      {
+        "provider": "ESPN saved final summary",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872980",
+        "retrieved_at": "2026-10-09T00:00:00Z"
+      },
+      {
+        "provider": "Parent initial findings",
+        "path": "../20261009-tb-dal-postmortem/PARENT_INITIAL_FINDINGS.md"
+      }
+    ],
+    "picks": [],
+    "outcome": {
+      "score": "TB 24, DAL 16",
+      "label": "Final \u2014 archived result, not a prospective recommendation."
+    }
+  },
+  {
+    "event_id": "401872981",
+    "game_id": "2026_05_PHI_JAX",
+    "away": "PHI",
+    "home": "JAX",
+    "kickoff": "2026-10-11T13:30Z",
+    "source_as_of": "2026-10-10T17:28:49Z",
+    "status": "upcoming",
+    "preview": "London, not Jacksonville: this is a neutral-site game at Tottenham Hotspur Stadium on natural grass. Jacksonville is 3-1 and Philadelphia 2-2 in the fresh ESPN event header. Philadelphia has DeVonta Smith and Hollywood Brown listed Out; that makes the Eagles\u2019 receiving allocation a current-role uncertainty rather than a reason to assume any replacement workload.",
+    "winner_lean": {
+      "team": "JAX",
+      "type": "analyst opinion",
+      "not_a_model_probability": true,
+      "basis": "Jacksonville\u2019s 3-1 record, Philadelphia\u2019s listed receiver absences, and the current public DraftKings-labelled JAX -7.5 price."
+    },
+    "context": {
+      "venue": "Tottenham Hotspur Stadium, London, England",
+      "indoor": false,
+      "broadcast": null,
+      "surface": "grass",
+      "neutral_site": true,
+      "situational_opportunity_and_live_watchlist": [
+        "PHI: verify who inherits DeVonta Smith/Hollywood Brown routes before any receiver prop; listed OUT status does not quantify routes or targets.",
+        "JAX: Trevor Lawrence is listed as JAX QB on the public odds page; a London game should not use Jacksonville weather or ordinary home-field assumptions.",
+        "Countercase: the market moved substantially from PHI -2.5 at open to JAX -7.5 on the captured page; a late availability correction can invalidate the current story."
+      ]
+    },
+    "coverage": {
+      "public_player_prop_market_families_captured": 7,
+      "player_price_rows_normalized": 0,
+      "native_research_rows_quarantined": 5,
+      "model": {
+        "run_id": "gha:37678810654-1",
+        "forecast_version": "ff-football-only-v1",
+        "model_as_of": "2026-10-07T20:03:17Z",
+        "artifact_published_at": "2026-10-08T22:48:51+00:00",
+        "card_rows_per_target_game": 5,
+        "use": "Read directly as research-only source; not a current player-prop issuance.",
+        "withheld_reason": "The saved rows have null book/odds/probability fields and were not refreshed for game-day role/availability. No calibrated probability or model-approved wager exists."
+      },
+      "market_limit": "The public ESPN page exposed seven player-prop family labels but its server markup did not provide a safe player-to-offer pairing. No named player price was published from this capture."
+    },
+    "sources": [
+      {
+        "provider": "ESPN site API",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "retrieved_at": "2026-10-10T17:28:49Z"
+      },
+      {
+        "provider": "ESPN odds page / DraftKings-labelled listings",
+        "url": "https://www.espn.com/nfl/odds/_/gameId/401872981",
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+      }
+    ],
+    "picks": [
+      {
+        "player": "No named player prop",
+        "player_id": null,
+        "team": null,
+        "market": "player_prop_screen",
+        "side": null,
+        "line": null,
+        "book": null,
+        "odds": null,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": "2026-10-07T20:03:17Z",
+        "status": "pass",
+        "rationale": "PASS. The saved native research rows have no current player price/probability and Philadelphia\u2019s receiver roles changed with two listed OUT receivers.",
+        "counterargument": "A valid player offer may still be available in a sportsbook; it was not safely normalized from this free public capture.",
+        "invalidation": "Re-open an exact player, market, threshold, price, and active-role source before making an analyst selection.",
+        "rank_basis": "availability and role gate",
+        "sources": [
+          {
+            "provider": "ESPN site API",
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+            "retrieved_at": "2026-10-10T17:28:49Z"
+          },
+          {
+            "provider": "ESPN odds page / DraftKings-labelled listings",
+            "url": "https://www.espn.com/nfl/odds/_/gameId/401872981",
+            "retrieved_at": "2026-10-10T17:28:49Z",
+            "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872990",
+    "game_id": "2026_05_CHI_GB",
+    "away": "CHI",
+    "home": "GB",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "CHI at GB is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is CHI -1.5 with total 46.5. Current volume context: GB Jordan Love: 87/154, 1,041 YDS, 8 TD, 3 INT; GB MarShawn Lloyd: 30 CAR, 81 YDS; GB Christian Watson: 20 REC, 331 YDS, 4 TD; GB Edgerrin Cooper: 3; GB Evan Williams: 36; CHI Caleb Williams: 36/55, 407 YDS, 2 TD, 1 INT. Injury/report watch: GB: Jacob Monk (Doubtful), Jager Burton (Questionable), Aaron Banks (Doubtful), Javon Hargrave (Questionable), Savion Williams (Injured Reserve); CHI: Anthony Johnson Jr. (Out), Keyshaun Elliott (Out), Kyler Gordon (Out), Caleb Williams (Questionable), Kyle Monangai (Out).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Lambeau Field",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "GB: Jacob Monk (Doubtful), Jager Burton (Questionable), Aaron Banks (Doubtful), Javon Hargrave (Questionable), Savion Williams (Injured Reserve); CHI: Anthony Johnson Jr. (Out), Keyshaun Elliott (Out), Kyler Gordon (Out), Caleb Williams (Questionable), Kyle Monangai (Out)",
+      "season_leaders": [
+        {
+          "team": "GB",
+          "category": "passingYards",
+          "player": "Jordan Love",
+          "player_id": "4036378",
+          "value": 1041.0,
+          "summary": "87/154, 8 TD, 3 INT",
+          "display_value": "87/154, 1,041 YDS, 8 TD, 3 INT"
+        },
+        {
+          "team": "GB",
+          "category": "rushingYards",
+          "player": "MarShawn Lloyd",
+          "player_id": "4429023",
+          "value": 81.0,
+          "summary": "30 CAR",
+          "display_value": "30 CAR, 81 YDS"
+        },
+        {
+          "team": "GB",
+          "category": "receivingYards",
+          "player": "Christian Watson",
+          "player_id": "4248528",
+          "value": 331.0,
+          "summary": "20 REC, 4 TD",
+          "display_value": "20 REC, 331 YDS, 4 TD"
+        },
+        {
+          "team": "GB",
+          "category": "sacks",
+          "player": "Edgerrin Cooper",
+          "player_id": "4430438",
+          "value": 3.0,
+          "summary": "",
+          "display_value": "3"
+        },
+        {
+          "team": "GB",
+          "category": "totalTackles",
+          "player": "Evan Williams",
+          "player_id": "4428863",
+          "value": 36.0,
+          "summary": "",
+          "display_value": "36"
+        },
+        {
+          "team": "CHI",
+          "category": "passingYards",
+          "player": "Caleb Williams",
+          "player_id": "4431611",
+          "value": 407.0,
+          "summary": "36/55, 2 TD, 1 INT",
+          "display_value": "36/55, 407 YDS, 2 TD, 1 INT"
+        },
+        {
+          "team": "CHI",
+          "category": "rushingYards",
+          "player": "Kyle Monangai",
+          "player_id": "4608686",
+          "value": 324.0,
+          "summary": "60 CAR, 3 TD",
+          "display_value": "60 CAR, 324 YDS, 3 TD"
+        },
+        {
+          "team": "CHI",
+          "category": "receivingYards",
+          "player": "Rome Odunze",
+          "player_id": "4431299",
+          "value": 233.0,
+          "summary": "14 REC",
+          "display_value": "14 REC, 233 YDS"
+        },
+        {
+          "team": "CHI",
+          "category": "sacks",
+          "player": "Dayo Odeyingbo",
+          "player_id": "4242659",
+          "value": 3.0,
+          "summary": "",
+          "display_value": "3"
+        },
+        {
+          "team": "CHI",
+          "category": "totalTackles",
+          "player": "Dillon Thieneman",
+          "player_id": "4954445",
+          "value": 30.0,
+          "summary": "",
+          "display_value": "30"
+        }
+      ],
+      "game_market": {
+        "details": "CHI -1.5",
+        "total": 46.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 88,
+      "captured_outcome_rows": 151,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/bears-vs-packers-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:01:07+00:00",
+        "modified_at": "2026-10-09T03:27:22+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Rome Odunze",
+        "player_id": "4431299",
+        "team": "CHI",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 40.5,
+        "book": "DraftKings",
+        "odds": -111,
+        "quote_updated_at": "2026-10-09T03:27:22+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Rome Odunze is active and the displayed 40.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (14 REC, 233 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/bears-vs-packers-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:07+00:00",
+            "modified_at": "2026-10-09T03:27:22+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872990:CHI:Rome Odunze:Receiving yards:40.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872984",
+    "game_id": "2026_05_HOU_TEN",
+    "away": "HOU",
+    "home": "TEN",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "HOU at TEN is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is HOU -7 with total 38.5. Current volume context: TEN Cam Ward: 75/119, 726 YDS, 3 TD, 2 INT; TEN Tony Pollard: 54 CAR, 221 YDS, 1 TD; TEN Carnell Tate: 22 REC, 268 YDS; TEN Jeffery Simmons: 2; TEN Anthony Hill Jr.: 42; HOU C.J. Stroud: 93/151, 1,141 YDS, 5 TD. Injury/report watch: TEN: David Martin-Robinson (Questionable), Amani Hooker (Out), Carnell Tate (Questionable), Joshua Williams (Injured Reserve), Jackson Slater (Injured Reserve); HOU: M.J. Stewart (Out), Tank Dell (Injured Reserve), Braden Smith (Injured Reserve), Kayden McDonald (Injured Reserve), Aireontae Ersery (Questionable).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Nissan Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "TEN: David Martin-Robinson (Questionable), Amani Hooker (Out), Carnell Tate (Questionable), Joshua Williams (Injured Reserve), Jackson Slater (Injured Reserve); HOU: M.J. Stewart (Out), Tank Dell (Injured Reserve), Braden Smith (Injured Reserve), Kayden McDonald (Injured Reserve), Aireontae Ersery (Questionable)",
+      "season_leaders": [
+        {
+          "team": "TEN",
+          "category": "passingYards",
+          "player": "Cam Ward",
+          "player_id": "4688380",
+          "value": 726.0,
+          "summary": "75/119, 3 TD, 2 INT",
+          "display_value": "75/119, 726 YDS, 3 TD, 2 INT"
+        },
+        {
+          "team": "TEN",
+          "category": "rushingYards",
+          "player": "Tony Pollard",
+          "player_id": "3916148",
+          "value": 221.0,
+          "summary": "54 CAR, 1 TD",
+          "display_value": "54 CAR, 221 YDS, 1 TD"
+        },
+        {
+          "team": "TEN",
+          "category": "receivingYards",
+          "player": "Carnell Tate",
+          "player_id": "4871023",
+          "value": 268.0,
+          "summary": "22 REC",
+          "display_value": "22 REC, 268 YDS"
+        },
+        {
+          "team": "TEN",
+          "category": "sacks",
+          "player": "Jeffery Simmons",
+          "player_id": "4035369",
+          "value": 2.0,
+          "summary": "",
+          "display_value": "2"
+        },
+        {
+          "team": "TEN",
+          "category": "totalTackles",
+          "player": "Anthony Hill Jr.",
+          "player_id": "4870805",
+          "value": 42.0,
+          "summary": "",
+          "display_value": "42"
+        },
+        {
+          "team": "HOU",
+          "category": "passingYards",
+          "player": "C.J. Stroud",
+          "player_id": "4432577",
+          "value": 1141.0,
+          "summary": "93/151, 5 TD",
+          "display_value": "93/151, 1,141 YDS, 5 TD"
+        },
+        {
+          "team": "HOU",
+          "category": "rushingYards",
+          "player": "David Montgomery",
+          "player_id": "4035538",
+          "value": 127.0,
+          "summary": "47 CAR, 2 TD",
+          "display_value": "47 CAR, 127 YDS, 2 TD"
+        },
+        {
+          "team": "HOU",
+          "category": "receivingYards",
+          "player": "Dalton Schultz",
+          "player_id": "3117256",
+          "value": 214.0,
+          "summary": "21 REC",
+          "display_value": "21 REC, 214 YDS"
+        },
+        {
+          "team": "HOU",
+          "category": "sacks",
+          "player": "Will Anderson Jr.",
+          "player_id": "4685724",
+          "value": 4.5,
+          "summary": "",
+          "display_value": "4.5"
+        },
+        {
+          "team": "HOU",
+          "category": "totalTackles",
+          "player": "Reed Blankenship",
+          "player_id": "4243956",
+          "value": 34.0,
+          "summary": "",
+          "display_value": "34"
+        }
+      ],
+      "game_market": {
+        "details": "HOU -7",
+        "total": 38.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 104,
+      "captured_outcome_rows": 178,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/texans-vs-titans-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:02:25+00:00",
+        "modified_at": "2026-10-09T03:26:56+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Dalton Schultz",
+        "player_id": "3117256",
+        "team": "HOU",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 34.5,
+        "book": "BetMGM",
+        "odds": -111,
+        "quote_updated_at": "2026-10-09T03:26:56+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Dalton Schultz is active and the displayed 34.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (21 REC, 214 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/texans-vs-titans-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:25+00:00",
+            "modified_at": "2026-10-09T03:26:56+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872984:HOU:Dalton Schultz:Receiving yards:34.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872982",
+    "game_id": "2026_05_CIN_MIA",
+    "away": "CIN",
+    "home": "MIA",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "CIN at MIA is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is CIN -7 with total 43.5. Current volume context: MIA Malik Willis: 58/103, 712 YDS, 1 TD, 2 INT; MIA Ollie Gordon II: 29 CAR, 148 YDS, 2 TD; MIA Malik Washington: 17 REC, 219 YDS; MIA Zach Sieler: 2; MIA Jacob Rodriguez: 46; CIN Joe Burrow: 112/157, 1,171 YDS, 7 TD, 3 INT. Injury/report watch: MIA: Robert Beal Jr. (Out), Justin Joly (Out), Jaylen Wright (Questionable), Caleb Douglas (Out), Storm Duck (Out); CIN: Kyle Dugger (Out), Bryan Cook (Questionable), Colbie Young (Questionable), Tee Higgins (Questionable), Ja'Marr Chase (Questionable).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Hard Rock Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "MIA: Robert Beal Jr. (Out), Justin Joly (Out), Jaylen Wright (Questionable), Caleb Douglas (Out), Storm Duck (Out); CIN: Kyle Dugger (Out), Bryan Cook (Questionable), Colbie Young (Questionable), Tee Higgins (Questionable), Ja'Marr Chase (Questionable)",
+      "season_leaders": [
+        {
+          "team": "MIA",
+          "category": "passingYards",
+          "player": "Malik Willis",
+          "player_id": "4242512",
+          "value": 712.0,
+          "summary": "58/103, 1 TD, 2 INT",
+          "display_value": "58/103, 712 YDS, 1 TD, 2 INT"
+        },
+        {
+          "team": "MIA",
+          "category": "rushingYards",
+          "player": "Ollie Gordon II",
+          "player_id": "4711533",
+          "value": 148.0,
+          "summary": "29 CAR, 2 TD",
+          "display_value": "29 CAR, 148 YDS, 2 TD"
+        },
+        {
+          "team": "MIA",
+          "category": "receivingYards",
+          "player": "Malik Washington",
+          "player_id": "4569603",
+          "value": 219.0,
+          "summary": "17 REC",
+          "display_value": "17 REC, 219 YDS"
+        },
+        {
+          "team": "MIA",
+          "category": "sacks",
+          "player": "Zach Sieler",
+          "player_id": "3057956",
+          "value": 2.0,
+          "summary": "",
+          "display_value": "2"
+        },
+        {
+          "team": "MIA",
+          "category": "totalTackles",
+          "player": "Jacob Rodriguez",
+          "player_id": "4566094",
+          "value": 46.0,
+          "summary": "",
+          "display_value": "46"
+        },
+        {
+          "team": "CIN",
+          "category": "passingYards",
+          "player": "Joe Burrow",
+          "player_id": "3915511",
+          "value": 1171.0,
+          "summary": "112/157, 7 TD, 3 INT",
+          "display_value": "112/157, 1,171 YDS, 7 TD, 3 INT"
+        },
+        {
+          "team": "CIN",
+          "category": "rushingYards",
+          "player": "Chase Brown",
+          "player_id": "4362238",
+          "value": 207.0,
+          "summary": "58 CAR, 1 TD",
+          "display_value": "58 CAR, 207 YDS, 1 TD"
+        },
+        {
+          "team": "CIN",
+          "category": "receivingYards",
+          "player": "Tee Higgins",
+          "player_id": "4239993",
+          "value": 401.0,
+          "summary": "25 REC, 1 TD",
+          "display_value": "25 REC, 401 YDS, 1 TD"
+        },
+        {
+          "team": "CIN",
+          "category": "sacks",
+          "player": "Dexter Lawrence II",
+          "player_id": "4035483",
+          "value": 3.0,
+          "summary": "",
+          "display_value": "3"
+        },
+        {
+          "team": "CIN",
+          "category": "totalTackles",
+          "player": "Demetrius Knight Jr.",
+          "player_id": "4427729",
+          "value": 34.0,
+          "summary": "",
+          "display_value": "34"
+        }
+      ],
+      "game_market": {
+        "details": "CIN -7",
+        "total": 43.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 72,
+      "captured_outcome_rows": 119,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/bengals-vs-dolphins-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:01:14+00:00",
+        "modified_at": "2026-10-09T03:27:00+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Malik Washington",
+        "player_id": "4569603",
+        "team": "MIA",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 45.5,
+        "book": "DraftKings",
+        "odds": -110,
+        "quote_updated_at": "2026-10-09T03:27:00+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Malik Washington is active and the displayed 45.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (17 REC, 219 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/bengals-vs-dolphins-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:14+00:00",
+            "modified_at": "2026-10-09T03:27:00+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872982:MIA:Malik Washington:Receiving yards:45.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872986",
+    "game_id": "2026_05_LV_NE",
+    "away": "LV",
+    "home": "NE",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "LV at NE is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is NE -3.5 with total 45.5. Current volume context: NE Drake Maye: 73/117, 854 YDS, 4 TD, 7 INT; NE Rhamondre Stevenson: 44 CAR, 163 YDS, 1 TD; NE Mack Hollins: 15 REC, 209 YDS; NE Elijah Ponder: 2.5; NE Robert Spillane: 29; LV Kirk Cousins: 93/144, 1,026 YDS, 11 TD, 4 INT. Injury/report watch: NE: Charles Woods (Questionable), Karon Prunty (Out), Channing Canada (Out), Craig Woodson (Questionable), Dre'Mont Jones (Questionable); LV: Trey Zuhn III (Out), Dont'e Thornton Jr. (Injured Reserve), Jalen Nailor (Out), Ashton Jeanty (Questionable), Jack Bech (Injured Reserve).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Gillette Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "NE: Charles Woods (Questionable), Karon Prunty (Out), Channing Canada (Out), Craig Woodson (Questionable), Dre'Mont Jones (Questionable); LV: Trey Zuhn III (Out), Dont'e Thornton Jr. (Injured Reserve), Jalen Nailor (Out), Ashton Jeanty (Questionable), Jack Bech (Injured Reserve)",
+      "season_leaders": [
+        {
+          "team": "NE",
+          "category": "passingYards",
+          "player": "Drake Maye",
+          "player_id": "4431452",
+          "value": 854.0,
+          "summary": "73/117, 4 TD, 7 INT",
+          "display_value": "73/117, 854 YDS, 4 TD, 7 INT"
+        },
+        {
+          "team": "NE",
+          "category": "rushingYards",
+          "player": "Rhamondre Stevenson",
+          "player_id": "4569173",
+          "value": 163.0,
+          "summary": "44 CAR, 1 TD",
+          "display_value": "44 CAR, 163 YDS, 1 TD"
+        },
+        {
+          "team": "NE",
+          "category": "receivingYards",
+          "player": "Mack Hollins",
+          "player_id": "2991662",
+          "value": 209.0,
+          "summary": "15 REC",
+          "display_value": "15 REC, 209 YDS"
+        },
+        {
+          "team": "NE",
+          "category": "sacks",
+          "player": "Elijah Ponder",
+          "player_id": "4688432",
+          "value": 2.5,
+          "summary": "",
+          "display_value": "2.5"
+        },
+        {
+          "team": "NE",
+          "category": "totalTackles",
+          "player": "Robert Spillane",
+          "player_id": "3129446",
+          "value": 29.0,
+          "summary": "",
+          "display_value": "29"
+        },
+        {
+          "team": "LV",
+          "category": "passingYards",
+          "player": "Kirk Cousins",
+          "player_id": "14880",
+          "value": 1026.0,
+          "summary": "93/144, 11 TD, 4 INT",
+          "display_value": "93/144, 1,026 YDS, 11 TD, 4 INT"
+        },
+        {
+          "team": "LV",
+          "category": "rushingYards",
+          "player": "Ashton Jeanty",
+          "player_id": "4890973",
+          "value": 264.0,
+          "summary": "78 CAR",
+          "display_value": "78 CAR, 264 YDS"
+        },
+        {
+          "team": "LV",
+          "category": "receivingYards",
+          "player": "Tre Tucker",
+          "player_id": "4428718",
+          "value": 233.0,
+          "summary": "15 REC, 1 TD",
+          "display_value": "15 REC, 233 YDS, 1 TD"
+        },
+        {
+          "team": "LV",
+          "category": "sacks",
+          "player": "Malcolm Koonce",
+          "player_id": "4239719",
+          "value": 2.5,
+          "summary": "",
+          "display_value": "2.5"
+        },
+        {
+          "team": "LV",
+          "category": "totalTackles",
+          "player": "Nakobe Dean",
+          "player_id": "4426340",
+          "value": 32.0,
+          "summary": "",
+          "display_value": "32"
+        }
+      ],
+      "game_market": {
+        "details": "NE -3.5",
+        "total": 45.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 78,
+      "captured_outcome_rows": 134,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/raiders-vs-patriots-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:02:09+00:00",
+        "modified_at": "2026-10-09T03:27:03+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Tre Tucker",
+        "player_id": "4428718",
+        "team": "LV",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 40.5,
+        "book": "FanDuel",
+        "odds": -113,
+        "quote_updated_at": "2026-10-09T03:27:03+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Tre Tucker is active and the displayed 40.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (15 REC, 233 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/raiders-vs-patriots-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:09+00:00",
+            "modified_at": "2026-10-09T03:27:03+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872986:LV:Tre Tucker:Receiving yards:40.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872987",
+    "game_id": "2026_05_MIN_NO",
+    "away": "MIN",
+    "home": "NO",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "MIN at NO is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is MIN -2.5 with total 41.5. Current volume context: NO Tyler Shough: 121/180, 1,203 YDS, 9 TD, 3 INT; NO Travis Etienne Jr.: 30 CAR, 128 YDS; NO Chris Olave: 35 REC, 491 YDS, 1 TD; NO Chase Young: 3.5; NO Jonas Sanker: 26; MIN Kyler Murray: 45/71, 433 YDS, 1 TD, 2 INT. Injury/report watch: NO: Christen Miller (Questionable), Jeremiah Wright (Out), Anfernee Jennings (Out), Julian Blackmon (Questionable), Kaden Elliss (Out); MIN: Charles Demmings (Out), Brian O'Neill (Questionable), Christian Darrisaw (Out), Ben Yurosek (Injured Reserve), Jordan Addison (Questionable).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Caesars Superdome",
+      "indoor": true,
+      "broadcast": null,
+      "injury_watch": "NO: Christen Miller (Questionable), Jeremiah Wright (Out), Anfernee Jennings (Out), Julian Blackmon (Questionable), Kaden Elliss (Out); MIN: Charles Demmings (Out), Brian O'Neill (Questionable), Christian Darrisaw (Out), Ben Yurosek (Injured Reserve), Jordan Addison (Questionable)",
+      "season_leaders": [
+        {
+          "team": "NO",
+          "category": "passingYards",
+          "player": "Tyler Shough",
+          "player_id": "4360689",
+          "value": 1203.0,
+          "summary": "121/180, 9 TD, 3 INT",
+          "display_value": "121/180, 1,203 YDS, 9 TD, 3 INT"
+        },
+        {
+          "team": "NO",
+          "category": "rushingYards",
+          "player": "Travis Etienne Jr.",
+          "player_id": "4239996",
+          "value": 128.0,
+          "summary": "30 CAR",
+          "display_value": "30 CAR, 128 YDS"
+        },
+        {
+          "team": "NO",
+          "category": "receivingYards",
+          "player": "Chris Olave",
+          "player_id": "4361370",
+          "value": 491.0,
+          "summary": "35 REC, 1 TD",
+          "display_value": "35 REC, 491 YDS, 1 TD"
+        },
+        {
+          "team": "NO",
+          "category": "sacks",
+          "player": "Chase Young",
+          "player_id": "4241986",
+          "value": 3.5,
+          "summary": "",
+          "display_value": "3.5"
+        },
+        {
+          "team": "NO",
+          "category": "totalTackles",
+          "player": "Jonas Sanker",
+          "player_id": "4683813",
+          "value": 26.0,
+          "summary": "",
+          "display_value": "26"
+        },
+        {
+          "team": "MIN",
+          "category": "passingYards",
+          "player": "Kyler Murray",
+          "player_id": "3917315",
+          "value": 433.0,
+          "summary": "45/71, 1 TD, 2 INT",
+          "display_value": "45/71, 433 YDS, 1 TD, 2 INT"
+        },
+        {
+          "team": "MIN",
+          "category": "rushingYards",
+          "player": "Aaron Jones Sr.",
+          "player_id": "3042519",
+          "value": 297.0,
+          "summary": "72 CAR, 1 TD",
+          "display_value": "72 CAR, 297 YDS, 1 TD"
+        },
+        {
+          "team": "MIN",
+          "category": "receivingYards",
+          "player": "T.J. Hockenson",
+          "player_id": "4036133",
+          "value": 195.0,
+          "summary": "22 REC, 1 TD",
+          "display_value": "22 REC, 195 YDS, 1 TD"
+        },
+        {
+          "team": "MIN",
+          "category": "sacks",
+          "player": "Dallas Turner",
+          "player_id": "4565190",
+          "value": 5.5,
+          "summary": "",
+          "display_value": "5.5"
+        },
+        {
+          "team": "MIN",
+          "category": "totalTackles",
+          "player": "Blake Cashman",
+          "player_id": "3728281",
+          "value": 33.0,
+          "summary": "",
+          "display_value": "33"
+        }
+      ],
+      "game_market": {
+        "details": "MIN -2.5",
+        "total": 41.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 82,
+      "captured_outcome_rows": 140,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/vikings-vs-saints-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:02:32+00:00",
+        "modified_at": "2026-10-09T03:27:07+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Chris Olave",
+        "player_id": "4361370",
+        "team": "NO",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 81.5,
+        "book": "DraftKings",
+        "odds": -113,
+        "quote_updated_at": "2026-10-09T03:27:07+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Chris Olave is active and the displayed 81.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (35 REC, 491 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/vikings-vs-saints-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:32+00:00",
+            "modified_at": "2026-10-09T03:27:07+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872987:NO:Chris Olave:Receiving yards:81.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872983",
+    "game_id": "2026_05_CLE_NYJ",
+    "away": "CLE",
+    "home": "NYJ",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "CLE at NYJ is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is NYJ -2.5 with total 39.5. Current volume context: NYJ Geno Smith: 85/117, 902 YDS, 5 TD; NYJ Breece Hall: 51 CAR, 163 YDS, 1 TD; NYJ Garrett Wilson: 24 REC, 270 YDS, 2 TD; NYJ Demario Davis: 2; NYJ Demario Davis: 32; CLE Deshaun Watson: 80/115, 855 YDS, 6 TD, 2 INT. Injury/report watch: NYJ: Dylan Parham (Out), Will McDonald IV (Questionable), Kingsley Enagbare (Questionable), Tim Patrick (Injured Reserve), Kiko Mauigoa (Out); CLE: Kalia Davis (Injured Reserve), Teven Jenkins (Out), Dillon Gabriel (Injured Reserve), Tylan Wallace (Out), Carsen Ryan (Out).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "MetLife Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "NYJ: Dylan Parham (Out), Will McDonald IV (Questionable), Kingsley Enagbare (Questionable), Tim Patrick (Injured Reserve), Kiko Mauigoa (Out); CLE: Kalia Davis (Injured Reserve), Teven Jenkins (Out), Dillon Gabriel (Injured Reserve), Tylan Wallace (Out), Carsen Ryan (Out)",
+      "season_leaders": [
+        {
+          "team": "NYJ",
+          "category": "passingYards",
+          "player": "Geno Smith",
+          "player_id": "15864",
+          "value": 902.0,
+          "summary": "85/117, 5 TD",
+          "display_value": "85/117, 902 YDS, 5 TD"
+        },
+        {
+          "team": "NYJ",
+          "category": "rushingYards",
+          "player": "Breece Hall",
+          "player_id": "4427366",
+          "value": 163.0,
+          "summary": "51 CAR, 1 TD",
+          "display_value": "51 CAR, 163 YDS, 1 TD"
+        },
+        {
+          "team": "NYJ",
+          "category": "receivingYards",
+          "player": "Garrett Wilson",
+          "player_id": "4569618",
+          "value": 270.0,
+          "summary": "24 REC, 2 TD",
+          "display_value": "24 REC, 270 YDS, 2 TD"
+        },
+        {
+          "team": "NYJ",
+          "category": "sacks",
+          "player": "Demario Davis",
+          "player_id": "14958",
+          "value": 2.0,
+          "summary": "",
+          "display_value": "2"
+        },
+        {
+          "team": "NYJ",
+          "category": "totalTackles",
+          "player": "Demario Davis",
+          "player_id": "14958",
+          "value": 32.0,
+          "summary": "",
+          "display_value": "32"
+        },
+        {
+          "team": "CLE",
+          "category": "passingYards",
+          "player": "Deshaun Watson",
+          "player_id": "3122840",
+          "value": 855.0,
+          "summary": "80/115, 6 TD, 2 INT",
+          "display_value": "80/115, 855 YDS, 6 TD, 2 INT"
+        },
+        {
+          "team": "CLE",
+          "category": "rushingYards",
+          "player": "Quinshon Judkins",
+          "player_id": "4685702",
+          "value": 177.0,
+          "summary": "59 CAR, 1 TD",
+          "display_value": "59 CAR, 177 YDS, 1 TD"
+        },
+        {
+          "team": "CLE",
+          "category": "receivingYards",
+          "player": "Denzel Boston",
+          "player_id": "4832800",
+          "value": 284.0,
+          "summary": "13 REC, 2 TD",
+          "display_value": "13 REC, 284 YDS, 2 TD"
+        },
+        {
+          "team": "CLE",
+          "category": "sacks",
+          "player": "Mason Graham",
+          "player_id": "4873232",
+          "value": 4.0,
+          "summary": "",
+          "display_value": "4"
+        },
+        {
+          "team": "CLE",
+          "category": "totalTackles",
+          "player": "Carson Schwesinger",
+          "player_id": "4876017",
+          "value": 35.0,
+          "summary": "",
+          "display_value": "35"
+        }
+      ],
+      "game_market": {
+        "details": "NYJ -2.5",
+        "total": 39.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 86,
+      "captured_outcome_rows": 149,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/browns-vs-jets-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:01:32+00:00",
+        "modified_at": "2026-10-09T03:27:11+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Denzel Boston",
+        "player_id": "4832800",
+        "team": "CLE",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 47.5,
+        "book": "DraftKings",
+        "odds": -114,
+        "quote_updated_at": "2026-10-09T03:27:11+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Denzel Boston is active and the displayed 47.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season receivingYards leader (13 REC, 284 YDS, 2 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/browns-vs-jets-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:32+00:00",
+            "modified_at": "2026-10-09T03:27:11+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872983:CLE:Denzel Boston:Receiving yards:47.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872985",
+    "game_id": "2026_05_IND_PIT",
+    "away": "IND",
+    "home": "PIT",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "IND at PIT is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is PIT -3 with total 43.5. Current volume context: PIT Aaron Rodgers: 88/153, 999 YDS, 7 TD, 4 INT; PIT Jaylen Warren: 55 CAR, 309 YDS; PIT DK Metcalf: 16 REC, 213 YDS, 1 TD; PIT T.J. Watt: 4.5; PIT Payton Wilson: 36; IND Daniel Jones: 84/132, 754 YDS, 3 TD, 4 INT. Injury/report watch: PIT: Yahya Black (Questionable), Jamel Dean (Out), DeShon Elliott (Injured Reserve), Jalen Ramsey (Questionable), Rico Dowdle (Questionable); IND: Arden Key (Injured Reserve), Darius Slayton (Out), Jaylon Carlies (Out), Charvarius Ward (Questionable), Will Mallory (Injured Reserve).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Acrisure Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "PIT: Yahya Black (Questionable), Jamel Dean (Out), DeShon Elliott (Injured Reserve), Jalen Ramsey (Questionable), Rico Dowdle (Questionable); IND: Arden Key (Injured Reserve), Darius Slayton (Out), Jaylon Carlies (Out), Charvarius Ward (Questionable), Will Mallory (Injured Reserve)",
+      "season_leaders": [
+        {
+          "team": "PIT",
+          "category": "passingYards",
+          "player": "Aaron Rodgers",
+          "player_id": "8439",
+          "value": 999.0,
+          "summary": "88/153, 7 TD, 4 INT",
+          "display_value": "88/153, 999 YDS, 7 TD, 4 INT"
+        },
+        {
+          "team": "PIT",
+          "category": "rushingYards",
+          "player": "Jaylen Warren",
+          "player_id": "4569987",
+          "value": 309.0,
+          "summary": "55 CAR",
+          "display_value": "55 CAR, 309 YDS"
+        },
+        {
+          "team": "PIT",
+          "category": "receivingYards",
+          "player": "DK Metcalf",
+          "player_id": "4047650",
+          "value": 213.0,
+          "summary": "16 REC, 1 TD",
+          "display_value": "16 REC, 213 YDS, 1 TD"
+        },
+        {
+          "team": "PIT",
+          "category": "sacks",
+          "player": "T.J. Watt",
+          "player_id": "3045282",
+          "value": 4.5,
+          "summary": "",
+          "display_value": "4.5"
+        },
+        {
+          "team": "PIT",
+          "category": "totalTackles",
+          "player": "Payton Wilson",
+          "player_id": "4361652",
+          "value": 36.0,
+          "summary": "",
+          "display_value": "36"
+        },
+        {
+          "team": "IND",
+          "category": "passingYards",
+          "player": "Daniel Jones",
+          "player_id": "3917792",
+          "value": 754.0,
+          "summary": "84/132, 3 TD, 4 INT",
+          "display_value": "84/132, 754 YDS, 3 TD, 4 INT"
+        },
+        {
+          "team": "IND",
+          "category": "rushingYards",
+          "player": "Jonathan Taylor",
+          "player_id": "4242335",
+          "value": 353.0,
+          "summary": "86 CAR, 6 TD",
+          "display_value": "86 CAR, 353 YDS, 6 TD"
+        },
+        {
+          "team": "IND",
+          "category": "receivingYards",
+          "player": "Josh Downs",
+          "player_id": "4688813",
+          "value": 202.0,
+          "summary": "17 REC",
+          "display_value": "17 REC, 202 YDS"
+        },
+        {
+          "team": "IND",
+          "category": "sacks",
+          "player": "DeForest Buckner",
+          "player_id": "2971282",
+          "value": 3.0,
+          "summary": "",
+          "display_value": "3"
+        },
+        {
+          "team": "IND",
+          "category": "totalTackles",
+          "player": "Akeem Davis-Gaither",
+          "player_id": "3917142",
+          "value": 37.0,
+          "summary": "",
+          "display_value": "37"
+        }
+      ],
+      "game_market": {
+        "details": "PIT -3",
+        "total": 43.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 84,
+      "captured_outcome_rows": 143,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/colts-vs-steelers-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:01:41+00:00",
+        "modified_at": "2026-10-09T03:27:15+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Jaylen Warren",
+        "player_id": "4569987",
+        "team": "PIT",
+        "market": "rushing_yards",
+        "side": "over",
+        "line": 61.5,
+        "book": "DraftKings",
+        "odds": -113,
+        "quote_updated_at": "2026-10-09T03:27:15+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Jaylen Warren is active and the displayed 61.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season rushingYards leader (55 CAR, 309 YDS); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/colts-vs-steelers-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:41+00:00",
+            "modified_at": "2026-10-09T03:27:15+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872985:PIT:Jaylen Warren:Rushing yards:61.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872988",
+    "game_id": "2026_05_NYG_WSH",
+    "away": "NYG",
+    "home": "WSH",
+    "kickoff": "2026-10-11T17:00Z",
+    "source_as_of": "2026-10-10T17:26:29.114999+00:00",
+    "status": "upcoming",
+    "preview": "NYG at WAS is scheduled for 2026-10-11T17:00Z. ESPN's current event summary shows the listed records and current team leaders; its listed game market is WSH -3.5 with total 41.5. Current volume context: WAS Marcus Mariota: 33/51, 340 YDS, 4 TD; WAS Jacory Croskey-Merritt: 56 CAR, 157 YDS, 1 TD; WAS Stefon Diggs: 18 REC, 170 YDS, 3 TD; WAS Odafe Oweh: 2; WAS Jeremy Reaves: 29; NYG Jameis Winston: 43/78, 479 YDS, 3 TD, 3 INT. Injury/report watch: WAS: Tyler Owens (Out), Charles Omenihu (Out), Percy Butler (Out), Trey Amos (Injured Reserve), Nick Cross (Out); NYG: Jason Pinnock (Out), Chauncey Golston (Out), Braxton Berrios (Injured Reserve), Jaxson Dart (Injured Reserve), Brian Burns (Injured Reserve).",
+    "winner_lean": "No current winner lean issued in this read-only publication.",
+    "context": {
+      "venue": "Northwest Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "injury_watch": "WAS: Tyler Owens (Out), Charles Omenihu (Out), Percy Butler (Out), Trey Amos (Injured Reserve), Nick Cross (Out); NYG: Jason Pinnock (Out), Chauncey Golston (Out), Braxton Berrios (Injured Reserve), Jaxson Dart (Injured Reserve), Brian Burns (Injured Reserve)",
+      "season_leaders": [
+        {
+          "team": "WAS",
+          "category": "passingYards",
+          "player": "Marcus Mariota",
+          "player_id": "2576980",
+          "value": 340.0,
+          "summary": "33/51, 4 TD",
+          "display_value": "33/51, 340 YDS, 4 TD"
+        },
+        {
+          "team": "WAS",
+          "category": "rushingYards",
+          "player": "Jacory Croskey-Merritt",
+          "player_id": "4575131",
+          "value": 157.0,
+          "summary": "56 CAR, 1 TD",
+          "display_value": "56 CAR, 157 YDS, 1 TD"
+        },
+        {
+          "team": "WAS",
+          "category": "receivingYards",
+          "player": "Stefon Diggs",
+          "player_id": "2976212",
+          "value": 170.0,
+          "summary": "18 REC, 3 TD",
+          "display_value": "18 REC, 170 YDS, 3 TD"
+        },
+        {
+          "team": "WAS",
+          "category": "sacks",
+          "player": "Odafe Oweh",
+          "player_id": "4361422",
+          "value": 2.0,
+          "summary": "",
+          "display_value": "2"
+        },
+        {
+          "team": "WAS",
+          "category": "totalTackles",
+          "player": "Jeremy Reaves",
+          "player_id": "3125248",
+          "value": 29.0,
+          "summary": "",
+          "display_value": "29"
+        },
+        {
+          "team": "NYG",
+          "category": "passingYards",
+          "player": "Jameis Winston",
+          "player_id": "2969939",
+          "value": 479.0,
+          "summary": "43/78, 3 TD, 3 INT",
+          "display_value": "43/78, 479 YDS, 3 TD, 3 INT"
+        },
+        {
+          "team": "NYG",
+          "category": "rushingYards",
+          "player": "Cam Skattebo",
+          "player_id": "4696981",
+          "value": 235.0,
+          "summary": "68 CAR, 1 TD",
+          "display_value": "68 CAR, 235 YDS, 1 TD"
+        },
+        {
+          "team": "NYG",
+          "category": "receivingYards",
+          "player": "Malik Nabers",
+          "player_id": "4595348",
+          "value": 208.0,
+          "summary": "18 REC, 1 TD",
+          "display_value": "18 REC, 208 YDS, 1 TD"
+        },
+        {
+          "team": "NYG",
+          "category": "sacks",
+          "player": "Tremaine Edmunds",
+          "player_id": "3929950",
+          "value": 1.0,
+          "summary": "",
+          "display_value": "1"
+        },
+        {
+          "team": "NYG",
+          "category": "totalTackles",
+          "player": "Arvell Reese",
+          "player_id": "4950400",
+          "value": 34.0,
+          "summary": "",
+          "display_value": "34"
+        }
+      ],
+      "game_market": {
+        "details": "WSH -3.5",
+        "total": 41.5,
+        "provider": "DraftKings"
+      },
+      "model_note": "Direct native screen inspected 5 saved card(s) from the October 7 forecast snapshot. None were promoted: no fresh availability/role-conditioned model run or current verified quote was present. No model-approved wager is represented."
+    },
+    "coverage": {
+      "captured_raw_market_rows": 75,
+      "captured_outcome_rows": 125,
+      "qualitatively_reviewed_outcome_rows": 1,
+      "model_priced_outcome_rows": 0,
+      "native_model_saved_candidate_rows": 5,
+      "native_model_promoted_rows": 0,
+      "market_source_scope": "Public Legion Report matchup page; player headings/tables visible in retrieved HTML. It labels pages updated every 10 minutes, but table rows expose no sportsbook timestamp. These are published listings, not verified executable quotes.",
+      "missing_or_not_captured_market_families": "No claim of complete all-book market coverage. Pages contain only listed players/families; specialty, alternate, defensive, period, and unavailable player markets may be absent."
+    },
+    "sources": [
+      {
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "title": "ESPN event summary",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      },
+      {
+        "url": "https://legionreport.com/giants-vs-commanders-player-props/",
+        "title": "Legion Report player-props page",
+        "published_at": "2026-10-09T01:01:49+00:00",
+        "modified_at": "2026-10-09T03:27:18+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Cam Skattebo",
+        "player_id": "4696981",
+        "team": "NYG",
+        "market": "rushing_yards",
+        "side": "over",
+        "line": 55.5,
+        "book": "DraftKings",
+        "odds": -113,
+        "quote_updated_at": "2026-10-09T03:27:18+00:00",
+        "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Conditional over only if Cam Skattebo is active and the displayed 55.5 line/price remain available. ESPN's refreshed event summary lists him as the team's current season rushingYards leader (68 CAR, 235 YDS, 1 TD); the listed public market is below that leader's four-game volume pace. This is analyst comparison, not a calibrated model edge.",
+        "counterargument": "Four-game season totals do not establish the next-game workload; opponent, game script, shared touches/targets, and a stale or moved price can reverse the setup.",
+        "invalidation": "Do not use if the player is inactive/limited, the source line or price changes, or a newer official report changes expected role.",
+        "rank_basis": "conditional analyst comparison of public listed line to ESPN current-season leader volume; not model-priced or model-approved.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/giants-vs-commanders-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:49+00:00",
+            "modified_at": "2026-10-09T03:27:18+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872988:NYG:Cam Skattebo:Rushing yards:55.5"
+          },
+          {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+            "title": "ESPN event summary",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872989",
+    "game_id": "2026_05_DEN_LAC",
+    "away": "DEN",
+    "home": "LAC",
+    "kickoff": "2026-10-11T20:05Z",
+    "source_as_of": "2026-10-10T16:13:21.237682+00:00",
+    "status": "upcoming",
+    "preview": "The captured DEN\u2013LAC screen covers 79 public secondary-listing rows. It is a player-prop review, not a game forecast: the retained analysis distinguishes role evidence from conversion and does not treat a posted line as value.",
+    "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+    "context": {
+      "venue": "SoFi Stadium",
+      "indoor": false,
+      "broadcast": null,
+      "countercase": "Payton retaking play-calling, reported receiver absences, a three-back rotation, and offensive-line absences make static workload assumptions fragile."
+    },
+    "coverage": {
+      "state": "captured_secondary_markets",
+      "detail": "79 raw source rows retained; outcome rows preserve each offered side."
+    },
+    "sources": [
+      {
+        "title": "ESPN Week 5 scoreboard",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20261011&seasontype=2&week=5"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Bo Nix",
+        "player_id": null,
+        "team": "DEN",
+        "market": "rushing_yards",
+        "side": "under",
+        "line": 13.5,
+        "book": "FanDuel",
+        "odds": -114,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.234578+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Payton retaking play-calling creates usage uncertainty; rushing production low in all four games.",
+        "counterargument": "Payton retaking play-calling creates usage uncertainty; low rushing production in all four observed games is not a stable role forecast.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
+          }
+        ]
+      },
+      {
+        "player": "RJ Harvey",
+        "player_id": null,
+        "team": "DEN",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 27.5,
+        "book": "FanDuel",
+        "odds": -114,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.235857+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Receiving lines in three observed games 23/41/68 yards; targets 4/7/10. Missing Week 2 is not assumed zero. Pat Bryant/Coleman absences and new play-caller may alter allocation; leading script may reduce receiving volume.",
+        "counterargument": "Missing Week 2 is not assumed zero. Pat Bryant/Coleman absences and a new play-caller may alter allocation; a Denver lead can reduce receiving volume.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872991",
+    "game_id": "2026_05_DET_ARI",
+    "away": "DET",
+    "home": "ARI",
+    "kickoff": "2026-10-11T20:25Z",
+    "source_as_of": "2026-10-10T16:13:21.265240+00:00",
+    "status": "upcoming",
+    "preview": "The captured DET\u2013ARI screen covers 76 public secondary-listing rows. The retained assessment prefers selected catch markets to some yardage/TD comparisons, while keeping target redistribution and game-script uncertainty explicit.",
+    "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+    "context": {
+      "venue": "State Farm Stadium",
+      "indoor": true,
+      "broadcast": null,
+      "countercase": "Detroit receiver outcomes are correlated; a leading script can reduce pass volume, while Harrison's reported absence may concentrate targets without quantifying the allocation."
+    },
+    "coverage": {
+      "state": "captured_secondary_markets",
+      "detail": "76 raw source rows retained; outcome rows preserve each offered side."
+    },
+    "sources": [
+      {
+        "title": "ESPN Week 5 scoreboard",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20261011&seasontype=2&week=5"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Trey McBride",
+        "player_id": null,
+        "team": "ARI",
+        "market": "receptions",
+        "side": "over",
+        "line": 7.5,
+        "book": "BetMGM",
+        "odds": -140,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.263519+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Receptions 9/8/9/7 on targets 13/10/11/12; catches preferred to high yards threshold. Harrison out could concentrate targets but not quantified.",
+        "counterargument": "Harrison's reported absence can concentrate targets but is not quantified; the high catch threshold already reflects opportunity.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
+          }
+        ]
+      },
+      {
+        "player": "Amon-Ra St. Brown",
+        "player_id": null,
+        "team": "DET",
+        "market": "receptions",
+        "side": "over",
+        "line": 7.5,
+        "book": "DraftKings",
+        "odds": 102,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.263805+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Receptions 10/9/4/8; targets 14/13/8/11. Catch over preferred to yards; blowout/redistribution is countercase.",
+        "counterargument": "A leading script or redistribution can reduce catch volume; this is not a reason to stack correlated Detroit receiver overs.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
+          }
+        ]
+      },
+      {
+        "player": "Jahmyr Gibbs",
+        "player_id": null,
+        "team": "DET",
+        "market": "receptions",
+        "side": "over",
+        "line": 4.5,
+        "book": "BetMGM",
+        "odds": -120,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.264371+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Receptions 5/6/7/4; targets 5/8/8/7. Receiving over preferred to expensive TD/rushing over; all are correlated.",
+        "counterargument": "The receiving case is correlated with other Lions target outcomes; expensive TD/rushing markets and game script remain countercases.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872992",
+    "game_id": "2026_05_SF_SEA",
+    "away": "SF",
+    "home": "SEA",
+    "kickoff": "2026-10-11T20:25Z",
+    "source_as_of": "2026-10-10T16:13:21.283365+00:00",
+    "status": "upcoming",
+    "preview": "The captured SF\u2013SEA screen covers 95 public secondary-listing rows. The retained assessment uses observed matching stat appearances only; missing appearances are not imputed as zero and no calibrated probability is claimed.",
+    "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+    "context": {
+      "venue": "Lumen Field",
+      "indoor": false,
+      "broadcast": null,
+      "countercase": "Darnold has only two recent full starts, JSN's first two games were largely with Lock, and a trailing/checkdown script can reverse a descriptive receptions case."
+    },
+    "coverage": {
+      "state": "captured_secondary_markets",
+      "detail": "95 raw source rows retained; outcome rows preserve each offered side."
+    },
+    "sources": [
+      {
+        "title": "ESPN Week 5 scoreboard",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20261011&seasontype=2&week=5"
+      }
+    ],
+    "picks": [
+      {
+        "player": "Jaxon Smith-Njigba",
+        "player_id": null,
+        "team": "SEA",
+        "market": "receptions",
+        "side": "over",
+        "line": 6.5,
+        "book": "FanDuel",
+        "odds": -130,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.281156+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Four-game catches 8/9/10/5; first two largely with Drew Lock. Last two full Darnold games 10/5 on 14/6 targets; do not call four-game trend Darnold chemistry.",
+        "counterargument": "The first two games were largely with Drew Lock; the last two full Darnold games were 10 and 5 catches on 14 and 6 targets, not a four-game chemistry trend.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/49ers-vs-seahawks/"
+          }
+        ]
+      },
+      {
+        "player": "Christian McCaffrey",
+        "player_id": null,
+        "team": "SF",
+        "market": "receptions",
+        "side": "under",
+        "line": 4.5,
+        "book": "BetMGM",
+        "odds": 105,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.282422+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Receptions 5/4/4/3; receiving under supported descriptively, but trailing/checkdown script can reverse. Shared touches and Seattle matchup.",
+        "counterargument": "A trailing/checkdown script can reverse the descriptive under; shared touches and the Seattle matchup remain material uncertainty.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/49ers-vs-seahawks/"
+          }
+        ]
+      },
+      {
+        "player": "George Kittle",
+        "player_id": null,
+        "team": "SF",
+        "market": "receiving_yards",
+        "side": "over",
+        "line": 54.5,
+        "book": "BetMGM",
+        "odds": -110,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T16:13:21.282816+00:00",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": null,
+        "status": "analyst_lean",
+        "rationale": "Yards 12/80/82/70; recent catches 4/6/4. Yardage over more plausible than catch over, but explosive-play and coverage risk.",
+        "counterargument": "Explosive-play dependence and coverage risk can overturn the descriptive yardage case.",
+        "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
+        "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/49ers-vs-seahawks/"
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872993",
+    "game_id": "2026_05_BAL_ATL",
+    "away": "BAL",
+    "home": "ATL",
+    "kickoff": "2026-10-12T00:20Z",
+    "source_as_of": "2026-10-10T17:28:49Z",
+    "status": "upcoming",
+    "preview": "Sunday night in Atlanta at Mercedes-Benz Stadium, a turf venue. Atlanta is 2-2 and Baltimore 3-1 in the fresh header. Baltimore has Trey Hendrickson listed Out and Zay Flowers Questionable; Atlanta lists Jake Matthews Questionable. Those are availability signals, not snap or target forecasts.",
+    "winner_lean": {
+      "team": "ATL",
+      "type": "analyst opinion",
+      "not_a_model_probability": true,
+      "basis": "Atlanta home venue and the captured DraftKings-labelled ATL -3 price, with Baltimore\u2019s Flowers availability unresolved."
+    },
+    "context": {
+      "venue": "Mercedes-Benz Stadium, Atlanta, Georgia",
+      "indoor": true,
+      "broadcast": null,
+      "surface": "artificial turf",
+      "neutral_site": false,
+      "situational_opportunity_and_live_watchlist": [
+        "BAL: verify Flowers\u2019 game status and route participation; Questionable is not an automatic absence or a target-share projection.",
+        "ATL: verify Matthews\u2019 active status before inferring changes to protection or rushing efficiency.",
+        "Countercase: Baltimore\u2019s 3-1 record is stronger than Atlanta\u2019s 2-2 record, and an active Flowers can alter the passing-game concentration."
+      ]
+    },
+    "coverage": {
+      "public_player_prop_market_families_captured": 7,
+      "player_price_rows_normalized": 0,
+      "native_research_rows_quarantined": 5,
+      "model": {
+        "run_id": "gha:37678810654-1",
+        "forecast_version": "ff-football-only-v1",
+        "model_as_of": "2026-10-07T20:03:17Z",
+        "artifact_published_at": "2026-10-08T22:48:51+00:00",
+        "card_rows_per_target_game": 5,
+        "use": "Read directly as research-only source; not a current player-prop issuance.",
+        "withheld_reason": "The saved rows have null book/odds/probability fields and were not refreshed for game-day role/availability. No calibrated probability or model-approved wager exists."
+      },
+      "market_limit": "Public capture included broad player-prop family labels but no safe player/offer normalization. The existing native Derrick Henry / Brian Robinson / C. Moore research rows are not current priced picks."
+    },
+    "sources": [
+      {
+        "provider": "ESPN site API",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "retrieved_at": "2026-10-10T17:28:49Z"
+      },
+      {
+        "provider": "ESPN odds page / DraftKings-labelled listings",
+        "url": "https://www.espn.com/nfl/odds/_/gameId/401872993",
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+      }
+    ],
+    "picks": [
+      {
+        "player": "No named player prop",
+        "player_id": null,
+        "team": null,
+        "market": "player_prop_screen",
+        "side": null,
+        "line": null,
+        "book": null,
+        "odds": null,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": "2026-10-07T20:03:17Z",
+        "status": "pass",
+        "rationale": "PASS. No safely normalized current named-player price; key availability is unresolved and the model artifact is October 7 research-only.",
+        "counterargument": "The public page showed prop families and can contain valid offers, but it did not yield reliable player-to-price records in this bounded scrape.",
+        "invalidation": "A current exact line/price plus final active-role check is required.",
+        "rank_basis": "availability and price-source gate",
+        "sources": [
+          {
+            "provider": "ESPN site API",
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+            "retrieved_at": "2026-10-10T17:28:49Z"
+          },
+          {
+            "provider": "ESPN odds page / DraftKings-labelled listings",
+            "url": "https://www.espn.com/nfl/odds/_/gameId/401872993",
+            "retrieved_at": "2026-10-10T17:28:49Z",
+            "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  },
+  {
+    "event_id": "401872994",
+    "game_id": "2026_05_BUF_LAR",
+    "away": "BUF",
+    "home": "LAR",
+    "kickoff": "2026-10-13T00:15Z",
+    "source_as_of": "2026-10-10T17:28:49Z",
+    "status": "upcoming",
+    "preview": "Monday, October 12 local date: 8:15 PM EDT / 5:15 PM PDT at SoFi Stadium in Inglewood, an artificial-turf venue. The fresh header has Buffalo 3-1 and Los Angeles 2-2. Buffalo lists DJ Moore and Joshua Palmer Questionable; Rams list multiple defensive Questionable players. No listed designation is treated as a workload forecast.",
+    "winner_lean": {
+      "team": "LAR",
+      "type": "analyst opinion",
+      "not_a_model_probability": true,
+      "basis": "Home venue and captured DraftKings-labelled LAR -3 price; this is a qualitative lean, not native model output."
+    },
+    "context": {
+      "venue": "SoFi Stadium, Inglewood, California",
+      "indoor": false,
+      "broadcast": null,
+      "surface": "artificial turf",
+      "neutral_site": false,
+      "situational_opportunity_and_live_watchlist": [
+        "BUF: confirm DJ Moore and Joshua Palmer availability before assigning any receiver/TE target redistribution.",
+        "LAR: Josh Allen, James Cook, Puka Nacua, Davante Adams, Dalton Kincaid, Tyler Higbee and Keon Coleman appear in the public odds-page player list; the list confirms roles displayed by the page, not a price for each player.",
+        "Countercase: Buffalo has the better listed record and the Rams\u2019 defensive injury designations could matter if they become absences."
+      ]
+    },
+    "coverage": {
+      "public_player_prop_market_families_captured": 7,
+      "player_price_rows_normalized": 0,
+      "native_research_rows_quarantined": 5,
+      "model": {
+        "run_id": "gha:37678810654-1",
+        "forecast_version": "ff-football-only-v1",
+        "model_as_of": "2026-10-07T20:03:17Z",
+        "artifact_published_at": "2026-10-08T22:48:51+00:00",
+        "card_rows_per_target_game": 5,
+        "use": "Read directly as research-only source; not a current player-prop issuance.",
+        "withheld_reason": "The saved rows have null book/odds/probability fields and were not refreshed for game-day role/availability. No calibrated probability or model-approved wager exists."
+      },
+      "market_limit": "The saved model contains D. Adams, D. Moore, G. Dortch rows, but no current book/odds/probability. They are retained as quarantined research, not published selections."
+    },
+    "sources": [
+      {
+        "provider": "ESPN site API",
+        "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "retrieved_at": "2026-10-10T17:28:49Z"
+      },
+      {
+        "provider": "ESPN odds page / DraftKings-labelled listings",
+        "url": "https://www.espn.com/nfl/odds/_/gameId/401872994",
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+      }
+    ],
+    "picks": [
+      {
+        "player": "No named player prop",
+        "player_id": null,
+        "team": null,
+        "market": "player_prop_screen",
+        "side": null,
+        "line": null,
+        "book": null,
+        "odds": null,
+        "quote_updated_at": null,
+        "retrieved_at": "2026-10-10T17:28:49Z",
+        "projection": null,
+        "model_probability": null,
+        "calibrated_probability": null,
+        "model_run_as_of": "2026-10-07T20:03:17Z",
+        "status": "pass",
+        "rationale": "PASS. The model rows are research-only and the free public scrape did not support a safe current player-price pairing.",
+        "counterargument": "The page visibly lists core skill players and prop families; absence of normalization is a source limitation, not proof that no book offers a prop.",
+        "invalidation": "Refresh an exact named offer and final availability before any analyst pick.",
+        "rank_basis": "price/source integrity gate",
+        "sources": [
+          {
+            "provider": "ESPN site API",
+            "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+            "retrieved_at": "2026-10-10T17:28:49Z"
+          },
+          {
+            "provider": "ESPN odds page / DraftKings-labelled listings",
+            "url": "https://www.espn.com/nfl/odds/_/gameId/401872994",
+            "retrieved_at": "2026-10-10T17:28:49Z",
+            "limitations": "Public page capture; listings were not independently opened in a sportsbook betslip. ESPN page does not provide a provider update timestamp for each player offer."
+          }
+        ]
+      }
+    ],
+    "outcome": null
+  }
+]

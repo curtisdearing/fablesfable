@@ -1,0 +1,24 @@
+{
+  "schema": "fablesfable.week5.integration.v1",
+  "season": 2026,
+  "week": 5,
+  "games": 15,
+  "upcoming_games": 14,
+  "completed_games": 1,
+  "raw_market_rows": 919,
+  "outcome_rows": 1557,
+  "coverage_family_rows": 18,
+  "coverage_gap_rows": 24,
+  "all_row_records": 1599,
+  "sources": {
+    "scoreboard": "data/research_snapshots/2026-week-5/scoreboard.json",
+    "saved_source_cards": "data/research_snapshots/2026-week-5/saved-source-cards.json",
+    "late_markets": "data/research_snapshots/2026-week-5/late-screened-markets.json",
+    "extra": [
+      "../early/game_cards.json",
+      "../early/market_rows.json",
+      "../extra/game_cards.json",
+      "../extra/market_rows.json"
+    ]
+  }
+}

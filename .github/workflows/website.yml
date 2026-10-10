@@ -89,8 +89,8 @@ jobs:
               assert not candidate.is_symlink(), f'Symlinks are not allowed: {candidate}'
 
           fixed_public_files = {
-              'index.html', 'best-bets.html', 'model-cards.html', 'history.html', 'dashboard.html', 'history.json', 'README.txt',
-              'api/hub.json', 'reports/index.json', 'reports/latest.html', 'games/pages.json', 'games/index.json',
+              'index.html', 'best-bets.html', 'all-props.html', 'model-cards.html', 'history.html', 'dashboard.html', 'history.json', 'README.txt',
+              'api/hub.json', 'api/all-props.json', 'reports/index.json', 'reports/latest.html', 'games/pages.json', 'games/index.json',
               'results.html', 'api/results.json', 'research.html', 'api/research.json', 'coverage.html', 'api/coverage.json',
           }
           report_week = re.compile(r'reports/[0-9]{4}/week-(?:[1-9]|1[0-9]|2[0-2])\.html\Z')

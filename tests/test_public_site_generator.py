@@ -82,6 +82,75 @@ def _run_checker(site_parent):
         os.chdir(cwd)
 
 
+def test_all_props_adapter_keeps_exact_semantics_and_rejections(tmp_path):
+    """Research payloads must stay browsable without inventing an executable offer."""
+    from nflvalue import all_props
+
+    cards = [{"event_id": "401872990", "game_id": "2026_05_CHI_GB", "away": "CHI", "home": "GB",
+              "kickoff": "2026-10-11T17:00:00Z", "source_as_of": "2026-10-09T20:00:00Z",
+              "preview": "Test-only preview", "winner_lean": None, "context": {}, "coverage": {},
+              "picks": [{"player": "Test Receiver", "player_id": None, "team": "GB",
+                         "market": "receiving_yards", "side": "under", "line": 65.5,
+                         "book": "ExampleBook", "odds": -110,
+                         "quote_updated_at": "2026-10-09T19:59:00Z", "retrieved_at": "2026-10-09T20:00:00Z",
+                         "projection": None, "model_probability": None, "calibrated_probability": None,
+                         "model_run_as_of": None, "status": "analyst_lean", "rationale": "Role risk",
+                         "counterargument": "One long reception", "invalidation": "Role changes",
+                         "rank_basis": "qualitative review", "sources": []}],
+              "all_market_rows_path": "market_rows.json", "sources": []}]
+    rows = [{"event_id": "401872990", "game_id": "2026_05_CHI_GB", "player": "Test Receiver",
+             "team": "GB", "market": "receiving_yards", "side": "under", "line": 65.5,
+             "book": "ExampleBook", "odds": -110, "captured_at": "2026-10-09T20:00:00Z",
+             "provider_updated_at": "2026-10-09T19:59:00Z", "period": "full_game",
+             "status": "analyst_lean", "disposition": "reviewed", "reason": "Role risk"},
+            {"event_id": "401872990", "game_id": "2026_05_CHI_GB", "player": "Test Runner",
+             "team": "CHI", "market": "longest_rush", "side": "over", "line": None,
+             "book": None, "odds": None, "captured_at": None, "provider_updated_at": None,
+             "period": "first_half", "status": "unavailable", "disposition": "unsupported",
+             "reason": "No captured price"}]
+    cards_path, rows_path = tmp_path / "game_cards.json", tmp_path / "market_rows.json"
+    cards_path.write_text(json.dumps(cards)); rows_path.write_text(json.dumps(rows))
+
+    payload = all_props.load(str(cards_path), str(rows_path), expected_event_ids={"401872990"})
+
+    assert payload["state"] == "ready"
+    assert payload["counts"] == {"games": 1, "raw_market_rows": 0, "outcome_rows": 2, "quote_rows": 1, "unique_athletes": 2,
+                                  "model_priced": 0, "qualitatively_reviewed": 1,
+                                  "unavailable_or_unsupported": 1}
+    assert payload["rows"][0]["side"] == "under"
+    assert payload["rows"][0]["line"] == 65.5
+    assert payload["rows"][1]["period"] == "first_half"
+    assert payload["rows"][1]["disposition"] == "unsupported"
+    assert "offer" not in payload["rows"][1]["offer_label"].lower()
+    incomplete = all_props.load(str(cards_path), str(rows_path), expected_event_ids={"401872990", "401872984"})
+    assert incomplete["state"] == "invalid"
+    assert "missing event(s)" in incomplete["errors"][0]
+
+
+def test_all_props_adapter_is_honest_when_payload_is_absent(tmp_path):
+    from nflvalue import all_props
+
+    payload = all_props.load(None, None)
+    assert payload["state"] == "pending"
+    assert payload["cards"] == [] and payload["rows"] == []
+    assert "No research payload" in all_props.render_page(payload)
+
+
+def test_public_builder_emits_pending_all_props_page_without_fake_rows(tmp_path):
+    db = _db(tmp_path, [_lean()])
+    out = tmp_path / "site" / "published-site"
+    assert bps.main(["--db", db, "--season", "2026", "--week", "3", "--archive", _archive(tmp_path),
+                     "--out", str(out), "--label", "replay", "--now", "2026-09-23T00:00:00Z"]) == 0
+    props_page = (out / "all-props.html").read_text()
+    props_api = json.loads((out / "api/all-props.json").read_text())
+    manifest = json.loads((out / "publication.json").read_text())
+    assert "No research payload" in props_page
+    assert "Test Receiver" not in props_page
+    assert props_api["state"] == "pending" and props_api["rows"] == []
+    assert {"all-props.html", "api/all-props.json"} <= set(manifest["files"])
+    _run_checker(out.parent)
+
+
 def test_coverage_keeps_game_lines_in_a_truthful_table_separate_from_player_props():
     payload = {
         "season": 2026,
