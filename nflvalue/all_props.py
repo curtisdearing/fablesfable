@@ -13,7 +13,7 @@ import os
 from collections import Counter
 
 SCHEMA = "fablesfable.all_props.v1"
-VALID_STATUSES = {"analyst_lean", "research", "pass", "unavailable", "model_approved"}
+VALID_STATUSES = {"analyst_lean", "research", "pass", "unavailable", "pending", "model_approved"}
 VALID_DISPOSITIONS = {"reviewed", "rejected", "unsupported", "unavailable", "pass", "pending"}
 REQUIRED_CARD = {"event_id", "game_id", "away", "home", "kickoff", "source_as_of", "picks"}
 REQUIRED_ROW = {"event_id", "game_id", "player", "team", "market", "side", "period", "status", "disposition"}
@@ -52,8 +52,11 @@ def _row_error(row, n):
     missing = sorted(k for k in REQUIRED_ROW if k not in row)
     if missing:
         return f"market_rows[{n}] missing {', '.join(missing)}"
-    invalid_text = [k for k in ("event_id", "game_id", "player", "team", "market", "side", "period")
+    is_coverage = row.get("raw_market_row_type") in {"family_availability", "coverage_gap"}
+    invalid_text = [k for k in ("event_id", "game_id", "player", "team", "market", "period")
                     if not _text(row.get(k))]
+    if not is_coverage and not _text(row.get("side")):
+        invalid_text.append("side")
     if invalid_text:
         return f"market_rows[{n}] has blank {', '.join(invalid_text)}"
     if row.get("status") not in VALID_STATUSES:
@@ -123,7 +126,7 @@ def _counts(cards, rows):
     return {
         "games": len(cards),
         "raw_market_rows": len({r.get("source_row_id") for r in rows if r.get("source_row_id") is not None}),
-        "outcome_rows": len(rows),
+        "outcome_rows": sum(1 for r in rows if r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"}),
         "quote_rows": sum(1 for r in rows if r["has_offer"]),
         "unique_athletes": len(athletes),
         "model_priced": sum(1 for r in rows if r.get("model_probability") is not None or r.get("calibrated_probability") is not None),

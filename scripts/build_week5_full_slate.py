@@ -53,7 +53,8 @@ def parse_price(value):
 
 def player_team(label):
     chunks = str(label).split()
-    return (" ".join(chunks[:-3]) or str(label), chunks[-1] if len(chunks) >= 3 else "UNK")
+    # Captured labels end in position and team (for example ``RJ Harvey RB DEN``).
+    return (" ".join(chunks[:-2]) or str(label), chunks[-1] if len(chunks) >= 2 else "UNK")
 
 
 def market_name(label):
@@ -67,24 +68,49 @@ def source(title, url):
     return {"title": title, "url": url}
 
 
-def source_card_pick(row, event_id):
-    quote = row.get("quote") or {}
-    price = quote.get("price_american")
-    try:
-        odds = int(str(price)) if price is not None else None
-    except ValueError:
-        odds = None
-    invalidation = row.get("invalidation") or []
-    return {"player": row.get("player") or row.get("name") or "Unknown player", "player_id": row.get("player_id"),
-            "team": row.get("team") or "UNK", "market": row.get("market") or "unknown", "side": row.get("side") or "unknown",
-            "line": row.get("line"), "book": quote.get("book"), "odds": odds,
-            "quote_updated_at": quote.get("captured_at"), "retrieved_at": row.get("run_as_of"),
-            "projection": row.get("mean"), "model_probability": row.get("model_p_side"), "calibrated_probability": None,
-            "model_run_as_of": row.get("run_as_of"), "status": "research", "rationale": row.get("rationale") or "Saved source card.",
-            "counterargument": row.get("countercase") or "Saved source card; role and line can change.",
-            "invalidation": "; ".join(invalidation) if isinstance(invalidation, list) else str(invalidation),
-            "rank_basis": "Saved native source card; not a current inference or wager approval.",
-            "sources": []}
+LATE_GAME_ANALYSIS = {
+    "DEN_LAC": {
+        "preview": "The captured DEN–LAC screen covers 79 public secondary-listing rows. It is a player-prop review, not a game forecast: the retained analysis distinguishes role evidence from conversion and does not treat a posted line as value.",
+        "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+        "context": {"countercase": "Payton retaking play-calling, reported receiver absences, a three-back rotation, and offensive-line absences make static workload assumptions fragile."},
+    },
+    "DET_ARI": {
+        "preview": "The captured DET–ARI screen covers 76 public secondary-listing rows. The retained assessment prefers selected catch markets to some yardage/TD comparisons, while keeping target redistribution and game-script uncertainty explicit.",
+        "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+        "context": {"countercase": "Detroit receiver outcomes are correlated; a leading script can reduce pass volume, while Harrison's reported absence may concentrate targets without quantifying the allocation."},
+    },
+    "SF_SEA": {
+        "preview": "The captured SF–SEA screen covers 95 public secondary-listing rows. The retained assessment uses observed matching stat appearances only; missing appearances are not imputed as zero and no calibrated probability is claimed.",
+        "winner_lean": "No game-winner lean was issued: the retained late research assessed player markets, not a side or moneyline.",
+        "context": {"countercase": "Darnold has only two recent full starts, JSN's first two games were largely with Lock, and a trailing/checkdown script can reverse a descriptive receptions case."},
+    },
+}
+
+LATE_PICK_COUNTERCASES = {
+    ("RJ Harvey", "Receiving yards"): "Missing Week 2 is not assumed zero. Pat Bryant/Coleman absences and a new play-caller may alter allocation; a Denver lead can reduce receiving volume.",
+    ("Bo Nix", "Rushing yards"): "Payton retaking play-calling creates usage uncertainty; low rushing production in all four observed games is not a stable role forecast.",
+    ("Amon-Ra St. Brown", "Receptions"): "A leading script or redistribution can reduce catch volume; this is not a reason to stack correlated Detroit receiver overs.",
+    ("Jahmyr Gibbs", "Receptions"): "The receiving case is correlated with other Lions target outcomes; expensive TD/rushing markets and game script remain countercases.",
+    ("Trey McBride", "Receptions"): "Harrison's reported absence can concentrate targets but is not quantified; the high catch threshold already reflects opportunity.",
+    ("Jaxon Smith-Njigba", "Receptions"): "The first two games were largely with Drew Lock; the last two full Darnold games were 10 and 5 catches on 14 and 6 targets, not a four-game chemistry trend.",
+    ("George Kittle", "Receiving yards"): "Explosive-play dependence and coverage risk can overturn the descriptive yardage case.",
+    ("Christian McCaffrey", "Receptions"): "A trailing/checkdown script can reverse the descriptive under; shared touches and the Seattle matchup remain material uncertainty.",
+}
+
+
+def is_game_card(item):
+    return isinstance(item, dict) and {"event_id", "game_id", "away", "home", "kickoff", "picks"} <= set(item)
+
+
+def is_market_row(item):
+    return isinstance(item, dict) and {"event_id", "game_id", "player", "market", "period", "status", "disposition"} <= set(item)
+
+
+def source_clock(card, fallback):
+    if card and card.get("source_as_of"):
+        return card["source_as_of"]
+    candidates = [r.get("captured_at") or r.get("retrieved_at") for r in fallback if isinstance(r, dict)]
+    return max((str(v) for v in candidates if v), default="Unavailable (no source capture clock supplied)")
 
 
 def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
@@ -98,22 +124,30 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
         raise ValueError("saved source cards must be a list or hub.json with cards")
     if not isinstance(late, list):
         raise ValueError("late market file must be a top-level list")
-    extras = []
+    extra_cards, extra_rows = [], []
     for path in extra_paths:
         doc = read_json(path)
         if not isinstance(doc, list):
             raise ValueError(f"extra payload must be a top-level list: {path}")
-        extras.extend(doc)
-    by_game = {}
-    for row in saved:
-        if isinstance(row, dict) and row.get("game_id"):
-            by_game.setdefault(row["game_id"], []).append(row)
+        for item in doc:
+            if is_game_card(item):
+                extra_cards.append(item)
+            elif is_market_row(item):
+                extra_rows.append(item)
+            else:
+                raise ValueError(f"extra payload item is neither a typed game card nor market row: {path}")
+    # Saved native cards are deliberately audit-only.  They are old model snapshots,
+    # not current issued picks, and must not leak into refreshed manual cards.
+    if any(not isinstance(row, dict) for row in saved):
+        raise ValueError("saved source cards must contain objects")
+    cards_by_event = {str(c["event_id"]): c for c in extra_cards}
+    cards_by_game = {c["game_id"]: c for c in extra_cards}
     late_by_game = {}
     for raw in late:
         if not isinstance(raw, dict) or not raw.get("game"):
             raise ValueError("late market rows must be objects with game")
         late_by_game.setdefault(raw["game"], []).append(raw)
-    cards, rows = [], []
+    cards, rows = [], list(extra_rows)
     raw_count = 0
     for event in scoreboard["events"]:
         comp = event["competitions"][0]
@@ -123,7 +157,8 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
         finished = bool(event.get("status", {}).get("type", {}).get("completed"))
         venue = comp.get("venue", {})
         event_sources = [source("ESPN Week 5 scoreboard", "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20261011&seasontype=2&week=5")]
-        picks = [source_card_pick(x, event_id) for x in by_game.get(gid, [])]
+        supplied = cards_by_event.get(event_id) or cards_by_game.get(gid)
+        picks = list((supplied or {}).get("picks") or [])
         late_rows = late_by_game.get(f"{away}_{home}", [])
         for raw in late_rows:
             raw_count += 1
@@ -134,9 +169,11 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
             raw_record = dict(raw)
             for side, field in (("over", "Best over"), ("under", "Best under")):
                 if raw.get("Prop") == "Anytime TD":
-                    side, field = "yes", "Best over"
-                    if rows and rows[-1].get("source_row_id") == raw_count:
+                    # A categorical TD listing has one ``yes`` outcome, not an
+                    # invented O/U pair.  The second loop pass has no distinct offer.
+                    if field != "Best over":
                         continue
+                    side = "yes"
                 odds, book = parse_price(raw.get(field))
                 disposition = str(raw.get("disposition") or "")
                 selected_here = selected == side
@@ -150,12 +187,13 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
                     status, outcome = "unavailable", "unsupported"
                 else:
                     status, outcome = "pass", "pass"
+                source_row_id = f"late:{raw.get('game')}:{raw.get('player_label')}:{raw.get('Prop')}:{raw.get('Line')}"
                 rows.append({"event_id": event_id, "game_id": gid, "player": player, "team": team, "market": prop,
                              "side": side, "period": "full_game", "status": status, "disposition": outcome,
                              "line": None if side == "yes" else line, "odds": odds, "book": book,
                              "captured_at": raw.get("retrieved_at"), "provider_updated_at": None,
                              "reason": raw.get("rationale") or raw.get("history_note"), "sources": [source("Secondary published listing", raw.get("source"))],
-                             "source_row_id": raw_count, "raw_source_row": raw_record,
+                             "source_row_id": source_row_id, "raw_source_row": raw_record,
                              "quote_verification": raw.get("quote_verification")})
                 if selected_here:
                     picks.append({"player": player, "player_id": None, "team": team, "market": prop, "side": side,
@@ -163,7 +201,7 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
                                   "quote_updated_at": None, "retrieved_at": raw.get("retrieved_at"), "projection": None,
                                   "model_probability": None, "calibrated_probability": None, "model_run_as_of": None,
                                   "status": "analyst_lean", "rationale": raw.get("rationale") or "Conditional analyst lean.",
-                                  "counterargument": "Secondary listing and current role/price have not been independently reverified.",
+                                  "counterargument": LATE_PICK_COUNTERCASES.get((player, raw.get("Prop")), "Secondary listing and current role/price have not been independently reverified."),
                                   "invalidation": "Any inactive/role change, line movement, or failure to confirm a current executable offer.",
                                   "rank_basis": "Conditional manual lean from descriptive observed history; no calibrated probability.",
                                   "sources": [source("Secondary published listing", raw.get("source"))]})
@@ -183,15 +221,30 @@ def integrate(scoreboard_path, early_hub_path, late_path, extra_paths=()):
         else:
             preview = "No researched player-market payload was supplied for this game at build time. This is a coverage gap, not a PASS or a fabricated analysis."
             coverage = {"state": "coverage_gap", "detail": "Awaiting a real game-card/market payload; no market rows were authored to fill the gap."}
-        cards.append({"event_id": event_id, "game_id": gid, "away": away, "home": home, "kickoff": event["date"],
-                      "source_as_of": "2026-10-10T17:23:00-04:00", "status": "completed" if finished else "upcoming",
-                      "preview": preview, "winner_lean": "No current winner lean issued in this read-only publication.",
-                      "context": {"venue": venue.get("fullName"), "indoor": venue.get("indoor"), "broadcast": event.get("broadcast")},
-                      "coverage": coverage, "sources": event_sources, "picks": picks, "outcome": outcome})
+        late_analysis = LATE_GAME_ANALYSIS.get(f"{away}_{home}", {})
+        supplied = supplied or {}
+        base_context = {"venue": venue.get("fullName"), "indoor": venue.get("indoor"), "broadcast": event.get("broadcast")}
+        base_context.update(late_analysis.get("context", {}))
+        base_context.update(supplied.get("context") or {})
+        card = {"event_id": event_id, "game_id": gid, "away": away, "home": home, "kickoff": event["date"],
+                "source_as_of": source_clock(supplied, late_rows), "status": "completed" if finished else "upcoming",
+                "preview": supplied.get("preview") or late_analysis.get("preview") or preview,
+                "winner_lean": supplied.get("winner_lean") or late_analysis.get("winner_lean") or "No current winner lean issued in this read-only publication.",
+                "context": base_context, "coverage": supplied.get("coverage") or coverage,
+                "sources": supplied.get("sources") or event_sources, "picks": [] if finished else picks, "outcome": outcome}
+        cards.append(card)
     cards.sort(key=lambda c: c["kickoff"])
+    priced_extra = [r for r in extra_rows if r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"}]
+    extra_families = sum(r.get("raw_market_row_type") == "family_availability" for r in extra_rows)
+    extra_gaps = sum(r.get("raw_market_row_type") == "coverage_gap" for r in extra_rows)
+    early_raw_ids = {r.get("raw_market_row_id") or r.get("source_row_id") for r in priced_extra if r.get("raw_market_row_id") or r.get("source_row_id")}
+    raw_total = raw_count + len(early_raw_ids)
+    outcome_total = sum(r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"} for r in rows)
     manifest = {"schema": "fablesfable.week5.integration.v1", "season": 2026, "week": 5, "games": len(cards),
                 "upcoming_games": sum(c["status"] == "upcoming" for c in cards), "completed_games": sum(c["status"] == "completed" for c in cards),
-                "raw_market_rows": raw_count, "outcome_rows": len(rows), "sources": {"scoreboard": str(scoreboard_path), "saved_source_cards": str(early_hub_path), "late_markets": str(late_path), "extra": list(extra_paths)}}
+                "raw_market_rows": raw_total, "outcome_rows": outcome_total, "coverage_family_rows": extra_families,
+                "coverage_gap_rows": extra_gaps, "all_row_records": len(rows),
+                "sources": {"scoreboard": str(scoreboard_path), "saved_source_cards": str(early_hub_path), "late_markets": str(late_path), "extra": list(extra_paths)}}
     return cards, rows, manifest
 
 
@@ -215,7 +268,9 @@ def build_site(cards_path, rows_path, integration_manifest_path, archive, out, p
     payload = all_props.load(str(cards_path), str(rows_path), expected_event_ids=expected)
     if payload["state"] != "ready":
         raise ValueError("refusing static build: " + "; ".join(payload["errors"]))
-    payload["counts"].update({"raw_market_rows": integration["raw_market_rows"], "outcome_rows": integration["outcome_rows"]})
+    payload["counts"].update({"raw_market_rows": integration["raw_market_rows"], "outcome_rows": integration["outcome_rows"],
+                              "coverage_family_rows": integration.get("coverage_family_rows", 0),
+                              "coverage_gap_rows": integration.get("coverage_gap_rows", 0)})
     archive, out = Path(archive), Path(out)
     if not archive.is_dir(): raise ValueError(f"archive not found: {archive}")
     if out.exists(): shutil.rmtree(out)
@@ -225,8 +280,10 @@ def build_site(cards_path, rows_path, integration_manifest_path, archive, out, p
     (out / "index.html").write_text(root)
     (out / "all-props.html").write_text(root)
     (out / "api/all-props.json").write_text(json.dumps(payload, indent=2) + "\n")
-    hub = {"season": 2026, "week": 5, "generated_at": published_at, "cards": cards, "all_props": payload["counts"], "label": "research_snapshot", "approved_bets": 0}
-    (out / "api/hub.json").write_text(json.dumps(hub, indent=2) + "\n")
+    # api/hub.json is the native dashboard contract.  Copy it unchanged from the
+    # archived public site; this research board lives at api/all-props.json.
+    if not (out / "api/hub.json").is_file():
+        raise ValueError("archive is missing native api/hub.json")
     files = {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob("*") if p.is_file()}
     manifest = {"schema_version": 2, "kind": "saved-model-analysis", "generator": "scripts/build_week5_full_slate.py", "label": "research_snapshot", "season": 2026, "week": 5, "published_at": published_at, "approved_bets": 0, "model_candidates": 0, "all_props": payload["counts"], "integration": integration, "files": dict(sorted(files.items()))}
     (out / "publication.json").write_text(json.dumps(manifest, indent=2) + "\n")
