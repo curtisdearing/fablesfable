@@ -95,6 +95,18 @@ def _card_error(card, n):
             return f"game_cards[{n}].picks[{p}] missing {', '.join(absent)}"
         if pick.get("status") not in VALID_STATUSES:
             return f"game_cards[{n}].picks[{p}] has unknown status {pick.get('status')!r}"
+        for key in ("projection", "model_projection"):
+            if key in pick and not _number_or_none(pick[key]):
+                return f"game_cards[{n}].picks[{p}].{key} must be numeric or null"
+    forecasts = card.get("player_forecasts")
+    if forecasts is not None and not isinstance(forecasts, list):
+        return f"game_cards[{n}].player_forecasts must be a list when supplied"
+    for f, forecast in enumerate(forecasts or []):
+        if not isinstance(forecast, dict):
+            return f"game_cards[{n}].player_forecasts[{f}] is not an object"
+        means = forecast.get("means")
+        if means is not None and not isinstance(means, dict):
+            return f"game_cards[{n}].player_forecasts[{f}].means must be an object when supplied"
     return None
 
 
@@ -132,7 +144,9 @@ def _counts(cards, rows):
         "outcome_rows": sum(1 for r in rows if r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"}),
         "quote_rows": sum(1 for r in rows if r["has_offer"]),
         "unique_athletes": len(athletes),
-        "model_priced": sum(1 for r in rows if r.get("model_probability") is not None or r.get("calibrated_probability") is not None),
+        "model_priced": len({(r.get('game_id') or card.get('game_id'), r.get('player_id') or r.get('player'), r.get('market'), r.get('side'), r.get('line'), r.get('book'))
+                             for card, r in [(c, p) for c in cards for p in c.get('picks', [])] + [({}, r) for r in rows]
+                             if r.get('model_probability') is not None or r.get('calibrated_probability') is not None}),
         "qualitatively_reviewed": qualitative,
         "unavailable_or_unsupported": sum(1 for r in rows if r.get("disposition") in {"unavailable", "unsupported"}),
     }
@@ -217,6 +231,109 @@ def _signed_odds(value):
     return f"{value:+g}"
 
 
+def _numeric(value):
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _number(value):
+    """Format a supplied number without fabricating precision or a missing zero."""
+    value = _numeric(value)
+    return f"{value:g}" if value is not None else ""
+
+
+def _model_projection(pick):
+    """``model_projection`` is the explicit native alias; legacy ``projection`` remains valid."""
+    return _numeric(pick.get("model_projection")) if "model_projection" in pick else _numeric(pick.get("projection"))
+
+
+def _projection_unit(market):
+    return {"passing_yards": "yards", "rushing_yards": "yards", "receiving_yards": "yards",
+            "receptions": "catches", "rush_attempts": "carries", "pass_attempts": "attempts"}.get(market, "")
+
+
+def _pick_comparison(pick):
+    projection, line = _model_projection(pick), _numeric(pick.get("line"))
+    if projection is None or line is None:
+        return ""
+    unit = _projection_unit(pick.get("market"))
+    model = f"{_number(projection)} {unit}".rstrip()
+    return f"<p class='model-comparison'><b>Model:</b> {_e(model)} · <b>Line:</b> {_e(_number(line))}</p>"
+
+
+def _forecast_name(forecast):
+    return _display_text(forecast.get("name")) or _display_text(forecast.get("player"))
+
+
+def _forecast_mean(forecast, key):
+    means = forecast.get("means")
+    return _numeric(means.get(key)) if isinstance(means, dict) else None
+
+
+def _forecast_td_probability(forecast):
+    """Show only an explicit P(TD >= 1), never an expected-TD mean."""
+    candidates = (forecast.get("anytime_td_p_ge_1"), forecast.get("td_probability"),
+                  forecast.get("anytime_td_probability"))
+    probabilities = forecast.get("probabilities")
+    if isinstance(probabilities, dict):
+        candidates += (probabilities.get("anytime_td_p_ge_1"), probabilities.get("anytime_td"))
+    for candidate in candidates:
+        value = _numeric(candidate)
+        if value is not None and 0 <= value <= 1:
+            return value
+    return None
+
+
+def _forecast_role(forecast):
+    role = _display_text(forecast.get("role")) or _display_text(forecast.get("model_role"))
+    unsupported = forecast.get("supported") is False or _display_text(forecast.get("role_status")).lower() == "unsupported"
+    if unsupported:
+        return "Not model-supported" + (f" — {role}" if role else "")
+    return role
+
+
+def _forecast_clock(forecast, card):
+    return (_display_text(forecast.get("model_run_as_of")) or _display_text(forecast.get("model_clock"))
+            or _display_text(forecast.get("forecast_as_of")) or _display_text(card.get("model_run_as_of")))
+
+
+def _forecast_table(card):
+    """Render the native per-player means as supplied; blanks remain blanks, not zeros."""
+    if str(card.get("status") or "").lower() == "completed":
+        return ""
+    forecasts = [forecast for forecast in card.get("player_forecasts") or []
+                 if isinstance(forecast, dict) and _forecast_name(forecast)]
+    if not forecasts:
+        return ""
+    td_available = any(_forecast_td_probability(forecast) is not None for forecast in forecasts)
+    headers = ["Player", "Pass attempts", "Pass yds", "Carries", "Rush yds", "Catches", "Rec yds"]
+    if td_available:
+        headers.append("TD probability")
+    headers.extend(("Model clock", "Role"))
+    rows = []
+    for forecast in forecasts:
+        player = _forecast_name(forecast)
+        position = _display_text(forecast.get("position")) or _display_text(forecast.get("pos"))
+        display_player = f"{player} ({position})" if position else player
+        values = [display_player, _number(_forecast_mean(forecast, "pass_attempts")), _number(_forecast_mean(forecast, "passing_yards")),
+                  _number(_forecast_mean(forecast, "rush_attempts")),
+                  _number(_forecast_mean(forecast, "rushing_yards")),
+                  _number(_forecast_mean(forecast, "receptions")),
+                  _number(_forecast_mean(forecast, "receiving_yards"))]
+        if td_available:
+            probability = _forecast_td_probability(forecast)
+            values.append(f"{probability:.0%}" if probability is not None else "")
+        clock = _forecast_clock(forecast, card)
+        values.extend((clock, _forecast_role(forecast)))
+        rows.append("<tr>" + "".join(f"<td>{_e(value) if value else '—'}</td>" for value in values) + "</tr>")
+    warning = (_display_text(card.get("incomplete_factor_warning")) or
+               _display_text(card.get("factor_warning")))
+    warning_html = f"<p class='factor-warning'>{_e(warning)}</p>" if warning else ""
+    return ("<details class='player-projections'><summary>Player projections</summary>" + warning_html
+            + "<div class='projection-scroll'><table><thead><tr>"
+            + "".join(f"<th>{_e(header)}</th>" for header in headers)
+            + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></details>")
+
+
 def _pick_is_displayable(pick):
     """Keep unsupported/pass placeholders and incomplete offers off the picks board."""
     if not isinstance(pick, dict):
@@ -258,16 +375,20 @@ def _pick_card(pick, game, number):
     detail = []
     if clock:
         detail.append(f"<p><b>Captured:</b> {_e(_kickoff(clock))}</p>")
+    model_clock = _display_text(pick.get("model_run_as_of")) or _display_text(game.get("model_run_as_of"))
+    if model_clock:
+        detail.append(f"<p><b>Model run:</b> {_e(model_clock)}</p>")
     if source_links:
         detail.append(f"<p><b>Source:</b> {' · '.join(source_links)}</p>")
     details = ("<details><summary>Source and timing</summary>" + "".join(detail) + "</details>") if detail else ""
     risk_html = f"<p class='pick-risk'><b>Risk:</b> {_e(risk)}</p>" if risk else ""
     why_html = f"<p>{_e(why)}</p>" if why else ""
+    comparison = _pick_comparison(pick)
     return (f"<article class='pick-card' id='pick-{_e(game.get('event_id'))}-{number}'>"
             f"<p class='pick-game'>{_e(game.get('away'))} at {_e(game.get('home'))}</p>"
             f"<h3>{_e(pick['player'])} {side} {_e(pick['line'])} {_e(_market_label(pick.get('market')))}</h3>"
             f"<p class='pick-price'>{_e(_display_text(pick.get('book')))} {_e(_signed_odds(pick.get('odds')))}</p>"
-            f"{why_html}{risk_html}{details}</article>")
+            f"{comparison}{why_html}{risk_html}{details}</article>")
 
 
 def render_page(payload):
@@ -280,12 +401,15 @@ def render_page(payload):
                 f"{_e(payload.get('message') or 'No research payload has been supplied yet.')} "
                 "No player props or picks are shown until separate game_cards.json and market_rows.json "
                 f"pass validation.</p>{detail}")
-    visible = [(card, pick) for card in payload["cards"] for pick in card.get("picks") or []
-               if _pick_is_displayable(pick)]
+    visible = [(card, pick) for card in payload["cards"] if str(card.get("status") or "").lower() != "completed"
+               for pick in card.get("picks") or [] if _pick_is_displayable(pick)]
     tiered = bool(visible) and all(_tier(pick) for _card, pick in visible)
     pick_numbers = {id(pick): n for n, (_card, pick) in enumerate(visible, 1)}
     rendered = []
-    if tiered:
+    native_board = any(card.get('native_model') for card in payload['cards'])
+    if native_board:
+        rendered.append("<p>Choose a game below. Model differences are ordered by the raw probability gap versus the listed price—not by validated confidence. Every supported comparison is retained; none are cut to a fixed number per game.</p>")
+    elif tiered:
         for label, key in (("Preferred picks", "preferred"), ("Other leans", "other")):
             choices = [(card, pick) for card, pick in visible if _tier(pick) == key]
             if choices:
@@ -301,8 +425,12 @@ def render_page(payload):
         for card in payload["cards"]) + "</nav>"
     games = []
     for card in payload["cards"]:
-        picks = [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)]
-        if picks:
+        picks = ([] if str(card.get("status") or "").lower() == "completed" else
+                 [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)])
+        forecasts = _forecast_table(card)
+        if picks and native_board:
+            content = f"<details class='game-model-picks'><summary>Model differences ({len(picks)})</summary><div class='picks-grid'>" + ''.join(_pick_card(p, card, pick_numbers[id(p)]) for p in picks) + '</div></details>'
+        elif picks:
             links = " · ".join(f'<a href="#pick-{_e(card.get("event_id"))}-{n}">{_e(_pick.get("player"))}</a>'
                               for n, (game, _pick) in enumerate(visible, 1) if game is card)
             content = f"<p>{links}</p>"
@@ -313,9 +441,9 @@ def render_page(payload):
             content = f"<p class='no-pick'>{_e(reason) if reason else 'No pick.'}</p>"
         games.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'>"
                      f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
-                     f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}</section>")
+                     f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}{forecasts}</section>")
     return ("<h1>Week 5 player props</h1>"
-            "<p class='board-caveat'>Conditional analyst leans; confirm every listed price before acting.</p>"
+            "<p class='board-caveat'>Uncalibrated model leans: prices can move; confirm every listed price before acting.</p>"
             "<h2>Picks</h2>" + "".join(rendered)
             + "<h2>All games</h2>" + jumps + "".join(games)
             + "<p class='research-download'><a href='api/all-props.json' download>Download research data (JSON)</a></p>")

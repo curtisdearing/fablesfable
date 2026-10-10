@@ -83,7 +83,9 @@ CSS = ("body{font:15px system-ui;max-width:900px;margin:auto;padding:1em}"
        ".pick-card,.ap-game{border:1px solid #d5dce6;border-radius:10px;padding:16px;background:#fff}"
        ".pick-card h3,.ap-game h3{margin:.2em 0}.pick-game,.game-time,.pick-price,.no-pick{margin:.25em 0;color:#4a596d}"
        ".pick-price{font-weight:700;color:#182233}.pick-risk{border-left:3px solid #9b4d00;padding-left:10px}"
+       ".model-comparison{font-weight:600}.model-disclaimer{margin:.3em 0;color:#4a596d;font-size:13px}.factor-warning{margin:10px;padding:10px;border-left:3px solid #9b4d00;background:#fff8ee}"
        ".game-jumps{margin:10px 0 16px}.game-jumps a{border-radius:999px}.ap-game{margin:10px 0}"
+       ".player-projections{margin-top:14px}.projection-scroll{overflow-x:auto}.projection-scroll table{border-collapse:collapse;min-width:760px;width:100%}.projection-scroll th,.projection-scroll td{border-bottom:1px solid #d5dce6;padding:8px;text-align:left;white-space:nowrap}.projection-scroll th{background:#f6f8fb}"
        ".research-download{margin:24px 0}@media(max-width:540px){.pick-card,.ap-game{padding:14px}.picks-grid{grid-template-columns:minmax(0,1fr)}}")
 
 

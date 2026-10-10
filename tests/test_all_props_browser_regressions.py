@@ -97,6 +97,60 @@ def test_et_clock_and_source_scheme():
     assert all_props._source_url("https://www.espn.com/")
 
 
+def test_native_model_projection_compares_pick_to_line_and_keeps_full_forecast_rows_honest():
+    payload = _payload()
+    card = payload["cards"][0]
+    pick = card["picks"][0]
+    pick["model_projection"] = 68.2
+    pick["model_run_as_of"] = "2026-10-10T22:35:00Z"
+    card["player_forecasts"] = [
+        {"name": "Sample Receiver", "position": "WR", "means": {"receptions": 6.4,
+                                                             "receiving_yards": 68.2,
+                                                             "anytime_td": 0.61},
+         "anytime_td_p_ge_1": 0.46, "model_run_as_of": "2026-10-10T22:35:00Z", "role": "primary receiver"},
+        {"player": "Unmatched Back", "pos": "RB", "means": {"rush_attempts": 10.5,
+                                                                    "rushing_yards": 43.7},
+         "role": "committee", "supported": False},
+    ]
+
+    page = all_props.render_page(payload)
+    visible_text = re.sub(r"<[^>]+>", "", page)
+
+    assert "Model: 68.2 yards · Line: 54.5" in visible_text
+    assert "Uncalibrated model lean" in page
+    assert "Model run:" in visible_text and "2026-10-10T22:35:00Z" in visible_text
+    assert "<summary>Player projections</summary>" in page
+    assert "Pass yds</th><th>Carries</th><th>Rush yds</th><th>Catches</th><th>Rec yds</th>" in page
+    assert "TD probability" in page and "46%" in page
+    assert "Unmatched Back" in page and "Not model-supported" in page
+    assert "0.61" not in page  # A TD mean is not a touchdown probability.
+    assert "No current line" not in page and "No line" not in page
+
+
+def test_uncalibrated_native_disclosure_appears_once_for_multiple_model_leans():
+    payload = _payload()
+    first = payload["cards"][0]["picks"][0]
+    first["model_projection"] = 68.2
+    second = dict(first, player="Another Receiver", line=44.5, model_projection=51.1)
+    payload["cards"][0]["picks"].append(second)
+
+    page = all_props.render_page(payload)
+
+    assert page.count("Uncalibrated model leans") == 1
+
+
+def test_completed_game_is_not_promoted_as_a_current_native_forecast():
+    payload = _payload()
+    payload["cards"][0]["status"] = "completed"
+    payload["cards"][0]["player_forecasts"] = [{"name": "Sample Receiver", "means": {"receiving_yards": 68.2}}]
+
+    page = all_props.render_page(payload)
+
+    assert "Sample Receiver OVER 54.5 Receiving yards" not in page
+    assert "Player projections" not in page
+    assert "No pick." in page
+
+
 def browser_smoke_optional():
     playwright = pytest.importorskip("playwright.sync_api")
     browser = None
