@@ -5,8 +5,8 @@
   "games": 15,
   "upcoming_games": 14,
   "completed_games": 1,
-  "raw_market_rows": 919,
-  "outcome_rows": 1557,
+  "raw_market_rows": 250,
+  "outcome_rows": 1863,
   "coverage_family_rows": 18,
   "coverage_gap_rows": 24,
   "all_row_records": 1599,
@@ -20,5 +20,8 @@
       "../extra/game_cards.json",
       "../extra/market_rows.json"
     ]
-  }
+  },
+  "model_run_as_of": "2026-10-10T22:47:38Z",
+  "native_candidates": 699,
+  "model_leans": 174
 }

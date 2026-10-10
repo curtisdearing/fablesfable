@@ -69,6 +69,14 @@ EXT_ONLY = ["play_id", "down", "ydstogo", "yardline_100", "score_differential", 
             "game_seconds_remaining", "sack", "qb_hit", "pass", "rush", "fixed_drive",
             "pass_location"]
 EXT_PBP_COLUMNS = PBP_COLUMNS + EXT_ONLY
+# ``pass_location`` is a documented nflverse field, and recent source seasons
+# carry it directly.  The frozen 2019--25 caches used by this release predate
+# its addition to our projected cache schema, though.  It is an unvalidated
+# research derivation (not a required advanced-pack input), so retain a real
+# current-season value when available and otherwise leave it missing rather
+# than letting one optional column disable every advanced/chemistry/FTN pack.
+OPTIONAL_EXT_PBP_COLUMNS = {"pass_location"}
+REQUIRED_EXT_PBP_COLUMNS = [c for c in EXT_PBP_COLUMNS if c not in OPTIONAL_EXT_PBP_COLUMNS]
 
 OL_POS = {"T", "G", "C", "OT", "OG", "OL", "LT", "RT", "LG", "RG"}
 FEATURES = [
@@ -83,17 +91,28 @@ FEATURES = [
 
 
 def load_pbp_ext() -> pd.DataFrame:
-    """Base 2019-2023 (all 397 cols on disk) + per-season extended files."""
-    frames = [pd.read_parquet(os.path.join(HIST, "historical_pbp.parquet"),
-                              columns=EXT_PBP_COLUMNS)]
+    """Load projected PBP caches, preserving missing optional derivations as NA.
+
+    All process/role inputs remain schema-required.  Only ``pass_location`` is
+    optional for compatibility with immutable legacy caches; it is never
+    synthesized or back-filled from another field.
+    """
+    def read_ext(path: str) -> pd.DataFrame:
+        import pyarrow.parquet as pq  # pyright: ignore[reportMissingImports]
+        names = set(pq.read_schema(path).names)
+        missing = [c for c in REQUIRED_EXT_PBP_COLUMNS if c not in names]
+        if missing:
+            raise RuntimeError(f"{os.path.basename(path)} lacks extended columns {missing[:4]} -- "
+                               "re-run ingest.refresh(force=True)")
+        frame = pd.read_parquet(path, columns=[c for c in EXT_PBP_COLUMNS if c in names])
+        for col in OPTIONAL_EXT_PBP_COLUMNS - names:
+            frame[col] = np.nan
+        return frame[EXT_PBP_COLUMNS]
+
+    frames = [read_ext(os.path.join(HIST, "historical_pbp.parquet"))]
     for fn in sorted(os.listdir(HIST)):
         if fn.startswith("pbp_") and fn.endswith(".parquet"):
-            f = pd.read_parquet(os.path.join(HIST, fn))
-            missing = [c for c in EXT_PBP_COLUMNS if c not in f.columns]
-            if missing:
-                raise RuntimeError(f"{fn} lacks extended columns {missing[:4]} -- "
-                                   "re-run ingest.refresh(force=True)")
-            frames.append(f[EXT_PBP_COLUMNS])
+            frames.append(read_ext(os.path.join(HIST, fn)))
     df = pd.concat(frames, ignore_index=True)
     return df[df["season_type"] == "REG"].reset_index(drop=True)
 

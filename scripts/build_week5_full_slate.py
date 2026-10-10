@@ -284,8 +284,16 @@ def build_site(cards_path, rows_path, integration_manifest_path, archive, out, p
     # archived public site; this research board lives at api/all-props.json.
     if not (out / "api/hub.json").is_file():
         raise ValueError("archive is missing native api/hub.json")
+    # Older reports are historical evidence, never the current forecast surface.
+    for old_page in list((out / 'games').glob('*.html')) + list((out / 'reports').glob('20*/week-*.html')):
+        text = old_page.read_text()
+        if 'data-historical-report' not in text:
+            banner = '<aside data-historical-report style="padding:16px;border:2px solid #9b4d00"><strong>Archived report — not current picks.</strong> This page preserves earlier claims and results; simulation descriptions here do not describe the current Week 5 player model. <a href="/fablesfable/index.html">Open current model comparisons</a>.</aside>'
+            text = re.sub(r'(<body[^>]*>)', lambda m: m.group(1) + banner, text, count=1, flags=re.I)
+            old_page.write_text(text)
+    (out / 'dashboard.html').write_text('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=index.html"><title>Current model board</title><a href="index.html">Open current model board</a>')
     files = {str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob("*") if p.is_file()}
-    manifest = {"schema_version": 2, "kind": "saved-model-analysis", "generator": "scripts/build_week5_full_slate.py", "label": "research_snapshot", "season": 2026, "week": 5, "published_at": published_at, "approved_bets": 0, "model_candidates": 0, "all_props": payload["counts"], "integration": integration, "files": dict(sorted(files.items()))}
+    manifest = {"schema_version": 2, "kind": "saved-model-analysis", "generator": "scripts/build_week5_full_slate.py", "label": "research_snapshot", "season": 2026, "week": 5, "published_at": published_at, "approved_bets": 0, "model_candidates": integration.get("native_candidates", 0), "all_props": payload["counts"], "integration": integration, "files": dict(sorted(files.items()))}
     (out / "publication.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest
 

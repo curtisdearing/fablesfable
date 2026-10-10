@@ -111,6 +111,29 @@ def test_degrades_when_pass_location_column_missing():
     assert af.build_def_loc_epa(pbp) == {}
 
 
+def test_extended_loader_keeps_advanced_pack_available_with_legacy_location_gap(tmp_path, monkeypatch):
+    """Older frozen seasons lack the documented location field; that missing
+    optional derivation must not suppress unrelated advanced/chemistry packs.
+    Missing source data stays missing (NA), while a current direct column is
+    retained unchanged."""
+    legacy: dict[str, list[object]] = {c: [0] for c in af.EXT_PBP_COLUMNS if c != "pass_location"}
+    legacy["season"] = [2025]
+    legacy["season_type"] = ["REG"]
+    current: dict[str, list[object]] = {c: [0] for c in af.EXT_PBP_COLUMNS}
+    current["season"] = [2026]
+    current["season_type"] = ["REG"]
+    current["pass_location"] = ["middle"]
+    pd.DataFrame(legacy).to_parquet(tmp_path / "historical_pbp.parquet", index=False)
+    pd.DataFrame(current).to_parquet(tmp_path / "pbp_2026.parquet", index=False)
+    monkeypatch.setattr(af, "HIST", str(tmp_path))
+
+    loaded = af.load_pbp_ext()
+
+    assert list(loaded["season"]) == [2025, 2026]
+    assert pd.isna(loaded.loc[loaded["season"] == 2025, "pass_location"]).all()
+    assert loaded.loc[loaded["season"] == 2026, "pass_location"].tolist() == ["middle"]
+
+
 def test_new_features_registered():
     for f in ("loc_middle_share", "loc_left_share", "loc_matchup_epa"):
         assert f in af.FEATURES

@@ -127,6 +127,18 @@ def test_native_model_projection_compares_pick_to_line_and_keeps_full_forecast_r
     assert "No current line" not in page and "No line" not in page
 
 
+def test_uncalibrated_native_disclosure_appears_once_for_multiple_model_leans():
+    payload = _payload()
+    first = payload["cards"][0]["picks"][0]
+    first["model_projection"] = 68.2
+    second = dict(first, player="Another Receiver", line=44.5, model_projection=51.1)
+    payload["cards"][0]["picks"].append(second)
+
+    page = all_props.render_page(payload)
+
+    assert page.count("Uncalibrated model leans") == 1
+
+
 def test_completed_game_is_not_promoted_as_a_current_native_forecast():
     payload = _payload()
     payload["cards"][0]["status"] = "completed"

@@ -1,0 +1,54 @@
+{
+  "schema": "native_exact_line_repricing.v2",
+  "generated_at": "2026-10-10T23:02:23.395520+00:00",
+  "inputs": {
+    "candidates": {
+      "path": "execution/artifacts/all_native_candidates.json",
+      "sha256": "e4a966a89df8c2fa3dc5581c2e1ba0677cfbd8229fc6a75671f364e3d926d4f3"
+    },
+    "offers": {
+      "path": "pricing/captured_market_rows_with_discovered_games.json",
+      "sha256": "00f2f27d5e96910c86e3d63d515b4524bb6101514d1cb82514320abbb20fc3e8"
+    },
+    "rosters": {
+      "path": "pricing/input/current_roster_2026.parquet",
+      "sha256": "e55bcd46e595fe8472ccc678c66e24cd6ab72af2b7f28032afacaca342727706"
+    },
+    "scoreboard": {
+      "path": "website/data/research_snapshots/2026-week-5/scoreboard.json",
+      "sha256": "57e47f00f2f9a6421ac63c28aa401089f21891d625f4c5fde598df4467813e79"
+    }
+  },
+  "model_run_as_of": "2026-10-10T22:47:38Z",
+  "native_candidate_count": 699,
+  "native_candidate_market_counts": {
+    "anytime_td": 215,
+    "receiving_yards": 135,
+    "receptions": 135,
+    "rush_attempts": 53,
+    "rushing_yards": 53,
+    "pass_attempts": 54,
+    "passing_yards": 54
+  },
+  "outcomes": {
+    "priced_offer_rows": 873,
+    "native_noquote_rows": 158,
+    "quarantined_source_offer_rows": 27,
+    "quarantined_matched_offer_rows": 0,
+    "displayed_model_leans": 174,
+    "validated_bets": 0
+  },
+  "self_checks": {
+    "all_native_candidate_coverage": true,
+    "all_market_families_preserved": true,
+    "positive_ev_only": true,
+    "quarantined_offers_not_promoted": true,
+    "no_backup_qb_promoted": true,
+    "native_probability_recomputed_at_exact_line": true
+  },
+  "notes": [
+    "No publication, odds request, or model rerun occurred.",
+    "Candidate means and distributions are immutable input.",
+    "Current same-season/week roster status is required; reserve/inactive/unknown statuses fail closed."
+  ]
+}

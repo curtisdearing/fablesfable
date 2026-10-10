@@ -144,7 +144,9 @@ def _counts(cards, rows):
         "outcome_rows": sum(1 for r in rows if r.get("raw_market_row_type") not in {"family_availability", "coverage_gap"}),
         "quote_rows": sum(1 for r in rows if r["has_offer"]),
         "unique_athletes": len(athletes),
-        "model_priced": sum(1 for r in rows if r.get("model_probability") is not None or r.get("calibrated_probability") is not None),
+        "model_priced": len({(r.get('game_id') or card.get('game_id'), r.get('player_id') or r.get('player'), r.get('market'), r.get('side'), r.get('line'), r.get('book'))
+                             for card, r in [(c, p) for c in cards for p in c.get('picks', [])] + [({}, r) for r in rows]
+                             if r.get('model_probability') is not None or r.get('calibrated_probability') is not None}),
         "qualitatively_reviewed": qualitative,
         "unavailable_or_unsupported": sum(1 for r in rows if r.get("disposition") in {"unavailable", "unsupported"}),
     }
@@ -303,7 +305,7 @@ def _forecast_table(card):
     if not forecasts:
         return ""
     td_available = any(_forecast_td_probability(forecast) is not None for forecast in forecasts)
-    headers = ["Player", "Pass yds", "Carries", "Rush yds", "Catches", "Rec yds"]
+    headers = ["Player", "Pass attempts", "Pass yds", "Carries", "Rush yds", "Catches", "Rec yds"]
     if td_available:
         headers.append("TD probability")
     headers.extend(("Model clock", "Role"))
@@ -312,7 +314,7 @@ def _forecast_table(card):
         player = _forecast_name(forecast)
         position = _display_text(forecast.get("position")) or _display_text(forecast.get("pos"))
         display_player = f"{player} ({position})" if position else player
-        values = [display_player, _number(_forecast_mean(forecast, "passing_yards")),
+        values = [display_player, _number(_forecast_mean(forecast, "pass_attempts")), _number(_forecast_mean(forecast, "passing_yards")),
                   _number(_forecast_mean(forecast, "rush_attempts")),
                   _number(_forecast_mean(forecast, "rushing_yards")),
                   _number(_forecast_mean(forecast, "receptions")),
@@ -382,13 +384,11 @@ def _pick_card(pick, game, number):
     risk_html = f"<p class='pick-risk'><b>Risk:</b> {_e(risk)}</p>" if risk else ""
     why_html = f"<p>{_e(why)}</p>" if why else ""
     comparison = _pick_comparison(pick)
-    disclaimer = ("<p class='model-disclaimer'>Uncalibrated model lean</p>"
-                  if str(pick.get("status") or "").lower() == "analyst_lean" and _model_projection(pick) is not None else "")
     return (f"<article class='pick-card' id='pick-{_e(game.get('event_id'))}-{number}'>"
             f"<p class='pick-game'>{_e(game.get('away'))} at {_e(game.get('home'))}</p>"
             f"<h3>{_e(pick['player'])} {side} {_e(pick['line'])} {_e(_market_label(pick.get('market')))}</h3>"
             f"<p class='pick-price'>{_e(_display_text(pick.get('book')))} {_e(_signed_odds(pick.get('odds')))}</p>"
-            f"{comparison}{disclaimer}{why_html}{risk_html}{details}</article>")
+            f"{comparison}{why_html}{risk_html}{details}</article>")
 
 
 def render_page(payload):
@@ -406,7 +406,10 @@ def render_page(payload):
     tiered = bool(visible) and all(_tier(pick) for _card, pick in visible)
     pick_numbers = {id(pick): n for n, (_card, pick) in enumerate(visible, 1)}
     rendered = []
-    if tiered:
+    native_board = any(card.get('native_model') for card in payload['cards'])
+    if native_board:
+        rendered.append("<p>Choose a game below. Model differences are ordered by the raw probability gap versus the listed price—not by validated confidence. Every supported comparison is retained; none are cut to a fixed number per game.</p>")
+    elif tiered:
         for label, key in (("Preferred picks", "preferred"), ("Other leans", "other")):
             choices = [(card, pick) for card, pick in visible if _tier(pick) == key]
             if choices:
@@ -425,7 +428,9 @@ def render_page(payload):
         picks = ([] if str(card.get("status") or "").lower() == "completed" else
                  [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)])
         forecasts = _forecast_table(card)
-        if picks:
+        if picks and native_board:
+            content = f"<details class='game-model-picks'><summary>Model differences ({len(picks)})</summary><div class='picks-grid'>" + ''.join(_pick_card(p, card, pick_numbers[id(p)]) for p in picks) + '</div></details>'
+        elif picks:
             links = " · ".join(f'<a href="#pick-{_e(card.get("event_id"))}-{n}">{_e(_pick.get("player"))}</a>'
                               for n, (game, _pick) in enumerate(visible, 1) if game is card)
             content = f"<p>{links}</p>"
@@ -438,7 +443,7 @@ def render_page(payload):
                      f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
                      f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}{forecasts}</section>")
     return ("<h1>Week 5 player props</h1>"
-            "<p class='board-caveat'>Prices can move; confirm every listed price before acting.</p>"
+            "<p class='board-caveat'>Uncalibrated model leans: prices can move; confirm every listed price before acting.</p>"
             "<h2>Picks</h2>" + "".join(rendered)
             + "<h2>All games</h2>" + jumps + "".join(games)
             + "<p class='research-download'><a href='api/all-props.json' download>Download research data (JSON)</a></p>")
