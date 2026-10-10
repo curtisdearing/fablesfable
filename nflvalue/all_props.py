@@ -104,7 +104,8 @@ def _has_offer(row):
 def _normalise_row(row):
     out = dict(row)
     out["has_offer"] = _has_offer(out)
-    out["offer_label"] = "Captured priced market" if out["has_offer"] else "No verified price captured"
+    out["offer_label"] = ("Published secondary listing — not sportsbook-verified" if out["has_offer"]
+                          else "No listed price captured")
     # Normalize the UI fields but leave all unknown/provenance values as the source supplied them.
     out.setdefault("reason", None)
     out.setdefault("book", None)
@@ -121,6 +122,8 @@ def _counts(cards, rows):
     qualitative = sum(1 for r in rows if r.get("disposition") == "reviewed")
     return {
         "games": len(cards),
+        "raw_market_rows": len({r.get("source_row_id") for r in rows if r.get("source_row_id") is not None}),
+        "outcome_rows": len(rows),
         "quote_rows": sum(1 for r in rows if r["has_offer"]),
         "unique_athletes": len(athletes),
         "model_priced": sum(1 for r in rows if r.get("model_probability") is not None or r.get("calibrated_probability") is not None),
@@ -181,7 +184,8 @@ def render_page(payload):
                "<label>Status <select id='ap-status'><option value=''>All</option></select></label> "
                "<label>Disposition <select id='ap-disposition'><option value=''>All</option></select></label> "
                "<label>Period <select id='ap-period'><option value=''>All</option></select></label>")
-    summary = (f"<p>{c['games']} games · {c['quote_rows']} captured priced rows · {c['unique_athletes']} athletes · "
+    summary = (f"<p>{c['games']} games · {c.get('raw_market_rows', 0)} raw market rows · {c.get('outcome_rows', 0)} outcome rows · "
+               f"{c['quote_rows']} published secondary listings (not sportsbook-verified) · {c['unique_athletes']} athletes · "
                f"{c['model_priced']} model-priced · {c['qualitatively_reviewed']} qualitatively reviewed · "
                f"{c['unavailable_or_unsupported']} unavailable/unsupported.</p>")
     cards = []
@@ -197,11 +201,17 @@ def render_page(payload):
                 counter=_e(p.get("counterargument")), invalid=_e(p.get("invalidation")),
                 basis=_e(p.get("rank_basis")), book=_e(p.get("book")), odds=_e(p.get("odds")),
                 updated=_e(p.get("quote_updated_at")), retrieved=_e(p.get("retrieved_at")),
-                prob=_e(p.get("calibrated_probability") if p.get("calibrated_probability") is not None else p.get("model_probability")))
+                prob=_e(p.get("calibrated_probability") if p.get("calibrated_probability") is not None else (p.get("model_probability") if p.get("model_probability") is not None else "Unavailable")))
             for p in picks)
+        sources = " ".join(f'<a href="{_e(s.get("url"))}" rel="noopener noreferrer">{_e(s.get("title") or "Source")}</a>'
+                          for s in card.get("sources", []) if isinstance(s, dict) and _text(s.get("url"))) or "No source URL supplied."
+        context = "; ".join(f"{_e(k.replace('_', ' '))}: {_e(v)}" for k, v in (card.get("context") or {}).items() if v is not None) or "No additional context supplied."
+        outcome = card.get("outcome") or {}
+        outcome_text = (f"<p><b>{_e(outcome.get('label'))}</b> {_e(outcome.get('score'))}</p>" if outcome else "")
         cards.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'><h2>{_e(card.get('away'))} @ {_e(card.get('home'))}</h2>"
-                     f"<p>Kickoff { _e(card.get('kickoff'))}; source as of {_e(card.get('source_as_of'))}.</p>"
-                     f"<p>{_e(card.get('preview'))}</p><ol>{picks_html or '<li>No ranked selections supplied.</li>'}</ol></section>")
+                     f"<p>Kickoff { _e(card.get('kickoff'))}; status {_status(card.get('status'))}; source as of {_e(card.get('source_as_of'))}.</p>"
+                     f"<p><b>Winner outlook:</b> {_e(card.get('winner_lean') or 'Unavailable')}<br><b>Context:</b> {context}<br><b>Coverage:</b> {_e((card.get('coverage') or {}).get('detail') or (card.get('coverage') or {}).get('state') or 'Unavailable')}<br><b>Sources:</b> {sources}</p>"
+                     f"{outcome_text}<p>{_e(card.get('preview'))}</p><ol>{picks_html or '<li>No ranked selections supplied.</li>'}</ol></section>")
     rows = []
     for row in payload["rows"]:
         search = " ".join(str(row.get(k) or "") for k in ("game_id", "player", "team", "market", "book", "side"))

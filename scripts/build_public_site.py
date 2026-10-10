@@ -457,7 +457,12 @@ def build(payload, label, archive, out, generated_at, published_at=None, results
     head = header(payload, label, generated_at, clock_info)
     cards = grouped_cards(payload["cards"])
     watch = [c for c in payload["cards"] if c["status"] in ("actionable", "watch")]
-    put("index.html", page(f"{season} week {week} cards", head + (cards or "<p>No leans.</p>")))
+    # A complete, persisted manual all-props screen is the reader-facing Week 5
+    # snapshot. Scheduled database rebuilds may refresh model-cards.html, but
+    # must not demote or erase the reviewed full-slate board from the landing page.
+    manual_board = all_props_payload.get("state") == "ready" and all_props_payload.get("counts", {}).get("games") >= 15
+    landing = allprops.render_page(all_props_payload) if manual_board else head + (cards or "<p>No leans.</p>")
+    put("index.html", page(f"{season} week {week} cards", landing))
     put("best-bets.html", page(f"{season} week {week} watch list", head + (
         grouped_cards(watch) if watch else
         "<p>No card is actionable, and none currently qualifies for the watch list.</p>")))
@@ -602,9 +607,16 @@ def main(argv=None):
             raise Refused(1, "give --current or --season/--week")
         cards_now = run_clock(a.db, season, week) if a.label == "results" else now
         payload = collect(a.db, season, week, cards_now)
-        expected = ({"401872990", "401872984", "401872982", "401872986", "401872987", "401872983",
-                     "401872985", "401872988"} if (season, week) == (2026, 5) and (a.game_cards or a.market_rows)
-                    else None)
+        snapshot = os.path.join(ROOT, "data", "research_snapshots", f"{season}-week-{week}")
+        if not a.game_cards and not a.market_rows and os.path.isfile(os.path.join(snapshot, "game_cards.json")) and os.path.isfile(os.path.join(snapshot, "market_rows.json")):
+            a.game_cards = os.path.join(snapshot, "game_cards.json")
+            a.market_rows = os.path.join(snapshot, "market_rows.json")
+        expected = None
+        if a.game_cards or a.market_rows:
+            try:
+                expected = {str(card["event_id"]) for card in json.load(open(a.game_cards, encoding="utf-8"))}
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                raise Refused(1, f"cannot read expected events from researched game cards: {exc}")
         all_props_payload = allprops.load(a.game_cards, a.market_rows, expected_event_ids=expected)
         m = build(payload, a.label, a.archive, a.out, cards_now.isoformat(timespec="seconds"),
                   published_at=now.isoformat(timespec="seconds"), results=ir.export_readonly(a.db),

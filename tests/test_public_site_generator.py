@@ -114,7 +114,7 @@ def test_all_props_adapter_keeps_exact_semantics_and_rejections(tmp_path):
     payload = all_props.load(str(cards_path), str(rows_path), expected_event_ids={"401872990"})
 
     assert payload["state"] == "ready"
-    assert payload["counts"] == {"games": 1, "quote_rows": 1, "unique_athletes": 2,
+    assert payload["counts"] == {"games": 1, "raw_market_rows": 0, "outcome_rows": 2, "quote_rows": 1, "unique_athletes": 2,
                                   "model_priced": 0, "qualitatively_reviewed": 1,
                                   "unavailable_or_unsupported": 1}
     assert payload["rows"][0]["side"] == "under"
