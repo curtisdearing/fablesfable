@@ -5,7 +5,7 @@
   "label": "research_snapshot",
   "season": 2026,
   "week": 5,
-  "published_at": "2026-10-10T17:54:30Z",
+  "published_at": "2026-10-10T19:48:28Z",
   "approved_bets": 0,
   "model_candidates": 0,
   "all_props": {
@@ -46,8 +46,8 @@
   },
   "files": {
     "README.txt": "b7f430d658823a5f3026f5fbcbaeb75064dd64ca1d4d747c909406a4fc8a57b7",
-    "all-props.html": "8f1143b55c3120f76cf8bdabf33a3625ee5c4114a785f2efd3ea39fb855089d5",
-    "api/all-props.json": "41bbb961ad10db70d20dcb0317aff62ce6bc466395e3a9dbcdd8e0baa04cd174",
+    "all-props.html": "b527d9d70b9a5cf9f6fc981278b2fe32baf8a607a7d05f44c462c3b5492c84d1",
+    "api/all-props.json": "52c62b9c5051bb99669fae4be13ef72f48b121516c600d8b90c76112f14b42ff",
     "api/coverage.json": "c4ee413cda7283b5add246f28a90d0e9df52e4a98b1988227ec4eb9f2360a3ec",
     "api/hub.json": "38e96eb53525ffd6885d907e046119a14dbaf047e7408b9eeb0c840149808017",
     "api/research.json": "23d7e6aaa89b8b734993a4fc84e184f73f212d78ee1da165ba619c83d9674ab2",
@@ -75,7 +75,7 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "94076c4fbeea5ce941ff1af22c70f832a9b46aae0c7d9d58ab3a052bfc1c1f2f",
-    "index.html": "8f1143b55c3120f76cf8bdabf33a3625ee5c4114a785f2efd3ea39fb855089d5",
+    "index.html": "b527d9d70b9a5cf9f6fc981278b2fe32baf8a607a7d05f44c462c3b5492c84d1",
     "model-cards.html": "a6d2b06ae993bb1e5ad34d6481e79e1a1133fc6a71774435894ee6d5f8c5a6f3",
     "reports/2026/week-1.html": "d1cd5c467b9961a1ba4022f91b58578e1926abc92dd2084949ef8b54da717a1d",
     "reports/2026/week-3.html": "2f61dfce3d0c68556a827599058d8a3a2cf2509405191939cea6e15a0ac6642f",
