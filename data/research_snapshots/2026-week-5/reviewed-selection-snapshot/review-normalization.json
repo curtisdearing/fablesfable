@@ -1,0 +1,1061 @@
+{
+  "schema": "fablesfable.reviewed-selection-snapshot.v1",
+  "reviewed_games": 14,
+  "manual_candidates": 11,
+  "conditional_games": 8,
+  "pass_games": 3,
+  "reviews": {
+    "401872981": {
+      "best_selection": {
+        "selection": "Trevor Lawrence under 227.5 passing yards",
+        "book": "DraftKings",
+        "price": -111,
+        "quote": "DraftKings -111",
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": "Lawrence has 245, 189, 182 and 227 passing yards in the four cached regular-season boxes (210.8 per game); Jacksonville is a 7.5-point home favorite and Philadelphia lists DeVonta Smith OUT, a setup that can shorten Jacksonville\u2019s own second-half dropback need.",
+        "risk": "A pass-heavy first half or Philadelphia forcing Jacksonville to answer would beat this; this is a stale captured prop quote, not a demonstrated EV estimate.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Trevor Lawrence under 227.5 passing yards",
+          "book": "DraftKings",
+          "price": -111,
+          "quote": "DraftKings -111",
+          "captured_at": "2026-10-10T22:48:36.313260+00:00",
+          "provider_updated_at": null,
+          "why": "4 PBP games; 26.25 pass attempts/game, 210.75 passing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [
+        {
+          "selection": "Jalen Hurts under 31.5 pass attempts",
+          "book": "DraftKings",
+          "price": -109,
+          "quote": "DraftKings -109",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 28.5 pass attempts/game, 178.25 passing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "JAX ML -395",
+          "price": "-395",
+          "reason": "The price asks the bettor to absorb a large favorite premium without a validated game-win distribution.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "JAX ML"
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "PHI +7.5 -112 / JAX -7.5 -108",
+          "price": "-108",
+          "reason": "The 10-point move from the recorded opener (PHI -2.5) leaves an extreme repricing with no validated team simulation.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "PHI +7.5 -112 / JAX -7.5"
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 41.5 -108 / Over 41.5 -112",
+          "price": "-112",
+          "reason": "Low total fits a slower script, but Philadelphia injuries can either suppress offense or create short fields; no quantitative total forecast was run.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "Under 41.5 -108 / Over 41.5"
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true
+    },
+    "401872990": {
+      "best_selection": {
+        "selection": "D'Andre Swift under 85.5 rushing yards",
+        "book": "DraftKings",
+        "price": -113,
+        "quote": "DraftKings -113",
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": "Swift\u2019s cached rushing lines are 124, 45, 84 and 58 yards on 18, 16, 20 and 15 carries. He stayed below 85.5 in three of four; a 46.5 total and near-pick\u2019em spread do not supply a runaway favorite script that would make 20-plus carries automatic.",
+        "risk": "His Week 1 124-yard outcome shows the breakaway/efficiency failure case; do not pair it with his attempts under because both lose in the same volume/efficiency script.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "D'Andre Swift under 85.5 rushing yards",
+          "book": "DraftKings",
+          "price": -113,
+          "quote": "DraftKings -113",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "4 PBP games; 17.25 carries/game, 77.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [
+        {
+          "selection": "D'Andre Swift under 19.5 rush attempts",
+          "book": "DraftKings",
+          "price": -117,
+          "quote": "DraftKings -117",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 17.25 carries/game, 77.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "CHI ML -122 / GB ML +102",
+          "price": "102",
+          "reason": "The favorite has flipped from the recorded GB opening favorite position. The present near-pick\u2019em price is not a model-backed win edge.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "CHI ML -122 / GB ML"
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "GB +1.5 -105 / CHI -1.5 -115",
+          "price": "-115",
+          "reason": "Small spread, but no validated game simulation and Green Bay interior-line availability is unresolved.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "GB +1.5 -105 / CHI -1.5"
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 46.5 -108 / Over 46.5 -112",
+          "price": "-112",
+          "reason": "A high total conflicts with a side-free read; neither result is analytically preferred from the available source set.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "Under 46.5 -108 / Over 46.5"
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true
+    },
+    "401872982": {
+      "best_selection": {
+        "selection": "PASS \u2014 personnel-dependent game",
+        "book": null,
+        "price": null,
+        "quote": "CIN -7 -109 only after active confirmation",
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": "Cincinnati is priced as a 7-point road favorite, but both Ja\u2019Marr Chase and Tee Higgins are listed questionable. Their availability changes the receiver tree and the rationale for both Cincinnati spread and Burrow volume props.",
+        "risk": "Do not substitute a Malik Willis market for that uncertainty: his native pass-attempt mean is contaminated by mixed-role appearances and there is no Saturday confirmation he starts.",
+        "condition": null,
+        "status": "pass_pending_status",
+        "analyst_review": true
+      },
+      "recommended_props": [],
+      "conditional_props": [
+        {
+          "selection": "Chase Brown under 67.5 rushing yards",
+          "book": "DraftKings",
+          "price": -110,
+          "quote": "DraftKings -110",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 14.5 carries/game, 51.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        },
+        {
+          "selection": "Joe Burrow over 256.5 passing yards",
+          "book": "DraftKings",
+          "price": -113,
+          "quote": "DraftKings -113",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 39.25 pass attempts/game, 292.75 passing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "CIN ML -355 / MIA ML +280",
+          "price": "280",
+          "reason": "Road-favorite price has no actionable value case while Cincinnati\u2019s two primary receivers are questionable.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "CIN ML -355 / MIA ML"
+        },
+        {
+          "market": "spread",
+          "decision": "CONDITIONAL",
+          "line": "CIN -7 -109",
+          "price": "-109",
+          "reason": "Only reconsider after both Chase and Higgins are confirmed active; otherwise PASS rather than treating expected targets as fixed.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "CIN -7"
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 43.5 -107 / Over 43.5 -113",
+          "price": "-113",
+          "reason": "The same unresolved receiver availability affects pace and scoring allocation.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "Under 43.5 -107 / Over 43.5"
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true
+    },
+    "401872983": {
+      "best_selection": {
+        "selection": "PASS \u2014 do not infer a Braelon Allen starter role",
+        "book": null,
+        "price": null,
+        "quote": "Braelon Allen under 16.5 attempts +102 only after role confirmation",
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": "Allen\u2019s cached carries are 10, 5, 4 and 14 (8.25 per game), well below 16.5; but the market itself signals a possible workload change and the saved source does not establish his game-day backfield role.",
+        "risk": "A new lead-back assignment would invalidate the four-game role sample; no current active/depth-chart source in the packet confirms that assignment.",
+        "condition": null,
+        "status": "pass_pending_status",
+        "analyst_review": true
+      },
+      "recommended_props": [],
+      "conditional_props": [
+        {
+          "selection": "Braelon Allen under 16.5 rush attempts",
+          "book": "DraftKings",
+          "price": 102,
+          "quote": "DraftKings +102",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 8.25 carries/game, 30.0 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        },
+        {
+          "selection": "Braelon Allen under 71.5 rushing yards",
+          "book": "DraftKings",
+          "price": -114,
+          "quote": "DraftKings -114",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 8.25 carries/game, 30.0 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "NYJ ML -135 / CLE ML +114",
+          "price": "114",
+          "reason": "Low-total, one-score pricing but no validated win probability.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "NYJ ML -135 / CLE ML"
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "NYJ -2.5 -108 / CLE +2.5 -112",
+          "price": "-112",
+          "reason": "Cleveland offensive-line absence context exists, but it is not quantified and should not be converted into a spread edge.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "NYJ -2.5 -108 / CLE +2.5"
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 39.5 -108 / Over 39.5 -112",
+          "price": "-112",
+          "reason": "The 39.5 total is already low; available information does not establish a superior side.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "Under 39.5 -108 / Over 39.5"
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true
+    },
+    "401872984": {
+      "best_selection": {
+        "selection": "C.J. Stroud over 239.5 passing yards",
+        "book": "DraftKings",
+        "price": -113,
+        "quote": "DraftKings -113",
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": "Stroud\u2019s cached passing yards are 274, 353, 167 and 347 (285.3 per game), clearing 239.5 in three of four. His 38, 55, 27 and 31 pass attempts show a stable 27-plus attempt floor rather than a relief-QB mixture.",
+        "risk": "Houston is a 7-point favorite in a 37.5 total, so an early lead could reduce second-half throws; it is an analyst value hypothesis, not a calibrated probability or proven edge.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "C.J. Stroud over 239.5 passing yards",
+          "book": "DraftKings",
+          "price": -113,
+          "quote": "DraftKings -113",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "4 PBP games; 37.75 pass attempts/game, 285.25 passing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [
+        {
+          "selection": "Cam Ward under 190.5 passing yards",
+          "book": "FanDuel",
+          "price": -114,
+          "quote": "FanDuel -114",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 30.0 pass attempts/game, 181.5 passing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        },
+        {
+          "selection": "Tony Pollard under 50.5 rushing yards",
+          "book": "FanDuel",
+          "price": -114,
+          "quote": "FanDuel -114",
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "4 PBP games; 13.5 carries/game, 55.25 rushing yards/game; source-captured threshold and price must be rechecked before use.",
+          "risk": null,
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "HOU ML -345 / TEN ML +275",
+          "price": "275",
+          "reason": "Houston\u2019s win case is already expensive; no game-win distribution was produced.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "HOU ML -345 / TEN ML"
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "HOU -7 -108 / TEN +7 -112",
+          "price": "-112",
+          "reason": "Houston\u2019s passing case does not prove a seven-point cover; favorite game scripts can reduce its late pass volume.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "HOU -7 -108 / TEN +7"
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 37.5 -108 / Over 37.5 -112",
+          "price": "-112",
+          "reason": "Low total is consistent with a slower Tennessee offense, but the source set has no calibrated total model.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": "Under 37.5 -108 / Over 37.5"
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true
+    },
+    "401872985": {
+      "best_selection": {
+        "selection": "Jonathan Taylor OVER 86.5 rushing yards (DraftKings -110)",
+        "book": null,
+        "price": null,
+        "quote": null,
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": null,
+        "risk": null,
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Jonathan Taylor OVER 86.5 rushing yards (DraftKings -110)",
+          "book": "DraftKings",
+          "price": -110,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Rush attempts/yards: 19/98, 24/92, 23/68, 20/95. He cleared 86.5 in 3 of 4; the three later games all supplied 20+ attempts.",
+          "risk": "A negative Colts script, a goal-line split, or a sub-20 carry workload breaks the case.",
+          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "IND +124 / PIT -148",
+          "price": null,
+          "reason": "No independently validated win distribution; PIT -148 does not improve on the role-supported Taylor prop.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "IND +3 (-115) / PIT -3 (-105)",
+          "price": null,
+          "reason": "A field-goal spread is plausible on both scripts; the supplied inputs do not establish a cover edge.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "43.5 (O -108 / U -112)",
+          "price": null,
+          "reason": "No validated game-total forecast or executable refresh; do not convert player volume into a total call.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
+      ],
+      "analyst_review": true
+    },
+    "401872986": {
+      "best_selection": {
+        "selection": "Kirk Cousins OVER 231.5 passing yards (DraftKings -111)",
+        "book": null,
+        "price": null,
+        "quote": null,
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": null,
+        "risk": null,
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Kirk Cousins OVER 231.5 passing yards (DraftKings -111)",
+          "book": "DraftKings",
+          "price": -111,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Pass attempts/yards: 30/160, 31/253, 38/248, 53/365. He cleared 231.5 in 3 of 4 and has four actual pass-volume games in the cache.",
+          "risk": "New England\u2019s lower passing allowance, a run-heavy LV plan, or an early lead can hold Cousins below the line.",
+          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "LV +160 / NE -192",
+          "price": null,
+          "reason": "Jeanty is listed questionable with an ankle injury; that uncertainty affects the whole LV game script.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "LV +3.5 (-112) / NE -3.5 (-108)",
+          "price": null,
+          "reason": "Same Jeanty uncertainty plus no calibrated margin forecast.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "45.5 (O -105 / U -115)",
+          "price": null,
+          "reason": "Cousins\u2019 volume supports one prop, not a game-total conclusion.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
+      ],
+      "analyst_review": true
+    },
+    "401872987": {
+      "best_selection": {
+        "selection": "Chris Olave OVER 81.5 receiving yards (DraftKings -113)",
+        "book": null,
+        "price": null,
+        "quote": null,
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": null,
+        "risk": null,
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Chris Olave OVER 81.5 receiving yards (DraftKings -113)",
+          "book": "DraftKings",
+          "price": -113,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Targets/receptions/yards: 13/10/182, 10/8/86, 13/9/107, 12/8/116. He cleared 81.5 in all four and has 10+ targets every week.",
+          "risk": "Minnesota can concentrate coverage on Olave; the required 82 yards leaves limited room for a lower-efficiency target day.",
+          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        },
+        {
+          "selection": "Tyler Shough OVER 235.5 passing yards (DraftKings -111)",
+          "book": "DraftKings",
+          "price": -111,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Pass attempts/yards: 62/410, 37/252, 44/255, 50/286. He cleared 235.5 in all four and attempted at least 37 passes each time.",
+          "risk": "A pressure-driven efficiency drop or a Saints lead that removes late volume is the direct failure path.",
+          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "MIN -130 / NO +110",
+          "price": null,
+          "reason": "MIN\u2019s line injuries\u2014Christian Darrisaw OUT and Brian O\u2019Neill/Michael Jurgens questionable\u2014make side exposure more fragile than the NO passing props.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "MIN -2.5 (-105) / NO +2.5 (-115)",
+          "price": null,
+          "reason": "The same offensive-line uncertainty prevents a defendable margin call.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "41.5 (O -108 / U -112)",
+          "price": null,
+          "reason": "The pair of NO volume ideas is correlated with a pass-heavy Saints script; no joint/game-total price is available.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
+      ],
+      "analyst_review": true
+    },
+    "401872988": {
+      "best_selection": {
+        "selection": "Cam Skattebo OVER 55.5 rushing yards (DraftKings -113)",
+        "book": null,
+        "price": null,
+        "quote": null,
+        "captured_at": null,
+        "provider_updated_at": null,
+        "why": null,
+        "risk": null,
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Cam Skattebo OVER 55.5 rushing yards (DraftKings -113)",
+          "book": "DraftKings",
+          "price": -113,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Rush attempts/yards: 18/81, 12/36, 20/60, 18/58. He cleared 55.5 in 3 of 4 and logged 18+ carries in three games.",
+          "risk": "Washington can force NYG into catch-up mode, and the one low-volume game fell well short.",
+          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [
+        {
+          "selection": "Jayden Daniels UNDER 193.5 passing yards (FanDuel -114)",
+          "book": "FanDuel",
+          "price": -114,
+          "quote": null,
+          "captured_at": null,
+          "provider_updated_at": null,
+          "why": "Pass attempts/yards: 36/164, 17/96, 3/0, 30/148. The three meaningful-volume appearances stayed under 193.5, but the 17- and 3-attempt games make this an availability/role-sensitive case.",
+          "risk": "A fully healthy Daniels, a higher New York scoring response, or a late catch-up script can make 194 passing yards attainable.",
+          "condition": "Captured secondary quote retrieved 2026-10-10T17:26:29Z; provider-updated 2026-10-09.",
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "NYG +145 / WSH -175",
+          "price": null,
+          "reason": "NYG\u2019s Jaxson Dart is on IR and Washington lists Terry McLaurin questionable; the price does not compensate for unresolved offensive roles.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "NYG +3.5 (-108) / WSH -3.5 (-112)",
+          "price": null,
+          "reason": "No validated margin distribution, and the quarterback/receiver availability context is unsettled.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "41.5 (O -115 / U -105)",
+          "price": null,
+          "reason": "The player calls point to different scripts; no total is supported.",
+          "captured_at": null,
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
+      ],
+      "analyst_review": true
+    },
+    "401872989": {
+      "best_selection": {
+        "selection": "Bo Nix under 220.5 passing yards",
+        "book": "DraftKings",
+        "price": -112,
+        "quote": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": null,
+        "why": "Nix recorded 131, 288, 186 and 214 passing yards in the four saved recent games; three were below 220.5. The 41.5 total constrains the median-volume case.",
+        "risk": "Denver can be forced into a pass-heavy chase, and Denver is without CB Pat Surtain II, which can make an up-tempo response more likely.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Bo Nix under 220.5 passing yards",
+          "book": "DraftKings",
+          "price": -112,
+          "quote": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "Nix recorded 131, 288, 186 and 214 passing yards in the four saved recent games; three were below 220.5. The 41.5 total constrains the median-volume case.",
+          "risk": "Denver can be forced into a pass-heavy chase, and Denver is without CB Pat Surtain II, which can make an up-tempo response more likely.",
+          "condition": null,
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "DraftKings -192 DEN / +160 LAC",
+          "price": null,
+          "reason": "The moneyline premium on Denver is too steep for a low-total road game.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "DEN -3.5 -108 / LAC +3.5 -112",
+          "price": null,
+          "reason": "The listed market moved from LAC -2.5 at open to DEN -3.5; the saved sources do not establish the reason for that seven-point flip.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Under 41.5 -105 / over 41.5 -115",
+          "price": null,
+          "reason": "Low total supports the Nix-volume hypothesis but Denver secondary absences are material counterevidence.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
+      ],
+      "analyst_review": true
+    },
+    "401872991": {
+      "best_selection": {
+        "selection": "Detroit Lions -5.5",
+        "book": "DraftKings",
+        "price": -108,
+        "quote": null,
+        "captured_at": "2026-10-11T03:17:52Z",
+        "provider_updated_at": null,
+        "why": "Arizona lists Marvin Harrison Jr. OUT while Detroit\u2019s passing game has Jared Goff at 9 TD through four games. Arizona\u2019s own secondary injury list includes Andrew Wingard OUT.",
+        "risk": "Detroit has Brian Branch and Rock Ya-Sin OUT, while a 54.5 total gives Jacoby Brissett a plausible volume path.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [],
+      "conditional_props": [
+        {
+          "selection": "Trey McBride under 81.5 receiving yards",
+          "book": "BetMGM",
+          "price": -115,
+          "quote": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "Saved recent yardage is 95, 41, 75 and 31; three are under 81.5.",
+          "risk": "Harrison being OUT can consolidate Arizona targets toward McBride, which is exactly why this is not a recommendation.",
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "DET -258 / ARI +210",
+          "price": null,
+          "reason": "Detroit is the side lean, but -258 is not the preferred risk/reward.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "SELECT \u2014 DET -5.5",
+          "line": "DraftKings",
+          "price": "-108",
+          "reason": "Role/news advantage is clearer than any single prop after Harrison\u2019s OUT designation.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over 54.5 -115 / under 54.5 -105",
+          "price": null,
+          "reason": "Detroit secondary absences and Harrison\u2019s absence pull the total in opposite directions.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
+      ],
+      "analyst_review": true
+    },
+    "401872992": {
+      "best_selection": {
+        "selection": "Jaxon Smith-Njigba over 94.5 receiving yards",
+        "book": "FanDuel",
+        "price": -114,
+        "quote": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": null,
+        "why": "JSN posted 122, 155, 128 and 76 receiving yards in the four saved games and leads Seattle with 32 catches and 6 TDs in ESPN\u2019s current summary. San Francisco lists Nick Bosa OUT and Marques Sigle OUT.",
+        "risk": "94.5 is a high threshold; a Seattle lead or a coverage adjustment can divert targets to Kupp, Barner or the backs.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [
+        {
+          "selection": "Jaxon Smith-Njigba over 94.5 receiving yards",
+          "book": "FanDuel",
+          "price": -114,
+          "quote": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "JSN posted 122, 155, 128 and 76 receiving yards in the four saved games and leads Seattle with 32 catches and 6 TDs in ESPN\u2019s current summary. San Francisco lists Nick Bosa OUT and Marques Sigle OUT.",
+          "risk": "94.5 is a high threshold; a Seattle lead or a coverage adjustment can divert targets to Kupp, Barner or the backs.",
+          "condition": null,
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "SF +136 / SEA -162",
+          "price": null,
+          "reason": "Seattle is favored, but the market charge does not offer enough support beyond the prop-specific case.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "SF +3 -110 / SEA -3 -110",
+          "price": null,
+          "reason": "Seattle RB availability is unsettled: Zach Charbonnet OUT and George Holani Questionable.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over 45.5 -115 / under 45.5 -105",
+          "price": null,
+          "reason": "The Bosa absence lifts Seattle\u2019s ceiling, but Seattle\u2019s backfield uncertainty makes the overall script unclear.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
+      ],
+      "analyst_review": true
+    },
+    "401872993": {
+      "best_selection": {
+        "selection": "PASS \u2014 no pregame selection",
+        "book": null,
+        "price": null,
+        "quote": null,
+        "captured_at": "2026-10-11T03:17:52Z",
+        "provider_updated_at": null,
+        "why": "The captured named QB offer is Tyler Huntley, while ESPN\u2019s season leader is Lamar Jackson and the saved injury list does not resolve the actual starter. That is a material role conflict for every Baltimore volume and game-side thesis.",
+        "risk": "A late starter confirmation changes both Baltimore\u2019s pass distribution and Atlanta\u2019s expected game script.",
+        "condition": null,
+        "status": "pass_pending_status",
+        "analyst_review": true
+      },
+      "recommended_props": [],
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "BAL +145 / ATL -175",
+          "price": null,
+          "reason": "Do not price Baltimore\u2019s win chance without resolved quarterback status.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "CONDITIONAL \u2014 ATL -3",
+          "line": "DraftKings",
+          "price": "-122",
+          "reason": "Only consider if Tyler Huntley is formally confirmed as Baltimore\u2019s starter and the listed price remains available.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over/under 43.5 -110",
+          "price": null,
+          "reason": "Quarterback ambiguity dominates a modest total.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
+      ],
+      "analyst_review": true
+    },
+    "401872994": {
+      "best_selection": {
+        "selection": "Los Angeles Rams -3.5",
+        "book": "DraftKings",
+        "price": -105,
+        "quote": null,
+        "captured_at": "2026-10-11T03:17:52Z",
+        "provider_updated_at": null,
+        "why": "Los Angeles is at home and Buffalo lists Ed Oliver OUT. The Rams\u2019 core roles are intact in ESPN\u2019s summary: Stafford, Kyren Williams and Davante Adams are the team leaders at their positions.",
+        "risk": "Buffalo\u2019s Allen/Cook/Kincaid core is also intact, and 54.5 implies a high-variance scoring environment where a backdoor cover is live.",
+        "condition": null,
+        "status": "manual_candidate_recheck_required",
+        "analyst_review": true
+      },
+      "recommended_props": [],
+      "conditional_props": [
+        {
+          "selection": "Josh Allen under 32.5 pass attempts",
+          "book": "DraftKings",
+          "price": -104,
+          "quote": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": null,
+          "why": "The Rams -3.5 script would be the path to late Buffalo volume, not the base case; this threshold requires an updated role/price check before Monday.",
+          "risk": "Trailing to the Rams is precisely the scenario that destroys an Allen attempt under.",
+          "condition": null,
+          "status": "conditional_recheck_required",
+          "analyst_review": true
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "BUF +150 / LAR -180",
+          "price": null,
+          "reason": "The spread is preferred to laying -180.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "spread",
+          "decision": "SELECT \u2014 LAR -3.5",
+          "line": "DraftKings",
+          "price": "-105",
+          "reason": "Home favorite plus Buffalo interior defensive absence is the cleaner game-side hypothesis.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over 54.5 -115 / under 54.5 -105",
+          "price": null,
+          "reason": "Both offenses carry enough intact high-end roles to make a total direction less clean than the side.",
+          "captured_at": "2026-10-11T03:17:52Z",
+          "source_state": "manual review; exact price recheck required",
+          "provider": null
+        }
+      ],
+      "limitations": [
+        "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
+      ],
+      "analyst_review": true
+    }
+  }
+}

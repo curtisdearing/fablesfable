@@ -283,3 +283,73 @@ def test_all_props_accepts_unpriced_coverage_records_without_counting_them_as_ou
     payload = all_props.load(str(tmp_path / "cards.json"), str(tmp_path / "rows.json"), expected_event_ids={"1"})
     assert payload["state"] == "ready"
     assert payload["counts"]["outcome_rows"] == 1
+
+
+def test_normalize_review_documents_keeps_manual_reviewed_props_and_game_selection_distinct():
+    docs = [{"games": [{"event_id": "1", "away": "AWY", "home": "HOME",
+                         "best_selection": {"selection": "Quarterback under 220.5 passing yards",
+                                            "book": "DraftKings", "price": -112,
+                                            "classification": "manual analyst value hypothesis — stale listed price; recheck before action",
+                                            "reason": "Volume case.", "risk": "Trailing script."},
+                         "game_decisions": [{"market": "spread", "decision": "SELECT", "selection": "AWY -3.5",
+                                             "price": -110, "listed_quote": "AWY -3.5 -110 / HOME +3.5 -110",
+                                             "reason": "Manual spread case.", "quote_clock": "2026-10-10T17:26:29Z"}],
+                         "recommended_props": [{"selection": "Quarterback under 220.5 passing yards", "book": "DraftKings",
+                                                "price": -112, "quote_clock": "2026-10-10T17:26:29Z",
+                                                "reason": "Volume case.", "risk": "Trailing script."}],
+                         "conditional_props": [{"selection": "Receiver over 50.5 receiving yards", "book": "FanDuel",
+                                                "price": -110, "quote_clock": "2026-10-10T17:26:29Z",
+                                                "reason": "Only if active.", "risk": "Snap cap."}]}]}]
+    normalized = board.normalize_review_documents(docs)
+    review = normalized["1"]
+    assert review["best_selection"]["selection"] == "Quarterback under 220.5 passing yards"
+    assert review["best_selection"]["status"] == "manual_candidate_recheck_required"
+    assert [p["selection"] for p in review["recommended_props"]] == ["Quarterback under 220.5 passing yards"]
+    assert review["conditional_props"][0]["status"] == "conditional_recheck_required"
+    assert review["game_markets"][1]["decision"] == "SELECT — AWY -3.5"
+    assert review["game_markets"][1]["price"] == "-110"
+
+
+def test_reviewed_rendering_leads_with_best_selection_and_keeps_native_output_collapsed():
+    from nflvalue import all_props
+    card = {"event_id": "1", "game_id": "2026_05_AWY_HOME", "away": "AWY", "home": "HOME",
+            "kickoff": "2026-10-11T20:05:00Z", "source_as_of": "2026-10-10T17:26:29Z", "status": "upcoming",
+            "picks": [{"player": "Old Native", "market": "passing_yards", "side": "over", "line": 1.5,
+                       "book": "Old", "odds": -110, "status": "analyst_lean", "rationale": "Old", "counterargument": "Old",
+                       "retrieved_at": "2026-10-09T00:00:00Z", "model_probability": None, "calibrated_probability": None,
+                       "projection": None, "model_run_as_of": "2026-10-09T00:00:00Z", "quote_updated_at": None,
+                       "invalidation": "Old", "rank_basis": "Old", "sources": []}], "native_model": True,
+            "game_markets": [{"market": name, "decision": "PASS", "line": None, "price": None} for name in ("moneyline", "spread", "total")],
+            "injuries": {"teams": [{"team": "AWY", "items": []}, {"team": "HOME", "items": []}]},
+            "analyst_review": {"best_selection": {"selection": "Quarterback under 220.5 passing yards", "book": "DraftKings", "price": -112,
+                                                     "captured_at": "2026-10-10T17:26:29Z", "why": "Volume case.", "risk": "Trailing script.",
+                                                     "status": "manual_candidate_recheck_required"},
+                               "recommended_props": [],
+                               "conditional_props": [{"selection": "Receiver over 50.5 receiving yards", "book": "FanDuel", "price": -110,
+                                                      "captured_at": "2026-10-10T17:26:29Z", "why": "Active only.", "risk": "Snap cap.",
+                                                      "status": "conditional_recheck_required"}],
+                               "limitations": ["Manual analyst review; recheck exact price."]}}
+    payload = {"state": "ready", "cards": [card], "rows": [], "counts": {}, "errors": []}
+    page = all_props.render_page(payload)
+    assert "Best reviewed selection" in page and "Quarterback under 220.5 passing yards" in page
+    assert "Candidate — exact line, price, book, and availability must be rechecked." in page
+    assert "Conditional — verify stated condition plus exact line, price, and book." in page
+    section = page[page.index("<section class='ap-game'"):]
+    assert section.index("Best reviewed selection") < section.index("Game decisions") < section.index("Both-team injury report")
+    assert "Unreviewed model output — includes known workload issues; not recommendations" in section
+    assert "<details class='game-model-picks'" in section
+
+
+def test_reviewed_rendering_excludes_withdrawn_native_players_from_the_visible_model_disclosure():
+    from nflvalue import all_props
+    pick = {"player": "Bijan Robinson", "market": "rushing_yards", "side": "under", "line": 88.5,
+            "book": "FanDuel", "odds": -114, "status": "analyst_lean", "rationale": "Old", "counterargument": "Old",
+            "retrieved_at": "2026-10-09T00:00:00Z", "model_probability": None, "calibrated_probability": None,
+            "projection": None, "model_run_as_of": "2026-10-09T00:00:00Z", "quote_updated_at": None,
+            "invalidation": "Old", "rank_basis": "Old", "sources": []}
+    card = {"event_id": "1", "game_id": "2026_05_AWY_HOME", "away": "AWY", "home": "HOME",
+            "kickoff": "2026-10-11T20:05:00Z", "source_as_of": "2026-10-10T17:26:29Z", "status": "upcoming",
+            "picks": [], "unreviewed_model_picks": [pick], "game_markets": [], "injuries": {"teams": []},
+            "analyst_review": {"best_selection": {"selection": "PASS", "status": "pass_pending_status"},
+                               "recommended_props": [], "conditional_props": []}}
+    assert "Bijan Robinson" not in all_props.render_page({"state": "ready", "cards": [card], "rows": [], "counts": {}, "errors": []})
