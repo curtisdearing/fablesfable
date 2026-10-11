@@ -692,32 +692,38 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "JAX ML -395",
-        "price": "-395",
-        "reason": "The price asks the bettor to absorb a large favorite premium without a validated game-win distribution.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "JAX ML"
+        "line": "PHI +310 \u00b7 JAX -395",
+        "price": null,
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The price asks the bettor to absorb a large favorite premium without a validated game-win distribution."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "PHI +7.5 -112 / JAX -7.5 -108",
-        "price": "-108",
-        "reason": "The 10-point move from the recorded opener (PHI -2.5) leaves an extreme repricing with no validated team simulation.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "PHI +7.5 -112 / JAX -7.5"
+        "line": "PHI +7.5 \u00b7 JAX -7.5",
+        "price": "PHI -112 \u00b7 JAX -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "JAX -7.5 requires a win by more than a touchdown; the review does not establish a cover edge."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 41.5 -108 / Over 41.5 -112",
-        "price": "-112",
-        "reason": "Low total fits a slower script, but Philadelphia injuries can either suppress offense or create short fields; no quantitative total forecast was run.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "Under 41.5 -108 / Over 41.5"
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Low total fits a slower script, but Philadelphia injuries can either suppress offense or create short fields; no quantitative total forecast was run."
       }
     ],
     "analyst_review": {
@@ -726,13 +732,24 @@
         "book": "DraftKings",
         "price": -111,
         "quote": "DraftKings -111",
-        "captured_at": null,
+        "captured_at": "2026-10-10T22:48:36.313260+00:00",
         "provider_updated_at": null,
-        "why": "Lawrence has 245, 189, 182 and 227 passing yards in the four cached regular-season boxes (210.8 per game); Jacksonville is a 7.5-point home favorite and Philadelphia lists DeVonta Smith OUT, a setup that can shorten Jacksonville\u2019s own second-half dropback need.",
-        "risk": "A pass-heavy first half or Philadelphia forcing Jacksonville to answer would beat this; this is a stale captured prop quote, not a demonstrated EV estimate.",
-        "condition": null,
+        "why": "Three of the four verified games finished below 227.5. Jacksonville is listed as the favorite; a lead that reduces second-half passing would help this under. That is a conditional game-script argument, not a measured betting probability. Verified recent results: 245, 189, 182, 227 passing yards (events 401872922, 401872940, 401872957, 401872969).",
+        "risk": "Philadelphia forcing a competitive, pass-heavy game could erase the case.",
+        "condition": "Lawrence completed all four prior official boxes; current game snapshot has no Lawrence designation. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "The displayed 26.25 attempts/game is false. Official attempts are 23, 29, 29, 23 = 26.00/game, not 26.25. Keep the yards rationale only after live recheck.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/eagles-vs-jaguars-player-props/",
+            "title": "Legion Report player-props page",
+            "retrieved_at": "2026-10-10T22:48:36.313260+00:00",
+            "saved_body_sha256": "3213945626f73b7cf39efeeba32010b059facbb52bfebcdf7f9a0846e05df21d"
+          }
+        ],
+        "verified_stat_context": "245, 189, 182, 227 passing yards (events 401872922, 401872940, 401872957, 401872969)."
       },
       "recommended_props": [
         {
@@ -742,58 +759,85 @@
           "quote": "DraftKings -111",
           "captured_at": "2026-10-10T22:48:36.313260+00:00",
           "provider_updated_at": null,
-          "why": "4 PBP games; 26.25 pass attempts/game, 210.75 passing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "why": "Three of the four verified games finished below 227.5. Jacksonville is listed as the favorite; a lead that reduces second-half passing would help this under. That is a conditional game-script argument, not a measured betting probability. Verified recent results: 245, 189, 182, 227 passing yards (events 401872922, 401872940, 401872957, 401872969).",
+          "risk": "Philadelphia forcing a competitive, pass-heavy game could erase the case.",
+          "condition": "Lawrence completed all four prior official boxes; current game snapshot has no Lawrence designation. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
-        }
-      ],
-      "conditional_props": [
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "The displayed 26.25 attempts/game is false. Official attempts are 23, 29, 29, 23 = 26.00/game, not 26.25. Keep the yards rationale only after live recheck.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/eagles-vs-jaguars-player-props/",
+              "title": "Legion Report player-props page",
+              "retrieved_at": "2026-10-10T22:48:36.313260+00:00",
+              "saved_body_sha256": "3213945626f73b7cf39efeeba32010b059facbb52bfebcdf7f9a0846e05df21d"
+            }
+          ],
+          "verified_stat_context": "245, 189, 182, 227 passing yards (events 401872922, 401872940, 401872957, 401872969)."
+        },
         {
           "selection": "Jalen Hurts under 31.5 pass attempts",
           "book": "DraftKings",
           "price": -109,
           "quote": "DraftKings -109",
-          "captured_at": null,
+          "captured_at": "2026-10-10T22:48:36.313260+00:00",
           "provider_updated_at": null,
-          "why": "4 PBP games; 28.5 pass attempts/game, 178.25 passing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
-          "status": "conditional_recheck_required",
-          "analyst_review": true
+          "why": "Three of four verified starts finished below 31.5 attempts. The under is a workload hypothesis, but Philadelphia being a substantial underdog is important contrary evidence. Verified recent results: 25, 37, 25, 27 attempts; 203, 264, 153, 93 passing yards.",
+          "risk": "A Jacksonville lead can force Philadelphia to pass more; do not treat the recent average as a ceiling.",
+          "condition": "Verify active status and exact book quote at action time. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
+          "status": "manual_candidate_recheck_required",
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "No statistical correction. Do not state an edge from the 28.5 attempt mean.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/eagles-vs-jaguars-player-props/",
+              "title": "Legion Report player-props page",
+              "retrieved_at": "2026-10-10T22:48:36.313260+00:00",
+              "saved_body_sha256": "3213945626f73b7cf39efeeba32010b059facbb52bfebcdf7f9a0846e05df21d"
+            }
+          ],
+          "verified_stat_context": "25, 37, 25, 27 attempts; 203, 264, 153, 93 passing yards."
         }
       ],
+      "conditional_props": [],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "JAX ML -395",
-          "price": "-395",
-          "reason": "The price asks the bettor to absorb a large favorite premium without a validated game-win distribution.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "JAX ML"
+          "line": "PHI +310 \u00b7 JAX -395",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.751699Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The price asks the bettor to absorb a large favorite premium without a validated game-win distribution."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "PHI +7.5 -112 / JAX -7.5 -108",
-          "price": "-108",
-          "reason": "The 10-point move from the recorded opener (PHI -2.5) leaves an extreme repricing with no validated team simulation.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "PHI +7.5 -112 / JAX -7.5"
+          "line": "PHI +7.5 \u00b7 JAX -7.5",
+          "price": "PHI -112 \u00b7 JAX -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.751699Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "JAX -7.5 requires a win by more than a touchdown; the review does not establish a cover edge."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Under 41.5 -108 / Over 41.5 -112",
-          "price": "-112",
-          "reason": "Low total fits a slower script, but Philadelphia injuries can either suppress offense or create short fields; no quantitative total forecast was run.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "Under 41.5 -108 / Over 41.5"
+          "line": "Over 41.5 \u00b7 Under 41.5",
+          "price": "Over -112 \u00b7 Under -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.751699Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Low total fits a slower script, but Philadelphia injuries can either suppress offense or create short fields; no quantitative total forecast was run."
         }
       ],
       "limitations": [
@@ -803,7 +847,8 @@
         "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
         "No same-game parlay is recommended: no actual joint quote or joint probability was available."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -1739,32 +1784,38 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "CHI ML -122 / GB ML +102",
-        "price": "102",
-        "reason": "The favorite has flipped from the recorded GB opening favorite position. The present near-pick\u2019em price is not a model-backed win edge.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "CHI ML -122 / GB ML"
+        "line": "CHI -130 \u00b7 GB +110",
+        "price": null,
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The favorite has flipped from the recorded GB opening favorite position. The present near-pick\u2019em price is not a model-backed win edge."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "GB +1.5 -105 / CHI -1.5 -115",
-        "price": "-115",
-        "reason": "Small spread, but no validated game simulation and Green Bay interior-line availability is unresolved.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "GB +1.5 -105 / CHI -1.5"
+        "line": "CHI -1.5 \u00b7 GB +1.5",
+        "price": "CHI -115 \u00b7 GB -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Small spread, but no validated game simulation and Green Bay interior-line availability is unresolved."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 46.5 -108 / Over 46.5 -112",
-        "price": "-112",
-        "reason": "A high total conflicts with a side-free read; neither result is analytically preferred from the available source set.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "Under 46.5 -108 / Over 46.5"
+        "line": "Over 46.5 \u00b7 Under 46.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "A high total conflicts with a side-free read; neither result is analytically preferred from the available source set."
       }
     ],
     "analyst_review": {
@@ -1773,13 +1824,26 @@
         "book": "DraftKings",
         "price": -113,
         "quote": "DraftKings -113",
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": "Swift\u2019s cached rushing lines are 124, 45, 84 and 58 yards on 18, 16, 20 and 15 carries. He stayed below 85.5 in three of four; a 46.5 total and near-pick\u2019em spread do not supply a runaway favorite script that would make 20-plus carries automatic.",
-        "risk": "His Week 1 124-yard outcome shows the breakaway/efficiency failure case; do not pair it with his attempts under because both lose in the same volume/efficiency script.",
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:27:22+00:00",
+        "why": "His verified carry totals were 18, 16, 20 and 15; three rushing totals were below 85.5. This under needs an ordinary workload rather than a prediction that he loses his role. Verified recent results: 18/124, 16/45, 20/84, 15/58 rushing.",
+        "risk": "He already produced 124 yards on 18 carries; efficiency or a run-heavy lead can beat the under.",
+        "condition": "Verify Swift is active and the exact quote remains displayed. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "No statistical correction. Keep as one conditional idea only, not a calibrated 3-of-4 edge.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/bears-vs-packers-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:07+00:00",
+            "modified_at": "2026-10-09T03:27:22+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872990:CHI:D'Andre Swift:Rushing yards:85.5"
+          }
+        ],
+        "verified_stat_context": "18/124, 16/45, 20/84, 15/58 rushing."
       },
       "recommended_props": [
         {
@@ -1788,12 +1852,25 @@
           "price": -113,
           "quote": "DraftKings -113",
           "captured_at": "2026-10-10T17:26:29.114999+00:00",
-          "provider_updated_at": null,
-          "why": "4 PBP games; 17.25 carries/game, 77.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "provider_updated_at": "2026-10-09T03:27:22+00:00",
+          "why": "His verified carry totals were 18, 16, 20 and 15; three rushing totals were below 85.5. This under needs an ordinary workload rather than a prediction that he loses his role. Verified recent results: 18/124, 16/45, 20/84, 15/58 rushing.",
+          "risk": "He already produced 124 yards on 18 carries; efficiency or a run-heavy lead can beat the under.",
+          "condition": "Verify Swift is active and the exact quote remains displayed. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "No statistical correction. Keep as one conditional idea only, not a calibrated 3-of-4 edge.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/bears-vs-packers-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:07+00:00",
+              "modified_at": "2026-10-09T03:27:22+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872990:CHI:D'Andre Swift:Rushing yards:85.5"
+            }
+          ],
+          "verified_stat_context": "18/124, 16/45, 20/84, 15/58 rushing."
         }
       ],
       "conditional_props": [
@@ -1802,45 +1879,63 @@
           "book": "DraftKings",
           "price": -117,
           "quote": "DraftKings -117",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 17.25 carries/game, 77.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:22+00:00",
+          "why": "18, 16, 20, 15 attempts.",
+          "risk": "Do not publish beside Swift under 85.5 rushing yards as a second recommendation; the two unders share the same workload/efficiency failure modes. Retain only as an alternate after live reprice, not a co-promoted pick.",
+          "condition": "Active confirmation and exact quote required. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Do not publish beside Swift under 85.5 rushing yards as a second recommendation; the two unders share the same workload/efficiency failure modes. Retain only as an alternate after live reprice, not a co-promoted pick.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/bears-vs-packers-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:07+00:00",
+              "modified_at": "2026-10-09T03:27:22+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872990:CHI:D'Andre Swift:Rush attempts:19.5"
+            }
+          ]
         }
       ],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "CHI ML -122 / GB ML +102",
-          "price": "102",
-          "reason": "The favorite has flipped from the recorded GB opening favorite position. The present near-pick\u2019em price is not a model-backed win edge.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "CHI ML -122 / GB ML"
+          "line": "CHI -130 \u00b7 GB +110",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.955582Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The favorite has flipped from the recorded GB opening favorite position. The present near-pick\u2019em price is not a model-backed win edge."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "GB +1.5 -105 / CHI -1.5 -115",
-          "price": "-115",
-          "reason": "Small spread, but no validated game simulation and Green Bay interior-line availability is unresolved.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "GB +1.5 -105 / CHI -1.5"
+          "line": "CHI -1.5 \u00b7 GB +1.5",
+          "price": "CHI -115 \u00b7 GB -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.955582Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Small spread, but no validated game simulation and Green Bay interior-line availability is unresolved."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Under 46.5 -108 / Over 46.5 -112",
-          "price": "-112",
-          "reason": "A high total conflicts with a side-free read; neither result is analytically preferred from the available source set.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "Under 46.5 -108 / Over 46.5"
+          "line": "Over 46.5 \u00b7 Under 46.5",
+          "price": "Over -112 \u00b7 Under -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:23.955582Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "A high total conflicts with a side-free read; neither result is analytically preferred from the available source set."
         }
       ],
       "limitations": [
@@ -1850,7 +1945,8 @@
         "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
         "No same-game parlay is recommended: no actual joint quote or joint probability was available."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -2828,46 +2924,46 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "CIN ML -355 / MIA ML +280",
-        "price": "280",
-        "reason": "Road-favorite price has no actionable value case while Cincinnati\u2019s two primary receivers are questionable.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "CIN ML -355 / MIA ML"
+        "line": "CIN -355 \u00b7 MIA +280",
+        "price": null,
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Road-favorite price has no actionable value case while Cincinnati\u2019s two primary receivers are questionable."
       },
       {
         "market": "spread",
-        "decision": "CONDITIONAL",
-        "line": "CIN -7 -109",
-        "price": "-109",
-        "reason": "Only reconsider after both Chase and Higgins are confirmed active; otherwise PASS rather than treating expected targets as fixed.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "CIN -7"
+        "decision": "PASS",
+        "line": "CIN -7 \u00b7 MIA +7",
+        "price": "CIN -110 \u00b7 MIA -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Only reconsider after both Chase and Higgins are confirmed active; otherwise PASS rather than treating expected targets as fixed."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 43.5 -107 / Over 43.5 -113",
-        "price": "-113",
-        "reason": "The same unresolved receiver availability affects pace and scoring allocation.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "Under 43.5 -107 / Over 43.5"
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The same unresolved receiver availability affects pace and scoring allocation."
       }
     ],
     "analyst_review": {
       "best_selection": {
-        "selection": "PASS \u2014 personnel-dependent game",
-        "book": null,
-        "price": null,
-        "quote": "CIN -7 -109 only after active confirmation",
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": "Cincinnati is priced as a 7-point road favorite, but both Ja\u2019Marr Chase and Tee Higgins are listed questionable. Their availability changes the receiver tree and the rationale for both Cincinnati spread and Burrow volume props.",
-        "risk": "Do not substitute a Malik Willis market for that uncertainty: his native pass-attempt mean is contaminated by mixed-role appearances and there is no Saturday confirmation he starts.",
-        "condition": null,
+        "selection": "PASS \u2014 pending stronger support / role confirmation",
         "status": "pass_pending_status",
+        "why": "No selection cleared the independent review for this game. See conditional ideas below; they are not ready-to-bet recommendations.",
+        "risk": null,
         "analyst_review": true
       },
       "recommended_props": [],
@@ -2877,58 +2973,88 @@
           "book": "DraftKings",
           "price": -110,
           "quote": "DraftKings -110",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 14.5 carries/game, 51.75 rushing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:00+00:00",
+          "why": "16/56, 20/80, 13/61, 9/10 rushing.",
+          "risk": "Numbers are accurate, but Cincinnati's official snapshot lists Ja'Marr Chase and Tee Higgins questionable; do not turn this into a pick until actives and expected offensive distribution are verified.",
+          "condition": "Verify Chase/Higgins actives, Brown role, and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Numbers are accurate, but Cincinnati's official snapshot lists Ja'Marr Chase and Tee Higgins questionable; do not turn this into a pick until actives and expected offensive distribution are verified.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/bengals-vs-dolphins-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:14+00:00",
+              "modified_at": "2026-10-09T03:27:00+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872982:CIN:Chase Brown:Rushing yards:67.5"
+            }
+          ]
         },
         {
           "selection": "Joe Burrow over 256.5 passing yards",
           "book": "DraftKings",
           "price": -113,
           "quote": "DraftKings -113",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 39.25 pass attempts/game, 292.75 passing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:00+00:00",
+          "why": "35/254, 31/207, 37/282, 54/428 passing.",
+          "risk": "The stated 39.25 attempts and 292.75 yards averages are correct, but the receiver availability gate is material. Do not promote from the mean alone.",
+          "condition": "Verify Chase/Higgins actives and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "The stated 39.25 attempts and 292.75 yards averages are correct, but the receiver availability gate is material. Do not promote from the mean alone.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/bengals-vs-dolphins-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:14+00:00",
+              "modified_at": "2026-10-09T03:27:00+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872982:CIN:Joe Burrow:Passing yards:256.5"
+            }
+          ]
         }
       ],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "CIN ML -355 / MIA ML +280",
-          "price": "280",
-          "reason": "Road-favorite price has no actionable value case while Cincinnati\u2019s two primary receivers are questionable.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "CIN ML -355 / MIA ML"
+          "line": "CIN -355 \u00b7 MIA +280",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.389349Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Road-favorite price has no actionable value case while Cincinnati\u2019s two primary receivers are questionable."
         },
         {
           "market": "spread",
-          "decision": "CONDITIONAL",
-          "line": "CIN -7 -109",
-          "price": "-109",
-          "reason": "Only reconsider after both Chase and Higgins are confirmed active; otherwise PASS rather than treating expected targets as fixed.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "CIN -7"
+          "decision": "PASS",
+          "line": "CIN -7 \u00b7 MIA +7",
+          "price": "CIN -110 \u00b7 MIA -110",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.389349Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Only reconsider after both Chase and Higgins are confirmed active; otherwise PASS rather than treating expected targets as fixed."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Under 43.5 -107 / Over 43.5 -113",
-          "price": "-113",
-          "reason": "The same unresolved receiver availability affects pace and scoring allocation.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "Under 43.5 -107 / Over 43.5"
+          "line": "Over 43.5 \u00b7 Under 43.5",
+          "price": "Over -112 \u00b7 Under -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.389349Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The same unresolved receiver availability affects pace and scoring allocation."
         }
       ],
       "limitations": [
@@ -2938,7 +3064,8 @@
         "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
         "No same-game parlay is recommended: no actual joint quote or joint probability was available."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -3897,46 +4024,46 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "NYJ ML -135 / CLE ML +114",
-        "price": "114",
-        "reason": "Low-total, one-score pricing but no validated win probability.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "NYJ ML -135 / CLE ML"
+        "line": "CLE +114 \u00b7 NYJ -135",
+        "price": null,
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Low-total, one-score pricing but no validated win probability."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "NYJ -2.5 -108 / CLE +2.5 -112",
-        "price": "-112",
-        "reason": "Cleveland offensive-line absence context exists, but it is not quantified and should not be converted into a spread edge.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "NYJ -2.5 -108 / CLE +2.5"
+        "line": "CLE +2.5 \u00b7 NYJ -2.5",
+        "price": "CLE -110 \u00b7 NYJ -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Cleveland offensive-line absence context exists, but it is not quantified and should not be converted into a spread edge."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 39.5 -108 / Over 39.5 -112",
-        "price": "-112",
-        "reason": "The 39.5 total is already low; available information does not establish a superior side.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "Under 39.5 -108 / Over 39.5"
+        "line": "Over 39.5 \u00b7 Under 39.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The 39.5 total is already low; available information does not establish a superior side."
       }
     ],
     "analyst_review": {
       "best_selection": {
-        "selection": "PASS \u2014 do not infer a Braelon Allen starter role",
-        "book": null,
-        "price": null,
-        "quote": "Braelon Allen under 16.5 attempts +102 only after role confirmation",
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": "Allen\u2019s cached carries are 10, 5, 4 and 14 (8.25 per game), well below 16.5; but the market itself signals a possible workload change and the saved source does not establish his game-day backfield role.",
-        "risk": "A new lead-back assignment would invalidate the four-game role sample; no current active/depth-chart source in the packet confirms that assignment.",
-        "condition": null,
+        "selection": "PASS \u2014 pending stronger support / role confirmation",
         "status": "pass_pending_status",
+        "why": "No selection cleared the independent review for this game. See conditional ideas below; they are not ready-to-bet recommendations.",
+        "risk": null,
         "analyst_review": true
       },
       "recommended_props": [],
@@ -3946,58 +4073,88 @@
           "book": "DraftKings",
           "price": 102,
           "quote": "DraftKings +102",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 8.25 carries/game, 30.0 rushing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:11+00:00",
+          "why": "10/40, 5/7, 4/14, 14/59 rushing.",
+          "risk": "The 8.25 attempts and 30.0 yards averages are accurate; they are not current lead-back authorization. Do not infer his Week 5 role from the historical mean.",
+          "condition": "Require a current official active/depth-role confirmation. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "The 8.25 attempts and 30.0 yards averages are accurate; they are not current lead-back authorization. Do not infer his Week 5 role from the historical mean.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/browns-vs-jets-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:32+00:00",
+              "modified_at": "2026-10-09T03:27:11+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872983:NYJ:Braelon Allen:Rush attempts:16.5"
+            }
+          ]
         },
         {
           "selection": "Braelon Allen under 71.5 rushing yards",
           "book": "DraftKings",
           "price": -114,
           "quote": "DraftKings -114",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 8.25 carries/game, 30.0 rushing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:11+00:00",
+          "why": "10/40, 5/7, 4/14, 14/59 rushing.",
+          "risk": "Same role failure as the attempts under; do not promote either market before current backfield confirmation.",
+          "condition": "Require a current official active/depth-role confirmation. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Same role failure as the attempts under; do not promote either market before current backfield confirmation.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/browns-vs-jets-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:32+00:00",
+              "modified_at": "2026-10-09T03:27:11+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872983:NYJ:Braelon Allen:Rushing yards:71.5"
+            }
+          ]
         }
       ],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "NYJ ML -135 / CLE ML +114",
-          "price": "114",
-          "reason": "Low-total, one-score pricing but no validated win probability.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "NYJ ML -135 / CLE ML"
+          "line": "CLE +114 \u00b7 NYJ -135",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.813681Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Low-total, one-score pricing but no validated win probability."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "NYJ -2.5 -108 / CLE +2.5 -112",
-          "price": "-112",
-          "reason": "Cleveland offensive-line absence context exists, but it is not quantified and should not be converted into a spread edge.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "NYJ -2.5 -108 / CLE +2.5"
+          "line": "CLE +2.5 \u00b7 NYJ -2.5",
+          "price": "CLE -110 \u00b7 NYJ -110",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.813681Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Cleveland offensive-line absence context exists, but it is not quantified and should not be converted into a spread edge."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Under 39.5 -108 / Over 39.5 -112",
-          "price": "-112",
-          "reason": "The 39.5 total is already low; available information does not establish a superior side.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "Under 39.5 -108 / Over 39.5"
+          "line": "Over 39.5 \u00b7 Under 39.5",
+          "price": "Over -112 \u00b7 Under -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.813681Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The 39.5 total is already low; available information does not establish a superior side."
         }
       ],
       "limitations": [
@@ -4007,7 +4164,8 @@
         "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
         "No same-game parlay is recommended: no actual joint quote or joint probability was available."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -5192,32 +5350,38 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "HOU ML -345 / TEN ML +275",
-        "price": "275",
-        "reason": "Houston\u2019s win case is already expensive; no game-win distribution was produced.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "HOU ML -345 / TEN ML"
+        "line": "HOU -345 \u00b7 TEN +275",
+        "price": null,
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Houston\u2019s win case is already expensive; no game-win distribution was produced."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "HOU -7 -108 / TEN +7 -112",
-        "price": "-112",
-        "reason": "Houston\u2019s passing case does not prove a seven-point cover; favorite game scripts can reduce its late pass volume.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "HOU -7 -108 / TEN +7"
+        "line": "HOU -7 \u00b7 TEN +7",
+        "price": "HOU -108 \u00b7 TEN -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Houston\u2019s passing case does not prove a seven-point cover; favorite game scripts can reduce its late pass volume."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 37.5 -108 / Over 37.5 -112",
-        "price": "-112",
-        "reason": "Low total is consistent with a slower Tennessee offense, but the source set has no calibrated total model.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": "Under 37.5 -108 / Over 37.5"
+        "line": "Over 37.5 \u00b7 Under 37.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Low total is consistent with a slower Tennessee offense, but the source set has no calibrated total model."
       }
     ],
     "analyst_review": {
@@ -5226,13 +5390,26 @@
         "book": "DraftKings",
         "price": -113,
         "quote": "DraftKings -113",
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": "Stroud\u2019s cached passing yards are 274, 353, 167 and 347 (285.3 per game), clearing 239.5 in three of four. His 38, 55, 27 and 31 pass attempts show a stable 27-plus attempt floor rather than a relief-QB mixture.",
-        "risk": "Houston is a 7-point favorite in a 37.5 total, so an early lead could reduce second-half throws; it is an analyst value hypothesis, not a calibrated probability or proven edge.",
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:26:56+00:00",
+        "why": "Three verified full-game passing totals exceeded 239.5, with substantial passing volume in those games. This is a role-supported candidate, not the old backup-contaminated QB projection. Verified recent results: 38/274, 55/353, 27/167, 31/347 passing.",
+        "risk": "Houston building a lead in a game listed at 37.5 total points could cut passing volume sharply.",
+        "condition": "Stroud's four full box-score roles are verified; exact price and game-day availability still need recheck. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "All displayed means are correct. Retain the stated HOU -7/37.5-total downside; it prevents any calibrated-edge wording.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/texans-vs-titans-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:25+00:00",
+            "modified_at": "2026-10-09T03:26:56+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872984:HOU:C.J. Stroud:Passing yards:239.5"
+          }
+        ],
+        "verified_stat_context": "38/274, 55/353, 27/167, 31/347 passing."
       },
       "recommended_props": [
         {
@@ -5241,12 +5418,25 @@
           "price": -113,
           "quote": "DraftKings -113",
           "captured_at": "2026-10-10T17:26:29.114999+00:00",
-          "provider_updated_at": null,
-          "why": "4 PBP games; 37.75 pass attempts/game, 285.25 passing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "provider_updated_at": "2026-10-09T03:26:56+00:00",
+          "why": "Three verified full-game passing totals exceeded 239.5, with substantial passing volume in those games. This is a role-supported candidate, not the old backup-contaminated QB projection. Verified recent results: 38/274, 55/353, 27/167, 31/347 passing.",
+          "risk": "Houston building a lead in a game listed at 37.5 total points could cut passing volume sharply.",
+          "condition": "Stroud's four full box-score roles are verified; exact price and game-day availability still need recheck. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "All displayed means are correct. Retain the stated HOU -7/37.5-total downside; it prevents any calibrated-edge wording.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/texans-vs-titans-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:02:25+00:00",
+              "modified_at": "2026-10-09T03:26:56+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872984:HOU:C.J. Stroud:Passing yards:239.5"
+            }
+          ],
+          "verified_stat_context": "38/274, 55/353, 27/167, 31/347 passing."
         }
       ],
       "conditional_props": [
@@ -5255,14 +5445,74 @@
           "book": "FanDuel",
           "price": -114,
           "quote": "FanDuel -114",
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "4 PBP games; 30.0 pass attempts/game, 181.5 passing yards/game; source-captured threshold and price must be rechecked before use.",
-          "risk": null,
-          "condition": null,
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:26:56+00:00",
+          "why": "32/140, 20/183, 36/181, 31/222 passing.",
+          "risk": "The displayed 30.0 attempts/game is rounded incorrectly: official average is 29.75. The 181.5-yard average is correct. Add role/availability and matchup support before release rather than promoting from three unders in four.",
+          "condition": "Verify starter/active status and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "The displayed 30.0 attempts/game is rounded incorrectly: official average is 29.75. The 181.5-yard average is correct. Add role/availability and matchup support before release rather than promoting from three unders in four.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/texans-vs-titans-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:02:25+00:00",
+              "modified_at": "2026-10-09T03:26:56+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872984:TEN:Cam Ward:Passing yards:190.5"
+            }
+          ]
+        }
+      ],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "HOU -345 \u00b7 TEN +275",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.166645Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Houston\u2019s win case is already expensive; no game-win distribution was produced."
         },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "HOU -7 \u00b7 TEN +7",
+          "price": "HOU -108 \u00b7 TEN -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.166645Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Houston\u2019s passing case does not prove a seven-point cover; favorite game scripts can reduce its late pass volume."
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over 37.5 \u00b7 Under 37.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.166645Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Low total is consistent with a slower Tennessee offense, but the source set has no calibrated total model."
+        }
+      ],
+      "limitations": [
+        "No joint-game simulation or validated exact-line probability model was available.",
+        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
+        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
+        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
+        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
+      ],
+      "analyst_review": true,
+      "rejected_after_verification": [
         {
           "selection": "Tony Pollard under 50.5 rushing yards",
           "book": "FanDuel",
@@ -5274,49 +5524,11 @@
           "risk": null,
           "condition": null,
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "REJECT",
+          "verification_note": "The verified 55.25-yard average is above the proposed under 50.5. The packet supplies no documented role/matchup counterweight strong enough to reverse that descriptive fact. Remove rather than label conditional."
         }
-      ],
-      "game_markets": [
-        {
-          "market": "moneyline",
-          "decision": "PASS",
-          "line": "HOU ML -345 / TEN ML +275",
-          "price": "275",
-          "reason": "Houston\u2019s win case is already expensive; no game-win distribution was produced.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "HOU ML -345 / TEN ML"
-        },
-        {
-          "market": "spread",
-          "decision": "PASS",
-          "line": "HOU -7 -108 / TEN +7 -112",
-          "price": "-112",
-          "reason": "Houston\u2019s passing case does not prove a seven-point cover; favorite game scripts can reduce its late pass volume.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "HOU -7 -108 / TEN +7"
-        },
-        {
-          "market": "total",
-          "decision": "PASS",
-          "line": "Under 37.5 -108 / Over 37.5 -112",
-          "price": "-112",
-          "reason": "Low total is consistent with a slower Tennessee offense, but the source set has no calibrated total model.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": "Under 37.5 -108 / Over 37.5"
-        }
-      ],
-      "limitations": [
-        "No joint-game simulation or validated exact-line probability model was available.",
-        "Native player candidates use synthetic trailing-mean reference lines; they were not treated as prices for the captured sportsbook thresholds.",
-        "Captured player-prop prices are from 2026-10-10 17:26:29Z with provider page clocks mostly on 2026-10-09; recheck line, price, player status, and settlement before acting.",
-        "Saturday injury designations are not game-day actives. Conditional items are not selections until their stated role/availability condition is verified.",
-        "No same-game parlay is recommended: no actual joint quote or joint probability was available."
-      ],
-      "analyst_review": true
+      ]
     },
     "unreviewed_model_picks": [
       {
@@ -6513,47 +6725,66 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "IND +124 / PIT -148",
+        "line": "IND +124 \u00b7 PIT -148",
         "price": null,
-        "reason": "No independently validated win distribution; PIT -148 does not improve on the role-supported Taylor prop.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "No independently validated win distribution; PIT -148 does not improve on the role-supported Taylor prop."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "IND +3 (-115) / PIT -3 (-105)",
-        "price": null,
-        "reason": "A field-goal spread is plausible on both scripts; the supplied inputs do not establish a cover edge.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "IND +3 \u00b7 PIT -3",
+        "price": "IND -115 \u00b7 PIT -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "A field-goal spread is plausible on both scripts; the supplied inputs do not establish a cover edge."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "43.5 (O -108 / U -112)",
-        "price": null,
-        "reason": "No validated game-total forecast or executable refresh; do not convert player volume into a total call.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -108 \u00b7 Under -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "No validated game-total forecast or executable refresh; do not convert player volume into a total call."
       }
     ],
     "analyst_review": {
       "best_selection": {
         "selection": "Jonathan Taylor OVER 86.5 rushing yards (DraftKings -110)",
-        "book": null,
-        "price": null,
+        "book": "DraftKings",
+        "price": -110,
         "quote": null,
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": null,
-        "risk": null,
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:27:15+00:00",
+        "why": "He received 19\u201324 carries in each verified game and exceeded 86.5 rushing yards in three. Repeated lead-back workload supplies the football case; the four-game hit count does not establish value by itself. Verified recent results: 19/98, 24/92, 23/68, 20/95 rushing.",
+        "risk": "A Pittsburgh lead that reduces Indianapolis rushing opportunities, or another lower-efficiency game like his 68-yard result, can defeat the over.",
+        "condition": "Four official box-score workloads establish recent role; verify active status and exact line/price. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "Full-game claim is accurate. The special score-gap split is not an official box-score field, so omit it until separately reproduced. Do not call 3-of-4 a calibrated edge.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/colts-vs-steelers-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:41+00:00",
+            "modified_at": "2026-10-09T03:27:15+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872985:IND:Jonathan Taylor:Rushing yards:86.5"
+          }
+        ],
+        "verified_stat_context": "19/98, 24/92, 23/68, 20/95 rushing."
       },
       "recommended_props": [
         {
@@ -6561,13 +6792,26 @@
           "book": "DraftKings",
           "price": -110,
           "quote": null,
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "Rush attempts/yards: 19/98, 24/92, 23/68, 20/95. He cleared 86.5 in 3 of 4; the three later games all supplied 20+ attempts.",
-          "risk": "A negative Colts script, a goal-line split, or a sub-20 carry workload breaks the case.",
-          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:15+00:00",
+          "why": "He received 19\u201324 carries in each verified game and exceeded 86.5 rushing yards in three. Repeated lead-back workload supplies the football case; the four-game hit count does not establish value by itself. Verified recent results: 19/98, 24/92, 23/68, 20/95 rushing.",
+          "risk": "A Pittsburgh lead that reduces Indianapolis rushing opportunities, or another lower-efficiency game like his 68-yard result, can defeat the over.",
+          "condition": "Four official box-score workloads establish recent role; verify active status and exact line/price. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "Full-game claim is accurate. The special score-gap split is not an official box-score field, so omit it until separately reproduced. Do not call 3-of-4 a calibrated edge.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/colts-vs-steelers-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:41+00:00",
+              "modified_at": "2026-10-09T03:27:15+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872985:IND:Jonathan Taylor:Rushing yards:86.5"
+            }
+          ],
+          "verified_stat_context": "19/98, 24/92, 23/68, 20/95 rushing."
         }
       ],
       "conditional_props": [],
@@ -6575,38 +6819,45 @@
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "IND +124 / PIT -148",
+          "line": "IND +124 \u00b7 PIT -148",
           "price": null,
-          "reason": "No independently validated win distribution; PIT -148 does not improve on the role-supported Taylor prop.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.932862Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "No independently validated win distribution; PIT -148 does not improve on the role-supported Taylor prop."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "IND +3 (-115) / PIT -3 (-105)",
-          "price": null,
-          "reason": "A field-goal spread is plausible on both scripts; the supplied inputs do not establish a cover edge.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "IND +3 \u00b7 PIT -3",
+          "price": "IND -115 \u00b7 PIT -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.932862Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "A field-goal spread is plausible on both scripts; the supplied inputs do not establish a cover edge."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "43.5 (O -108 / U -112)",
-          "price": null,
-          "reason": "No validated game-total forecast or executable refresh; do not convert player volume into a total call.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 43.5 \u00b7 Under 43.5",
+          "price": "Over -108 \u00b7 Under -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.932862Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "No validated game-total forecast or executable refresh; do not convert player volume into a total call."
         }
       ],
       "limitations": [
         "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -7870,47 +8121,66 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "LV +160 / NE -192",
+        "line": "LV +160 \u00b7 NE -192",
         "price": null,
-        "reason": "Jeanty is listed questionable with an ankle injury; that uncertainty affects the whole LV game script.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Jeanty is listed questionable with an ankle injury; that uncertainty affects the whole LV game script."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "LV +3.5 (-112) / NE -3.5 (-108)",
-        "price": null,
-        "reason": "Same Jeanty uncertainty plus no calibrated margin forecast.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "LV +3.5 \u00b7 NE -3.5",
+        "price": "LV -112 \u00b7 NE -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Same Jeanty uncertainty plus no calibrated margin forecast."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "45.5 (O -105 / U -115)",
-        "price": null,
-        "reason": "Cousins\u2019 volume supports one prop, not a game-total conclusion.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 45.5 \u00b7 Under 45.5",
+        "price": "Over -105 \u00b7 Under -115",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Cousins\u2019 volume supports one prop, not a game-total conclusion."
       }
     ],
     "analyst_review": {
       "best_selection": {
         "selection": "Kirk Cousins OVER 231.5 passing yards (DraftKings -111)",
-        "book": null,
-        "price": null,
+        "book": "DraftKings",
+        "price": -111,
         "quote": null,
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": null,
-        "risk": null,
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:27:03+00:00",
+        "why": "The last three verified passing totals exceeded 231.5, with corrected official attempts of 30, 29, 33 and 52 across the four games. The case is sustained starting-QB volume, not relief appearances. Verified recent results: 30/160, 29/253, 33/248, 52/365 passing.",
+        "risk": "New England\u2019s lower passing allowance and Las Vegas receiving absences are counterarguments; an ordinary low-efficiency game can stay under.",
+        "condition": "Verify current role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "Correct the published attempts from 30/31/38/53 to 30/29/33/52. Passing yards and the 3-of-4 yardage statement are accurate. Remove unverified score-gap counts unless separately reproduced.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/raiders-vs-patriots-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:09+00:00",
+            "modified_at": "2026-10-09T03:27:03+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872986:LV:Kirk Cousins:Passing yards:231.5"
+          }
+        ],
+        "verified_stat_context": "30/160, 29/253, 33/248, 52/365 passing."
       },
       "recommended_props": [
         {
@@ -7918,13 +8188,26 @@
           "book": "DraftKings",
           "price": -111,
           "quote": null,
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "Pass attempts/yards: 30/160, 31/253, 38/248, 53/365. He cleared 231.5 in 3 of 4 and has four actual pass-volume games in the cache.",
-          "risk": "New England\u2019s lower passing allowance, a run-heavy LV plan, or an early lead can hold Cousins below the line.",
-          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:03+00:00",
+          "why": "The last three verified passing totals exceeded 231.5, with corrected official attempts of 30, 29, 33 and 52 across the four games. The case is sustained starting-QB volume, not relief appearances. Verified recent results: 30/160, 29/253, 33/248, 52/365 passing.",
+          "risk": "New England\u2019s lower passing allowance and Las Vegas receiving absences are counterarguments; an ordinary low-efficiency game can stay under.",
+          "condition": "Verify current role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "Correct the published attempts from 30/31/38/53 to 30/29/33/52. Passing yards and the 3-of-4 yardage statement are accurate. Remove unverified score-gap counts unless separately reproduced.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/raiders-vs-patriots-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:02:09+00:00",
+              "modified_at": "2026-10-09T03:27:03+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872986:LV:Kirk Cousins:Passing yards:231.5"
+            }
+          ],
+          "verified_stat_context": "30/160, 29/253, 33/248, 52/365 passing."
         }
       ],
       "conditional_props": [],
@@ -7932,38 +8215,45 @@
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "LV +160 / NE -192",
+          "line": "LV +160 \u00b7 NE -192",
           "price": null,
-          "reason": "Jeanty is listed questionable with an ankle injury; that uncertainty affects the whole LV game script.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.526831Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Jeanty is listed questionable with an ankle injury; that uncertainty affects the whole LV game script."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "LV +3.5 (-112) / NE -3.5 (-108)",
-          "price": null,
-          "reason": "Same Jeanty uncertainty plus no calibrated margin forecast.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "LV +3.5 \u00b7 NE -3.5",
+          "price": "LV -112 \u00b7 NE -108",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.526831Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Same Jeanty uncertainty plus no calibrated margin forecast."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "45.5 (O -105 / U -115)",
-          "price": null,
-          "reason": "Cousins\u2019 volume supports one prop, not a game-total conclusion.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 45.5 \u00b7 Under 45.5",
+          "price": "Over -105 \u00b7 Under -115",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.526831Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Cousins\u2019 volume supports one prop, not a game-total conclusion."
         }
       ],
       "limitations": [
         "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -9081,47 +9371,66 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "MIN -130 / NO +110",
+        "line": "MIN -130 \u00b7 NO +110",
         "price": null,
-        "reason": "MIN\u2019s line injuries\u2014Christian Darrisaw OUT and Brian O\u2019Neill/Michael Jurgens questionable\u2014make side exposure more fragile than the NO passing props.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "MIN\u2019s line injuries\u2014Christian Darrisaw OUT and Brian O\u2019Neill/Michael Jurgens questionable\u2014make side exposure more fragile than the NO passing props."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "MIN -2.5 (-105) / NO +2.5 (-115)",
-        "price": null,
-        "reason": "The same offensive-line uncertainty prevents a defendable margin call.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "MIN -2.5 \u00b7 NO +2.5",
+        "price": "MIN -105 \u00b7 NO -115",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The same offensive-line uncertainty prevents a defendable margin call."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "41.5 (O -108 / U -112)",
-        "price": null,
-        "reason": "The pair of NO volume ideas is correlated with a pass-heavy Saints script; no joint/game-total price is available.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -108 \u00b7 Under -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The pair of NO volume ideas is correlated with a pass-heavy Saints script; no joint/game-total price is available."
       }
     ],
     "analyst_review": {
       "best_selection": {
         "selection": "Chris Olave OVER 81.5 receiving yards (DraftKings -113)",
-        "book": null,
-        "price": null,
+        "book": "DraftKings",
+        "price": -113,
         "quote": null,
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": null,
-        "risk": null,
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:27:07+00:00",
+        "why": "The four verified games each supplied at least ten targets. That repeated receiving workload is the reason to consider the over\u2014not simply the four successful historical yardage outcomes. Verified recent results: 13/10/182, 10/8/86, 13/9/107, 12/8/116 targets/receptions/yards.",
+        "risk": "The 81.5-yard threshold still requires a productive day; concentrated coverage or a lower passing-volume game can beat it.",
+        "condition": "Verify active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "The full-game lines and 10-plus targets are accurate. The 4-for-4 is descriptive, not calibrated; retain target-volume evidence and remove the unverified score-gap yardage split unless separately reproduced.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/vikings-vs-saints-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:02:32+00:00",
+            "modified_at": "2026-10-09T03:27:07+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872987:NO:Chris Olave:Receiving yards:81.5"
+          }
+        ],
+        "verified_stat_context": "13/10/182, 10/8/86, 13/9/107, 12/8/116 targets/receptions/yards."
       },
       "recommended_props": [
         {
@@ -9129,65 +9438,98 @@
           "book": "DraftKings",
           "price": -113,
           "quote": null,
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "Targets/receptions/yards: 13/10/182, 10/8/86, 13/9/107, 12/8/116. He cleared 81.5 in all four and has 10+ targets every week.",
-          "risk": "Minnesota can concentrate coverage on Olave; the required 82 yards leaves limited room for a lower-efficiency target day.",
-          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:07+00:00",
+          "why": "The four verified games each supplied at least ten targets. That repeated receiving workload is the reason to consider the over\u2014not simply the four successful historical yardage outcomes. Verified recent results: 13/10/182, 10/8/86, 13/9/107, 12/8/116 targets/receptions/yards.",
+          "risk": "The 81.5-yard threshold still requires a productive day; concentrated coverage or a lower passing-volume game can beat it.",
+          "condition": "Verify active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
-        },
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "The full-game lines and 10-plus targets are accurate. The 4-for-4 is descriptive, not calibrated; retain target-volume evidence and remove the unverified score-gap yardage split unless separately reproduced.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/vikings-vs-saints-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:02:32+00:00",
+              "modified_at": "2026-10-09T03:27:07+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872987:NO:Chris Olave:Receiving yards:81.5"
+            }
+          ],
+          "verified_stat_context": "13/10/182, 10/8/86, 13/9/107, 12/8/116 targets/receptions/yards."
+        }
+      ],
+      "conditional_props": [
         {
           "selection": "Tyler Shough OVER 235.5 passing yards (DraftKings -111)",
           "book": "DraftKings",
           "price": -111,
           "quote": null,
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "Pass attempts/yards: 62/410, 37/252, 44/255, 50/286. He cleared 235.5 in all four and attempted at least 37 passes each time.",
-          "risk": "A pressure-driven efficiency drop or a Saints lead that removes late volume is the direct failure path.",
-          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
-          "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:07+00:00",
+          "why": "56/410, 34/252, 42/255, 48/286 passing.",
+          "risk": "Correct the displayed attempts from 62/37/44/50 to 56/34/42/48. Yardage is accurate, but a four-game clear rate plus stale price does not justify release; require a documented current-role/matchup countercase and live reprice.",
+          "condition": "Verify current starter status and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
+          "status": "conditional_recheck_required",
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Correct the displayed attempts from 62/37/44/50 to 56/34/42/48. Yardage is accurate, but a four-game clear rate plus stale price does not justify release; require a documented current-role/matchup countercase and live reprice.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/vikings-vs-saints-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:02:32+00:00",
+              "modified_at": "2026-10-09T03:27:07+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872987:NO:Tyler Shough:Passing yards:235.5"
+            }
+          ]
         }
       ],
-      "conditional_props": [],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "MIN -130 / NO +110",
+          "line": "MIN -130 \u00b7 NO +110",
           "price": null,
-          "reason": "MIN\u2019s line injuries\u2014Christian Darrisaw OUT and Brian O\u2019Neill/Michael Jurgens questionable\u2014make side exposure more fragile than the NO passing props.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.694736Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "MIN\u2019s line injuries\u2014Christian Darrisaw OUT and Brian O\u2019Neill/Michael Jurgens questionable\u2014make side exposure more fragile than the NO passing props."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "MIN -2.5 (-105) / NO +2.5 (-115)",
-          "price": null,
-          "reason": "The same offensive-line uncertainty prevents a defendable margin call.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "MIN -2.5 \u00b7 NO +2.5",
+          "price": "MIN -105 \u00b7 NO -115",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.694736Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The same offensive-line uncertainty prevents a defendable margin call."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "41.5 (O -108 / U -112)",
-          "price": null,
-          "reason": "The pair of NO volume ideas is correlated with a pass-heavy Saints script; no joint/game-total price is available.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 41.5 \u00b7 Under 41.5",
+          "price": "Over -108 \u00b7 Under -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:24.694736Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The pair of NO volume ideas is correlated with a pass-heavy Saints script; no joint/game-total price is available."
         }
       ],
       "limitations": [
         "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -10536,47 +10878,66 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "NYG +145 / WSH -175",
+        "line": "NYG +145 \u00b7 WSH -175",
         "price": null,
-        "reason": "NYG\u2019s Jaxson Dart is on IR and Washington lists Terry McLaurin questionable; the price does not compensate for unresolved offensive roles.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "NYG\u2019s Jaxson Dart is on IR and Washington lists Terry McLaurin questionable; the price does not compensate for unresolved offensive roles."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "NYG +3.5 (-108) / WSH -3.5 (-112)",
-        "price": null,
-        "reason": "No validated margin distribution, and the quarterback/receiver availability context is unsettled.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "NYG +3.5 \u00b7 WSH -3.5",
+        "price": "NYG -108 \u00b7 WSH -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "No validated margin distribution, and the quarterback/receiver availability context is unsettled."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "41.5 (O -115 / U -105)",
-        "price": null,
-        "reason": "The player calls point to different scripts; no total is supported.",
-        "captured_at": null,
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The player calls point to different scripts; no total is supported."
       }
     ],
     "analyst_review": {
       "best_selection": {
         "selection": "Cam Skattebo OVER 55.5 rushing yards (DraftKings -113)",
-        "book": null,
-        "price": null,
+        "book": "DraftKings",
+        "price": -113,
         "quote": null,
-        "captured_at": null,
-        "provider_updated_at": null,
-        "why": null,
-        "risk": null,
-        "condition": null,
+        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "provider_updated_at": "2026-10-09T03:27:18+00:00",
+        "why": "He received at least 18 carries in three verified games and exceeded 55.5 yards in those three. This is a workload-based candidate with limited margin in the 58- and 60-yard games. Verified recent results: 18/81, 12/36, 20/60, 18/58 rushing.",
+        "risk": "A Washington lead can reduce rushing opportunities; the 12-carry game produced only 36 yards.",
+        "condition": "Verify active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "Full-game statistics are accurate. Keep the documented low-volume countercase; remove score-gap split from public copy unless separately audited.",
+        "sources": [
+          {
+            "url": "https://legionreport.com/giants-vs-commanders-player-props/",
+            "title": "Legion Report player-props page",
+            "published_at": "2026-10-09T01:01:49+00:00",
+            "modified_at": "2026-10-09T03:27:18+00:00",
+            "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+            "source_row_id": "401872988:NYG:Cam Skattebo:Rushing yards:55.5"
+          }
+        ],
+        "verified_stat_context": "18/81, 12/36, 20/60, 18/58 rushing."
       },
       "recommended_props": [
         {
@@ -10584,16 +10945,72 @@
           "book": "DraftKings",
           "price": -113,
           "quote": null,
-          "captured_at": null,
-          "provider_updated_at": null,
-          "why": "Rush attempts/yards: 18/81, 12/36, 20/60, 18/58. He cleared 55.5 in 3 of 4 and logged 18+ carries in three games.",
-          "risk": "Washington can force NYG into catch-up mode, and the one low-volume game fell well short.",
-          "condition": "Use only if the exact line and price are still available on the named book at bet time. This captured secondary quote was retrieved 2026-10-10T17:26:29Z and provider-updated 2026-10-09.",
+          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "provider_updated_at": "2026-10-09T03:27:18+00:00",
+          "why": "He received at least 18 carries in three verified games and exceeded 55.5 yards in those three. This is a workload-based candidate with limited margin in the 58- and 60-yard games. Verified recent results: 18/81, 12/36, 20/60, 18/58 rushing.",
+          "risk": "A Washington lead can reduce rushing opportunities; the 12-carry game produced only 36 yards.",
+          "condition": "Verify active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "Full-game statistics are accurate. Keep the documented low-volume countercase; remove score-gap split from public copy unless separately audited.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/giants-vs-commanders-player-props/",
+              "title": "Legion Report player-props page",
+              "published_at": "2026-10-09T01:01:49+00:00",
+              "modified_at": "2026-10-09T03:27:18+00:00",
+              "retrieved_at": "2026-10-10T17:26:29.114999+00:00",
+              "source_row_id": "401872988:NYG:Cam Skattebo:Rushing yards:55.5"
+            }
+          ],
+          "verified_stat_context": "18/81, 12/36, 20/60, 18/58 rushing."
         }
       ],
-      "conditional_props": [
+      "conditional_props": [],
+      "game_markets": [
+        {
+          "market": "moneyline",
+          "decision": "PASS",
+          "line": "NYG +145 \u00b7 WSH -175",
+          "price": null,
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.073727Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "NYG\u2019s Jaxson Dart is on IR and Washington lists Terry McLaurin questionable; the price does not compensate for unresolved offensive roles."
+        },
+        {
+          "market": "spread",
+          "decision": "PASS",
+          "line": "NYG +3.5 \u00b7 WSH -3.5",
+          "price": "NYG -108 \u00b7 WSH -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.073727Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "No validated margin distribution, and the quarterback/receiver availability context is unsettled."
+        },
+        {
+          "market": "total",
+          "decision": "PASS",
+          "line": "Over 41.5 \u00b7 Under 41.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.073727Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The player calls point to different scripts; no total is supported."
+        }
+      ],
+      "limitations": [
+        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
+      ],
+      "analyst_review": true,
+      "rejected_after_verification": [
         {
           "selection": "Jayden Daniels UNDER 193.5 passing yards (FanDuel -114)",
           "book": "FanDuel",
@@ -10605,45 +11022,11 @@
           "risk": "A fully healthy Daniels, a higher New York scoring response, or a late catch-up script can make 194 passing yards attainable.",
           "condition": "Captured secondary quote retrieved 2026-10-10T17:26:29Z; provider-updated 2026-10-09.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "REJECT",
+          "verification_note": "This is an identity/team-join contamination, not an availability caveat. Remove the four-game narrative and the selection; rebuild only from verified Washington player IDs and a current starter confirmation."
         }
-      ],
-      "game_markets": [
-        {
-          "market": "moneyline",
-          "decision": "PASS",
-          "line": "NYG +145 / WSH -175",
-          "price": null,
-          "reason": "NYG\u2019s Jaxson Dart is on IR and Washington lists Terry McLaurin questionable; the price does not compensate for unresolved offensive roles.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
-        },
-        {
-          "market": "spread",
-          "decision": "PASS",
-          "line": "NYG +3.5 (-108) / WSH -3.5 (-112)",
-          "price": null,
-          "reason": "No validated margin distribution, and the quarterback/receiver availability context is unsettled.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
-        },
-        {
-          "market": "total",
-          "decision": "PASS",
-          "line": "41.5 (O -115 / U -105)",
-          "price": null,
-          "reason": "The player calls point to different scripts; no total is supported.",
-          "captured_at": null,
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
-        }
-      ],
-      "limitations": [
-        "ANALYST_SELECTIONS_CONDITIONAL_ON_EXACT_PRICE_RECHECK; no calibrated or model-approved profitability claim."
-      ],
-      "analyst_review": true
+      ]
     },
     "unreviewed_model_picks": [
       {
@@ -11431,32 +11814,38 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "DraftKings -192 DEN / +160 LAC",
+        "line": "DEN -192 \u00b7 LAC +160",
         "price": null,
-        "reason": "The moneyline premium on Denver is too steep for a low-total road game.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The moneyline premium on Denver is too steep for a low-total road game."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "DEN -3.5 -108 / LAC +3.5 -112",
-        "price": null,
-        "reason": "The listed market moved from LAC -2.5 at open to DEN -3.5; the saved sources do not establish the reason for that seven-point flip.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "DEN -3.5 \u00b7 LAC +3.5",
+        "price": "DEN -108 \u00b7 LAC -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The current listed spread is DEN -3.5. The available evidence does not establish a cover edge; no unsupported opener-move explanation is used."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Under 41.5 -105 / over 41.5 -115",
-        "price": null,
-        "reason": "Low total supports the Nix-volume hypothesis but Denver secondary absences are material counterevidence.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Low total supports the Nix-volume hypothesis but Denver secondary absences are material counterevidence."
       }
     ],
     "analyst_review": {
@@ -11465,13 +11854,22 @@
         "book": "DraftKings",
         "price": -112,
         "quote": null,
-        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "captured_at": "2026-10-10T16:13:21.234510+00:00",
         "provider_updated_at": null,
-        "why": "Nix recorded 131, 288, 186 and 214 passing yards in the four saved recent games; three were below 220.5. The 41.5 total constrains the median-volume case.",
-        "risk": "Denver can be forced into a pass-heavy chase, and Denver is without CB Pat Surtain II, which can make an up-tempo response more likely.",
-        "condition": null,
+        "why": "Three of the four verified passing totals were below 220.5. A lower-scoring game would support the under, but that game script is a hypothesis rather than a calibrated probability. Verified recent results: 131, 288, 186, 214 passing yards.",
+        "risk": "Denver\u2019s secondary absences could force a higher-volume response; Nix also had a 288-yard game in this sample.",
+        "condition": "Nix has four official prior full-game boxes; verify active status and live quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "No statistical correction. Denver's official snapshot lists Pat Surtain II OUT; preserve that as a failure-case context rather than evidence of a quantified passing-yards edge.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
+          }
+        ],
+        "verified_stat_context": "131, 288, 186, 214 passing yards."
       },
       "recommended_props": [
         {
@@ -11479,13 +11877,22 @@
           "book": "DraftKings",
           "price": -112,
           "quote": null,
-          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "captured_at": "2026-10-10T16:13:21.234510+00:00",
           "provider_updated_at": null,
-          "why": "Nix recorded 131, 288, 186 and 214 passing yards in the four saved recent games; three were below 220.5. The 41.5 total constrains the median-volume case.",
-          "risk": "Denver can be forced into a pass-heavy chase, and Denver is without CB Pat Surtain II, which can make an up-tempo response more likely.",
-          "condition": null,
+          "why": "Three of the four verified passing totals were below 220.5. A lower-scoring game would support the under, but that game script is a hypothesis rather than a calibrated probability. Verified recent results: 131, 288, 186, 214 passing yards.",
+          "risk": "Denver\u2019s secondary absences could force a higher-volume response; Nix also had a 288-yard game in this sample.",
+          "condition": "Nix has four official prior full-game boxes; verify active status and live quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "No statistical correction. Denver's official snapshot lists Pat Surtain II OUT; preserve that as a failure-case context rather than evidence of a quantified passing-yards edge.",
+          "sources": [
+            {
+              "title": "Secondary published listing",
+              "url": "https://legionreport.com/broncos-vs-chargers-player-props/"
+            }
+          ],
+          "verified_stat_context": "131, 288, 186, 214 passing yards."
         }
       ],
       "conditional_props": [],
@@ -11493,38 +11900,45 @@
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "DraftKings -192 DEN / +160 LAC",
+          "line": "DEN -192 \u00b7 LAC +160",
           "price": null,
-          "reason": "The moneyline premium on Denver is too steep for a low-total road game.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.214208Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The moneyline premium on Denver is too steep for a low-total road game."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "DEN -3.5 -108 / LAC +3.5 -112",
-          "price": null,
-          "reason": "The listed market moved from LAC -2.5 at open to DEN -3.5; the saved sources do not establish the reason for that seven-point flip.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "DEN -3.5 \u00b7 LAC +3.5",
+          "price": "DEN -108 \u00b7 LAC -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.214208Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The current listed spread is DEN -3.5. The available evidence does not establish a cover edge; no unsupported opener-move explanation is used."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Under 41.5 -105 / over 41.5 -115",
-          "price": null,
-          "reason": "Low total supports the Nix-volume hypothesis but Denver secondary absences are material counterevidence.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 41.5 \u00b7 Under 41.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.214208Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Low total supports the Nix-volume hypothesis but Denver secondary absences are material counterevidence."
         }
       ],
       "limitations": [
         "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -12444,46 +12858,46 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "DET -258 / ARI +210",
+        "line": "DET -258 \u00b7 ARI +210",
         "price": null,
-        "reason": "Detroit is the side lean, but -258 is not the preferred risk/reward.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Detroit is the side lean, but -258 is not the preferred risk/reward."
       },
       {
         "market": "spread",
-        "decision": "SELECT \u2014 DET -5.5",
-        "line": "DraftKings",
-        "price": "-108",
-        "reason": "Role/news advantage is clearer than any single prop after Harrison\u2019s OUT designation.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "decision": "PASS",
+        "line": "DET -5.5 \u00b7 ARI +5.5",
+        "price": "DET -108 \u00b7 ARI -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "HOLD \u2014 the listed spread is verified, but the reviewed personnel facts alone do not establish sufficient support for a selection."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Over 54.5 -115 / under 54.5 -105",
-        "price": null,
-        "reason": "Detroit secondary absences and Harrison\u2019s absence pull the total in opposite directions.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 54.5 \u00b7 Under 54.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Detroit secondary absences and Harrison\u2019s absence pull the total in opposite directions."
       }
     ],
     "analyst_review": {
       "best_selection": {
-        "selection": "Detroit Lions -5.5",
-        "book": "DraftKings",
-        "price": -108,
-        "quote": null,
-        "captured_at": "2026-10-11T03:17:52Z",
-        "provider_updated_at": null,
-        "why": "Arizona lists Marvin Harrison Jr. OUT while Detroit\u2019s passing game has Jared Goff at 9 TD through four games. Arizona\u2019s own secondary injury list includes Andrew Wingard OUT.",
-        "risk": "Detroit has Brian Branch and Rock Ya-Sin OUT, while a 54.5 total gives Jacoby Brissett a plausible volume path.",
-        "condition": null,
-        "status": "manual_candidate_recheck_required",
+        "selection": "PASS \u2014 pending stronger support / role confirmation",
+        "status": "pass_pending_status",
+        "why": "No selection cleared the independent review for this game. See conditional ideas below; they are not ready-to-bet recommendations.",
+        "risk": null,
         "analyst_review": true
       },
       "recommended_props": [],
@@ -12493,51 +12907,81 @@
           "book": "BetMGM",
           "price": -115,
           "quote": null,
-          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "captured_at": "2026-10-10T16:13:21.263506+00:00",
           "provider_updated_at": null,
-          "why": "Saved recent yardage is 95, 41, 75 and 31; three are under 81.5.",
-          "risk": "Harrison being OUT can consolidate Arizona targets toward McBride, which is exactly why this is not a recommendation.",
-          "condition": null,
+          "why": "95, 41, 75, 31 receiving yards.",
+          "risk": "The historical yardage claim is correct. Arizona lists Marvin Harrison Jr. OUT, so target consolidation toward McBride is a real countercase; do not promote this under from a 3-of-4 count.",
+          "condition": "Verify active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "The historical yardage claim is correct. Arizona lists Marvin Harrison Jr. OUT, so target consolidation toward McBride is a real countercase; do not promote this under from a 3-of-4 count.",
+          "sources": [
+            {
+              "title": "Secondary published listing",
+              "url": "https://legionreport.com/lions-vs-cardinals-player-props/"
+            }
+          ]
+        },
+        {
+          "selection": "Detroit Lions -5.5",
+          "book": "DraftKings",
+          "price": -108,
+          "quote": null,
+          "captured_at": "2026-10-11T03:17:52Z",
+          "provider_updated_at": null,
+          "why": "Not a player-stat selection.",
+          "risk": "Current official ESPN pickcenter matches DET -5.5 (-108); Marvin Harrison Jr. OUT, Andrew Wingard OUT, Brian Branch OUT, and Rock Ya-Sin OUT are also supported by the captured ESPN snapshot. Those facts alone do not create a validated cover distribution. Keep as PASS/HOLD, not a website pick.",
+          "condition": "Recheck actives and a real book betslip; ESPN listed close is not execution verification. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
+          "status": "conditional_recheck_required",
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Current official ESPN pickcenter matches DET -5.5 (-108); Marvin Harrison Jr. OUT, Andrew Wingard OUT, Brian Branch OUT, and Rock Ya-Sin OUT are also supported by the captured ESPN snapshot. Those facts alone do not create a validated cover distribution. Keep as PASS/HOLD, not a website pick."
         }
       ],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "DET -258 / ARI +210",
+          "line": "DET -258 \u00b7 ARI +210",
           "price": null,
-          "reason": "Detroit is the side lean, but -258 is not the preferred risk/reward.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.372567Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Detroit is the side lean, but -258 is not the preferred risk/reward."
         },
         {
           "market": "spread",
-          "decision": "SELECT \u2014 DET -5.5",
-          "line": "DraftKings",
-          "price": "-108",
-          "reason": "Role/news advantage is clearer than any single prop after Harrison\u2019s OUT designation.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "decision": "PASS",
+          "line": "DET -5.5 \u00b7 ARI +5.5",
+          "price": "DET -108 \u00b7 ARI -112",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.372567Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "HOLD \u2014 the listed spread is verified, but the reviewed personnel facts alone do not establish sufficient support for a selection."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Over 54.5 -115 / under 54.5 -105",
-          "price": null,
-          "reason": "Detroit secondary absences and Harrison\u2019s absence pull the total in opposite directions.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 54.5 \u00b7 Under 54.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.372567Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Detroit secondary absences and Harrison\u2019s absence pull the total in opposite directions."
         }
       ],
       "limitations": [
         "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -13643,32 +14087,38 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "SF +136 / SEA -162",
+        "line": "SF +136 \u00b7 SEA -162",
         "price": null,
-        "reason": "Seattle is favored, but the market charge does not offer enough support beyond the prop-specific case.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Seattle is favored, but the market charge does not offer enough support beyond the prop-specific case."
       },
       {
         "market": "spread",
         "decision": "PASS",
-        "line": "SF +3 -110 / SEA -3 -110",
-        "price": null,
-        "reason": "Seattle RB availability is unsettled: Zach Charbonnet OUT and George Holani Questionable.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "SF +3 \u00b7 SEA -3",
+        "price": "SF -110 \u00b7 SEA -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Seattle RB availability is unsettled: Zach Charbonnet OUT and George Holani Questionable."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Over 45.5 -115 / under 45.5 -105",
-        "price": null,
-        "reason": "The Bosa absence lifts Seattle\u2019s ceiling, but Seattle\u2019s backfield uncertainty makes the overall script unclear.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 45.5 \u00b7 Under 45.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The Bosa absence lifts Seattle\u2019s ceiling, but Seattle\u2019s backfield uncertainty makes the overall script unclear."
       }
     ],
     "analyst_review": {
@@ -13677,13 +14127,22 @@
         "book": "FanDuel",
         "price": -114,
         "quote": null,
-        "captured_at": "2026-10-10T17:26:29.114999+00:00",
+        "captured_at": "2026-10-10T16:13:21.281144+00:00",
         "provider_updated_at": null,
-        "why": "JSN posted 122, 155, 128 and 76 receiving yards in the four saved games and leads Seattle with 32 catches and 6 TDs in ESPN\u2019s current summary. San Francisco lists Nick Bosa OUT and Marques Sigle OUT.",
-        "risk": "94.5 is a high threshold; a Seattle lead or a coverage adjustment can divert targets to Kupp, Barner or the backs.",
-        "condition": null,
+        "why": "His verified recent production supports reviewing this receiving over, while the reported San Francisco defensive absences provide matchup context. Neither alone proves an edge at this price. Verified recent results: 122, 155, 128, 76 receiving yards; 32 receptions and 6 TDs through four games.",
+        "risk": "The 94.5-yard line is high; fewer targets or Seattle controlling the game on the ground can defeat it.",
+        "condition": "Verify current active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
         "status": "manual_candidate_recheck_required",
-        "analyst_review": true
+        "analyst_review": true,
+        "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+        "verification_note": "No statistical correction. Nick Bosa OUT and Marques Sigle OUT are supported by the captured ESPN snapshot, but the 94.5 threshold remains high; do not convert four-game production into a calibrated probability.",
+        "sources": [
+          {
+            "title": "Secondary published listing",
+            "url": "https://legionreport.com/49ers-vs-seahawks/"
+          }
+        ],
+        "verified_stat_context": "122, 155, 128, 76 receiving yards; 32 receptions and 6 TDs through four games."
       },
       "recommended_props": [
         {
@@ -13691,13 +14150,22 @@
           "book": "FanDuel",
           "price": -114,
           "quote": null,
-          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "captured_at": "2026-10-10T16:13:21.281144+00:00",
           "provider_updated_at": null,
-          "why": "JSN posted 122, 155, 128 and 76 receiving yards in the four saved games and leads Seattle with 32 catches and 6 TDs in ESPN\u2019s current summary. San Francisco lists Nick Bosa OUT and Marques Sigle OUT.",
-          "risk": "94.5 is a high threshold; a Seattle lead or a coverage adjustment can divert targets to Kupp, Barner or the backs.",
-          "condition": null,
+          "why": "His verified recent production supports reviewing this receiving over, while the reported San Francisco defensive absences provide matchup context. Neither alone proves an edge at this price. Verified recent results: 122, 155, 128, 76 receiving yards; 32 receptions and 6 TDs through four games.",
+          "risk": "The 94.5-yard line is high; fewer targets or Seattle controlling the game on the ground can defeat it.",
+          "condition": "Verify current active role and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "manual_candidate_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "ACCEPT_AS_CONDITIONAL_ANALYST",
+          "verification_note": "No statistical correction. Nick Bosa OUT and Marques Sigle OUT are supported by the captured ESPN snapshot, but the 94.5 threshold remains high; do not convert four-game production into a calibrated probability.",
+          "sources": [
+            {
+              "title": "Secondary published listing",
+              "url": "https://legionreport.com/49ers-vs-seahawks/"
+            }
+          ],
+          "verified_stat_context": "122, 155, 128, 76 receiving yards; 32 receptions and 6 TDs through four games."
         }
       ],
       "conditional_props": [],
@@ -13705,38 +14173,45 @@
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "SF +136 / SEA -162",
+          "line": "SF +136 \u00b7 SEA -162",
           "price": null,
-          "reason": "Seattle is favored, but the market charge does not offer enough support beyond the prop-specific case.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.485040Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Seattle is favored, but the market charge does not offer enough support beyond the prop-specific case."
         },
         {
           "market": "spread",
           "decision": "PASS",
-          "line": "SF +3 -110 / SEA -3 -110",
-          "price": null,
-          "reason": "Seattle RB availability is unsettled: Zach Charbonnet OUT and George Holani Questionable.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "SF +3 \u00b7 SEA -3",
+          "price": "SF -110 \u00b7 SEA -110",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.485040Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Seattle RB availability is unsettled: Zach Charbonnet OUT and George Holani Questionable."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Over 45.5 -115 / under 45.5 -105",
-          "price": null,
-          "reason": "The Bosa absence lifts Seattle\u2019s ceiling, but Seattle\u2019s backfield uncertainty makes the overall script unclear.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 45.5 \u00b7 Under 45.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.485040Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The Bosa absence lifts Seattle\u2019s ceiling, but Seattle\u2019s backfield uncertainty makes the overall script unclear."
         }
       ],
       "limitations": [
         "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -14644,46 +15119,46 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "BAL +145 / ATL -175",
+        "line": "BAL +145 \u00b7 ATL -175",
         "price": null,
-        "reason": "Do not price Baltimore\u2019s win chance without resolved quarterback status.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
       },
       {
         "market": "spread",
-        "decision": "CONDITIONAL \u2014 ATL -3",
-        "line": "DraftKings",
-        "price": "-122",
-        "reason": "Only consider if Tyler Huntley is formally confirmed as Baltimore\u2019s starter and the listed price remains available.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "decision": "PASS",
+        "line": "BAL +3 \u00b7 ATL -3",
+        "price": "BAL +102 \u00b7 ATL -122",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Over/under 43.5 -110",
-        "price": null,
-        "reason": "Quarterback ambiguity dominates a modest total.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -110 \u00b7 Under -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
       }
     ],
     "analyst_review": {
       "best_selection": {
-        "selection": "PASS \u2014 no pregame selection",
-        "book": null,
-        "price": null,
-        "quote": null,
-        "captured_at": "2026-10-11T03:17:52Z",
-        "provider_updated_at": null,
-        "why": "The captured named QB offer is Tyler Huntley, while ESPN\u2019s season leader is Lamar Jackson and the saved injury list does not resolve the actual starter. That is a material role conflict for every Baltimore volume and game-side thesis.",
-        "risk": "A late starter confirmation changes both Baltimore\u2019s pass distribution and Atlanta\u2019s expected game script.",
-        "condition": null,
+        "selection": "PASS \u2014 pending stronger support / role confirmation",
         "status": "pass_pending_status",
+        "why": "No selection cleared the independent review for this game. See conditional ideas below; they are not ready-to-bet recommendations.",
+        "risk": null,
         "analyst_review": true
       },
       "recommended_props": [],
@@ -14692,38 +15167,45 @@
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "BAL +145 / ATL -175",
+          "line": "BAL +145 \u00b7 ATL -175",
           "price": null,
-          "reason": "Do not price Baltimore\u2019s win chance without resolved quarterback status.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.650429Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
         },
         {
           "market": "spread",
-          "decision": "CONDITIONAL \u2014 ATL -3",
-          "line": "DraftKings",
-          "price": "-122",
-          "reason": "Only consider if Tyler Huntley is formally confirmed as Baltimore\u2019s starter and the listed price remains available.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "decision": "PASS",
+          "line": "BAL +3 \u00b7 ATL -3",
+          "price": "BAL +102 \u00b7 ATL -122",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.650429Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Over/under 43.5 -110",
-          "price": null,
-          "reason": "Quarterback ambiguity dominates a modest total.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 43.5 \u00b7 Under 43.5",
+          "price": "Over -110 \u00b7 Under -110",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.650429Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Baltimore starting-quarterback confirmation is unresolved in the reviewed sources. A season passing leader or a captured player market does not establish the starter."
         }
       ],
       "limitations": [
         "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {
@@ -15977,46 +16459,46 @@
       {
         "market": "moneyline",
         "decision": "PASS",
-        "line": "BUF +150 / LAR -180",
+        "line": "BUF +150 \u00b7 LAR -180",
         "price": null,
-        "reason": "The spread is preferred to laying -180.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "The spread is preferred to laying -180."
       },
       {
         "market": "spread",
-        "decision": "SELECT \u2014 LAR -3.5",
-        "line": "DraftKings",
-        "price": "-105",
-        "reason": "Home favorite plus Buffalo interior defensive absence is the cleaner game-side hypothesis.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "decision": "PASS",
+        "line": "BUF +3.5 \u00b7 LAR -3.5",
+        "price": "BUF -115 \u00b7 LAR -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "HOLD \u2014 the listed spread is verified, but the reviewed personnel facts alone do not establish sufficient support for a selection."
       },
       {
         "market": "total",
         "decision": "PASS",
-        "line": "Over 54.5 -115 / under 54.5 -105",
-        "price": null,
-        "reason": "Both offenses carry enough intact high-end roles to make a total direction less clean than the side.",
-        "captured_at": "2026-10-11T03:17:52Z",
-        "source_state": "manual review; exact price recheck required",
-        "provider": null
+        "line": "Over 54.5 \u00b7 Under 54.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+        "reason": "Both offenses carry enough intact high-end roles to make a total direction less clean than the side."
       }
     ],
     "analyst_review": {
       "best_selection": {
-        "selection": "Los Angeles Rams -3.5",
-        "book": "DraftKings",
-        "price": -105,
-        "quote": null,
-        "captured_at": "2026-10-11T03:17:52Z",
-        "provider_updated_at": null,
-        "why": "Los Angeles is at home and Buffalo lists Ed Oliver OUT. The Rams\u2019 core roles are intact in ESPN\u2019s summary: Stafford, Kyren Williams and Davante Adams are the team leaders at their positions.",
-        "risk": "Buffalo\u2019s Allen/Cook/Kincaid core is also intact, and 54.5 implies a high-variance scoring environment where a backdoor cover is live.",
-        "condition": null,
-        "status": "manual_candidate_recheck_required",
+        "selection": "PASS \u2014 pending stronger support / role confirmation",
+        "status": "pass_pending_status",
+        "why": "No selection cleared the independent review for this game. See conditional ideas below; they are not ready-to-bet recommendations.",
+        "risk": null,
         "analyst_review": true
       },
       "recommended_props": [],
@@ -16026,51 +16508,83 @@
           "book": "DraftKings",
           "price": -104,
           "quote": null,
-          "captured_at": "2026-10-10T17:26:29.114999+00:00",
+          "captured_at": "2026-10-10T22:48:36.313260+00:00",
           "provider_updated_at": null,
-          "why": "The Rams -3.5 script would be the path to late Buffalo volume, not the base case; this threshold requires an updated role/price check before Monday.",
-          "risk": "Trailing to the Rams is precisely the scenario that destroys an Allen attempt under.",
-          "condition": null,
+          "why": "29, 31, 26, 33 attempts.",
+          "risk": "The stated Rams-favored script does not support an Allen attempts under: a Rams lead is the direct path to Buffalo late passing volume. Rebuild the rationale after live personnel/price confirmation; do not release this as written.",
+          "condition": "Verify Allen role, Monday personnel, and exact quote. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
           "status": "conditional_recheck_required",
-          "analyst_review": true
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "The stated Rams-favored script does not support an Allen attempts under: a Rams lead is the direct path to Buffalo late passing volume. Rebuild the rationale after live personnel/price confirmation; do not release this as written.",
+          "sources": [
+            {
+              "url": "https://legionreport.com/bills-vs-rams-player-props/",
+              "title": "Legion Report player-props page",
+              "retrieved_at": "2026-10-10T22:48:36.313260+00:00",
+              "saved_body_sha256": "6afb9920f533d47481ad3059509381f6da3b14070a8c2385c6cc1f984b9f34af"
+            }
+          ]
+        },
+        {
+          "selection": "Los Angeles Rams -3.5",
+          "book": "DraftKings",
+          "price": -105,
+          "quote": null,
+          "captured_at": "2026-10-11T03:17:52Z",
+          "provider_updated_at": null,
+          "why": "Not a player-stat selection.",
+          "risk": "Current official ESPN pickcenter matches LAR -3.5 (-105), and Ed Oliver is OUT in the captured ESPN snapshot. That is insufficient to assert a cover edge in a 54.5-total game. Keep as PASS/HOLD until an independently justified spread case exists.",
+          "condition": "Monday personnel and executable betslip recheck required. Exact named-book line and price must be rechecked; captured prices are not live-verified.",
+          "status": "conditional_recheck_required",
+          "analyst_review": true,
+          "verification_verdict": "HOLD",
+          "verification_note": "Current official ESPN pickcenter matches LAR -3.5 (-105), and Ed Oliver is OUT in the captured ESPN snapshot. That is insufficient to assert a cover edge in a 54.5-total game. Keep as PASS/HOLD until an independently justified spread case exists."
         }
       ],
       "game_markets": [
         {
           "market": "moneyline",
           "decision": "PASS",
-          "line": "BUF +150 / LAR -180",
+          "line": "BUF +150 \u00b7 LAR -180",
           "price": null,
-          "reason": "The spread is preferred to laying -180.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.790121Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "The spread is preferred to laying -180."
         },
         {
           "market": "spread",
-          "decision": "SELECT \u2014 LAR -3.5",
-          "line": "DraftKings",
-          "price": "-105",
-          "reason": "Home favorite plus Buffalo interior defensive absence is the cleaner game-side hypothesis.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "decision": "PASS",
+          "line": "BUF +3.5 \u00b7 LAR -3.5",
+          "price": "BUF -115 \u00b7 LAR -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.790121Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "HOLD \u2014 the listed spread is verified, but the reviewed personnel facts alone do not establish sufficient support for a selection."
         },
         {
           "market": "total",
           "decision": "PASS",
-          "line": "Over 54.5 -115 / under 54.5 -105",
-          "price": null,
-          "reason": "Both offenses carry enough intact high-end roles to make a total direction less clean than the side.",
-          "captured_at": "2026-10-11T03:17:52Z",
-          "source_state": "manual review; exact price recheck required",
-          "provider": null
+          "line": "Over 54.5 \u00b7 Under 54.5",
+          "price": "Over -115 \u00b7 Under -105",
+          "provider": "DraftKings",
+          "captured_at": "2026-10-11T02:00:25.790121Z",
+          "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+          "source_state": "ESPN listed close; not executable verified",
+          "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote.",
+          "reason": "Both offenses carry enough intact high-end roles to make a total direction less clean than the side."
         }
       ],
       "limitations": [
         "research-only manual analyst review; no validated model-approved or profit-guaranteed edge"
       ],
-      "analyst_review": true
+      "analyst_review": true,
+      "rejected_after_verification": []
     },
     "unreviewed_model_picks": [
       {

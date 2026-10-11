@@ -504,8 +504,8 @@ def _review_item(item, featured=False):
     status = _display_text(item.get("status"))
     conditional = status == "conditional_recheck_required"
     pass_item = status == "pass_pending_status" or selection.upper().startswith("PASS")
-    note = ("PASS — pending named-status resolution; no forced selection." if pass_item else
-            "Conditional — verify stated condition plus exact line, price, and book." if conditional else
+    note = ("PASS — insufficient support or unresolved availability; no forced selection." if pass_item else
+            "HOLD — not a recommendation; resolve the stated concerns and recheck the price." if conditional else
             "Candidate — exact line, price, book, and availability must be rechecked.")
     why = _display_text(item.get("why")); risk = _display_text(item.get("risk")); condition = _display_text(item.get("condition"))
     clock = _display_text(item.get("captured_at"))
@@ -541,12 +541,13 @@ def _reviewed_game_content(card):
     withdrawn = {"malik willis", "bijan robinson"}
     model_cards = [pick for pick in native if _pick_is_displayable(pick)
                    and _display_text(pick.get("player")).casefold() not in withdrawn]
+    model_cards.sort(key=_model_difference_sort_key)
     model = ("<details class='game-model-picks'><summary>Unreviewed model output — includes known workload issues; not recommendations"
              f" ({len(model_cards)})</summary><div class='picks-grid'>"
              + "".join(_pick_card(pick, card, number) for number, pick in enumerate(model_cards, 1)) + "</div></details>") if model_cards else ""
     limits = [text for text in review.get("limitations") or [] if _display_text(text)]
     limitation = ("<p class='model-disclaimer'><b>Review status:</b> " + _e(" ".join(limits)) + "</p>") if limits else ""
-    return featured + _game_header(card) + prop_list + limitation + model
+    return featured + _game_header(card) + prop_list + limitation + model + _forecast_table(card)
 
 
 def _reviewed_summary(cards):

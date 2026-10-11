@@ -333,7 +333,7 @@ def test_reviewed_rendering_leads_with_best_selection_and_keeps_native_output_co
     page = all_props.render_page(payload)
     assert "Best reviewed selection" in page and "Quarterback under 220.5 passing yards" in page
     assert "Candidate — exact line, price, book, and availability must be rechecked." in page
-    assert "Conditional — verify stated condition plus exact line, price, and book." in page
+    assert "HOLD — not a recommendation; resolve the stated concerns and recheck the price." in page
     section = page[page.index("<section class='ap-game'"):]
     assert section.index("Best reviewed selection") < section.index("Game decisions") < section.index("Both-team injury report")
     assert "Unreviewed model output — includes known workload issues; not recommendations" in section
