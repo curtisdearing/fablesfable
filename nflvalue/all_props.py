@@ -494,6 +494,76 @@ def _game_header(card):
             "<div class='injury-grid'>" + "".join(injury_parts) + "</div></section></div>")
 
 
+def _review_quote(item):
+    parts = [part for part in (_display_text(item.get("book")), _signed_odds(item.get("price"))) if part]
+    return " ".join(parts) or _display_text(item.get("quote")) or "No exact listed quote supplied"
+
+
+def _review_item(item, featured=False):
+    selection = _display_text(item.get("selection")) or "PASS"
+    status = _display_text(item.get("status"))
+    conditional = status == "conditional_recheck_required"
+    pass_item = status == "pass_pending_status" or selection.upper().startswith("PASS")
+    note = ("PASS — insufficient support or unresolved availability; no forced selection." if pass_item else
+            "HOLD — not a recommendation; resolve the stated concerns and recheck the price." if conditional else
+            "Candidate — exact line, price, book, and availability must be rechecked.")
+    why = _display_text(item.get("why")); risk = _display_text(item.get("risk")); condition = _display_text(item.get("condition"))
+    clock = _display_text(item.get("captured_at"))
+    title = "Best reviewed selection" if featured else ("Conditional reviewed prop" if conditional else "Reviewed prop")
+    return ("<article class='pick-card reviewed-item'>"
+            f"<h4>{_e(title)}</h4><h3>{_e(selection)}</h3><p class='pick-price'>{_e(_review_quote(item))}</p>"
+            f"<p><b>{_e(note)}</b></p>"
+            + (f"<p><b>Why:</b> {_e(why)}</p>" if why else "")
+            + (f"<p class='pick-risk'><b>Risk:</b> {_e(risk)}</p>" if risk else "")
+            + (f"<p><b>Condition:</b> {_e(condition)}</p>" if condition else "")
+            + (f"<p><b>Captured:</b> {_e(_kickoff(clock))}</p>" if clock else "") + "</article>")
+
+
+def _reviewed_game_content(card):
+    review = card.get("analyst_review") or {}
+    best = review.get("best_selection") if isinstance(review.get("best_selection"), dict) else {}
+    best_selection = _display_text(best.get("selection"))
+    featured = _review_item(best, featured=True)
+    seen = {(best_selection or "").casefold()} if best_selection else set()
+    retained = []
+    for item in list(review.get("recommended_props") or []) + list(review.get("conditional_props") or []):
+        if not isinstance(item, dict):
+            continue
+        selection = _display_text(item.get("selection"))
+        if selection and (selection or "").casefold() in seen:
+            continue
+        if selection:
+            seen.add(selection.casefold())
+        retained.append(_review_item(item))
+    prop_list = ("<section class='reviewed-props'><h4>All retained reviewed props</h4><div class='picks-grid'>"
+                 + "".join(retained) + "</div></section>") if retained else ""
+    native = card.get("unreviewed_model_picks", card.get("picks") or [])
+    withdrawn = {"malik willis", "bijan robinson"}
+    model_cards = [pick for pick in native if _pick_is_displayable(pick)
+                   and _display_text(pick.get("player")).casefold() not in withdrawn]
+    model_cards.sort(key=_model_difference_sort_key)
+    model = ("<details class='game-model-picks'><summary>Unreviewed model output — includes known workload issues; not recommendations"
+             f" ({len(model_cards)})</summary><div class='picks-grid'>"
+             + "".join(_pick_card(pick, card, number) for number, pick in enumerate(model_cards, 1)) + "</div></details>") if model_cards else ""
+    limits = [text for text in review.get("limitations") or [] if _display_text(text)]
+    limitation = ("<p class='model-disclaimer'><b>Review status:</b> " + _e(" ".join(limits)) + "</p>") if limits else ""
+    return featured + _game_header(card) + prop_list + limitation + model + _forecast_table(card)
+
+
+def _reviewed_summary(cards):
+    rows = []
+    for card in cards:
+        if str(card.get("status")).lower() == "completed":
+            label = "Archived"
+        else:
+            review = card.get("analyst_review") or {}
+            best = review.get("best_selection") if isinstance(review.get("best_selection"), dict) else {}
+            label = _display_text(best.get("selection")) or "Review pending"
+        rows.append(f"<li><a href='#game-{_e(card.get('event_id'))}'>{_e(card.get('away'))} at {_e(card.get('home'))}</a> — {_e(label)}</li>")
+    return ("<h2>Best reviewed selection by game</h2><p>Manual analyst review only — candidates and conditionals are not model-approved, calibrated, proven profitable, or executable promises.</p><ul class='review-summary'>"
+            + "".join(rows) + "</ul>")
+
+
 def render_page(payload):
     """Render a picks-first public board; full research remains available as JSON."""
     state = payload.get("state")
@@ -504,6 +574,23 @@ def render_page(payload):
                 f"{_e(payload.get('message') or 'No research payload has been supplied yet.')} "
                 "No player props or picks are shown until separate game_cards.json and market_rows.json "
                 f"pass validation.</p>{detail}")
+    reviewed_board = any(isinstance(card.get("analyst_review"), dict) for card in payload["cards"])
+    if reviewed_board:
+        games = []
+        for card in payload["cards"]:
+            archived = str(card.get("status") or "").lower() == "completed"
+            content = ("<p class='no-pick'><b>Archived — not a prospective pick.</b></p>" if archived else
+                       _reviewed_game_content(card) if isinstance(card.get("analyst_review"), dict) else
+                       _game_header(card) + "<p class='no-pick'>Review pending; no manual selection was supplied.</p>")
+            games.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'>"
+                         f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
+                         f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}</section>")
+        jumps = '<nav class="game-jumps" aria-label="Jump to a game">' + "".join(
+            f'<a href="#game-{_e(card.get("event_id"))}">{_e(card.get("away"))} at {_e(card.get("home"))}</a>'
+            for card in payload["cards"]) + "</nav>"
+        return ("<h1>Week 5 reviewed game selections</h1><p class='board-caveat'>Manual analyst review only. Every quote is a captured candidate or conditional item: recheck exact line, price, named book, player availability, and stated condition before acting. The captured universe is not a claim that all possible props were reviewed.</p>"
+                + _reviewed_summary(payload["cards"]) + "<h2>All games</h2>" + jumps + "".join(games)
+                + "<p class='research-download'><a href='api/all-props.json' download>Download research data (JSON)</a></p>")
     visible = [(card, pick) for card in payload["cards"] if str(card.get("status") or "").lower() != "completed"
                for pick in card.get("picks") or [] if _pick_is_displayable(pick)]
     tiered = bool(visible) and all(_tier(pick) for _card, pick in visible)

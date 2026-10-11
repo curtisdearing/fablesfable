@@ -68,6 +68,99 @@ def source(title, url):
     return {"title": title, "url": url}
 
 
+def _review_text(value):
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _review_quote(item):
+    """Normalize only the reviewer-supplied exact quote fields; never infer juice."""
+    quote = _review_text(item.get("quote"))
+    book = _review_text(item.get("book"))
+    price = item.get("price", item.get("odds"))
+    if quote and (book is None or price is None):
+        match = re.search(r"^(.*?)([+-]\d+)\s*$", quote)
+        if match:
+            book = book or match.group(1).strip() or None
+            price = price if price is not None else int(match.group(2))
+    return book, price, quote
+
+
+def _review_prop(item, conditional=False):
+    item = item if isinstance(item, dict) else {"selection": item}
+    book, price, quote = _review_quote(item)
+    clock = (item.get("quote_clock") or item.get("captured_at") or item.get("retrieved_at")
+             or item.get("provider_updated_at"))
+    return {"selection": _review_text(item.get("selection")) or "Unnamed reviewed item",
+            "book": book, "price": price, "quote": quote,
+            "captured_at": clock, "provider_updated_at": item.get("provider_updated_at"),
+            "why": _review_text(item.get("why")) or _review_text(item.get("reason")),
+            "risk": _review_text(item.get("risk")) or _review_text(item.get("failure_case")),
+            "condition": _review_text(item.get("quote_condition")),
+            "status": "conditional_recheck_required" if conditional else "manual_candidate_recheck_required",
+            "analyst_review": True}
+
+
+def normalize_review_documents(documents):
+    """Normalize completed manual review packets without promoting any native output.
+
+    The source packets intentionally use several schemas.  This adapter retains their
+    authored selection/reason/risk/clock fields and marks every item as a stale-price
+    candidate or conditional item requiring an exact recheck.
+    """
+    normalized = {}
+    for document in documents:
+        if not isinstance(document, dict):
+            raise ValueError("review document must be an object")
+        for game in document.get("games") or []:
+            if not isinstance(game, dict) or not game.get("event_id"):
+                raise ValueError("review game is missing event_id")
+            best = game.get("best_selection")
+            if isinstance(best, str):
+                best = {"selection": best}
+            best = _review_prop(best or {})
+            if best["selection"].upper().startswith("PASS"):
+                best["status"] = "pass_pending_status"
+            decisions = []
+            by_market = {str(d.get("market")).lower(): d for d in game.get("game_decisions") or [] if isinstance(d, dict)}
+            for market in ("moneyline", "spread", "total"):
+                item = by_market.get(market, {})
+                raw_decision = _review_text(item.get("decision")) or "PASS"
+                selection = _review_text(item.get("selection"))
+                decision = raw_decision + (f" — {selection}" if selection else "")
+                _book, price, quote = _review_quote(item)
+                decisions.append({"market": market, "decision": decision,
+                                  "line": _review_text(item.get("listed_quote")) or _review_text(item.get("offered")) or quote,
+                                  "price": str(price) if price is not None else None,
+                                  "reason": _review_text(item.get("reason")),
+                                  "captured_at": item.get("quote_clock"),
+                                  "source_state": "manual review; exact price recheck required",
+                                  "provider": _book})
+            normalized[str(game["event_id"])] = {
+                "best_selection": best,
+                "recommended_props": [_review_prop(item) for item in game.get("recommended_props") or []],
+                "conditional_props": [_review_prop(item, conditional=True) for item in game.get("conditional_props") or []],
+                "game_markets": decisions,
+                "limitations": document.get("important_limitations") or [document.get("execution_status") or document.get("status") or "Manual analyst review; exact price and availability recheck required."],
+                "analyst_review": True,
+            }
+    return normalized
+
+
+def apply_review_to_cards(cards, review_by_event):
+    """Attach only reviewed selections to cards; immutable native forecasts remain audit data."""
+    for card in cards:
+        review = review_by_event.get(str(card.get("event_id")))
+        if not review or str(card.get("status")).lower() == "completed":
+            continue
+        card["analyst_review"] = review
+        card["game_markets"] = review["game_markets"]
+        withdrawn = {"malik willis", "bijan robinson"}
+        card["unreviewed_model_picks"] = [pick for pick in card.get("picks") or []
+                                          if str(pick.get("player") or "").casefold() not in withdrawn]
+        card["picks"] = []  # reviewed rendering reads analyst_review, never native pick arrays
+    return cards
+
+
 LATE_GAME_ANALYSIS = {
     "DEN_LAC": {
         "preview": "The captured DEN–LAC screen covers 79 public secondary-listing rows. It is a player-prop review, not a game forecast: the retained analysis distinguishes role evidence from conversion and does not treat a posted line as value.",
@@ -255,6 +348,27 @@ def write_payload(cards, rows, manifest, out):
     (out / "integration-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
 
+def write_review_snapshot(base_cards_path, review_paths, out):
+    cards = read_json(base_cards_path)
+    if not isinstance(cards, list):
+        raise ValueError("base game cards must be a top-level list")
+    documents = [read_json(path) for path in review_paths]
+    review = normalize_review_documents(documents)
+    out = Path(out); out.mkdir(parents=True, exist_ok=True)
+    apply_review_to_cards(cards, review)
+    (out / "game_cards.json").write_text(json.dumps(cards, indent=2) + "\n")
+    (out / "review-normalization.json").write_text(json.dumps({"schema": "fablesfable.reviewed-selection-snapshot.v1",
+        "reviewed_games": len(review), "manual_candidates": sum(1 for r in review.values() if r["best_selection"]["status"] == "manual_candidate_recheck_required"),
+        "conditional_games": sum(1 for r in review.values() if r["conditional_props"]),
+        "pass_games": sum(1 for r in review.values() if r["best_selection"]["status"] == "pass_pending_status"),
+        "reviews": review}, indent=2) + "\n")
+    source_dir = out / "source-json"
+    source_dir.mkdir(exist_ok=True)
+    for path in review_paths:
+        shutil.copy2(path, source_dir / Path(path).name)
+    return cards, review
+
+
 def site_page(title, body):
     bridge = (ROOT / "published-site/assets/hub-scroll.js").read_text()
     css = "body{font:16px/1.5 system-ui;max-width:1100px;margin:auto;padding:1rem;color:#182233;overflow-wrap:anywhere}nav{display:flex;gap:8px 12px;flex-wrap:wrap}nav a{min-height:44px;display:inline-flex;align-items:center}a{color:#17529c}details{border:1px solid #d5dce6;border-radius:8px;margin:12px 0}summary{padding:10px;cursor:pointer;font-weight:600}.board-caveat{max-width:72ch}.picks-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.pick-card,.ap-game{border:1px solid #d5dce6;border-radius:10px;padding:16px;background:#fff}.pick-card h3{margin:.2rem 0}.pick-game,.game-time,.pick-price,.no-pick{margin:.25rem 0;color:#4a596d}.pick-price,.model-comparison{font-weight:700;color:#182233}.model-disclaimer{margin:.3em 0;color:#4a596d;font-size:13px}.pick-risk{border-left:3px solid #9b4d00;padding-left:10px}.factor-warning{margin:10px;padding:10px;border-left:3px solid #9b4d00;background:#fff8ee}.game-jumps{margin:10px 0 16px}.game-jumps a{border:1px solid #d5dce6;border-radius:999px;padding:5px 10px;text-decoration:none}.ap-game{margin:10px 0;scroll-margin-top:8px}.ap-game h3{margin:0}.player-projections{margin-top:14px}.projection-scroll{overflow-x:auto}.projection-scroll table{border-collapse:collapse;min-width:760px;width:100%}.projection-scroll th,.projection-scroll td{border-bottom:1px solid #d5dce6;padding:8px;text-align:left;white-space:nowrap}.projection-scroll th{background:#f6f8fb}.research-download{margin:24px 0}.game-frontmatter{margin:14px 0;padding:12px;border:1px solid #d5dce6;border-radius:8px;background:#fbfcfe}.game-frontmatter h4{margin:.15rem 0 .4rem}.game-decision-note,.injury-source,.injury-note,.game-market-line{margin:.3rem 0;color:#4a596d;font-size:13px}.game-market-grid,.injury-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.game-market,.injury-team{border:1px solid #d5dce6;border-radius:7px;padding:10px;background:#fff}.injury-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}.injury-team ul{margin:.4rem 0;padding-left:1.15rem}.injury-team li{margin:.45rem 0}.injury-status{display:inline-block;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:700;background:#e7edf4;color:#182233}.injury-out{background:#ffe0e0;color:#8b0000}.injury-doubtful{background:#ffe9c5;color:#754400}.injury-questionable{background:#fff4c2;color:#695400}.injury-ir{background:#eadffb;color:#51307f}.injury-impact{color:#4a596d}.game-market-source{color:#4a596d;font-size:12px}@media(max-width:540px){body{padding:.75rem}.pick-card,.ap-game{padding:14px}.picks-grid,.game-market-grid,.injury-grid{grid-template-columns:minmax(0,1fr)}}"
@@ -307,15 +421,20 @@ def main(argv=None):
     build = sub.add_parser("build")
     build.add_argument("--game-cards", required=True); build.add_argument("--market-rows", required=True); build.add_argument("--integration-manifest", required=True)
     build.add_argument("--archive", required=True); build.add_argument("--out", required=True); build.add_argument("--published-at", required=True)
+    review = sub.add_parser("review-snapshot")
+    review.add_argument("--base-cards", required=True); review.add_argument("--review", action="append", required=True); review.add_argument("--out", required=True)
     args = ap.parse_args(argv)
     try:
         if args.command == "integrate":
             cards, rows, manifest = integrate(args.scoreboard, args.saved_source_cards, args.late_markets, args.extra)
             write_payload(cards, rows, manifest, args.out)
             print(f"integrated {manifest['games']} games; {manifest['raw_market_rows']} raw rows -> {manifest['outcome_rows']} outcome rows")
-        else:
+        elif args.command == "build":
             manifest = build_site(args.game_cards, args.market_rows, args.integration_manifest, args.archive, args.out, args.published_at)
             print(f"built {args.out}: {len(manifest['files'])} files")
+        else:
+            cards, review = write_review_snapshot(args.base_cards, args.review, args.out)
+            print(f"normalized {len(review)} reviewed games into {len(cards)} game cards")
     except ValueError as exc:
         print(f"[week5-board] not built: {exc}")
         return 1
