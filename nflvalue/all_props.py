@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import json
+import math
 import os
 from collections import Counter
 
@@ -251,13 +252,46 @@ def _projection_unit(market):
             "receptions": "catches", "rush_attempts": "carries", "pass_attempts": "attempts"}.get(market, "")
 
 
-def _pick_comparison(pick):
+def _finite_number(value):
+    value = _numeric(value)
+    return value if value is not None and math.isfinite(value) else None
+
+
+def _model_line_gap(pick):
+    """Return a unit-safe comparison or None when the supplied fields are incomparable."""
+    if pick.get("market") in {"anytime_td", "anytime_touchdown"}:
+        # P(TD >= 1) is categorical; it is not a comparable mean against a 0.5 threshold.
+        return None
+    projection = _finite_number(_model_projection(pick))
+    line = _finite_number(pick.get("line"))
+    if projection is None or line is None or line == 0:
+        return None
+    gap = projection - line
+    return {"gap": gap, "absolute_percentage": abs(gap) / abs(line) * 100}
+
+
+def _model_difference_sort_key(pick):
+    """Sort comparable discrepancies first, with deterministic player/market ties."""
+    comparison = _model_line_gap(pick)
+    player = _display_text(pick.get("player")).casefold()
+    market = _display_text(pick.get("market")).casefold()
+    if comparison is None:
+        return (1, 0, player, market)
+    return (0, -comparison["absolute_percentage"], player, market)
+
+
+def _pick_comparison(pick, show_uncomparable=False):
+    comparison = _model_line_gap(pick)
+    if comparison is None:
+        return ("<p class='model-comparison'><b>Model-vs-line gap:</b> Not comparable</p>"
+                if show_uncomparable else "")
     projection, line = _model_projection(pick), _numeric(pick.get("line"))
-    if projection is None or line is None:
-        return ""
     unit = _projection_unit(pick.get("market"))
     model = f"{_number(projection)} {unit}".rstrip()
-    return f"<p class='model-comparison'><b>Model:</b> {_e(model)} · <b>Line:</b> {_e(_number(line))}</p>"
+    gap = f"{comparison['gap']:+g} {unit}".rstrip()
+    percentage = f"{comparison['absolute_percentage']:g}%"
+    return (f"<p class='model-comparison'><b>Model:</b> {_e(model)} · <b>Line:</b> {_e(_number(line))}"
+            f" · <b>Model-vs-line gap:</b> {_e(gap)} ({_e(percentage)})</p>")
 
 
 def _forecast_name(forecast):
@@ -345,8 +379,10 @@ def _pick_is_displayable(pick):
     player = _display_text(pick.get("player"))
     if not player or player.lower().startswith("no named player"):
         return False
-    return (str(pick.get("side") or "").lower() in {"over", "under"}
-            and isinstance(pick.get("line"), (int, float)) and not isinstance(pick.get("line"), bool)
+    side = str(pick.get("side") or "").lower()
+    categorical_td = pick.get("market") in {"anytime_td", "anytime_touchdown"} and side == "yes"
+    has_numeric_line = isinstance(pick.get("line"), (int, float)) and not isinstance(pick.get("line"), bool)
+    return (((side in {"over", "under"} and has_numeric_line) or categorical_td)
             and _display_text(pick.get("book")) and bool(_signed_odds(pick.get("odds"))))
 
 
@@ -383,10 +419,11 @@ def _pick_card(pick, game, number):
     details = ("<details><summary>Source and timing</summary>" + "".join(detail) + "</details>") if detail else ""
     risk_html = f"<p class='pick-risk'><b>Risk:</b> {_e(risk)}</p>" if risk else ""
     why_html = f"<p>{_e(why)}</p>" if why else ""
-    comparison = _pick_comparison(pick)
+    comparison = _pick_comparison(pick, bool(game.get("native_model")))
+    line_label = f" {_e(pick.get('line'))}" if pick.get("line") is not None else ""
     return (f"<article class='pick-card' id='pick-{_e(game.get('event_id'))}-{number}'>"
             f"<p class='pick-game'>{_e(game.get('away'))} at {_e(game.get('home'))}</p>"
-            f"<h3>{_e(pick['player'])} {side} {_e(pick['line'])} {_e(_market_label(pick.get('market')))}</h3>"
+            f"<h3>{_e(pick['player'])} {side}{line_label} {_e(_market_label(pick.get('market')))}</h3>"
             f"<p class='pick-price'>{_e(_display_text(pick.get('book')))} {_e(_signed_odds(pick.get('odds')))}</p>"
             f"{comparison}{why_html}{risk_html}{details}</article>")
 
@@ -408,7 +445,7 @@ def render_page(payload):
     rendered = []
     native_board = any(card.get('native_model') for card in payload['cards'])
     if native_board:
-        rendered.append("<p>Choose a game below. Model differences are ordered by the raw probability gap versus the listed price—not by validated confidence. Every supported comparison is retained; none are cut to a fixed number per game.</p>")
+        rendered.append("<p>Choose a game below. Within each game, comparable model-vs-line discrepancies are ordered by absolute percentage gap; the signed gap shows the actual-unit difference. This is a discrepancy, not confidence. Every supported comparison is retained; none are cut to a fixed number per game.</p>")
     elif tiered:
         for label, key in (("Preferred picks", "preferred"), ("Other leans", "other")):
             choices = [(card, pick) for card, pick in visible if _tier(pick) == key]
@@ -427,6 +464,8 @@ def render_page(payload):
     for card in payload["cards"]:
         picks = ([] if str(card.get("status") or "").lower() == "completed" else
                  [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)])
+        if native_board:
+            picks.sort(key=_model_difference_sort_key)
         forecasts = _forecast_table(card)
         if picks and native_board:
             content = f"<details class='game-model-picks'><summary>Model differences ({len(picks)})</summary><div class='picks-grid'>" + ''.join(_pick_card(p, card, pick_numbers[id(p)]) for p in picks) + '</div></details>'

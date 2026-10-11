@@ -151,6 +151,73 @@ def test_completed_game_is_not_promoted_as_a_current_native_forecast():
     assert "No pick." in page
 
 
+def test_native_model_differences_sort_per_game_by_absolute_percentage_gap_and_show_signed_gap():
+    payload = _payload()
+    first, second = payload["cards"]
+    first["native_model"] = True
+    first["picks"] = [
+        {"player": "Yard Receiver", "team": "ABC", "market": "receiving_yards", "side": "over",
+         "line": 80.0, "model_projection": 100.0, "book": "ExampleBook", "odds": -110,
+         "status": "analyst_lean"},
+        {"player": "Catch Receiver", "team": "ABC", "market": "receptions", "side": "under",
+         "line": 5.0, "model_projection": 3.0, "book": "ExampleBook", "odds": -110,
+         "status": "analyst_lean"},
+        {"player": "Small Yard Gap", "team": "ABC", "market": "rushing_yards", "side": "over",
+         "line": 40.0, "model_projection": 45.0, "book": "ExampleBook", "odds": -110,
+         "status": "analyst_lean"},
+    ]
+    second["native_model"] = True
+    second["picks"] = [
+        {"player": "Other Game First", "team": "GHI", "market": "receiving_yards", "side": "over",
+         "line": 50.0, "model_projection": 55.0, "book": "ExampleBook", "odds": -110,
+         "status": "analyst_lean"},
+        {"player": "Other Game Largest", "team": "GHI", "market": "receptions", "side": "under",
+         "line": 4.0, "model_projection": 2.0, "book": "ExampleBook", "odds": -110,
+         "status": "analyst_lean"},
+    ]
+
+    page = all_props.render_page(payload)
+    first_game = page.split("id='game-opaque-game-id'", 1)[1].split("id='game-no-pick-game'", 1)[0]
+    second_game = page.split("id='game-no-pick-game'", 1)[1]
+
+    # 40% receptions gap outranks a 25% yardage gap despite unlike raw units.
+    assert first_game.index("Catch Receiver") < first_game.index("Yard Receiver") < first_game.index("Small Yard Gap")
+    # Sorting restarts for each game rather than globally.
+    assert second_game.index("Other Game Largest") < second_game.index("Other Game First")
+    text = re.sub(r"<[^>]+>", "", first_game)
+    assert "Model-vs-line gap: -2 catches (40%)" in text
+    assert "Model-vs-line gap: +20 yards (25%)" in text
+    assert "discrepancy, not confidence" in page
+
+
+def test_native_model_differences_leave_noncomparable_zero_missing_and_td_rows_after_sorted_rows_with_stable_ties():
+    payload = _payload()
+    card = payload["cards"][0]
+    card["native_model"] = True
+    card["picks"] = [
+        {"player": "Zulu", "team": "ABC", "market": "receiving_yards", "side": "over", "line": 20.0,
+         "model_projection": 30.0, "book": "ExampleBook", "odds": -110, "status": "analyst_lean"},
+        {"player": "Alpha", "team": "ABC", "market": "receptions", "side": "under", "line": 4.0,
+         "model_projection": 2.0, "book": "ExampleBook", "odds": -110, "status": "analyst_lean"},
+        {"player": "TD Player", "team": "ABC", "market": "anytime_td", "side": "yes", "line": None,
+         "model_probability": 0.75, "book": "ExampleBook", "odds": 120, "status": "analyst_lean"},
+        {"player": "Zero Line", "team": "ABC", "market": "receptions", "side": "over", "line": 0.0,
+         "model_projection": 1.0, "book": "ExampleBook", "odds": -110, "status": "analyst_lean"},
+        {"player": "Missing Projection", "team": "ABC", "market": "rushing_yards", "side": "under", "line": 30.0,
+         "book": "ExampleBook", "odds": -110, "status": "analyst_lean"},
+    ]
+
+    page = all_props.render_page(payload)
+    game = page.split("id='game-opaque-game-id'", 1)[1].split("id='game-no-pick-game'", 1)[0]
+    visible_text = re.sub(r"<[^>]+>", "", game)
+
+    # Alpha and Zulu have the same 50% gap; player then market resolves ties deterministically.
+    assert game.index("Alpha") < game.index("Zulu") < game.index("Missing Projection") < game.index("TD Player") < game.index("Zero Line")
+    assert visible_text.count("Model-vs-line gap: Not comparable") == 3
+    assert "Model-vs-line gap: -2 catches (50%)" in visible_text
+    assert "Model-vs-line gap: +10 yards (50%)" in visible_text
+
+
 def browser_smoke_optional():
     playwright = pytest.importorskip("playwright.sync_api")
     browser = None
