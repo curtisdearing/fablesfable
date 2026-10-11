@@ -447,9 +447,12 @@ def _game_header(card):
         decision = _display_text(item.get("decision")) or "No supported pick"
         line = _display_text(item.get("line"))
         price = _display_text(item.get("price"))
+        provider = _display_text(item.get("provider"))
         source_state = _display_text(item.get("source_state"))
         offer = " · ".join(part for part in (line, price) if part)
         note = f" <span class='game-market-source'>({ _e(source_state) })</span>" if source_state else ""
+        if provider:
+            note += f" <span class='game-market-provider'>[{_e(provider)}]</span>"
         market_parts.append(f"<article class='game-market game-market-{_e(key)}'><h4>{GAME_MARKET_LABELS[key]}</h4>"
                             f"<p><b>{_e(decision)}</b>{note}</p>"
                             f"<p class='game-market-line'>{_e(offer) if offer else 'No listed game line or price captured.'}</p></article>")
@@ -465,22 +468,29 @@ def _game_header(card):
                 status = _display_text(item.get("status")) or "No designation"
                 css = INJURY_STATUS_CLASSES.get(status.lower(), "unknown")
                 position = _display_text(item.get("position"))
-                impact = _display_text(item.get("impact")) or "Availability context only; not a quantified model input."
+                body_part = _display_text(item.get("body_part"))
+                description = _display_text(item.get("description"))
+                report_date = _display_text(item.get("report_date"))
+                impact = _display_text(item.get("impact"))
+                details = " — ".join(part for part in (body_part, description) if part)
+                reported = f" <span class='injury-date'>(reported {_e(report_date)})</span>" if report_date else ""
+                context = f" <span class='injury-impact'> — {_e(impact)}</span>" if impact else ""
                 rows.append(f"<li><span class='injury-status injury-{_e(css)}'>{_e(status)}</span> "
                             f"<b>{_e(item.get('name'))}</b>{_e(' (' + position + ')') if position else ''}"
-                            f"<span class='injury-impact'> — {_e(impact)}</span></li>")
+                            f"{_e(' — ' + details) if details else ''}{reported}{context}</li>")
             contents = "<ul>" + "".join(rows) + "</ul>"
         else:
             contents = "<p>No current injury report captured; this is unknown, not healthy.</p>"
         injury_parts.append(f"<section class='injury-team'><h4>{_e(team_code)} injuries</h4>{contents}</section>")
     injury_clock = _display_text(injuries.get("retrieved_at")) or _display_text(card.get("source_as_of"))
     injury_source = _display_text(injuries.get("source")) or "No injury source supplied"
+    raw_injury_url = injuries.get("url")
+    injury_url = _display_text(raw_injury_url) if _source_url(raw_injury_url) else None
+    source_link = (f" <a href='{_e(injury_url)}' rel='noopener noreferrer'>ESPN source</a>" if injury_url else "")
     return ("<div class='game-frontmatter'><section class='game-decisions'><h4>Game decisions</h4>"
-            "<p class='game-decision-note'>Analyst context only; no game simulation or native game probability is claimed.</p>"
             "<div class='game-market-grid'>" + "".join(market_parts) + "</div></section>"
             "<section class='injury-panel'><h4>Both-team injury report</h4>"
-            f"<p class='injury-source'>Source: {_e(injury_source)} · captured {_e(injury_clock) if injury_clock else 'unknown time'}.</p>"
-            "<p class='injury-note'>Statuses are pregame report designations, not confirmed game-day actives. Impact is qualitative context, not a quantified model input.</p>"
+            f"<p class='injury-source'>Source: {_e(injury_source)} · retrieved {_e(injury_clock) if injury_clock else 'unknown time'}.{source_link}</p>"
             "<div class='injury-grid'>" + "".join(injury_parts) + "</div></section></div>")
 
 
@@ -518,7 +528,8 @@ def render_page(payload):
         for card in payload["cards"]) + "</nav>"
     games = []
     for card in payload["cards"]:
-        picks = ([] if str(card.get("status") or "").lower() == "completed" else
+        archived = str(card.get("status") or "").lower() == "completed"
+        picks = ([] if archived else
                  [pick for pick in card.get("picks") or [] if _pick_is_displayable(pick)])
         if native_board:
             picks.sort(key=_model_difference_sort_key)
@@ -529,16 +540,19 @@ def render_page(payload):
             links = " · ".join(f'<a href="#pick-{_e(card.get("event_id"))}-{n}">{_e(_pick.get("player"))}</a>'
                               for n, (game, _pick) in enumerate(visible, 1) if game is card)
             content = f"<p>{links}</p>"
+        elif archived:
+            content = "<p class='no-pick'><b>Archived — not a prospective pick.</b></p>"
         else:
             reason = _display_text(card.get("no_pick_reason"))
             if reason and not reason.lower().startswith(('no pick', 'completed')):
                 reason = 'No pick. ' + reason
             content = f"<p class='no-pick'>{_e(reason) if reason else 'No pick.'}</p>"
+        archived_label = " <span class='archived-label'>Archived</span>" if archived else ""
         games.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'>"
-                     f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
+                     f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}{archived_label}</h3>"
                      f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{_game_header(card)}{content}{forecasts}</section>")
     return ("<h1>Week 5 player props</h1>"
-            "<p class='board-caveat'>Uncalibrated model leans: prices can move; confirm every listed price before acting.</p>"
+            "<p class='board-caveat'>Uncalibrated model leans: prices can move; confirm every listed price before acting. ESPN pickcenter closes are display-only listed context, not sportsbook-verified executable quotes. No game-market picks are issued because this board has no joint game model.</p>"
             "<h2>Picks</h2>" + "".join(rendered)
             + "<h2>All games</h2>" + jumps + "".join(games)
             + "<p class='research-download'><a href='api/all-props.json' download>Download research data (JSON)</a></p>")

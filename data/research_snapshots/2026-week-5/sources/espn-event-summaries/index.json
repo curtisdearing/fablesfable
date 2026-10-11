@@ -1,0 +1,148 @@
+{
+  "schema": "fablesfable.espn-event-summary-receipts.v1",
+  "provider": "ESPN site API event summaries",
+  "retrieval_clock_min": "2026-10-11T02:00:23.751699Z",
+  "retrieval_clock_max": "2026-10-11T02:00:25.790121Z",
+  "events": [
+    {
+      "event_id": "401872981",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+      "retrieved_at": "2026-10-11T02:00:23.751699Z",
+      "http_status": 200,
+      "sha256": "886d5761563b14036596790698538bf942de4a78916bab076651f3038e7be5ba",
+      "bytes": 112210,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872990",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+      "retrieved_at": "2026-10-11T02:00:23.955582Z",
+      "http_status": 200,
+      "sha256": "449e348f2669f83e735e895e90c43cb7ed5b2c4c08e95223ed0f3cdeee42d355",
+      "bytes": 107740,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872984",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+      "retrieved_at": "2026-10-11T02:00:24.166645Z",
+      "http_status": 200,
+      "sha256": "e19adee9c4a59d2a758cef2418f91f63138f69d4f77bf99e8222313ae42ebe0e",
+      "bytes": 106240,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872982",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+      "retrieved_at": "2026-10-11T02:00:24.389349Z",
+      "http_status": 200,
+      "sha256": "7cfe50771def69fb61a6aed9f2ffc5719b1025699a064f10cd428aa0a8e9dc40",
+      "bytes": 112927,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872986",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+      "retrieved_at": "2026-10-11T02:00:24.526831Z",
+      "http_status": 200,
+      "sha256": "9bb82130202e46abca95f5483fcf3458785554af062e017c4fe5659f60e36265",
+      "bytes": 120226,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872987",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+      "retrieved_at": "2026-10-11T02:00:24.694736Z",
+      "http_status": 200,
+      "sha256": "7b5cbf8c5f14db6becd9aa19da3e304a3c723eaaa0e39b29ff5bedd66c75f6d6",
+      "bytes": 114086,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872983",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+      "retrieved_at": "2026-10-11T02:00:24.813681Z",
+      "http_status": 200,
+      "sha256": "5297755ac8ccf40c7355f921a0762cbf6b7684afc5109392a4f2b396a2b048b8",
+      "bytes": 113151,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872985",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+      "retrieved_at": "2026-10-11T02:00:24.932862Z",
+      "http_status": 200,
+      "sha256": "1273d05d07a7aacf2fc79acc74f8f64ef9b4c5afb8cc89cc8d16aead8d28f9f1",
+      "bytes": 113495,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872988",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+      "retrieved_at": "2026-10-11T02:00:25.073727Z",
+      "http_status": 200,
+      "sha256": "3ad4938dc222d84dfd9ff4acc5745048be16393140ceae66976d54f8b0fddf75",
+      "bytes": 112677,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872989",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+      "retrieved_at": "2026-10-11T02:00:25.214208Z",
+      "http_status": 200,
+      "sha256": "405997b26fac1c255ce33b4f762bb59120463ca8006ff4a83f785493d9874eee",
+      "bytes": 113286,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872991",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+      "retrieved_at": "2026-10-11T02:00:25.372567Z",
+      "http_status": 200,
+      "sha256": "b84a92cf724baae27ea3bd651c12207e1b35565a740dc5c7c176038e6c38f397",
+      "bytes": 112035,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872992",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+      "retrieved_at": "2026-10-11T02:00:25.485040Z",
+      "http_status": 200,
+      "sha256": "892c89be5d7e439b936ba595ad12793d8430f6a56bea7055f08d2ac8b0bd4177",
+      "bytes": 114196,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872993",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+      "retrieved_at": "2026-10-11T02:00:25.650429Z",
+      "http_status": 200,
+      "sha256": "7bd862cf997f14693496958fef913a6742b997b40b03c3254471c00f42cda70c",
+      "bytes": 121998,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    },
+    {
+      "event_id": "401872994",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+      "retrieved_at": "2026-10-11T02:00:25.790121Z",
+      "http_status": 200,
+      "sha256": "1947739885a8db9db6a0b1ba05ffc875e096070f327a95e3462120bece807748",
+      "bytes": 121850,
+      "pickcenter_offers": 1,
+      "odds_offers": 0
+    }
+  ]
+}

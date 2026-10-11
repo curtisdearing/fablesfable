@@ -101,7 +101,7 @@ def test_rendered_game_header_leads_with_three_market_decisions_and_both_team_in
                               {"market": "total", "decision": "No supported pick", "line": "44.5",
                                "price": None, "source_state": "line_only"},
                           ],
-                          "injuries": {"source": "ESPN event summary", "retrieved_at": "2026-10-10T23:02:49Z",
+                          "injuries": {"source": "ESPN event summary", "url": "https://example.test/summary?event=1", "retrieved_at": "2026-10-10T23:02:49Z",
                                        "teams": [{"team": "AWY", "items": [{"name": "Away QB", "position": "QB",
                                                                             "status": "Questionable", "impact": "Starting-QB availability unresolved."}]},
                                                  {"team": "HOME", "items": [{"name": "Home LT", "position": "OT",
@@ -113,6 +113,7 @@ def test_rendered_game_header_leads_with_three_market_decisions_and_both_team_in
     assert "No supported pick" in section
     assert "AWY injuries" in section and "HOME injuries" in section
     assert "Away QB" in section and "Home LT" in section
+    assert "href='https://example.test/summary?event=1'" in section
     assert section.index("Moneyline") < section.index("Away QB") < section.index("No pick.")
 
 
@@ -134,9 +135,97 @@ def test_frontmatter_overlay_keeps_markets_unsupported_when_fresh_espn_has_no_od
     current, archived = result
     assert [market["market"] for market in current["game_markets"]] == ["moneyline", "spread", "total"]
     assert all(market["decision"] == "No supported pick" for market in current["game_markets"])
-    assert current["game_markets"][1]["line"] == "AWY +3" and current["game_markets"][1]["price"] is None
+    assert current["game_markets"][1]["line"] is None and current["game_markets"][1]["price"] is None
+    assert current["game_markets"][1]["source_state"] == "ESPN pickcenter close unavailable"
     assert "Quarterback availability" in current["injuries"]["teams"][0]["items"][0]["impact"]
     assert archived["injuries"]["teams"] == [{"team": "OLD", "items": []}, {"team": "DONE", "items": []}]
+
+
+def test_frontmatter_normalizes_pickcenter_close_fields_without_fabricating_juice_or_signs():
+    front_spec = importlib.util.spec_from_file_location("week5_frontmatter", ROOT / "scripts" / "build_week5_frontmatter.py")
+    assert front_spec and front_spec.loader
+    frontmatter = importlib.util.module_from_spec(front_spec)
+    front_spec.loader.exec_module(frontmatter)
+    summary = {"pickcenter": [{"provider": {"name": "DraftKings"},
+               "moneyline": {"away": {"close": {"odds": "+310"}}, "home": {"close": {"odds": "-395"}}},
+               "pointSpread": {"away": {"close": {"line": "+7.5", "odds": "-112"}},
+                               "home": {"close": {"line": "-7.5", "odds": "-108"}}},
+               "total": {"over": {"close": {"line": "o41.5", "odds": "-112"}},
+                         "under": {"close": {"line": "u41.5", "odds": "-108"}}}}]}
+    markets = frontmatter._markets({"away": "PHI", "home": "JAX"}, summary)
+    by_market = {m["market"]: m for m in markets}
+    assert by_market["moneyline"]["line"] == "PHI +310 · JAX -395"
+    assert by_market["spread"]["line"] == "PHI +7.5 · JAX -7.5"
+    assert by_market["spread"]["price"] == "PHI -112 · JAX -108"
+    assert by_market["total"]["line"] == "Over 41.5 · Under 41.5"
+    assert by_market["total"]["price"] == "Over -112 · Under -108"
+    assert all(m["decision"] == "No supported pick" for m in markets)
+    assert all(m["source_state"] == "ESPN listed close; not executable verified" for m in markets)
+
+
+def test_frontmatter_preserves_zero_prices_and_omits_absent_sides_without_default_juice():
+    front_spec = importlib.util.spec_from_file_location("week5_frontmatter", ROOT / "scripts" / "build_week5_frontmatter.py")
+    assert front_spec and front_spec.loader
+    frontmatter = importlib.util.module_from_spec(front_spec)
+    front_spec.loader.exec_module(frontmatter)
+    summary = {"pickcenter": [{"provider": {"name": "DraftKings"},
+               "moneyline": {"away": {"close": {"odds": 0}}},
+               "pointSpread": {"away": {"close": {"line": "-3", "odds": 0}}},
+               "total": {"over": {"close": {"line": "o42.5"}}}}]}
+    by_market = {m["market"]: m for m in frontmatter._markets({"away": "WAS", "home": "LA"}, summary)}
+    assert by_market["moneyline"]["line"] == "WAS 0"
+    assert by_market["spread"]["line"] == "WAS -3"
+    assert by_market["spread"]["price"] == "WAS 0"
+    assert by_market["total"]["line"] == "Over 42.5"
+    assert by_market["total"]["price"] is None
+    assert "-110" not in repr(by_market)
+
+
+def test_frontmatter_injury_rows_include_report_date_and_latest_description_sorted_by_priority():
+    front_spec = importlib.util.spec_from_file_location("week5_frontmatter", ROOT / "scripts" / "build_week5_frontmatter.py")
+    assert front_spec and front_spec.loader
+    frontmatter = importlib.util.module_from_spec(front_spec)
+    front_spec.loader.exec_module(frontmatter)
+    summary = {"injuries": [{"team": {"abbreviation": "WAS"}, "injuries": [
+        {"status": "Questionable", "date": "2026-10-10T01:11Z", "athlete": {"displayName": "Wideout", "position": {"abbreviation": "WR"}},
+         "details": {"type": "Ankle", "detail": "Limited in practice"}},
+        {"status": "Out", "date": "2026-10-10T02:24Z", "athlete": {"displayName": "Quarterback", "position": {"abbreviation": "QB"}},
+         "details": {"type": "Knee", "detail": "Will not play"}},
+    ]}]}
+    items = frontmatter._injury_team(summary, "WSH")["items"]
+    assert [item["name"] for item in items] == ["Quarterback", "Wideout"]
+    assert items[0]["report_date"] == "2026-10-10T02:24Z"
+    assert items[0]["body_part"] == "Knee"
+    assert items[0]["description"] == "Will not play"
+    assert "Quarterback availability" in items[0]["impact"]
+
+
+def test_frontmatter_overlay_accepts_versioned_receipt_index(tmp_path):
+    front_spec = importlib.util.spec_from_file_location("week5_frontmatter", ROOT / "scripts" / "build_week5_frontmatter.py")
+    assert front_spec and front_spec.loader
+    frontmatter = importlib.util.module_from_spec(front_spec)
+    front_spec.loader.exec_module(frontmatter)
+    (tmp_path / "1.json").write_text(json.dumps({"pickcenter": [], "injuries": []}))
+    cards = [{"event_id": "1", "away": "AWY", "home": "HOME"}]
+    receipt = {"schema": "fablesfable.espn-event-summary-receipts.v1", "events": [{
+        "event_id": "1", "url": "https://example.test/1", "retrieved_at": "2026-10-11T02:00:23Z"}]}
+    result = frontmatter.overlay(cards, receipt, tmp_path)
+    assert result[0]["injuries"]["retrieved_at"] == "2026-10-11T02:00:23Z"
+
+
+def test_rendered_completed_game_is_labeled_archived_not_a_current_no_pick():
+    from nflvalue import all_props
+    payload = {"schema": "fablesfable.all_props.v1", "state": "ready",
+               "counts": {"games": 1, "raw_market_rows": 0, "outcome_rows": 0, "quote_rows": 0,
+                          "unique_athletes": 0, "model_priced": 0, "qualitatively_reviewed": 0,
+                          "unavailable_or_unsupported": 0}, "errors": [],
+               "cards": [{"event_id": "1", "game_id": "2026_05_TB_DAL", "away": "TB", "home": "DAL",
+                          "kickoff": "2026-10-09T00:15:00Z", "source_as_of": "2026-10-09T00:00:00Z",
+                          "status": "completed", "picks": [], "game_markets": [],
+                          "injuries": {"teams": []}, "no_pick_reason": "Completed game — see archive."}], "rows": []}
+    page = all_props.render_page(payload)
+    assert "Archived — not a prospective pick." in page
+    assert "No pick. Completed game" not in page
 
 
 def test_integrate_merges_typed_card_and_row_extras_without_saved_native_picks(tmp_path):

@@ -67,27 +67,33 @@
         "decision": "No supported pick",
         "line": null,
         "price": null,
-        "source_state": "fresh ESPN market missing",
+        "provider": null,
         "captured_at": null,
-        "note": "No current line or price captured."
+        "source_url": null,
+        "source_state": "ESPN pickcenter close unavailable",
+        "note": "No ESPN pickcenter close field was available at retrieval."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
         "line": null,
         "price": null,
-        "source_state": "fresh ESPN market missing",
+        "provider": null,
         "captured_at": null,
-        "note": "No current line or price captured."
+        "source_url": null,
+        "source_state": "ESPN pickcenter close unavailable",
+        "note": "No ESPN pickcenter close field was available at retrieval."
       },
       {
         "market": "total",
         "decision": "No supported pick",
         "line": null,
         "price": null,
-        "source_state": "fresh ESPN market missing",
+        "provider": null,
         "captured_at": null,
-        "note": "No current line or price captured."
+        "source_url": null,
+        "source_state": "ESPN pickcenter close unavailable",
+        "note": "No ESPN pickcenter close field was available at retrieval."
       }
     ]
   },
@@ -989,45 +995,59 @@
         "anytime_td_p_ge_1": 0.0440025181669001
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
-      "retrieved_at": "2026-10-10T23:02:49.835178+00:00",
+      "retrieved_at": "2026-10-11T02:00:23.751699Z",
       "teams": [
         {
           "team": "PHI",
           "items": [
             {
-              "name": "Drew Kendall",
-              "position": "C",
+              "name": "DeVonta Smith",
+              "position": "WR",
               "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Marcus Epps",
-              "position": "S",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Jonathan Greenard",
-              "position": "LB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-09T15:34Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Hollywood Brown",
               "position": "WR",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T00:53Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "DeVonta Smith",
-              "position": "WR",
+              "name": "Marcus Epps",
+              "position": "S",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T01:14Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Drew Kendall",
+              "position": "C",
+              "status": "Out",
+              "report_date": "2026-10-10T02:24Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Jonathan Greenard",
+              "position": "LB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:11Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -1035,34 +1055,49 @@
           "team": "JAX",
           "items": [
             {
-              "name": "Eric Murray",
-              "position": "S",
-              "status": "Doubtful",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Caleb Ransaw",
-              "position": "S",
+              "name": "Patrick Mekari",
+              "position": "G",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "B.J. Green II",
-              "position": "DE",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-08-31T23:21Z",
+              "body_part": "Back",
+              "description": "Surgery",
+              "impact": ""
             },
             {
               "name": "Sam Mustipher",
               "position": "C",
               "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-08-31T23:25Z",
+              "body_part": null,
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Patrick Mekari",
-              "position": "G",
+              "name": "B.J. Green II",
+              "position": "DE",
               "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-09-17T00:17Z",
+              "body_part": "Elbow",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Caleb Ransaw",
+              "position": "S",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-07T00:42Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Eric Murray",
+              "position": "S",
+              "status": "Doubtful",
+              "report_date": "2026-10-10T00:02Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             }
           ]
         }
@@ -1072,29 +1107,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "PHI +310 \u00b7 JAX -395",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "PHI +7.5 \u00b7 JAX -7.5",
+        "price": "PHI -112 \u00b7 JAX -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.751699Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872981",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -1936,45 +1977,59 @@
         "native_model": true
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
-      "retrieved_at": "2026-10-10T23:02:49.848288+00:00",
+      "retrieved_at": "2026-10-11T02:00:23.955582Z",
       "teams": [
         {
           "team": "CHI",
           "items": [
             {
-              "name": "Anthony Johnson Jr.",
-              "position": "S",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Shemar Turner",
-              "position": "DT",
+              "name": "Keyshaun Elliott",
+              "position": "LB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T02:01Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Kyler Gordon",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T19:40Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Shemar Turner",
+              "position": "DT",
+              "status": "Out",
+              "report_date": "2026-10-10T19:58Z",
+              "body_part": "Knee - ACL",
+              "description": "Surgery",
+              "impact": ""
+            },
+            {
+              "name": "Anthony Johnson Jr.",
+              "position": "S",
+              "status": "Out",
+              "report_date": "2026-10-11T00:32Z",
+              "body_part": null,
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Noah Sewell",
               "position": "LB",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Keyshaun Elliott",
-              "position": "LB",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T19:32Z",
+              "body_part": "Achilles",
+              "description": "Ruptured",
+              "impact": ""
             }
           ]
         },
@@ -1985,31 +2040,46 @@
               "name": "Chris Brooks",
               "position": "RB",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Jacob Monk",
-              "position": "C",
-              "status": "Doubtful",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Jager Burton",
-              "position": "C",
-              "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-10T20:06Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Aaron Banks",
               "position": "G",
               "status": "Doubtful",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-10T02:22Z",
+              "body_part": "Toe",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Jacob Monk",
+              "position": "C",
+              "status": "Doubtful",
+              "report_date": "2026-10-10T02:27Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Javon Hargrave",
               "position": "DT",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T00:50Z",
+              "body_part": "Toe",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Jager Burton",
+              "position": "C",
+              "status": "Questionable",
+              "report_date": "2026-10-10T02:25Z",
+              "body_part": "Back",
+              "description": "Spasms",
+              "impact": ""
             }
           ]
         }
@@ -2019,29 +2089,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "CHI -130 \u00b7 GB +110",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "CHI -1.5 \u00b7 GB +1.5",
+        "price": "CHI -115 \u00b7 GB -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 46.5 \u00b7 Under 46.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:23.955582Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872990",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -3007,12 +3083,11 @@
         "anytime_td_p_ge_1": 0.2172954617581318
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
-      "retrieved_at": "2026-10-10T23:02:49.831203+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.389349Z",
       "teams": [
         {
           "team": "CIN",
@@ -3021,31 +3096,46 @@
               "name": "Kyle Dugger",
               "position": "S",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Bryan Cook",
-              "position": "S",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Colbie Young",
-              "position": "WR",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Tee Higgins",
-              "position": "WR",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T00:16Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Ja'Marr Chase",
               "position": "WR",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T16:29Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
+            },
+            {
+              "name": "Tee Higgins",
+              "position": "WR",
+              "status": "Questionable",
+              "report_date": "2026-10-09T20:27Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Colbie Young",
+              "position": "WR",
+              "status": "Questionable",
+              "report_date": "2026-10-09T21:24Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Bryan Cook",
+              "position": "S",
+              "status": "Questionable",
+              "report_date": "2026-10-10T00:13Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -3053,34 +3143,49 @@
           "team": "MIA",
           "items": [
             {
-              "name": "Kenneth Grant",
-              "position": "DT",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Robert Beal Jr.",
-              "position": "DE",
+              "name": "Caleb Douglas",
+              "position": "WR",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-09T20:46Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Justin Joly",
               "position": "TE",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T02:41Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
+            },
+            {
+              "name": "Robert Beal Jr.",
+              "position": "DE",
+              "status": "Out",
+              "report_date": "2026-10-10T02:58Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Storm Duck",
+              "position": "CB",
+              "status": "Out",
+              "report_date": "2026-10-11T00:56Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Jaylen Wright",
               "position": "RB",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Caleb Douglas",
-              "position": "WR",
-              "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T20:51Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -3090,29 +3195,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "CIN -355 \u00b7 MIA +280",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "CIN -7 \u00b7 MIA +7",
+        "price": "CIN -110 \u00b7 MIA -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.389349Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872982",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -4099,45 +4210,59 @@
         "anytime_td_p_ge_1": 0.15210629591208422
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
-      "retrieved_at": "2026-10-10T23:02:50.089388+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.813681Z",
       "teams": [
         {
           "team": "CLE",
           "items": [
             {
-              "name": "Kalia Davis",
-              "position": "DT",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Teven Jenkins",
-              "position": "G",
+              "name": "Carsen Ryan",
+              "position": "TE",
               "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Dillon Gabriel",
-              "position": "QB",
-              "status": "Injured Reserve",
-              "impact": "Quarterback availability is unresolved; no starter or replacement projection is inferred."
+              "report_date": "2026-10-10T00:29Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Tylan Wallace",
               "position": "WR",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T00:35Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Carsen Ryan",
-              "position": "TE",
+              "name": "Teven Jenkins",
+              "position": "G",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T02:09Z",
+              "body_part": "Back",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Dillon Gabriel",
+              "position": "QB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T00:37Z",
+              "body_part": "Back",
+              "description": null,
+              "impact": "Quarterback availability reported; no starter or replacement is inferred."
+            },
+            {
+              "name": "Kalia Davis",
+              "position": "DT",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T02:57Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -4145,34 +4270,49 @@
           "team": "NYJ",
           "items": [
             {
-              "name": "Dylan Parham",
-              "position": "G",
+              "name": "Adonai Mitchell",
+              "position": "WR",
               "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Will McDonald IV",
-              "position": "DE",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Kingsley Enagbare",
-              "position": "LB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-09T15:09Z",
+              "body_part": "Finger",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Kiko Mauigoa",
               "position": "LB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-09T22:11Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Adonai Mitchell",
-              "position": "WR",
+              "name": "Dylan Parham",
+              "position": "G",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T01:41Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Kingsley Enagbare",
+              "position": "LB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T00:45Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Will McDonald IV",
+              "position": "DE",
+              "status": "Questionable",
+              "report_date": "2026-10-10T00:50Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -4182,29 +4322,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "CLE +114 \u00b7 NYJ -135",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "CLE +2.5 \u00b7 NYJ -2.5",
+        "price": "CLE -110 \u00b7 NYJ -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 39.5 \u00b7 Under 39.5",
+        "price": "Over -112 \u00b7 Under -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.813681Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872983",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -5373,45 +5519,59 @@
         "anytime_td_p_ge_1": 0.31682211038010033
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
-      "retrieved_at": "2026-10-10T23:02:49.820172+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.166645Z",
       "teams": [
         {
           "team": "HOU",
           "items": [
             {
-              "name": "Kayden McDonald",
-              "position": "DT",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "M.J. Stewart",
-              "position": "S",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "name": "Braden Smith",
+              "position": "OT",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-09T00:59Z",
+              "body_part": "Foot",
+              "description": "Plantar Fasciitis",
+              "impact": ""
             },
             {
               "name": "Tank Dell",
               "position": "WR",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Braden Smith",
-              "position": "OT",
-              "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-09T21:09Z",
+              "body_part": "Knee - ACL + MCL",
+              "description": "Surgery",
+              "impact": ""
             },
             {
               "name": "Aireontae Ersery",
               "position": "OT",
               "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-08T21:53Z",
+              "body_part": "Illness",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Kayden McDonald",
+              "position": "DT",
+              "status": "Questionable",
+              "report_date": "2026-10-11T00:19Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
+            },
+            {
+              "name": "M.J. Stewart",
+              "position": "S",
+              "status": "Questionable",
+              "report_date": "2026-10-11T00:24Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -5419,34 +5579,49 @@
           "team": "TEN",
           "items": [
             {
-              "name": "David Martin-Robinson",
-              "position": "TE",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
               "name": "Amani Hooker",
               "position": "S",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Carnell Tate",
-              "position": "WR",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Joshua Williams",
-              "position": "CB",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-09T23:43Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
               "name": "Jackson Slater",
               "position": "G",
               "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-09-30T01:02Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Joshua Williams",
+              "position": "CB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T23:21Z",
+              "body_part": "Pectoral",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Carnell Tate",
+              "position": "WR",
+              "status": "Questionable",
+              "report_date": "2026-10-09T20:15Z",
+              "body_part": "Back",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "David Martin-Robinson",
+              "position": "TE",
+              "status": "Questionable",
+              "report_date": "2026-10-09T23:46Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -5456,29 +5631,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "HOU -345 \u00b7 TEN +275",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "HOU -7 \u00b7 TEN +7",
+        "price": "HOU -108 \u00b7 TEN -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 37.5 \u00b7 Under 37.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.166645Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872984",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -6707,45 +6888,59 @@
         "anytime_td_p_ge_1": 0.2479857456806173
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
-      "retrieved_at": "2026-10-10T23:02:49.945427+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.932862Z",
       "teams": [
         {
           "team": "IND",
           "items": [
             {
-              "name": "Arden Key",
-              "position": "DE",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "name": "Jaylon Carlies",
+              "position": "LB",
+              "status": "Out",
+              "report_date": "2026-10-10T02:08Z",
+              "body_part": "Ribs",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Darius Slayton",
               "position": "WR",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Jaylon Carlies",
-              "position": "LB",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Charvarius Ward",
-              "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T15:55Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Will Mallory",
               "position": "TE",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T23:56Z",
+              "body_part": "Thumb",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Arden Key",
+              "position": "DE",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T17:51Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Charvarius Ward",
+              "position": "CB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:36Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -6753,34 +6948,49 @@
           "team": "PIT",
           "items": [
             {
-              "name": "Michael Pittman Jr.",
-              "position": "WR",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
               "name": "Jamel Dean",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-09T23:27Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "DeShon Elliott",
               "position": "S",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-09T23:23Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Jalen Ramsey",
-              "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "name": "Michael Pittman Jr.",
+              "position": "WR",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T19:52Z",
+              "body_part": "Foot",
+              "description": "Plantar Fasciitis",
+              "impact": ""
             },
             {
               "name": "Rico Dowdle",
               "position": "RB",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T20:14Z",
+              "body_part": "Toe",
+              "description": "Dislocated",
+              "impact": ""
+            },
+            {
+              "name": "Jalen Ramsey",
+              "position": "CB",
+              "status": "Questionable",
+              "report_date": "2026-10-09T23:20Z",
+              "body_part": "Wrist",
+              "description": "Fracture",
+              "impact": ""
             }
           ]
         }
@@ -6790,29 +7000,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "IND +124 \u00b7 PIT -148",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "IND +3 \u00b7 PIT -3",
+        "price": "IND -115 \u00b7 PIT -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -108 \u00b7 Under -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.932862Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872985",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -7724,45 +7940,59 @@
         "anytime_td_p_ge_1": 0.38676067300607236
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
-      "retrieved_at": "2026-10-10T23:02:49.893520+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.526831Z",
       "teams": [
         {
           "team": "LV",
           "items": [
             {
-              "name": "Trey Zuhn III",
-              "position": "C",
-              "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Dont'e Thornton Jr.",
-              "position": "WR",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
               "name": "Jalen Nailor",
               "position": "WR",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T19:01Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
-              "name": "Ashton Jeanty",
-              "position": "RB",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "name": "Trey Zuhn III",
+              "position": "C",
+              "status": "Out",
+              "report_date": "2026-10-10T02:03Z",
+              "body_part": "Knee",
+              "description": "Abrasion",
+              "impact": ""
             },
             {
               "name": "Jack Bech",
               "position": "WR",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-09-29T22:27Z",
+              "body_part": "Forearm",
+              "description": "Fracture",
+              "impact": ""
+            },
+            {
+              "name": "Dont'e Thornton Jr.",
+              "position": "WR",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-09T23:15Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Ashton Jeanty",
+              "position": "RB",
+              "status": "Questionable",
+              "report_date": "2026-10-09T18:02Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -7770,34 +8000,49 @@
           "team": "NE",
           "items": [
             {
-              "name": "Reggie Gilliam",
-              "position": "FB",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Mack Hollins",
-              "position": "WR",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Charles Woods",
+              "name": "Channing Canada",
               "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "status": "Out",
+              "report_date": "2026-10-10T01:54Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Karon Prunty",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T01:56Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Channing Canada",
+              "name": "Mack Hollins",
+              "position": "WR",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T20:09Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Reggie Gilliam",
+              "position": "FB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-11T00:36Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Charles Woods",
               "position": "CB",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:58Z",
+              "body_part": "Shoulder",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -7807,29 +8052,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "LV +160 \u00b7 NE -192",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "LV +3.5 \u00b7 NE -3.5",
+        "price": "LV -112 \u00b7 NE -108",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 45.5 \u00b7 Under 45.5",
+        "price": "Over -105 \u00b7 Under -115",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.526831Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872986",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -9075,45 +9326,59 @@
         "native_model": true
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
-      "retrieved_at": "2026-10-10T23:02:49.812292+00:00",
+      "retrieved_at": "2026-10-11T02:00:24.694736Z",
       "teams": [
         {
           "team": "MIN",
           "items": [
             {
-              "name": "Michael Jurgens",
-              "position": "C",
-              "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "name": "Christian Darrisaw",
+              "position": "OT",
+              "status": "Out",
+              "report_date": "2026-10-10T01:48Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
               "name": "Charles Demmings",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Brian O'Neill",
-              "position": "OT",
-              "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Christian Darrisaw",
-              "position": "OT",
-              "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-10T01:52Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Ben Yurosek",
               "position": "TE",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T22:19Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Brian O'Neill",
+              "position": "OT",
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:49Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Michael Jurgens",
+              "position": "C",
+              "status": "Questionable",
+              "report_date": "2026-10-10T20:52Z",
+              "body_part": "Elbow",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -9121,34 +9386,49 @@
           "team": "NO",
           "items": [
             {
-              "name": "Vernon Broughton",
+              "name": "Christen Miller",
               "position": "DT",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Nathan Shepherd",
-              "position": "DT",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Lorenzo Styles Jr.",
-              "position": "S",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T11:57Z",
+              "body_part": "Illness",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Jaylan Ford",
               "position": "LB",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T20:46Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Christen Miller",
+              "name": "Lorenzo Styles Jr.",
+              "position": "S",
+              "status": "Questionable",
+              "report_date": "2026-10-10T20:46Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Vernon Broughton",
               "position": "DT",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T22:27Z",
+              "body_part": "Illness",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Nathan Shepherd",
+              "position": "DT",
+              "status": "Questionable",
+              "report_date": "2026-10-11T01:36Z",
+              "body_part": "Illness",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -9158,29 +9438,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "MIN -130 \u00b7 NO +110",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "MIN -2.5 \u00b7 NO +2.5",
+        "price": "MIN -105 \u00b7 NO -115",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -108 \u00b7 Under -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:24.694736Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872987",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -9841,12 +10127,11 @@
         "anytime_td_p_ge_1": 0.18290507205776332
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
-      "retrieved_at": "2026-10-10T23:02:49.957790+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.073727Z",
       "teams": [
         {
           "team": "NYG",
@@ -9855,31 +10140,46 @@
               "name": "Jason Pinnock",
               "position": "S",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Chauncey Golston",
-              "position": "DE",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Braxton Berrios",
-              "position": "WR",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
-            },
-            {
-              "name": "Jaxson Dart",
-              "position": "QB",
-              "status": "Injured Reserve",
-              "impact": "Quarterback availability is unresolved; no starter or replacement projection is inferred."
+              "report_date": "2026-10-10T02:35Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
               "name": "Brian Burns",
               "position": "LB",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-09-29T23:44Z",
+              "body_part": "Knee - ACL",
+              "description": "Surgery",
+              "impact": ""
+            },
+            {
+              "name": "Jaxson Dart",
+              "position": "QB",
+              "status": "Injured Reserve",
+              "report_date": "2026-09-30T20:35Z",
+              "body_part": "Knee - Meniscus",
+              "description": "Surgery",
+              "impact": "Quarterback availability reported; no starter or replacement is inferred."
+            },
+            {
+              "name": "Braxton Berrios",
+              "position": "WR",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-07T23:25Z",
+              "body_part": "Foot",
+              "description": "Surgery",
+              "impact": ""
+            },
+            {
+              "name": "Chauncey Golston",
+              "position": "DE",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-11T01:28Z",
+              "body_part": "Neck",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -9887,34 +10187,49 @@
           "team": "WSH",
           "items": [
             {
-              "name": "Tyler Owens",
-              "position": "S",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
               "name": "Charles Omenihu",
               "position": "DE",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T02:41Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Percy Butler",
+              "name": "Tyler Owens",
               "position": "S",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T02:45Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Jeremy McNichols",
+              "position": "RB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-11T01:00Z",
+              "body_part": "Quadriceps",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Trey Amos",
               "position": "CB",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-11T01:02Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
             },
             {
-              "name": "Nick Cross",
-              "position": "S",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "name": "Terry McLaurin",
+              "position": "WR",
+              "status": "Questionable",
+              "report_date": "2026-10-11T00:32Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -9924,29 +10239,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "NYG +145 \u00b7 WSH -175",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "NYG +3.5 \u00b7 WSH -3.5",
+        "price": "NYG -108 \u00b7 WSH -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.073727Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872988",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -10734,45 +11055,59 @@
         "anytime_td_p_ge_1": 0.09877470257879521
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
-      "retrieved_at": "2026-10-10T23:02:50.054466+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.214208Z",
       "teams": [
         {
           "team": "DEN",
           "items": [
             {
-              "name": "Riley Moss",
-              "position": "CB",
+              "name": "Jonathon Cooper",
+              "position": "LB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-08-31T23:50Z",
+              "body_part": "Personal",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Pat Surtain II",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T16:13Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
             },
             {
-              "name": "Pat Bryant",
-              "position": "WR",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "name": "Riley Moss",
+              "position": "CB",
+              "status": "Out",
+              "report_date": "2026-10-10T16:16Z",
+              "body_part": "Ribs",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Jonah Coleman",
               "position": "RB",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-09-26T20:36Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
             },
             {
-              "name": "Jonathon Cooper",
-              "position": "LB",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "name": "Pat Bryant",
+              "position": "WR",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-09T21:47Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
             }
           ]
         },
@@ -10780,34 +11115,49 @@
           "team": "LAC",
           "items": [
             {
-              "name": "Branson Taylor",
-              "position": "G",
-              "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "name": "Rashawn Slater",
+              "position": "OT",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T02:51Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
             },
             {
-              "name": "Scott Matlock",
-              "position": "FB",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "name": "Trey Lance",
+              "position": "QB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-11T00:57Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": "Quarterback availability reported; no starter or replacement is inferred."
             },
             {
               "name": "Charlie Kolar",
               "position": "TE",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T16:17Z",
+              "body_part": "Forearm",
+              "description": "Surgery",
+              "impact": ""
             },
             {
-              "name": "Rashawn Slater",
-              "position": "OT",
-              "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Trevor Penning",
+              "name": "Branson Taylor",
               "position": "G",
-              "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "status": "Questionable",
+              "report_date": "2026-10-10T20:25Z",
+              "body_part": "Neck",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Scott Matlock",
+              "position": "FB",
+              "status": "Questionable",
+              "report_date": "2026-10-11T01:02Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -10817,29 +11167,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "DEN -192 \u00b7 LAC +160",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "DEN -3.5 \u00b7 LAC +3.5",
+        "price": "DEN -108 \u00b7 LAC -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 41.5 \u00b7 Under 41.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.214208Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872989",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -11911,45 +12267,59 @@
         "anytime_td_p_ge_1": 0.14870792889284884
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
-      "retrieved_at": "2026-10-10T23:02:50.027646+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.372567Z",
       "teams": [
         {
           "team": "DET",
           "items": [
             {
-              "name": "Cade Mays",
-              "position": "C",
-              "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Ben Bartch",
-              "position": "G",
+              "name": "Brian Branch",
+              "position": "S",
               "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "report_date": "2026-10-10T00:56Z",
+              "body_part": "Achilles",
+              "description": "Surgery",
+              "impact": ""
             },
             {
               "name": "Rock Ya-Sin",
               "position": "CB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T01:01Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Brian Branch",
-              "position": "S",
+              "name": "Ben Bartch",
+              "position": "G",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T02:32Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Cade Mays",
+              "position": "C",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T02:36Z",
+              "body_part": "Wrist",
+              "description": "Fracture",
+              "impact": ""
             },
             {
               "name": "Tyleik Williams",
               "position": "DT",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-07T21:52Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -11957,34 +12327,49 @@
           "team": "ARI",
           "items": [
             {
-              "name": "Isaiah Adams",
-              "position": "G",
-              "status": "Injured Reserve",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
+              "name": "Andrew Wingard",
+              "position": "S",
+              "status": "Out",
+              "report_date": "2026-10-09T22:16Z",
+              "body_part": "Knee",
+              "description": "Bruise",
+              "impact": ""
             },
             {
               "name": "Marvin Harrison Jr.",
               "position": "WR",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T15:35Z",
+              "body_part": "Coach's Decision",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Walter Nolen III",
-              "position": "DT",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Andrew Wingard",
-              "position": "S",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "name": "Isaiah Adams",
+              "position": "G",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T21:14Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Karson Sharar",
               "position": "LB",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-08T23:20Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Walter Nolen III",
+              "position": "DT",
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:19Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -11994,29 +12379,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "DET -258 \u00b7 ARI +210",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "DET -5.5 \u00b7 ARI +5.5",
+        "price": "DET -108 \u00b7 ARI -112",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 54.5 \u00b7 Under 54.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.372567Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872991",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -12834,45 +13225,59 @@
         "anytime_td_p_ge_1": 0.39164701618882364
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
-      "retrieved_at": "2026-10-10T23:02:50.085255+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.485040Z",
       "teams": [
         {
           "team": "SF",
           "items": [
             {
-              "name": "James Thompson Jr.",
-              "position": "DT",
+              "name": "Kyle Juszczyk",
+              "position": "FB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Upton Stout",
-              "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Nick Bosa",
-              "position": "DE",
-              "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-07T18:34Z",
+              "body_part": "Knee",
+              "description": "Sprain",
+              "impact": ""
             },
             {
               "name": "Marques Sigle",
               "position": "S",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-07T18:39Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Kyle Juszczyk",
-              "position": "FB",
+              "name": "Nick Bosa",
+              "position": "DE",
               "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T01:33Z",
+              "body_part": "Calf",
+              "description": "Strain",
+              "impact": ""
+            },
+            {
+              "name": "James Thompson Jr.",
+              "position": "DT",
+              "status": "Out",
+              "report_date": "2026-10-10T02:50Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
+            },
+            {
+              "name": "Upton Stout",
+              "position": "CB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T01:37Z",
+              "body_part": "Shoulder - AC Joint",
+              "description": "Sprain",
+              "impact": ""
             }
           ]
         },
@@ -12880,34 +13285,49 @@
           "team": "SEA",
           "items": [
             {
-              "name": "Julian Neal",
-              "position": "CB",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "name": "Zach Charbonnet",
+              "position": "RB",
+              "status": "Out",
+              "report_date": "2026-10-05T17:05Z",
+              "body_part": "Knee - ACL",
+              "description": "Surgery",
+              "impact": ""
             },
             {
               "name": "Chazz Surratt",
               "position": "LB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "George Holani",
-              "position": "RB",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T02:47Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Irv Charles",
               "position": "WR",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-07T22:45Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Zach Charbonnet",
+              "name": "Julian Neal",
+              "position": "CB",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T20:55Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "George Holani",
               "position": "RB",
-              "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "status": "Questionable",
+              "report_date": "2026-10-09T21:59Z",
+              "body_part": "Ribs",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -12917,29 +13337,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "SF +136 \u00b7 SEA -162",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "SF +3 \u00b7 SEA -3",
+        "price": "SF -110 \u00b7 SEA -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 45.5 \u00b7 Under 45.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.485040Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872992",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -14085,45 +14511,59 @@
         "anytime_td_p_ge_1": 0.5171262274687703
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
-      "retrieved_at": "2026-10-10T23:02:50.088149+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.650429Z",
       "teams": [
         {
           "team": "BAL",
           "items": [
             {
-              "name": "Cam Jurgens",
-              "position": "C",
-              "status": "Out",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
-              "name": "Marlon Humphrey",
-              "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
               "name": "Trey Hendrickson",
               "position": "LB",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-10T00:05Z",
+              "body_part": "Finger",
+              "description": "Surgery",
+              "impact": ""
             },
             {
-              "name": "Zay Flowers",
-              "position": "WR",
-              "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "name": "Cam Jurgens",
+              "position": "C",
+              "status": "Out",
+              "report_date": "2026-10-10T02:13Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
               "name": "Ja'Kobi Lane",
               "position": "WR",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-09T17:56Z",
+              "body_part": "Wrist",
+              "description": "Surgery",
+              "impact": ""
+            },
+            {
+              "name": "Zay Flowers",
+              "position": "WR",
+              "status": "Questionable",
+              "report_date": "2026-10-09T20:34Z",
+              "body_part": "Foot",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Marlon Humphrey",
+              "position": "CB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T00:07Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -14131,34 +14571,49 @@
           "team": "ATL",
           "items": [
             {
-              "name": "Yasir Abdullah",
-              "position": "LB",
-              "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Jake Matthews",
-              "position": "OT",
-              "status": "Questionable",
-              "impact": "Offensive-line availability is contextual; no protection or rushing adjustment is quantified."
-            },
-            {
               "name": "Za'Darius Smith",
               "position": "DE",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-11T01:12Z",
+              "body_part": "Concussion",
+              "description": "Concussion",
+              "impact": ""
             },
             {
-              "name": "Divine Deablo",
+              "name": "Yasir Abdullah",
               "position": "LB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T20:40Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Samson Ebukam",
               "position": "DE",
               "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-08T19:36Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Divine Deablo",
+              "position": "LB",
+              "status": "Questionable",
+              "report_date": "2026-10-09T23:39Z",
+              "body_part": "Hamstring",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Jake Matthews",
+              "position": "OT",
+              "status": "Questionable",
+              "report_date": "2026-10-10T02:07Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -14168,29 +14623,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "BAL +145 \u00b7 ATL -175",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "BAL +3 \u00b7 ATL -3",
+        "price": "BAL +102 \u00b7 ATL -122",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 43.5 \u00b7 Under 43.5",
+        "price": "Over -110 \u00b7 Under -110",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.650429Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872993",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   },
@@ -15462,45 +15923,59 @@
         "anytime_td_p_ge_1": 0.25098779459733067
       }
     ],
-    "no_pick_reason": "No supported positive-value comparison at the captured lines.",
     "incomplete_factor_warning": "Player-stat forecasts, not a joint game simulation. A dash means the model did not produce that stat. Weather, travel and individual coverage assignments are not fully modeled; touchdown probabilities are uncalibrated.",
     "injuries": {
       "source": "ESPN event summary injury report",
       "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
-      "retrieved_at": "2026-10-10T23:02:50.143759+00:00",
+      "retrieved_at": "2026-10-11T02:00:25.790121Z",
       "teams": [
         {
           "team": "BUF",
           "items": [
             {
-              "name": "Dee Alford",
-              "position": "CB",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "name": "Joshua Palmer",
+              "position": "WR",
+              "status": "Out",
+              "report_date": "2026-10-10T18:00Z",
+              "body_part": "Shoulder",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Ed Oliver",
               "position": "DT",
               "status": "Out",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Landon Jackson",
-              "position": "DE",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
+              "report_date": "2026-10-10T18:55Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "DJ Moore",
               "position": "WR",
               "status": "Questionable",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-10-10T18:05Z",
+              "body_part": "Shoulder - AC Joint",
+              "description": "Sprain",
+              "impact": ""
             },
             {
-              "name": "Joshua Palmer",
-              "position": "WR",
-              "status": "Out",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "name": "Landon Jackson",
+              "position": "DE",
+              "status": "Questionable",
+              "report_date": "2026-10-10T18:07Z",
+              "body_part": "Knee",
+              "description": null,
+              "impact": ""
+            },
+            {
+              "name": "Dee Alford",
+              "position": "CB",
+              "status": "Questionable",
+              "report_date": "2026-10-10T19:14Z",
+              "body_part": "Ankle",
+              "description": null,
+              "impact": ""
             }
           ]
         },
@@ -15508,34 +15983,49 @@
           "team": "LAR",
           "items": [
             {
-              "name": "Myles Garrett",
-              "position": "DE",
+              "name": "Keir Thomas II",
+              "position": "LB",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
-            },
-            {
-              "name": "Quentin Lake",
-              "position": "S",
-              "status": "Questionable",
-              "impact": "Availability context only; not a quantified model input."
-            },
-            {
-              "name": "Terrance Ferguson",
-              "position": "TE",
-              "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-09-08T20:42Z",
+              "body_part": "Groin",
+              "description": null,
+              "impact": ""
             },
             {
               "name": "Ronnie Rivers",
               "position": "RB",
               "status": "Injured Reserve",
-              "impact": "Skill-position availability can affect usage, but no beneficiary or workload is assumed."
+              "report_date": "2026-09-24T00:22Z",
+              "body_part": "Calf",
+              "description": null,
+              "impact": ""
             },
             {
-              "name": "Keir Thomas II",
-              "position": "LB",
+              "name": "Terrance Ferguson",
+              "position": "TE",
               "status": "Injured Reserve",
-              "impact": "Defensive availability is contextual; no matchup adjustment is quantified."
+              "report_date": "2026-10-07T17:52Z",
+              "body_part": "Ankle",
+              "description": "Sprain",
+              "impact": ""
+            },
+            {
+              "name": "Myles Garrett",
+              "position": "DE",
+              "status": "Injured Reserve",
+              "report_date": "2026-10-10T20:19Z",
+              "body_part": "Knee",
+              "description": "Surgery",
+              "impact": ""
+            },
+            {
+              "name": "Quentin Lake",
+              "position": "S",
+              "status": "Questionable",
+              "report_date": "2026-10-09T00:29Z",
+              "body_part": "Hip",
+              "description": null,
+              "impact": ""
             }
           ]
         }
@@ -15545,29 +16035,35 @@
       {
         "market": "moneyline",
         "decision": "No supported pick",
-        "line": null,
+        "line": "BUF +150 \u00b7 LAR -180",
         "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "spread",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "BUF +3.5 \u00b7 LAR -3.5",
+        "price": "BUF -115 \u00b7 LAR -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       },
       {
         "market": "total",
         "decision": "No supported pick",
-        "line": null,
-        "price": null,
-        "source_state": "fresh ESPN market missing",
-        "captured_at": null,
-        "note": "No current line or price captured."
+        "line": "Over 54.5 \u00b7 Under 54.5",
+        "price": "Over -115 \u00b7 Under -105",
+        "provider": "DraftKings",
+        "captured_at": "2026-10-11T02:00:25.790121Z",
+        "source_url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401872994",
+        "source_state": "ESPN listed close; not executable verified",
+        "note": "Listed close fields at retrieval; not a sportsbook-verified executable quote."
       }
     ]
   }
