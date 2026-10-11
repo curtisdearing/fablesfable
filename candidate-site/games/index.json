@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "season": 2026,
+  "week": 1,
+  "clock": "wed",
+  "as_of": "2026-09-11T07:00:38Z",
+  "pages": [
+    {
+      "game_id": "2026_01_ARI_LAC",
+      "matchup": "ARI @ LAC",
+      "href": "games/2026_01_ARI_LAC.html",
+      "n_approved": 0,
+      "n_hold": 3
+    },
+    {
+      "game_id": "2026_01_ATL_PIT",
+      "matchup": "ATL @ PIT",
+      "href": "games/2026_01_ATL_PIT.html",
+      "n_approved": 0,
+      "n_hold": 3
+    },
+    {
+      "game_id": "2026_01_BAL_IND",
+      "matchup": "BAL @ IND",
+      "href": "games/2026_01_BAL_IND.html",
+      "n_approved": 0,
+      "n_hold": 2
+    },
+    {
+      "game_id": "2026_01_BUF_HOU",
+      "matchup": "BUF @ HOU",
+      "href": "games/2026_01_BUF_HOU.html",
+      "n_approved": 0,
+      "n_hold": 3
+    },
+    {
+      "game_id": "2026_01_CHI_CAR",
+      "matchup": "CHI @ CAR",
+      "href": "games/2026_01_CHI_CAR.html",
+      "n_approved": 0,
+      "n_hold": 3
+    },
+    {
+      "game_id": "2026_01_CLE_JAX",
+      "matchup": "CLE @ JAX",
+      "href": "games/2026_01_CLE_JAX.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_DAL_NYG",
+      "matchup": "DAL @ NYG",
+      "href": "games/2026_01_DAL_NYG.html",
+      "n_approved": 0,
+      "n_hold": 3
+    },
+    {
+      "game_id": "2026_01_DEN_KC",
+      "matchup": "DEN @ KC",
+      "href": "games/2026_01_DEN_KC.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_GB_MIN",
+      "matchup": "GB @ MIN",
+      "href": "games/2026_01_GB_MIN.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_MIA_LV",
+      "matchup": "MIA @ LV",
+      "href": "games/2026_01_MIA_LV.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_NE_SEA",
+      "matchup": "NE @ SEA \u2014 FINAL (historical; no prospective lean)",
+      "href": "games/2026_01_NE_SEA.html",
+      "n_approved": 0,
+      "n_hold": 0
+    },
+    {
+      "game_id": "2026_01_NO_DET",
+      "matchup": "NO @ DET",
+      "href": "games/2026_01_NO_DET.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_NYJ_TEN",
+      "matchup": "NYJ @ TEN",
+      "href": "games/2026_01_NYJ_TEN.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_SF_LA",
+      "matchup": "SF @ LA \u2014 FINAL (historical; no prospective lean)",
+      "href": "games/2026_01_SF_LA.html",
+      "n_approved": 0,
+      "n_hold": 0
+    },
+    {
+      "game_id": "2026_01_TB_CIN",
+      "matchup": "TB @ CIN",
+      "href": "games/2026_01_TB_CIN.html",
+      "n_approved": 0,
+      "n_hold": 5
+    },
+    {
+      "game_id": "2026_01_WAS_PHI",
+      "matchup": "WAS @ PHI",
+      "href": "games/2026_01_WAS_PHI.html",
+      "n_approved": 0,
+      "n_hold": 5
+    }
+  ],
+  "n_approved_total": 0
+}

@@ -428,6 +428,62 @@ def _pick_card(pick, game, number):
             f"{comparison}{why_html}{risk_html}{details}</article>")
 
 
+GAME_MARKET_LABELS = {"moneyline": "Moneyline", "spread": "Spread", "total": "Total"}
+INJURY_STATUS_CLASSES = {"out": "out", "doubtful": "doubtful", "questionable": "questionable",
+                         "injured reserve": "ir", "reserve/injured": "ir"}
+
+
+def _game_header(card):
+    """Render sourced game decisions and both teams' availability before player props.
+
+    Game lines and injury context are an explicit display-only overlay.  Neither is
+    converted into a forecast or an implied player workload by this reader.
+    """
+    markets = {str(item.get("market")).lower(): item for item in card.get("game_markets") or []
+               if isinstance(item, dict)}
+    market_parts = []
+    for key in ("moneyline", "spread", "total"):
+        item = markets.get(key, {})
+        decision = _display_text(item.get("decision")) or "No supported pick"
+        line = _display_text(item.get("line"))
+        price = _display_text(item.get("price"))
+        source_state = _display_text(item.get("source_state"))
+        offer = " · ".join(part for part in (line, price) if part)
+        note = f" <span class='game-market-source'>({ _e(source_state) })</span>" if source_state else ""
+        market_parts.append(f"<article class='game-market game-market-{_e(key)}'><h4>{GAME_MARKET_LABELS[key]}</h4>"
+                            f"<p><b>{_e(decision)}</b>{note}</p>"
+                            f"<p class='game-market-line'>{_e(offer) if offer else 'No listed game line or price captured.'}</p></article>")
+    injuries = card.get("injuries") if isinstance(card.get("injuries"), dict) else {}
+    injury_teams = {str(team.get("team")): team for team in injuries.get("teams") or [] if isinstance(team, dict)}
+    injury_parts = []
+    for team_code in (str(card.get("away")), str(card.get("home"))):
+        team = injury_teams.get(team_code, {})
+        items = [item for item in team.get("items") or [] if isinstance(item, dict)]
+        if items:
+            rows = []
+            for item in items:
+                status = _display_text(item.get("status")) or "No designation"
+                css = INJURY_STATUS_CLASSES.get(status.lower(), "unknown")
+                position = _display_text(item.get("position"))
+                impact = _display_text(item.get("impact")) or "Availability context only; not a quantified model input."
+                rows.append(f"<li><span class='injury-status injury-{_e(css)}'>{_e(status)}</span> "
+                            f"<b>{_e(item.get('name'))}</b>{_e(' (' + position + ')') if position else ''}"
+                            f"<span class='injury-impact'> — {_e(impact)}</span></li>")
+            contents = "<ul>" + "".join(rows) + "</ul>"
+        else:
+            contents = "<p>No current injury report captured; this is unknown, not healthy.</p>"
+        injury_parts.append(f"<section class='injury-team'><h4>{_e(team_code)} injuries</h4>{contents}</section>")
+    injury_clock = _display_text(injuries.get("retrieved_at")) or _display_text(card.get("source_as_of"))
+    injury_source = _display_text(injuries.get("source")) or "No injury source supplied"
+    return ("<div class='game-frontmatter'><section class='game-decisions'><h4>Game decisions</h4>"
+            "<p class='game-decision-note'>Analyst context only; no game simulation or native game probability is claimed.</p>"
+            "<div class='game-market-grid'>" + "".join(market_parts) + "</div></section>"
+            "<section class='injury-panel'><h4>Both-team injury report</h4>"
+            f"<p class='injury-source'>Source: {_e(injury_source)} · captured {_e(injury_clock) if injury_clock else 'unknown time'}.</p>"
+            "<p class='injury-note'>Statuses are pregame report designations, not confirmed game-day actives. Impact is qualitative context, not a quantified model input.</p>"
+            "<div class='injury-grid'>" + "".join(injury_parts) + "</div></section></div>")
+
+
 def render_page(payload):
     """Render a picks-first public board; full research remains available as JSON."""
     state = payload.get("state")
@@ -480,7 +536,7 @@ def render_page(payload):
             content = f"<p class='no-pick'>{_e(reason) if reason else 'No pick.'}</p>"
         games.append(f"<section class='ap-game' id='game-{_e(card.get('event_id'))}'>"
                      f"<h3>{_e(card.get('away'))} at {_e(card.get('home'))}</h3>"
-                     f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{content}{forecasts}</section>")
+                     f"<p class='game-time'>{_e(_kickoff(card.get('kickoff')))}</p>{_game_header(card)}{content}{forecasts}</section>")
     return ("<h1>Week 5 player props</h1>"
             "<p class='board-caveat'>Uncalibrated model leans: prices can move; confirm every listed price before acting.</p>"
             "<h2>Picks</h2>" + "".join(rendered)

@@ -1,0 +1,33 @@
+{
+  "schema": "fablesfable.week5.frontmatter-source-receipt.v1",
+  "market_refresh": {
+    "provider": "ESPN site API event summaries",
+    "fresh_summary_clock": "2026-10-10T23:02:49.812292+00:00 to 2026-10-10T23:02:50.143759+00:00",
+    "events": 14,
+    "finding": "The supplied fresh ESPN summary payloads expose empty odds arrays. No moneyline, spread price, total price, or synthetic -110 price was published from them. All 45 rendered game-market decisions therefore say No supported pick; older line-only context remains visibly clocked as historical context only."
+  },
+  "injuries": {
+    "provider": "ESPN site API event summary injury arrays",
+    "source_index": "/Users/curtisdearing/.hermes/profiles/football-genius/projects/nfl-improvement/20261010-native-simulation/publication-inputs/injuries/index.json",
+    "index_sha256": "a07390f027d03d1360549a081aa827b0071e0f2130ac816514e0f582e9fa2b95",
+    "source_retrieved_min": "2026-10-10T23:02:49.812292+00:00",
+    "source_retrieved_max": "2026-10-10T23:02:50.143759+00:00",
+    "events": 14,
+    "event_files_sha256": {
+      "401872981": "6b3767d6f93745200ec6aa1f25c03a643ec192a36f3b7cb5b0382afcfa7a2a70",
+      "401872990": "a39408f67850a89621c9a9233756de71cbcd5a78baacca6967a3caa6763276a1",
+      "401872984": "3bf259ba7a45e0116bb52b42baea30019fb179443690815197f87722168e26e0",
+      "401872982": "fa339c5b1b06a62822fb91c4628e0dd781999bab8f036acbaa3bd8428f3403a5",
+      "401872986": "33b868f192a216bf411475b99c131918b12a32e0700eb0c578286fa6789d3030",
+      "401872987": "caed196223eb94895277a32775b5c1daba0e13ee9b2a6c04d44bd439bfe39819",
+      "401872983": "be5f8653022506ee70c3ae07871a8186c49ab099ebda013a233eac4b46187dd4",
+      "401872985": "3ba69230f55551ea7dc244112a4d430991554090b795c7f17b29195e442641d1",
+      "401872988": "121cdef5b0025f56c572ae286082cb4f200c9594190ccf8612a286bc9ab3957f",
+      "401872989": "178550813b9d98477a119ac240cc9034bc6f2cdca927a9564970804b7b92f515",
+      "401872991": "7856437ae24313c675d8c43d7c4a0d618f274445a6a4848ac607ae7b0f2b34bf",
+      "401872992": "e67ee5a1eaa37620b3a491febb10afea879d5964547aa8039524ec57baf1638c",
+      "401872993": "e0414cb64cb3501cd04612ea20a38fa8e093d9bf024e41be4513f2eedcd165dd",
+      "401872994": "46e8458bc5f7c7e1db0e10ab70609c37bd31d5567ae12f65edbb665d8383d8a8"
+    }
+  }
+}

@@ -83,6 +83,62 @@ def test_rendered_board_shows_clean_pick_card_without_research_inventory():
     assert "<table" not in page
 
 
+def test_rendered_game_header_leads_with_three_market_decisions_and_both_team_injuries():
+    from nflvalue import all_props
+    payload = {"schema": "fablesfable.all_props.v1", "state": "ready",
+               "counts": {"games": 1, "raw_market_rows": 0, "outcome_rows": 0, "quote_rows": 0,
+                          "unique_athletes": 0, "model_priced": 0, "qualitatively_reviewed": 0,
+                          "unavailable_or_unsupported": 0}, "errors": [],
+               "cards": [{"event_id": "1", "game_id": "2026_05_AWY_HOME", "away": "AWY", "home": "HOME",
+                          "kickoff": "2026-10-11T20:05:00Z", "source_as_of": "2026-10-10T23:02:49Z",
+                          "status": "upcoming", "preview": "No player pick.", "winner_lean": None,
+                          "picks": [],
+                          "game_markets": [
+                              {"market": "moneyline", "decision": "No supported pick", "line": None,
+                               "price": None, "source_state": "missing"},
+                              {"market": "spread", "decision": "Prior analyst lean: AWY +3 (not current)", "line": "+3",
+                               "price": "+105", "source_state": "stale", "captured_at": "2026-10-10T17:00:00Z"},
+                              {"market": "total", "decision": "No supported pick", "line": "44.5",
+                               "price": None, "source_state": "line_only"},
+                          ],
+                          "injuries": {"source": "ESPN event summary", "retrieved_at": "2026-10-10T23:02:49Z",
+                                       "teams": [{"team": "AWY", "items": [{"name": "Away QB", "position": "QB",
+                                                                            "status": "Questionable", "impact": "Starting-QB availability unresolved."}]},
+                                                 {"team": "HOME", "items": [{"name": "Home LT", "position": "OT",
+                                                                             "status": "Out", "impact": "Starting tackle unavailable."}]}]}}],
+               "rows": []}
+    page = all_props.render_page(payload)
+    section = page[page.index("<section class='ap-game'"):]
+    assert "Moneyline" in section and "Spread" in section and "Total" in section
+    assert "No supported pick" in section
+    assert "AWY injuries" in section and "HOME injuries" in section
+    assert "Away QB" in section and "Home LT" in section
+    assert section.index("Moneyline") < section.index("Away QB") < section.index("No pick.")
+
+
+def test_frontmatter_overlay_keeps_markets_unsupported_when_fresh_espn_has_no_odds_and_marks_archive_unknown(tmp_path):
+    front_spec = importlib.util.spec_from_file_location("week5_frontmatter", ROOT / "scripts" / "build_week5_frontmatter.py")
+    assert front_spec and front_spec.loader
+    frontmatter = importlib.util.module_from_spec(front_spec)
+    front_spec.loader.exec_module(frontmatter)
+    summary = {"odds": [], "injuries": [{"team": {"abbreviation": "AWY"}, "injuries": [{
+        "status": "Questionable", "athlete": {"displayName": "Away Quarterback", "position": {"abbreviation": "QB"}}}]},
+        {"team": {"abbreviation": "HOME"}, "injuries": [{"status": "Out", "athlete": {
+            "displayName": "Home Tackle", "position": {"abbreviation": "OT"}}}]}]}
+    (tmp_path / "1.json").write_text(json.dumps(summary))
+    cards = [{"event_id": "1", "away": "AWY", "home": "HOME", "context": {"game_market": {
+        "details": "AWY +3", "total": 44.5, "provider": "Captured source"}}},
+             {"event_id": "archive", "away": "OLD", "home": "DONE", "context": {}}]
+    result = frontmatter.overlay(cards, [{"event_id": "1", "url": "https://example.test/1",
+                                          "retrieved_at": "2026-10-10T23:02:49Z"}], tmp_path)
+    current, archived = result
+    assert [market["market"] for market in current["game_markets"]] == ["moneyline", "spread", "total"]
+    assert all(market["decision"] == "No supported pick" for market in current["game_markets"])
+    assert current["game_markets"][1]["line"] == "AWY +3" and current["game_markets"][1]["price"] is None
+    assert "Quarterback availability" in current["injuries"]["teams"][0]["items"][0]["impact"]
+    assert archived["injuries"]["teams"] == [{"team": "OLD", "items": []}, {"team": "DONE", "items": []}]
+
+
 def test_integrate_merges_typed_card_and_row_extras_without_saved_native_picks(tmp_path):
     events = [_event("1", "DEN", "LAC", "2026-10-11T20:05Z")]
     events.extend(_event(str(i), f"A{i}", f"H{i}", f"2026-10-12T{i:02}:00Z") for i in range(2, 16))
