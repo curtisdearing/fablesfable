@@ -1,63 +1,117 @@
 {
   "schema_version": 2,
   "kind": "saved-model-analysis",
-  "generator": "scripts/build_week5_full_slate.py",
-  "label": "research_snapshot",
+  "generator": "scripts/build_public_site.py",
+  "label": "analyst-board-update",
   "season": 2026,
-  "week": 5,
-  "published_at": "2026-10-11T03:57:09Z",
-  "approved_bets": 0,
-  "model_candidates": 699,
-  "all_props": {
-    "games": 15,
-    "raw_market_rows": 250,
-    "outcome_rows": 1863,
-    "quote_rows": 1863,
-    "unique_athletes": 374,
-    "model_priced": 0,
-    "qualitatively_reviewed": 8,
-    "unavailable_or_unsupported": 25,
-    "coverage_family_rows": 18,
-    "coverage_gap_rows": 24
+  "week": 6,
+  "published_at": "2026-10-18T01:51:05+00:00",
+  "results_checked_at": "2026-10-12T00:43:39Z",
+  "clocks": {
+    "published_at": "2026-10-18T01:51:05+00:00",
+    "forecast_as_of": "2026-10-15T22:52:11Z",
+    "forecast_code_shas": [
+      "96b4baace8e75a10f860d34033e4455d58def325"
+    ],
+    "forecast_versions": [
+      "ff-football-only-v1"
+    ],
+    "quote_clock_earliest": null,
+    "quote_clock_latest": null,
+    "leans_with_quote": 0,
+    "results_updated_at": "2026-10-12T00:43:39Z",
+    "research_checked_at": "2026-10-12T00:43:39Z",
+    "forecast_age_hours_at_publish": 2.5,
+    "new_forecast_in_this_publication": false,
+    "missing": [
+      "quote clock"
+    ]
   },
-  "integration": {
-    "schema": "fablesfable.week5.integration.v1",
-    "season": 2026,
-    "week": 5,
-    "games": 15,
-    "upcoming_games": 14,
-    "completed_games": 1,
-    "raw_market_rows": 250,
-    "outcome_rows": 1863,
-    "coverage_family_rows": 18,
-    "coverage_gap_rows": 24,
-    "all_row_records": 1599,
-    "sources": {
-      "scoreboard": "data/research_snapshots/2026-week-5/scoreboard.json",
-      "saved_source_cards": "data/research_snapshots/2026-week-5/saved-source-cards.json",
-      "late_markets": "data/research_snapshots/2026-week-5/late-screened-markets.json",
-      "extra": [
-        "../early/game_cards.json",
-        "../early/market_rows.json",
-        "../extra/game_cards.json",
-        "../extra/market_rows.json"
-      ]
+  "source_as_of": "2026-10-15T22:52:11Z",
+  "quote_clocks": {
+    "earliest": null,
+    "latest": null,
+    "leans_with_quote": 0
+  },
+  "runs": [
+    {
+      "run_id": "gha:38617362078-1",
+      "code_sha": "96b4baace8e75a10f860d34033e4455d58def325",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "wed",
+      "as_of": "2026-10-14T18:44:24Z",
+      "created_at": "2026-10-14T18:44:27Z"
     },
-    "model_run_as_of": "2026-10-10T22:47:38Z",
-    "native_candidates": 699,
-    "model_leans": 174
+    {
+      "run_id": "gha:38819708224-1:t90:2026_06_SEA_DEN",
+      "code_sha": "96b4baace8e75a10f860d34033e4455d58def325",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-15T22:52:11Z",
+      "created_at": "2026-10-15T22:52:13Z"
+    }
+  ],
+  "counts": {
+    "actionable": 0,
+    "watch": 0,
+    "research": 65,
+    "pass": 6
   },
+  "approved_bets": 0,
+  "model_candidates": 71,
+  "all_props": {
+    "schema": "fablesfable.all_props.v1",
+    "state": "pending",
+    "counts": {
+      "games": 0,
+      "raw_market_rows": 0,
+      "outcome_rows": 0,
+      "quote_rows": 0,
+      "unique_athletes": 0,
+      "model_priced": 0,
+      "qualitatively_reviewed": 0,
+      "unavailable_or_unsupported": 0
+    }
+  },
+  "archived_files": [
+    "assets/hub-scroll.js",
+    "dashboard.html",
+    "games/2026_01_ARI_LAC.html",
+    "games/2026_01_ATL_PIT.html",
+    "games/2026_01_BAL_IND.html",
+    "games/2026_01_BUF_HOU.html",
+    "games/2026_01_CHI_CAR.html",
+    "games/2026_01_CLE_JAX.html",
+    "games/2026_01_DAL_NYG.html",
+    "games/2026_01_DEN_KC.html",
+    "games/2026_01_GB_MIN.html",
+    "games/2026_01_MIA_LV.html",
+    "games/2026_01_NE_SEA.html",
+    "games/2026_01_NO_DET.html",
+    "games/2026_01_NYJ_TEN.html",
+    "games/2026_01_SF_LA.html",
+    "games/2026_01_TB_CIN.html",
+    "games/2026_01_WAS_PHI.html",
+    "games/index.json",
+    "games/pages.json",
+    "history.html",
+    "reports/2026/week-1.html",
+    "reports/2026/week-3.html",
+    "reports/2026/week-5.html"
+  ],
   "files": {
-    "README.txt": "b7f430d658823a5f3026f5fbcbaeb75064dd64ca1d4d747c909406a4fc8a57b7",
-    "all-props.html": "90ba8f8296ad359dd25f7765d0fe8623c2b80b5da17b49c66a64db26de9aa075",
-    "api/all-props.json": "f2fcd6d5ccec6cf61538cc2d3d891d229f6bd591ca829dc76bb76d5ca312012a",
-    "api/coverage.json": "c4ee413cda7283b5add246f28a90d0e9df52e4a98b1988227ec4eb9f2360a3ec",
-    "api/hub.json": "38e96eb53525ffd6885d907e046119a14dbaf047e7408b9eeb0c840149808017",
-    "api/research.json": "23d7e6aaa89b8b734993a4fc84e184f73f212d78ee1da165ba619c83d9674ab2",
-    "api/results.json": "baf228b5b0cfb2613c49b49247da7cb2e65cef9b8367c9816b709f34a0299e0c",
+    "README.txt": "3c3e06dff47a0082acb4b158d706f10f1d3be43dc81e5ff15b95e3225fc1c0da",
+    "all-props.html": "1127a3303fcbbaab32ca3399070edb968f7140a0bd0f79c497faa66e61b3ff81",
+    "api/all-props.json": "b88acd3dfe060960389d604423fd1cb6967265eece39ff35c01e29f0b26bda3b",
+    "api/coverage.json": "18970dc56de31fa1ebe124b86e38213791455f98b1c10244776260997651586d",
+    "api/hub.json": "1635ade7f98006e32882034a4877ac97926df6b59aa6dc7c4c81886149563a8a",
+    "api/research.json": "376b86087335a3835b16955c98e83b506ee06a84496e409cc16f2957759f7c92",
+    "api/results.json": "2f30dab2e05bf7630e52751dac1d7bd085b2b331f0a9a0a05894cb9c7ef68406",
     "assets/hub-scroll.js": "501efcfc177f91ffccb23687508d31d8f47b10f7c5d409f5a6e7e034d313ad5f",
-    "best-bets.html": "70ac67cd6e7051955404357d7fbccfcd9be5b25459ec0f16515cff0e86b3532a",
-    "coverage.html": "6a7ff0a9956d636f8aabf7c01883c02fb60168a5804a2f138ae2e15eade76987",
+    "best-bets.html": "172eb2e926c2bd2dedfe8e37999611a55cdc8bec6248db20c7624890374122be",
+    "coverage.html": "68442301fc990436da07afbf5937a19f5942cb792da0694b98fdc810725e7934",
     "dashboard.html": "13d8dcdf15aecf9b410ad2282097b2a68c70370416592d85e8d0d5bd07a42c02",
     "games/2026_01_ARI_LAC.html": "1000b560b4785f6176608dbeaf3c3c441a847d3539967e0ca04b9bce62c7865f",
     "games/2026_01_ATL_PIT.html": "d7ccae4d111517bb50af4a9e2c056245296105ea68b25803ca86d9a5bfdf5373",
@@ -78,14 +132,25 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "94076c4fbeea5ce941ff1af22c70f832a9b46aae0c7d9d58ab3a052bfc1c1f2f",
-    "index.html": "90ba8f8296ad359dd25f7765d0fe8623c2b80b5da17b49c66a64db26de9aa075",
-    "model-cards.html": "a6d2b06ae993bb1e5ad34d6481e79e1a1133fc6a71774435894ee6d5f8c5a6f3",
+    "index.html": "fd83801ae09c0bba44bd2008872818b5a66236abf51df45b4b515c1a8d0223c4",
+    "model-cards.html": "34b0d795a5c4bd6894baf7349f2b9daffaaf9a95389f860e9b067c8f01c77080",
     "reports/2026/week-1.html": "d1cd5c467b9961a1ba4022f91b58578e1926abc92dd2084949ef8b54da717a1d",
     "reports/2026/week-3.html": "ead3ec0aa1ae9e07dbc334b3fa7c6147583bd907cee1149f1dff7988bbe512d4",
     "reports/2026/week-5.html": "6c298a69d31f55c0b810307caf6ae2a2dc70940df08261ac2f0c0146639016f8",
-    "reports/index.json": "6e42d66d6c0f0c44ee7d7c06d8200933dae62f3729495b55f0ed5a656c61aeb4",
-    "reports/latest.html": "1a039573226eb6aea37c79dd7f69fa58e59dfe56c0e4f14c4fcf010f5e2edeaa",
-    "research.html": "58c1803c7f8b98b317d490a0bf60d6d08f4b947720e7825fb8483d747dc9adb8",
-    "results.html": "a17e163f89fddc57d8e2ee71be9c8e4c732f45bae319163106a9a6bcbaf556ae"
+    "reports/2026/week-6.html": "f9c625fb946a8acd435eb25d5dbeaade7673c116e3e4178eb2ddde30286fcc12",
+    "reports/index.json": "7c8b10e63c92f88ece7d41120aabf6fef22ea6930128996de951f161c78a87d7",
+    "reports/latest.html": "c01bdf0b5cab9697a93e871af9a23544c95497218aa1a908c49e0da4309c8850",
+    "research.html": "c649c874dd90a8f640684e152235dcb3e60a3d91e3ff26e01efe00429e0efecd",
+    "results.html": "469cac67771552be997a3de8692d22ce30810a6ba0b89aa56ac0a23c7fe86c7d"
+  },
+  "analyst_board": {
+    "event_date": "2026-10-18",
+    "published_at": "2026-10-18T01:51:05+00:00",
+    "priority_conditional": 4,
+    "secondary_conditional": 9,
+    "watch": 7,
+    "approved_bets": 0,
+    "hard_rock_sgp_status": "HOLD",
+    "automated_source_clocks_retained": true
   }
 }

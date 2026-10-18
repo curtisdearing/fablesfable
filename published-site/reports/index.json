@@ -1,7 +1,7 @@
 {
   "latest": {
     "season": 2026,
-    "week": 5,
+    "week": 6,
     "path": "reports/latest.html"
   },
   "weeks": [
@@ -19,6 +19,11 @@
       "season": 2026,
       "week": 5,
       "path": "reports/2026/week-5.html"
+    },
+    {
+      "season": 2026,
+      "week": 6,
+      "path": "reports/2026/week-6.html"
     }
   ]
 }

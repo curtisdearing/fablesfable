@@ -41,7 +41,7 @@
       "status": "retired_retrospective_fail"
     }
   ],
-  "checked_at": "2026-10-09T12:06:13Z",
+  "checked_at": "2026-10-12T00:43:39Z",
   "historical_imports": 0,
   "issued_confidence": {
     "by_market": {},
@@ -49,7 +49,7 @@
       "missing_game_cluster": 0,
       "missing_or_invalid_probability": 0,
       "non_win_loss": 0,
-      "not_recommendation": 59,
+      "not_recommendation": 86,
       "outside_frozen_prospective_window": 0,
       "untrusted_capture": 0
     },
@@ -65,14 +65,14 @@
     "statement": "descriptive reliability of frozen issued probabilities only; no refit, no promotion"
   },
   "ledger": {
-    "entries": 111,
-    "head_entry_sha256": "514aad622e95191771666bfacb4b012dfaf2268f65c8c4ac628762bd32c74a2b",
+    "entries": 138,
+    "head_entry_sha256": "44bcd41a2e667de5121728bed3ef728cc599406c3529f2bd3c8b6f46e61c676e",
     "last_append": {
-      "appended": 7,
+      "appended": 27,
       "revisions": 0,
-      "skipped_identical": 52
+      "skipped_identical": 59
     },
-    "records": 59,
+    "records": 86,
     "revisions": 52
   },
   "missing_data_gates": [
@@ -144,27 +144,27 @@
     "watch_published": {
       "by_policy_class": {
         "unrecorded": {
-          "loss": 10,
+          "loss": 22,
           "pending": 2,
           "push": 0,
           "void": 0,
-          "win": 25
+          "win": 40
         }
       },
-      "n": 37,
+      "n": 64,
       "outcomes": {
-        "loss": 10,
+        "loss": 22,
         "pending": 2,
         "push": 0,
         "void": 0,
-        "win": 25
+        "win": 40
       }
     }
   },
   "windows": {
     "retrospective|excluded_late": 4,
     "retrospective|retrospective_exploratory": 18,
-    "watch_published|prospective_confirmation": 7,
+    "watch_published|prospective_confirmation": 34,
     "watch_published|retrospective_exploratory": 30
   }
 }
