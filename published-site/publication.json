@@ -2,15 +2,16 @@
   "schema_version": 2,
   "kind": "saved-model-analysis",
   "generator": "scripts/build_public_site.py",
-  "label": "analyst-board-update",
+  "label": "game-first-analyst-update",
   "season": 2026,
   "week": 6,
-  "published_at": "2026-10-18T01:51:05+00:00",
+  "published_at": "2026-10-18T17:19:54+00:00",
   "results_checked_at": "2026-10-12T00:43:39Z",
   "clocks": {
-    "published_at": "2026-10-18T01:51:05+00:00",
-    "forecast_as_of": "2026-10-15T22:52:11Z",
+    "published_at": "2026-10-18T17:19:54+00:00",
+    "forecast_as_of": "2026-10-18T15:51:33Z",
     "forecast_code_shas": [
+      "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
       "96b4baace8e75a10f860d34033e4455d58def325"
     ],
     "forecast_versions": [
@@ -21,13 +22,13 @@
     "leans_with_quote": 0,
     "results_updated_at": "2026-10-12T00:43:39Z",
     "research_checked_at": "2026-10-12T00:43:39Z",
-    "forecast_age_hours_at_publish": 2.5,
+    "forecast_age_hours_at_publish": 0.0,
     "new_forecast_in_this_publication": false,
     "missing": [
       "quote clock"
     ]
   },
-  "source_as_of": "2026-10-15T22:52:11Z",
+  "source_as_of": "2026-10-18T15:51:33Z",
   "quote_clocks": {
     "earliest": null,
     "latest": null,
@@ -51,16 +52,79 @@
       "clock": "t90",
       "as_of": "2026-10-15T22:52:11Z",
       "created_at": "2026-10-15T22:52:13Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_CHI_ATL",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:48:57Z",
+      "created_at": "2026-10-18T15:48:59Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_BAL_CLE",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:49:23Z",
+      "created_at": "2026-10-18T15:49:25Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_TEN_IND",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:49:50Z",
+      "created_at": "2026-10-18T15:49:52Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_NYJ_NE",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:50:15Z",
+      "created_at": "2026-10-18T15:50:17Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_NO_NYG",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:50:40Z",
+      "created_at": "2026-10-18T15:50:42Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_CAR_PHI",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:51:07Z",
+      "created_at": "2026-10-18T15:51:09Z"
+    },
+    {
+      "run_id": "gha:39141993559-1:t90:2026_06_PIT_TB",
+      "code_sha": "2b26a894ecc92f796189d5a6a48c168661e7f6f3",
+      "forecast_version": "ff-football-only-v1",
+      "ranker_sha256": "24417284bef420b684cc829733516a862bdbc0ac5040d0d380dd604afbf9ff11",
+      "clock": "t90",
+      "as_of": "2026-10-18T15:51:33Z",
+      "created_at": "2026-10-18T15:51:35Z"
     }
   ],
   "counts": {
     "actionable": 0,
     "watch": 0,
-    "research": 65,
-    "pass": 6
+    "research": 73,
+    "pass": 8
   },
   "approved_bets": 0,
-  "model_candidates": 71,
+  "model_candidates": 81,
   "all_props": {
     "schema": "fablesfable.all_props.v1",
     "state": "pending",
@@ -105,13 +169,14 @@
     "README.txt": "3c3e06dff47a0082acb4b158d706f10f1d3be43dc81e5ff15b95e3225fc1c0da",
     "all-props.html": "1127a3303fcbbaab32ca3399070edb968f7140a0bd0f79c497faa66e61b3ff81",
     "api/all-props.json": "b88acd3dfe060960389d604423fd1cb6967265eece39ff35c01e29f0b26bda3b",
-    "api/coverage.json": "18970dc56de31fa1ebe124b86e38213791455f98b1c10244776260997651586d",
-    "api/hub.json": "1635ade7f98006e32882034a4877ac97926df6b59aa6dc7c4c81886149563a8a",
+    "api/coverage.json": "326cd870caf0b1a72b1bdd64f1b8cc53a5106041f37e5b28ecdb4c844a053f85",
+    "api/hub.json": "ee84cc1cbe5dfb356a684492fa3a1a200a8af46ed6784d63208ef22e57d4319e",
     "api/research.json": "376b86087335a3835b16955c98e83b506ee06a84496e409cc16f2957759f7c92",
     "api/results.json": "2f30dab2e05bf7630e52751dac1d7bd085b2b331f0a9a0a05894cb9c7ef68406",
+    "assets/game-board.css": "bff83578cb5caece17090e8c95548a4af6e9c1348acb02126d227613401c3713",
     "assets/hub-scroll.js": "501efcfc177f91ffccb23687508d31d8f47b10f7c5d409f5a6e7e034d313ad5f",
-    "best-bets.html": "172eb2e926c2bd2dedfe8e37999611a55cdc8bec6248db20c7624890374122be",
-    "coverage.html": "68442301fc990436da07afbf5937a19f5942cb792da0694b98fdc810725e7934",
+    "best-bets.html": "e49a9c4f07c963dc84323afbf2fa95303d17d82c724afae793a886742ffbb11e",
+    "coverage.html": "30c428b809fd54b67668f0f4c519b48f99a3473f92eba5ce0bf6a02044aab2b6",
     "dashboard.html": "13d8dcdf15aecf9b410ad2282097b2a68c70370416592d85e8d0d5bd07a42c02",
     "games/2026_01_ARI_LAC.html": "1000b560b4785f6176608dbeaf3c3c441a847d3539967e0ca04b9bce62c7865f",
     "games/2026_01_ATL_PIT.html": "d7ccae4d111517bb50af4a9e2c056245296105ea68b25803ca86d9a5bfdf5373",
@@ -132,25 +197,24 @@
     "games/index.json": "7ea1b81bf8d170cd43d6b1144423a4c23c261dee79bfc013d9a7ae8ce1b29170",
     "games/pages.json": "84669e5d074ee28792d851ffb9d037e039559ca651600a8539df886ebb1ce20c",
     "history.html": "94076c4fbeea5ce941ff1af22c70f832a9b46aae0c7d9d58ab3a052bfc1c1f2f",
-    "index.html": "fd83801ae09c0bba44bd2008872818b5a66236abf51df45b4b515c1a8d0223c4",
-    "model-cards.html": "34b0d795a5c4bd6894baf7349f2b9daffaaf9a95389f860e9b067c8f01c77080",
+    "index.html": "e49a9c4f07c963dc84323afbf2fa95303d17d82c724afae793a886742ffbb11e",
+    "model-cards.html": "92983ce2e28b0eca684268824e1979ec92958dab811033d2645c78525cfda7a6",
     "reports/2026/week-1.html": "d1cd5c467b9961a1ba4022f91b58578e1926abc92dd2084949ef8b54da717a1d",
     "reports/2026/week-3.html": "ead3ec0aa1ae9e07dbc334b3fa7c6147583bd907cee1149f1dff7988bbe512d4",
     "reports/2026/week-5.html": "6c298a69d31f55c0b810307caf6ae2a2dc70940df08261ac2f0c0146639016f8",
-    "reports/2026/week-6.html": "f9c625fb946a8acd435eb25d5dbeaade7673c116e3e4178eb2ddde30286fcc12",
+    "reports/2026/week-6.html": "418467dc8701b4bbd0b72afd69f908fa4b2da47c6fdd7803bbd8f8b1203030d1",
     "reports/index.json": "7c8b10e63c92f88ece7d41120aabf6fef22ea6930128996de951f161c78a87d7",
-    "reports/latest.html": "c01bdf0b5cab9697a93e871af9a23544c95497218aa1a908c49e0da4309c8850",
+    "reports/latest.html": "288ff96d278a4d2534ca7b0867606063089cafe824402bbfbd5ecdefe9440387",
     "research.html": "c649c874dd90a8f640684e152235dcb3e60a3d91e3ff26e01efe00429e0efecd",
     "results.html": "469cac67771552be997a3de8692d22ce30810a6ba0b89aa56ac0a23c7fe86c7d"
   },
   "analyst_board": {
-    "event_date": "2026-10-18",
-    "published_at": "2026-10-18T01:51:05+00:00",
-    "priority_conditional": 4,
-    "secondary_conditional": 9,
-    "watch": 7,
+    "presentation": "game-first",
+    "published_at": "2026-10-18T17:19:54+00:00",
+    "public_quote_capture": "2026-10-18T17:15:23Z",
+    "comparisons": 225,
     "approved_bets": 0,
-    "hard_rock_sgp_status": "HOLD",
+    "portfolio_profit_probability": null,
     "automated_source_clocks_retained": true
   }
 }

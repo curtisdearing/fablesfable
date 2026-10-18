@@ -1437,6 +1437,1168 @@
         "priced": 0,
         "sparse_books": []
       }
+    },
+    {
+      "as_of": "2026-10-18T15:48:57Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_CHI_ATL": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:48:31Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_CHI_ATL": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "7c312fdf24fb35f58b0e07c2932cc997",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_CHI_ATL": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "7c312fdf24fb35f58b0e07c2932cc997",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:48:31Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_CHI_ATL",
+      "summary": {
+        "as_of": "2026-10-18T15:48:31Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:49:23Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_BAL_CLE": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:49:17Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_BAL_CLE": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "e86227938fd3cf008fc5648fb5128344",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_BAL_CLE": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "e86227938fd3cf008fc5648fb5128344",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:49:17Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_BAL_CLE",
+      "summary": {
+        "as_of": "2026-10-18T15:49:17Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:49:50Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_TEN_IND": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:49:43Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_TEN_IND": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "84aa9e190e625d7e9cd67e1f157a45b4",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_TEN_IND": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "84aa9e190e625d7e9cd67e1f157a45b4",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:49:43Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_TEN_IND",
+      "summary": {
+        "as_of": "2026-10-18T15:49:43Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:50:15Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_NYJ_NE": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:50:10Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_NYJ_NE": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "0b0b582b32b09ab6ff6664ffae0c9653",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_NYJ_NE": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "0b0b582b32b09ab6ff6664ffae0c9653",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:50:10Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_NYJ_NE",
+      "summary": {
+        "as_of": "2026-10-18T15:50:10Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:50:40Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_NO_NYG": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:50:35Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_NO_NYG": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "1cf74afd313e9fd300e1462012b174cb",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_NO_NYG": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "1cf74afd313e9fd300e1462012b174cb",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:50:35Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_NO_NYG",
+      "summary": {
+        "as_of": "2026-10-18T15:50:35Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:51:07Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_CAR_PHI": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:51:01Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_CAR_PHI": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "caca2d752fe1a1779029082e95332fcc",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_CAR_PHI": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "caca2d752fe1a1779029082e95332fcc",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:51:01Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_CAR_PHI",
+      "summary": {
+        "as_of": "2026-10-18T15:51:01Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
+    },
+    {
+      "as_of": "2026-10-18T15:51:33Z",
+      "clock": "t90",
+      "game_lines": {
+        "games": {
+          "2026_06_PIT_TB": {
+            "book_clock_max": null,
+            "book_clock_min": null,
+            "books_by_market": {
+              "h2h": [],
+              "spreads": [],
+              "totals": []
+            },
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "capture_clock": null,
+            "markets_missing": [
+              "h2h",
+              "spreads",
+              "totals"
+            ],
+            "markets_offered": [],
+            "quote_age_hours": null,
+            "reused_cached_answer": false,
+            "started": false,
+            "state": "no_current_quotes"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:51:27Z",
+          "billing_cycle": "unknown: the provider quota preflight is the authoritative allowance",
+          "by_state": {
+            "no_current_quotes": 1
+          },
+          "call": {
+            "called": null,
+            "credits_billed": null,
+            "credits_held_for_closes": null,
+            "credits_planned": null,
+            "refused": null,
+            "reused": null,
+            "ts": null
+          },
+          "n_games": 1,
+          "priced": 0,
+          "product": "game lines (h2h/spreads/totals) -- distinct from player props"
+        }
+      },
+      "games": {
+        "2026_06_PIT_TB": {
+          "books_missing": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "books_offered": [],
+          "commence_time": "2026-10-18T17:00:00Z",
+          "error": null,
+          "event_id": "27f3994841ce8081c0b7349cf3d1e3d7",
+          "kickoff": "2026-10-18T17:00:00Z",
+          "kickoff_delta_minutes": 0,
+          "kickoff_moved": false,
+          "lines_priced": 0,
+          "markets_missing": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "markets_offered": [],
+          "max_books_on_a_line": 0,
+          "players_priced": 0,
+          "pulled_this_run": false,
+          "quote_age_hours": null,
+          "quote_clock": null,
+          "started": false,
+          "state": "skipped_budget"
+        }
+      },
+      "props": {
+        "games": {
+          "2026_06_PIT_TB": {
+            "books_missing": [
+              "draftkings",
+              "betmgm",
+              "hardrockbet"
+            ],
+            "books_offered": [],
+            "commence_time": "2026-10-18T17:00:00Z",
+            "error": null,
+            "event_id": "27f3994841ce8081c0b7349cf3d1e3d7",
+            "kickoff": "2026-10-18T17:00:00Z",
+            "kickoff_delta_minutes": 0,
+            "kickoff_moved": false,
+            "lines_priced": 0,
+            "markets_missing": [
+              "anytime_td",
+              "passing_yards",
+              "receiving_yards",
+              "receptions",
+              "rushing_yards"
+            ],
+            "markets_offered": [],
+            "max_books_on_a_line": 0,
+            "players_priced": 0,
+            "pulled_this_run": false,
+            "quote_age_hours": null,
+            "quote_clock": null,
+            "started": false,
+            "state": "skipped_budget"
+          }
+        },
+        "recorded": true,
+        "summary": {
+          "as_of": "2026-10-18T15:51:27Z",
+          "books_requested": [
+            "draftkings",
+            "betmgm",
+            "hardrockbet"
+          ],
+          "by_state": {
+            "skipped_budget": 1
+          },
+          "markets_requested": [
+            "anytime_td",
+            "passing_yards",
+            "receiving_yards",
+            "receptions",
+            "rushing_yards"
+          ],
+          "missing": 1,
+          "n_games": 1,
+          "priced": 0,
+          "sparse_books": []
+        }
+      },
+      "recorded": true,
+      "run_id": "gha:39141993559-1:t90:2026_06_PIT_TB",
+      "summary": {
+        "as_of": "2026-10-18T15:51:27Z",
+        "books_requested": [
+          "draftkings",
+          "betmgm",
+          "hardrockbet"
+        ],
+        "by_state": {
+          "skipped_budget": 1
+        },
+        "markets_requested": [
+          "anytime_td",
+          "passing_yards",
+          "receiving_yards",
+          "receptions",
+          "rushing_yards"
+        ],
+        "missing": 1,
+        "n_games": 1,
+        "priced": 0,
+        "sparse_books": []
+      }
     }
   ],
   "schema": "fablesfable.odds_coverage.v2",
